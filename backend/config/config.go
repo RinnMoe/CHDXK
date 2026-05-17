@@ -11,6 +11,13 @@ type AppConfig struct {
 	Server   ServerConfig   `mapstructure:"server"`
 	Postgres PostgresConfig `mapstructure:"postgres"`
 	Redis    RedisConfig    `mapstructure:"redis"`
+	Session  SessionConfig  `mapstructure:"session"`
+}
+
+type SessionConfig struct {
+	Secret string `mapstructure:"secret"`
+	MaxAge int    `mapstructure:"max_age"` // seconds
+	Secure bool   `mapstructure:"secure"`  // HTTPS only
 }
 
 type ServerConfig struct {

@@ -40,7 +40,7 @@ func main() {
 	}
 
 	container := app.NewServiceContainer(conf)
-	engine := web.NewRouter(container)
+	engine := web.NewRouter(container, conf)
 
 	srv := &http.Server{
 		Addr:    conf.Server.Addr,
