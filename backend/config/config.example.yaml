@@ -1,0 +1,18 @@
+# Example config for jcourse API server
+# Config path can be set via --config flag or CONFIG_PATH env
+# Any config value can be overridden by env with JCOURSE_ prefix, e.g.:
+#   JCOURSE_SERVER_ADDR=:9090
+#   JCOURSE_POSTGRES_DSN="host=localhost ..."
+#   JCOURSE_REDIS_ADDR=localhost:6379
+
+server:
+  addr: ":8080"
+
+postgres:
+  dsn: "host=localhost port=5432 user=postgres password=postgres dbname=jcourse sslmode=disable"
+
+redis:
+  addr: "localhost:6379"
+  username: ""
+  password: ""
+  db: 0
