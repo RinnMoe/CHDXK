@@ -20,11 +20,19 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	g.Use(sessions.Sessions("jcourse_session", store))
 
 	reviewController := controller.NewReviewController(container.ReviewQuery, container.ReviewCommand)
+	courseController := controller.NewCourseController(container.CourseQuery)
+	teacherController := controller.NewTeacherController(container.TeacherQuery)
 
 	apiGroup := g.Group("/api")
 	courseGroup := apiGroup.Group("/course")
 	{
+		courseGroup.GET("/", courseController.ListCourses)
+		courseGroup.GET("/:courseID", courseController.GetCourseDetail)
 		courseGroup.GET("/:courseID/review", reviewController.GetCourseReviews)
+	}
+	teacherGroup := apiGroup.Group("/teacher")
+	{
+		teacherGroup.GET("/", teacherController.ListTeachers)
 	}
 	reviewGroup := apiGroup.Group("/review")
 	{

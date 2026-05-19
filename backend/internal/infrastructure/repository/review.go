@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"time"
 
 	"gorm.io/gorm"
 
@@ -24,6 +23,7 @@ func newReviewEntity(r *review.Review) ReviewEntity {
 
 func newReviewDomain(e *ReviewEntity) review.Review {
 	return review.Review{
+		ID:        e.ID,
 		CourseID:  e.CourseID,
 		Semester:  e.Semester,
 		UserID:    e.UserID,
@@ -80,8 +80,15 @@ type ReviewRepository struct {
 	db *gorm.DB
 }
 
+func (r2 *ReviewRepository) updateCourseStats(tx *gorm.DB, courseID int) error {
+	return tx.Exec(`UPDATE courses SET
+		review_count = (SELECT COUNT(*) FROM reviews WHERE course_id = ?),
+		avg_rating = (SELECT COALESCE(AVG(rating), 0) FROM reviews WHERE course_id = ?)
+		WHERE id = ?`, courseID, courseID, courseID).Error
+}
+
 func (r2 *ReviewRepository) FindBy(ctx context.Context, filter review.ReviewFilter) ([]review.ReviewForQuery, error) {
-	db := gorm.G[ReviewEntity](r2.db).Where("deleted_at IS NULL")
+	db := gorm.G[ReviewEntity](r2.db).Where("1 = 1")
 	if filter.CourseID != 0 {
 		db = db.Where("course_id = ?", filter.CourseID)
 	}
@@ -109,7 +116,7 @@ func (r2 *ReviewRepository) FindBy(ctx context.Context, filter review.ReviewFilt
 }
 
 func (r2 *ReviewRepository) FindRevisions(ctx context.Context, reviewID int) ([]review.RevisionForQuery, error) {
-	es, err := gorm.G[ReviewRevisionEntity](r2.db).Where("review_id = ? AND deleted_at IS NULL", reviewID).Find(ctx)
+	es, err := gorm.G[ReviewRevisionEntity](r2.db).Where("review_id = ?", reviewID).Find(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -122,9 +129,15 @@ func (r2 *ReviewRepository) FindRevisions(ctx context.Context, reviewID int) ([]
 
 func (r2 *ReviewRepository) Create(ctx context.Context, r *review.Review) error {
 	e := newReviewEntity(r)
-	if err := gorm.G[ReviewEntity](r2.db).Create(ctx, &e); err != nil {
+	if err := r2.db.Transaction(func(tx *gorm.DB) error {
+		if err := gorm.G[ReviewEntity](tx).Create(ctx, &e); err != nil {
+			return err
+		}
+		return r2.updateCourseStats(tx, r.CourseID)
+	}); err != nil {
 		return err
 	}
+
 	r.ID = e.ID
 	return nil
 }
@@ -133,13 +146,13 @@ func (r2 *ReviewRepository) Update(ctx context.Context, r *review.Review) error 
 	e := newReviewEntity(r)
 	rr := newReviewRevisionEntity(r.MakeRevision())
 	if err := r2.db.Transaction(func(tx *gorm.DB) error {
-		if _, err := gorm.G[ReviewEntity](tx).Where("id = ? AND deleted_at IS NULL", e.ID).Updates(ctx, e); err != nil {
+		if _, err := gorm.G[ReviewEntity](tx).Where("id = ?", e.ID).Updates(ctx, e); err != nil {
 			return err
 		}
 		if err := gorm.G[ReviewRevisionEntity](tx).Create(ctx, &rr); err != nil {
 			return err
 		}
-		return nil
+		return r2.updateCourseStats(tx, r.CourseID)
 	}); err != nil {
 		return err
 	}
@@ -149,15 +162,20 @@ func (r2 *ReviewRepository) Update(ctx context.Context, r *review.Review) error 
 }
 
 func (r2 *ReviewRepository) Delete(ctx context.Context, reviewID int) error {
-	if _, err := gorm.G[ReviewEntity](r2.db).Where("id = ? AND deleted_at IS NULL", reviewID).
-		Update(ctx, "deleted_at", time.Now().Unix()); err != nil {
-		return err
-	}
-	return nil
+	return r2.db.Transaction(func(tx *gorm.DB) error {
+		var courseID int
+		if err := tx.Raw("SELECT course_id FROM reviews WHERE id = ?", reviewID).Scan(&courseID).Error; err != nil {
+			return err
+		}
+		if _, err := gorm.G[ReviewEntity](tx).Where("id = ?", reviewID).Delete(ctx); err != nil {
+			return err
+		}
+		return r2.updateCourseStats(tx, courseID)
+	})
 }
 
 func (r2 *ReviewRepository) Get(ctx context.Context, reviewID int) (*review.Review, error) {
-	e, err := gorm.G[ReviewEntity](r2.db).Where("id = ? AND deleted_at IS NULL", reviewID).First(ctx)
+	e, err := gorm.G[ReviewEntity](r2.db).Where("id = ?", reviewID).First(ctx)
 	if err != nil {
 		return nil, err
 	}

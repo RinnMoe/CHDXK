@@ -56,7 +56,7 @@ func (u2 *UserRepository) Update(ctx context.Context, u *auth.User) error {
 }
 
 func (u2 *UserRepository) FindByID(ctx context.Context, id int) (*auth.User, error) {
-	e, err := gorm.G[UserEntity](u2.db).Where("id = ? AND deleted_at IS NULL", id).Take(ctx)
+	e, err := gorm.G[UserEntity](u2.db).Where("id = ?", id).Take(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (u2 *UserRepository) FindByID(ctx context.Context, id int) (*auth.User, err
 }
 
 func (u2 *UserRepository) FindByUsername(ctx context.Context, username string) (*auth.User, error) {
-	e, err := gorm.G[UserEntity](u2.db).Where("username = ? AND deleted_at IS NULL", username).Take(ctx)
+	e, err := gorm.G[UserEntity](u2.db).Where("username = ?", username).Take(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (u2 *UserRepository) FindByUsername(ctx context.Context, username string) (
 }
 
 func (u2 *UserRepository) FindByEmail(ctx context.Context, email string) (*auth.User, error) {
-	e, err := gorm.G[UserEntity](u2.db).Where("email = ? AND deleted_at IS NULL", email).Take(ctx)
+	e, err := gorm.G[UserEntity](u2.db).Where("email = ?", email).Take(ctx)
 	if err != nil {
 		return nil, err
 	}

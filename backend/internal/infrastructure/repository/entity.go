@@ -50,6 +50,8 @@ type CourseEntity struct {
 	Credit        float32
 	Department    string
 	MainTeacherID int
+	ReviewCount   int
+	AvgRating     float64
 	CreatedAt     time.Time
 }
 
@@ -67,7 +69,6 @@ type ReviewEntity struct {
 	Grade     string
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt *time.Time
 }
 
 func (ReviewEntity) TableName() string {
@@ -101,8 +102,6 @@ type UserEntity struct {
 
 	SuspendedAt *time.Time
 	SuspendTill *time.Time
-
-	DeletedAt *time.Time
 }
 
 func (UserEntity) TableName() string {
