@@ -134,3 +134,34 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, courseID int) 
 
 	return dto, nil
 }
+
+func (s *CourseQueryService) ListTeacherCourses(ctx context.Context, teacherID int, f CourseListFilter) (*PaginatedResult[CourseDTO], error) {
+	filter := course.CourseFilter{
+		TeacherID:  teacherID,
+		Code:       f.Code,
+		Department: f.Department,
+		Credit:     f.Credit,
+		HasReview:  f.HasReview,
+		OrderBy:    f.OrderBy,
+		OrderDir:   f.OrderDir,
+		Page:       f.Page,
+		PageSize:   f.PageSize,
+	}
+
+	courses, total, err := s.courseQuery.FindBy(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	dtos := make([]CourseDTO, len(courses))
+	for i, c := range courses {
+		dtos[i] = newCourseDTO(&c)
+	}
+
+	return &PaginatedResult[CourseDTO]{
+		Items:    dtos,
+		Total:    total,
+		Page:     f.Page,
+		PageSize: f.PageSize,
+	}, nil
+}

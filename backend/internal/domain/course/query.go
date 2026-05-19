@@ -7,6 +7,7 @@ import (
 )
 
 type CourseFilter struct {
+	TeacherID  int
 	Code       string
 	Department string
 	Credit     *float32

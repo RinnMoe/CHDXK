@@ -21,7 +21,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 
 	reviewController := controller.NewReviewController(container.ReviewQuery, container.ReviewCommand)
 	courseController := controller.NewCourseController(container.CourseQuery)
-	teacherController := controller.NewTeacherController(container.TeacherQuery)
+	teacherController := controller.NewTeacherController(container.TeacherQuery, container.CourseQuery)
 
 	apiGroup := g.Group("/api")
 	courseGroup := apiGroup.Group("/course")
@@ -33,6 +33,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	teacherGroup := apiGroup.Group("/teacher")
 	{
 		teacherGroup.GET("/", teacherController.ListTeachers)
+		teacherGroup.GET("/:teacherID/courses", teacherController.ListTeacherCourses)
 	}
 	reviewGroup := apiGroup.Group("/review")
 	{

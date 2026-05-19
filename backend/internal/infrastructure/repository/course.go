@@ -76,6 +76,9 @@ func (r *CourseRepository) baseCourseQuery(ctx context.Context) *gorm.DB {
 }
 
 func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm.DB {
+	if f.TeacherID > 0 {
+		db = db.Where("c.main_teacher_id = ?", f.TeacherID)
+	}
 	if f.Code != "" {
 		db = db.Where("c.code LIKE ?", "%"+f.Code+"%")
 	}
