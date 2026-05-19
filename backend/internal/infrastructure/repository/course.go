@@ -80,7 +80,7 @@ func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm
 		db = db.Where("c.main_teacher_id = ?", f.TeacherID)
 	}
 	if f.Code != "" {
-		db = db.Where("c.code LIKE ?", "%"+f.Code+"%")
+		db = db.Where("LOWER(c.code) = LOWER(?)", f.Code)
 	}
 	if f.Department != "" {
 		db = db.Where("c.department = ?", f.Department)
