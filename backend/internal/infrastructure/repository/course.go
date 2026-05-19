@@ -77,7 +77,10 @@ func (r *CourseRepository) baseCourseQuery(ctx context.Context) *gorm.DB {
 
 func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm.DB {
 	if f.TeacherID > 0 {
-		db = db.Where("c.main_teacher_id = ?", f.TeacherID)
+		db = db.Where(
+			"(c.main_teacher_id = ? OR EXISTS (SELECT 1 FROM course_teacher_groups ctg WHERE ctg.course_id = c.id AND ctg.teacher_id = ?))",
+			f.TeacherID, f.TeacherID,
+		)
 	}
 	if f.ExcludeID > 0 {
 		db = db.Where("c.id != ?", f.ExcludeID)
@@ -181,6 +184,28 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 		if d.Rating >= 1 && d.Rating <= 5 {
 			result.RatingDistribution[d.Rating-1] = d.Count
 		}
+	}
+
+	var groupRows []struct {
+		ID         int
+		Code       string
+		Name       string
+		Department string
+		Title      string
+	}
+	r.db.WithContext(ctx).Table("course_teacher_groups ctg").
+		Select("DISTINCT t.id, t.code, t.name, t.department, t.title").
+		Joins("JOIN teachers t ON t.id = ctg.teacher_id").
+		Where("ctg.course_id = ?", courseID).
+		Scan(&groupRows)
+	for _, gr := range groupRows {
+		result.TeacherGroup = append(result.TeacherGroup, &teacher.TeacherForQuery{
+			ID:         gr.ID,
+			Code:       gr.Code,
+			Name:       gr.Name,
+			Department: gr.Department,
+			Title:      gr.Title,
+		})
 	}
 
 	return result, nil

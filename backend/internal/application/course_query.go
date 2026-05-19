@@ -36,6 +36,7 @@ type CourseDetailDTO struct {
 	Credit             float32          `json:"credit"`
 	Department         string           `json:"department"`
 	MainTeacher        TeacherDTO       `json:"main_teacher"`
+	TeacherGroup       []TeacherDTO     `json:"teacher_group"`
 	ReviewCount        int              `json:"review_count"`
 	AvgRating          float64          `json:"avg_rating"`
 	RatingDistribution [5]int           `json:"rating_distribution"`
@@ -120,6 +121,11 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, courseID int) 
 	}
 	if detail.MainTeacher != nil {
 		dto.MainTeacher = newTeacherDTO(detail.MainTeacher)
+	}
+
+	dto.TeacherGroup = make([]TeacherDTO, 0, len(detail.TeacherGroup))
+	for _, t := range detail.TeacherGroup {
+		dto.TeacherGroup = append(dto.TeacherGroup, newTeacherDTO(t))
 	}
 
 	sameCode, _, err := s.courseQuery.FindBy(ctx, course.CourseFilter{

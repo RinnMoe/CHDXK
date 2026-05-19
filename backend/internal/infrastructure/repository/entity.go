@@ -43,6 +43,16 @@ func (TeacherEntity) TableName() string {
 	return "teachers"
 }
 
+type CourseTeacherGroupEntity struct {
+	CourseID  int
+	TeacherID int
+	Semester  string
+}
+
+func (CourseTeacherGroupEntity) TableName() string {
+	return "course_teacher_groups"
+}
+
 type CourseEntity struct {
 	ID            int
 	Code          string

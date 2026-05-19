@@ -34,6 +34,7 @@ type CourseForQuery struct {
 type CourseDetailForQuery struct {
 	CourseForQuery
 	RatingDistribution [5]int // index 0 = 1-star, ..., index 4 = 5-star
+	TeacherGroup       []*teacher.TeacherForQuery
 }
 
 type CourseQuery interface {
