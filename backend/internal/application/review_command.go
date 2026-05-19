@@ -49,6 +49,14 @@ func (s *ReviewCommandService) CreateReview(ctx context.Context, u *auth.User, c
 		return err
 	}
 
+	exists, err := s.courseRepo.OfferedCourseExists(ctx, cmd.CourseID, cmd.Semester)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return errors.New("offered course not found for the given semester")
+	}
+
 	r := review.Review{
 		CourseID:  cmd.CourseID,
 		Semester:  cmd.Semester,

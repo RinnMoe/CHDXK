@@ -78,7 +78,7 @@ func (r *CourseRepository) baseCourseQuery(ctx context.Context) *gorm.DB {
 func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm.DB {
 	if f.TeacherID > 0 {
 		db = db.Where(
-			"(c.main_teacher_id = ? OR EXISTS (SELECT 1 FROM course_teacher_groups ctg WHERE ctg.course_id = c.id AND ctg.teacher_id = ?))",
+			"(c.main_teacher_id = ? OR EXISTS (SELECT 1 FROM offered_courses oc JOIN course_teacher_groups ctg ON ctg.offered_course_id = oc.id WHERE oc.course_id = c.id AND ctg.teacher_id = ?))",
 			f.TeacherID, f.TeacherID,
 		)
 	}
@@ -122,6 +122,76 @@ func (r *CourseRepository) applyPagination(db *gorm.DB, f course.CourseFilter) *
 		db = db.Offset(offset).Limit(f.PageSize)
 	}
 	return db
+}
+
+func (r *CourseRepository) OfferedCourseExists(ctx context.Context, courseID int, semester string) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Table("offered_courses").
+		Where("course_id = ? AND semester = ?", courseID, semester).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int) ([]course.OfferedCourseForQuery, error) {
+	type ocRow struct {
+		ID          int
+		Semester    string
+		Language    string
+		Grade       string
+		TeacherID   int
+		TeacherCode string
+		TeacherName string
+		TeacherDept string
+		TeacherTitl string
+	}
+
+	var rows []ocRow
+	err := r.db.WithContext(ctx).Table("offered_courses oc").
+		Select("oc.id, oc.semester, oc.language, oc.grade, "+
+			"t.id AS teacher_id, t.code AS teacher_code, t.name AS teacher_name, "+
+			"t.department AS teacher_dept, t.title AS teacher_titl").
+		Joins("LEFT JOIN course_teacher_groups ctg ON ctg.offered_course_id = oc.id").
+		Joins("LEFT JOIN teachers t ON t.id = ctg.teacher_id").
+		Where("oc.course_id = ?", courseID).
+		Order("oc.semester DESC").
+		Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+
+	ocMap := make(map[int]*course.OfferedCourseForQuery)
+	var ocOrder []int
+	for _, row := range rows {
+		oc, ok := ocMap[row.ID]
+		if !ok {
+			oc = &course.OfferedCourseForQuery{
+				ID:       row.ID,
+				Semester: row.Semester,
+				Language: row.Language,
+				Grade:    row.Grade,
+			}
+			ocMap[row.ID] = oc
+			ocOrder = append(ocOrder, row.ID)
+		}
+		if row.TeacherID > 0 {
+			oc.TeacherGroup = append(oc.TeacherGroup, &teacher.TeacherForQuery{
+				ID:         row.TeacherID,
+				Code:       row.TeacherCode,
+				Name:       row.TeacherName,
+				Department: row.TeacherDept,
+				Title:      row.TeacherTitl,
+			})
+		}
+	}
+
+	result := make([]course.OfferedCourseForQuery, 0, len(ocMap))
+	for _, id := range ocOrder {
+		result = append(result, *ocMap[id])
+	}
+	return result, nil
 }
 
 func (r *CourseRepository) FindBy(ctx context.Context, filter course.CourseFilter) ([]course.CourseForQuery, int64, error) {
@@ -186,26 +256,13 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 		}
 	}
 
-	var groupRows []struct {
-		ID         int
-		Code       string
-		Name       string
-		Department string
-		Title      string
+	offeredCourses, err := r.FindOfferedCourses(ctx, courseID)
+	if err != nil {
+		return nil, err
 	}
-	r.db.WithContext(ctx).Table("course_teacher_groups ctg").
-		Select("DISTINCT t.id, t.code, t.name, t.department, t.title").
-		Joins("JOIN teachers t ON t.id = ctg.teacher_id").
-		Where("ctg.course_id = ?", courseID).
-		Scan(&groupRows)
-	for _, gr := range groupRows {
-		result.TeacherGroup = append(result.TeacherGroup, &teacher.TeacherForQuery{
-			ID:         gr.ID,
-			Code:       gr.Code,
-			Name:       gr.Name,
-			Department: gr.Department,
-			Title:      gr.Title,
-		})
+	result.OfferedCourses = make([]*course.OfferedCourseForQuery, len(offeredCourses))
+	for i := range offeredCourses {
+		result.OfferedCourses[i] = &offeredCourses[i]
 	}
 
 	return result, nil

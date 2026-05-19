@@ -33,11 +33,12 @@ type CourseForQuery struct {
 
 type CourseDetailForQuery struct {
 	CourseForQuery
-	RatingDistribution [5]int // index 0 = 1-star, ..., index 4 = 5-star
-	TeacherGroup       []*teacher.TeacherForQuery
+	RatingDistribution [5]int
+	OfferedCourses     []*OfferedCourseForQuery
 }
 
 type CourseQuery interface {
 	FindBy(ctx context.Context, filter CourseFilter) ([]CourseForQuery, int64, error)
 	GetDetail(ctx context.Context, courseID int) (*CourseDetailForQuery, error)
+	FindOfferedCourses(ctx context.Context, courseID int) ([]OfferedCourseForQuery, error)
 }

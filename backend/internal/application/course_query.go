@@ -29,19 +29,26 @@ func newCourseListItem(c *course.CourseForQuery) CourseListItem {
 	return item
 }
 
+type OfferedCourseDTO struct {
+	Semester     string       `json:"semester"`
+	Language     string       `json:"language"`
+	Grade        string       `json:"grade"`
+	TeacherGroup []TeacherDTO `json:"teacher_group"`
+}
+
 type CourseDetailDTO struct {
-	ID                 int              `json:"id"`
-	Code               string           `json:"code"`
-	Name               string           `json:"name"`
-	Credit             float32          `json:"credit"`
-	Department         string           `json:"department"`
-	MainTeacher        TeacherDTO       `json:"main_teacher"`
-	TeacherGroup       []TeacherDTO     `json:"teacher_group"`
-	ReviewCount        int              `json:"review_count"`
-	AvgRating          float64          `json:"avg_rating"`
-	RatingDistribution [5]int           `json:"rating_distribution"`
-	OtherTeachers      []CourseListItem `json:"other_teachers"`
-	OtherCourses       []CourseListItem `json:"other_courses"`
+	ID                 int                `json:"id"`
+	Code               string             `json:"code"`
+	Name               string             `json:"name"`
+	Credit             float32            `json:"credit"`
+	Department         string             `json:"department"`
+	MainTeacher        TeacherDTO         `json:"main_teacher"`
+	OfferedCourses     []OfferedCourseDTO `json:"offered_courses"`
+	ReviewCount        int                `json:"review_count"`
+	AvgRating          float64            `json:"avg_rating"`
+	RatingDistribution [5]int             `json:"rating_distribution"`
+	OtherTeachers      []CourseListItem   `json:"other_teachers"`
+	OtherCourses       []CourseListItem   `json:"other_courses"`
 }
 
 type CourseListFilter struct {
@@ -123,9 +130,18 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, courseID int) 
 		dto.MainTeacher = newTeacherDTO(detail.MainTeacher)
 	}
 
-	dto.TeacherGroup = make([]TeacherDTO, 0, len(detail.TeacherGroup))
-	for _, t := range detail.TeacherGroup {
-		dto.TeacherGroup = append(dto.TeacherGroup, newTeacherDTO(t))
+	dto.OfferedCourses = make([]OfferedCourseDTO, 0, len(detail.OfferedCourses))
+	for _, oc := range detail.OfferedCourses {
+		ocDTO := OfferedCourseDTO{
+			Semester:     oc.Semester,
+			Language:     oc.Language,
+			Grade:        oc.Grade,
+			TeacherGroup: make([]TeacherDTO, 0, len(oc.TeacherGroup)),
+		}
+		for _, t := range oc.TeacherGroup {
+			ocDTO.TeacherGroup = append(ocDTO.TeacherGroup, newTeacherDTO(t))
+		}
+		dto.OfferedCourses = append(dto.OfferedCourses, ocDTO)
 	}
 
 	sameCode, _, err := s.courseQuery.FindBy(ctx, course.CourseFilter{
