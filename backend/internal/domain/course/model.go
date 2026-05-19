@@ -1,6 +1,9 @@
 package course
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 type Course struct {
 	ID            int
@@ -8,7 +11,7 @@ type Course struct {
 	Name          string
 	Credit        float32
 	MainTeacherID int
-	CreatedAt     int64
+	CreatedAt     time.Time
 }
 
 type CourseRepository interface {

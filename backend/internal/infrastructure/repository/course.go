@@ -8,27 +8,6 @@ import (
 	"jcourse/internal/domain/course"
 )
 
-type CourseEntity struct {
-	ID            int
-	Code          string
-	Name          string
-	Credit        float32
-	Department    string
-	MainTeacherID int
-	CreatedAt     int64
-}
-
-func newCourseEntity(c *course.Course) CourseEntity {
-	return CourseEntity{
-		ID:            c.ID,
-		Code:          c.Code,
-		Name:          c.Name,
-		Credit:        c.Credit,
-		MainTeacherID: c.MainTeacherID,
-		CreatedAt:     c.CreatedAt,
-	}
-}
-
 func newCourseDomain(e *CourseEntity) course.Course {
 	return course.Course{
 		ID:            e.ID,
@@ -58,7 +37,7 @@ func NewCourseRepository(db *gorm.DB) *CourseRepository {
 }
 
 func (c *CourseRepository) FindBy(ctx context.Context, filter course.CourseFilter) ([]course.CourseForQuery, error) {
-	db := gorm.G[CourseEntity](c.db).Where("deleted_at = 0")
+	db := gorm.G[CourseEntity](c.db).Where("deleted_at IS NULL")
 	es, err := db.Find(ctx)
 	if err != nil {
 		return nil, err

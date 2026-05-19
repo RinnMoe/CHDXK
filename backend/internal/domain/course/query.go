@@ -23,3 +23,9 @@ type TeacherForQuery struct {
 	Name       string
 	Department string
 }
+
+type TeacherFilter struct{}
+
+type TeacherQuery interface {
+	FindBy(ctx context.Context, filter TeacherFilter) ([]TeacherForQuery, error)
+}

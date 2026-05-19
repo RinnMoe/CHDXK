@@ -1,4 +1,5 @@
 jcourse_v1/
-
 node_modules/
 dist/
+.idea/
+.vscode/
