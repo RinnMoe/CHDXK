@@ -6,46 +6,41 @@ import (
 	"jcourse/internal/domain/course"
 )
 
-type CourseDTO struct {
-	ID          int        `json:"id"`
+type CourseListItem struct {
 	Code        string     `json:"code"`
 	Name        string     `json:"name"`
 	Credit      float32    `json:"credit"`
-	Department  string     `json:"department"`
 	MainTeacher TeacherDTO `json:"main_teacher"`
-	ReviewCount int        `json:"review_count"`
-	AvgRating   float64    `json:"avg_rating"`
+	RatingCount int        `json:"rating_cnt"`
+	RatingAvg   float64    `json:"rating_avg"`
 }
 
-func newCourseDTO(c *course.CourseForQuery) CourseDTO {
-	dto := CourseDTO{
-		ID:          c.ID,
+func newCourseListItem(c *course.CourseForQuery) CourseListItem {
+	item := CourseListItem{
 		Code:        c.Code,
 		Name:        c.Name,
 		Credit:      c.Credit,
-		Department:  c.Department,
-		ReviewCount: c.ReviewCount,
-		AvgRating:   c.AvgRating,
-		MainTeacher: TeacherDTO{ID: c.MainTeacherID},
+		RatingCount: c.ReviewCount,
+		RatingAvg:   c.AvgRating,
 	}
 	if c.MainTeacher != nil {
-		dto.MainTeacher = newTeacherDTO(c.MainTeacher)
+		item.MainTeacher = newTeacherDTO(c.MainTeacher)
 	}
-	return dto
+	return item
 }
 
 type CourseDetailDTO struct {
-	CourseDTO
-	RatingDistribution [5]int             `json:"rating_distribution"`
-	OtherTeachers      []TeacherCourseDTO `json:"other_teachers"`
-	OtherCourses       []CourseDTO        `json:"other_courses"`
-}
-
-type TeacherCourseDTO struct {
-	CourseID    int        `json:"course_id"`
-	Teacher     TeacherDTO `json:"teacher"`
-	ReviewCount int        `json:"review_count"`
-	AvgRating   float64    `json:"avg_rating"`
+	ID                 int              `json:"id"`
+	Code               string           `json:"code"`
+	Name               string           `json:"name"`
+	Credit             float32          `json:"credit"`
+	Department         string           `json:"department"`
+	MainTeacher        TeacherDTO       `json:"main_teacher"`
+	ReviewCount        int              `json:"review_count"`
+	AvgRating          float64          `json:"avg_rating"`
+	RatingDistribution [5]int           `json:"rating_distribution"`
+	OtherTeachers      []CourseListItem `json:"other_teachers"`
+	OtherCourses       []CourseListItem `json:"other_courses"`
 }
 
 type CourseListFilter struct {
@@ -76,7 +71,7 @@ func NewCourseQueryService(courseQuery course.CourseQuery) *CourseQueryService {
 	}
 }
 
-func (s *CourseQueryService) ListCourses(ctx context.Context, f CourseListFilter) (*PaginatedResult[CourseDTO], error) {
+func (s *CourseQueryService) ListCourses(ctx context.Context, f CourseListFilter) (*PaginatedResult[CourseListItem], error) {
 	filter := course.CourseFilter{
 		Code:       f.Code,
 		Department: f.Department,
@@ -93,13 +88,13 @@ func (s *CourseQueryService) ListCourses(ctx context.Context, f CourseListFilter
 		return nil, err
 	}
 
-	dtos := make([]CourseDTO, len(courses))
+	items := make([]CourseListItem, len(courses))
 	for i, c := range courses {
-		dtos[i] = newCourseDTO(&c)
+		items[i] = newCourseListItem(&c)
 	}
 
-	return &PaginatedResult[CourseDTO]{
-		Items:    dtos,
+	return &PaginatedResult[CourseListItem]{
+		Items:    items,
 		Total:    total,
 		Page:     f.Page,
 		PageSize: f.PageSize,
@@ -113,29 +108,52 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, courseID int) 
 	}
 
 	dto := &CourseDetailDTO{
-		CourseDTO:          newCourseDTO(&detail.CourseForQuery),
+		ID:                 detail.ID,
+		Code:               detail.Code,
+		Name:               detail.Name,
+		Credit:             detail.Credit,
+		Department:         detail.Department,
+		ReviewCount:        detail.ReviewCount,
+		AvgRating:          detail.AvgRating,
 		RatingDistribution: detail.RatingDistribution,
-		OtherTeachers:      make([]TeacherCourseDTO, len(detail.OtherTeachers)),
-		OtherCourses:       make([]CourseDTO, len(detail.OtherCourses)),
+		MainTeacher:        TeacherDTO{ID: detail.MainTeacherID},
+	}
+	if detail.MainTeacher != nil {
+		dto.MainTeacher = newTeacherDTO(detail.MainTeacher)
 	}
 
-	for i, t := range detail.OtherTeachers {
-		dto.OtherTeachers[i] = TeacherCourseDTO{
-			CourseID:    t.CourseID,
-			Teacher:     newTeacherDTO(&t.Teacher),
-			ReviewCount: t.ReviewCount,
-			AvgRating:   t.AvgRating,
-		}
+	sameCode, _, err := s.courseQuery.FindBy(ctx, course.CourseFilter{
+		Code:      detail.Code,
+		ExcludeID: courseID,
+		OrderBy:   "avg_rating",
+		OrderDir:  "desc",
+	})
+	if err != nil {
+		return nil, err
+	}
+	dto.OtherTeachers = make([]CourseListItem, len(sameCode))
+	for i, c := range sameCode {
+		dto.OtherTeachers[i] = newCourseListItem(&c)
 	}
 
-	for i, c := range detail.OtherCourses {
-		dto.OtherCourses[i] = newCourseDTO(&c)
+	sameTeacher, _, err := s.courseQuery.FindBy(ctx, course.CourseFilter{
+		TeacherID: detail.MainTeacherID,
+		ExcludeID: courseID,
+		OrderBy:   "avg_rating",
+		OrderDir:  "desc",
+	})
+	if err != nil {
+		return nil, err
+	}
+	dto.OtherCourses = make([]CourseListItem, len(sameTeacher))
+	for i, c := range sameTeacher {
+		dto.OtherCourses[i] = newCourseListItem(&c)
 	}
 
 	return dto, nil
 }
 
-func (s *CourseQueryService) ListTeacherCourses(ctx context.Context, teacherID int, f CourseListFilter) (*PaginatedResult[CourseDTO], error) {
+func (s *CourseQueryService) ListTeacherCourses(ctx context.Context, teacherID int, f CourseListFilter) (*PaginatedResult[CourseListItem], error) {
 	filter := course.CourseFilter{
 		TeacherID:  teacherID,
 		Code:       f.Code,
@@ -153,13 +171,13 @@ func (s *CourseQueryService) ListTeacherCourses(ctx context.Context, teacherID i
 		return nil, err
 	}
 
-	dtos := make([]CourseDTO, len(courses))
+	items := make([]CourseListItem, len(courses))
 	for i, c := range courses {
-		dtos[i] = newCourseDTO(&c)
+		items[i] = newCourseListItem(&c)
 	}
 
-	return &PaginatedResult[CourseDTO]{
-		Items:    dtos,
+	return &PaginatedResult[CourseListItem]{
+		Items:    items,
 		Total:    total,
 		Page:     f.Page,
 		PageSize: f.PageSize,

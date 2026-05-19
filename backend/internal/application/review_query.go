@@ -9,20 +9,19 @@ import (
 )
 
 type ReviewDTO struct {
-	ID        int        `json:"id"`
-	Course    *CourseDTO `json:"course,omitempty"`
-	CourseID  int        `json:"course_id"`
-	Grade     string     `json:"grade"`
-	Rating    int        `json:"rating"`
-	Content   string     `json:"content"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
+	ID        int             `json:"id"`
+	Course    *CourseListItem `json:"course,omitempty"`
+	CourseID  int             `json:"course_id"`
+	Grade     string          `json:"grade"`
+	Rating    int             `json:"rating"`
+	Content   string          `json:"content"`
+	CreatedAt time.Time       `json:"created_at"`
+	UpdatedAt time.Time       `json:"updated_at"`
 }
 
 func newReviewDTO(r *review.ReviewForQuery) ReviewDTO {
 	dto := ReviewDTO{
 		ID:        r.ID,
-		Course:    &CourseDTO{ID: r.CourseID},
 		CourseID:  r.CourseID,
 		Grade:     r.Grade,
 		Rating:    r.Rating,
@@ -31,7 +30,8 @@ func newReviewDTO(r *review.ReviewForQuery) ReviewDTO {
 		UpdatedAt: r.UpdatedAt,
 	}
 	if r.Course != nil {
-		dto.Course = new(newCourseDTO(r.Course))
+		item := newCourseListItem(r.Course)
+		dto.Course = &item
 	}
 	return dto
 }

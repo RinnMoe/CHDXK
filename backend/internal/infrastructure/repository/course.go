@@ -79,6 +79,9 @@ func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm
 	if f.TeacherID > 0 {
 		db = db.Where("c.main_teacher_id = ?", f.TeacherID)
 	}
+	if f.ExcludeID > 0 {
+		db = db.Where("c.id != ?", f.ExcludeID)
+	}
 	if f.Code != "" {
 		db = db.Where("LOWER(c.code) = LOWER(?)", f.Code)
 	}
@@ -164,7 +167,6 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 		CourseForQuery: newCourseQuery(&row),
 	}
 
-	// Rating distribution (still needs review query)
 	type ratingCount struct {
 		Rating int
 		Count  int
@@ -179,41 +181,6 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 		if d.Rating >= 1 && d.Rating <= 5 {
 			result.RatingDistribution[d.Rating-1] = d.Count
 		}
-	}
-
-	// Other teachers teaching same course code (stats from course table)
-	var otherTeacherRows []courseRow
-	r.baseCourseQuery(ctx).
-		Where("c.code = ? AND c.id != ?", row.Code, courseID).
-		Order("c.avg_rating DESC").
-		Scan(&otherTeacherRows)
-
-	result.OtherTeachers = make([]course.TeacherCourseStats, len(otherTeacherRows))
-	for i, tr := range otherTeacherRows {
-		result.OtherTeachers[i] = course.TeacherCourseStats{
-			Teacher: teacher.TeacherForQuery{
-				ID:         tr.TeacherID,
-				Code:       tr.TeacherCode,
-				Name:       tr.TeacherName,
-				Department: tr.TeacherDepartment,
-				Title:      tr.TeacherTitle,
-			},
-			CourseID:    tr.ID,
-			ReviewCount: tr.ReviewCount,
-			AvgRating:   tr.AvgRating,
-		}
-	}
-
-	// Other courses by same teacher (stats from course table)
-	var otherCourseRows []courseRow
-	r.baseCourseQuery(ctx).
-		Where("c.main_teacher_id = ? AND c.id != ?", row.MainTeacherID, courseID).
-		Order("c.avg_rating DESC").
-		Scan(&otherCourseRows)
-
-	result.OtherCourses = make([]course.CourseForQuery, len(otherCourseRows))
-	for i, cr := range otherCourseRows {
-		result.OtherCourses[i] = newCourseQuery(&cr)
 	}
 
 	return result, nil

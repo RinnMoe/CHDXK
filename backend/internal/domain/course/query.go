@@ -8,6 +8,7 @@ import (
 
 type CourseFilter struct {
 	TeacherID  int
+	ExcludeID  int
 	Code       string
 	Department string
 	Credit     *float32
@@ -33,15 +34,6 @@ type CourseForQuery struct {
 type CourseDetailForQuery struct {
 	CourseForQuery
 	RatingDistribution [5]int // index 0 = 1-star, ..., index 4 = 5-star
-	OtherTeachers      []TeacherCourseStats
-	OtherCourses       []CourseForQuery
-}
-
-type TeacherCourseStats struct {
-	Teacher     teacher.TeacherForQuery
-	CourseID    int
-	ReviewCount int
-	AvgRating   float64
 }
 
 type CourseQuery interface {
