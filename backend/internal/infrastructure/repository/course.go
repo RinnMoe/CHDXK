@@ -39,8 +39,8 @@ func newCourseQuery(e *courseRow) course.CourseView {
 		Language:      e.Language,
 		TargetYears:   e.TargetYears,
 		Rating: course.RatingInfo{
-			Count: e.ReviewCount,
-			Avg:   e.AvgRating,
+			Count: e.RatingCount,
+			Avg:   e.RatingAvg,
 		},
 		MainTeacher: &teacher.TeacherView{
 			ID:         e.TeacherID,
@@ -62,8 +62,8 @@ type courseRow struct {
 	Categories    pq.StringArray `gorm:"type:text[]"`
 	Language      string
 	TargetYears   pq.StringArray `gorm:"type:text[]"`
-	ReviewCount   int
-	AvgRating     float64
+	RatingCount   int
+	RatingAvg     float64
 
 	TeacherID         int
 	TeacherCode       string
@@ -270,8 +270,8 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 		Language:      row.Language,
 		TargetYears:   row.TargetYears,
 		Rating: course.RatingInfo{
-			Count: row.ReviewCount,
-			Avg:   row.AvgRating,
+			Count: row.RatingCount,
+			Avg:   row.RatingAvg,
 		},
 		MainTeacher: &teacher.TeacherView{
 			ID:         row.TeacherID,
