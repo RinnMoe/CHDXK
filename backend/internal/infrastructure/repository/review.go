@@ -2,10 +2,13 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	"gorm.io/gorm"
 
+	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/review"
+	"jcourse/internal/domain/teacher"
 )
 
 func newReviewEntity(r *review.Review) ReviewEntity {
@@ -62,8 +65,8 @@ func newReviewRevisionQuery(e *ReviewRevisionEntity) review.RevisionView {
 	}
 }
 
-func newReviewQuery(e *ReviewEntity) review.ReviewView {
-	return review.ReviewView{
+func newReviewView(e *ReviewEntity) review.ReviewView {
+	v := review.ReviewView{
 		ID:       e.ID,
 		CourseID: e.CourseID,
 		Semester: e.Semester,
@@ -78,6 +81,38 @@ func newReviewQuery(e *ReviewEntity) review.ReviewView {
 		CreatedAt: e.CreatedAt,
 		UpdatedAt: e.UpdatedAt,
 	}
+	if e.Course != nil {
+		v.Course = newCourseView(e.Course)
+	}
+	return v
+}
+
+func newCourseView(e *CourseEntity) *course.CourseView {
+	cv := &course.CourseView{
+		ID:            e.ID,
+		Code:          e.Code,
+		Name:          e.Name,
+		Credit:        e.Credit,
+		Department:    e.Department,
+		MainTeacherID: e.MainTeacherID,
+		Categories:    e.Categories,
+		Language:      e.Language,
+		TargetYears:   e.TargetYears,
+		Rating: course.RatingInfo{
+			Count: e.RatingCount,
+			Avg:   e.RatingAvg,
+		},
+	}
+	if e.MainTeacher != nil {
+		cv.MainTeacher = &teacher.TeacherView{
+			ID:         e.MainTeacher.ID,
+			Code:       e.MainTeacher.Code,
+			Name:       e.MainTeacher.Name,
+			Department: e.MainTeacher.Department,
+			Title:      e.MainTeacher.Title,
+		}
+	}
+	return cv
 }
 
 type ReviewRepository struct {
@@ -91,8 +126,37 @@ func (r2 *ReviewRepository) updateCourseStats(tx *gorm.DB, courseID int) error {
 		WHERE id = ?`, courseID, courseID, courseID).Error
 }
 
-func (r2 *ReviewRepository) FindBy(ctx context.Context, filter review.ReviewFilter) ([]review.ReviewView, error) {
-	db := gorm.G[ReviewEntity](r2.db).Where("1 = 1")
+func (r2 *ReviewRepository) FindBy(ctx context.Context, filter review.ReviewFilter) ([]review.ReviewView, int64, error) {
+	db := r2.db.WithContext(ctx).Model(&ReviewEntity{})
+
+	if filter.WithCourse {
+		db = db.Joins("Course").Joins("Course.MainTeacher")
+	}
+
+	db = r2.applyFilter(db, filter)
+
+	var total int64
+	db.Count(&total)
+
+	db = r2.applySort(db, filter)
+	db = r2.applyPagination(db, filter)
+
+	var entities []ReviewEntity
+	if err := db.Find(&entities).Error; err != nil {
+		return nil, 0, err
+	}
+
+	rs := make([]review.ReviewView, len(entities))
+	for i, e := range entities {
+		rs[i] = newReviewView(&e)
+	}
+	return rs, total, nil
+}
+
+func (r2 *ReviewRepository) applyFilter(db *gorm.DB, filter review.ReviewFilter) *gorm.DB {
+	if filter.ReviewID != 0 {
+		db = db.Where("id = ?", filter.ReviewID)
+	}
 	if filter.CourseID != 0 {
 		db = db.Where("course_id = ?", filter.CourseID)
 	}
@@ -108,21 +172,33 @@ func (r2 *ReviewRepository) FindBy(ctx context.Context, filter review.ReviewFilt
 	if !filter.CreatedAfter.IsZero() {
 		db = db.Where("created_at > ?", filter.CreatedAfter)
 	}
-	if filter.Order != "" {
-		db = db.Order(filter.Order)
+	return db
+}
+
+func (r2 *ReviewRepository) applySort(db *gorm.DB, filter review.ReviewFilter) *gorm.DB {
+	dir := "DESC"
+	if filter.OrderDir == "asc" {
+		dir = "ASC"
 	}
-	if filter.Limit > 0 {
-		db = db.Limit(filter.Limit)
+	switch filter.OrderBy {
+	case "rating":
+		db = db.Order(fmt.Sprintf("rating %s", dir))
+	case "like_count":
+		db = db.Order(fmt.Sprintf("like_count %s", dir))
+	case "created_at":
+		db = db.Order(fmt.Sprintf("created_at %s", dir))
+	default:
+		db = db.Order(fmt.Sprintf("id %s", dir))
 	}
-	es, err := db.Find(ctx)
-	if err != nil {
-		return nil, err
+	return db
+}
+
+func (r2 *ReviewRepository) applyPagination(db *gorm.DB, filter review.ReviewFilter) *gorm.DB {
+	if filter.Page > 0 && filter.PageSize > 0 {
+		offset := (filter.Page - 1) * filter.PageSize
+		db = db.Offset(offset).Limit(filter.PageSize)
 	}
-	rs := make([]review.ReviewView, len(es))
-	for i, e := range es {
-		rs[i] = newReviewQuery(&e)
-	}
-	return rs, nil
+	return db
 }
 
 func (r2 *ReviewRepository) FindRevisions(ctx context.Context, reviewID int) ([]review.RevisionView, error) {

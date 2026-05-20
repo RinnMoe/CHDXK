@@ -182,7 +182,7 @@ func TestReviewRepository_FindBy(t *testing.T) {
 	}
 
 	t.Run("find by course", func(t *testing.T) {
-		results, err := repo.FindBy(ctx, review.ReviewFilter{CourseID: course.ID})
+		results, _, err := repo.FindBy(ctx, review.ReviewFilter{CourseID: course.ID})
 		if err != nil {
 			t.Fatalf("FindBy: %v", err)
 		}
@@ -192,7 +192,7 @@ func TestReviewRepository_FindBy(t *testing.T) {
 	})
 
 	t.Run("find by semester", func(t *testing.T) {
-		results, err := repo.FindBy(ctx, review.ReviewFilter{Semester: "2024-2025-1"})
+		results, _, err := repo.FindBy(ctx, review.ReviewFilter{Semester: "2024-2025-1"})
 		if err != nil {
 			t.Fatalf("FindBy: %v", err)
 		}
@@ -205,7 +205,7 @@ func TestReviewRepository_FindBy(t *testing.T) {
 	})
 
 	t.Run("find by rating", func(t *testing.T) {
-		results, err := repo.FindBy(ctx, review.ReviewFilter{Rating: 5})
+		results, _, err := repo.FindBy(ctx, review.ReviewFilter{Rating: 5})
 		if err != nil {
 			t.Fatalf("FindBy: %v", err)
 		}
@@ -215,7 +215,7 @@ func TestReviewRepository_FindBy(t *testing.T) {
 	})
 
 	t.Run("find by user", func(t *testing.T) {
-		results, err := repo.FindBy(ctx, review.ReviewFilter{UserID: user.ID})
+		results, _, err := repo.FindBy(ctx, review.ReviewFilter{UserID: user.ID})
 		if err != nil {
 			t.Fatalf("FindBy: %v", err)
 		}
@@ -225,7 +225,7 @@ func TestReviewRepository_FindBy(t *testing.T) {
 	})
 
 	t.Run("find by course and semester", func(t *testing.T) {
-		results, err := repo.FindBy(ctx, review.ReviewFilter{CourseID: course.ID, Semester: "2024-2025-1"})
+		results, _, err := repo.FindBy(ctx, review.ReviewFilter{CourseID: course.ID, Semester: "2024-2025-1"})
 		if err != nil {
 			t.Fatalf("FindBy: %v", err)
 		}

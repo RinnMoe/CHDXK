@@ -18,9 +18,9 @@ type fakeReviewQuery struct {
 	lastFilter review.ReviewFilter
 }
 
-func (f *fakeReviewQuery) FindBy(ctx context.Context, filter review.ReviewFilter) ([]review.ReviewView, error) {
+func (f *fakeReviewQuery) FindBy(ctx context.Context, filter review.ReviewFilter) ([]review.ReviewView, int64, error) {
 	f.lastFilter = filter
-	return f.reviews, nil
+	return f.reviews, int64(len(f.reviews)), nil
 }
 
 func (f *fakeReviewQuery) FindRevisions(ctx context.Context, reviewID int) ([]review.RevisionView, error) {

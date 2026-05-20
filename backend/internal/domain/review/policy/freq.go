@@ -45,11 +45,12 @@ func (p *FrequencyPolicy) CanCreate(ctx context.Context, u *auth.User, c *course
 		return nil
 	}
 
-	recent, err := p.query.FindBy(ctx, review.ReviewFilter{
+	recent, _, err := p.query.FindBy(ctx, review.ReviewFilter{
 		UserID:       u.ID,
 		CreatedAfter: time.Now().Add(-p.config.Window),
-		Order:        "created_at DESC",
-		Limit:        p.config.MaxReviews,
+		OrderBy:      "created_at",
+		OrderDir:     "desc",
+		PageSize:     p.config.MaxReviews,
 	})
 	if err != nil {
 		return err

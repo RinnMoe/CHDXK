@@ -25,31 +25,165 @@ func NewReviewController(
 }
 
 func (r *ReviewController) GetCourseReviews(c *gin.Context) {
+	courseID, err := strconv.Atoi(c.Param("courseID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid course id"})
+		return
+	}
 
+	var f application.ReviewListFilter
+	if err := c.ShouldBindQuery(&f); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if f.Page <= 0 {
+		f.Page = 1
+	}
+	if f.PageSize <= 0 {
+		f.PageSize = 20
+	}
+
+	result, err := r.query.GetReviewsByCourse(c.Request.Context(), courseID, f)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, result)
 }
 
 func (r *ReviewController) CreateReview(c *gin.Context) {
+	u := auth.GetUserFromCtx(c.Request.Context())
+	if u == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
+	var cmd application.CreateReviewCmd
+	if err := c.ShouldBindJSON(&cmd); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := r.command.CreateReview(c.Request.Context(), u, &cmd); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{"message": "ok"})
 }
 
 func (r *ReviewController) UpdateReview(c *gin.Context) {
+	reviewID, err := strconv.Atoi(c.Param("reviewID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid review id"})
+		return
+	}
 
+	u := auth.GetUserFromCtx(c.Request.Context())
+	if u == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var cmd application.UpdateReviewCmd
+	if err := c.ShouldBindJSON(&cmd); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	cmd.ReviewID = reviewID
+
+	if err := r.command.UpdateReview(c.Request.Context(), u, &cmd); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "ok"})
 }
 
 func (r *ReviewController) DeleteReview(c *gin.Context) {
+	reviewID, err := strconv.Atoi(c.Param("reviewID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid review id"})
+		return
+	}
 
+	u := auth.GetUserFromCtx(c.Request.Context())
+	if u == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	if err := r.command.DeleteReview(c.Request.Context(), u, reviewID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "ok"})
 }
 
 func (r *ReviewController) GetMyReviews(c *gin.Context) {
+	userID, err := strconv.Atoi(c.Param("userID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+		return
+	}
 
+	var f application.ReviewListFilter
+	if err := c.ShouldBindQuery(&f); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if f.Page <= 0 {
+		f.Page = 1
+	}
+	if f.PageSize <= 0 {
+		f.PageSize = 20
+	}
+
+	result, err := r.query.GetReviewsByUser(c.Request.Context(), userID, f)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, result)
 }
 
 func (r *ReviewController) GetLatestReviews(c *gin.Context) {
+	var f application.ReviewListFilter
+	if err := c.ShouldBindQuery(&f); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if f.Page <= 0 {
+		f.Page = 1
+	}
+	if f.PageSize <= 0 {
+		f.PageSize = 20
+	}
+	if f.OrderBy == "" {
+		f.OrderBy = "created_at"
+		f.OrderDir = "desc"
+	}
 
+	result, err := r.query.GetLatestReviews(c.Request.Context(), f)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, result)
 }
 
 func (r *ReviewController) GetReviewDetail(c *gin.Context) {
+	reviewID, err := strconv.Atoi(c.Param("reviewID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid review id"})
+		return
+	}
 
+	u := auth.GetUserFromCtx(c.Request.Context())
+	detail, err := r.query.GetReview(c.Request.Context(), u, reviewID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "review not found"})
+		return
+	}
+	c.JSON(http.StatusOK, detail)
 }
 
 func (r *ReviewController) VoteReview(c *gin.Context) {

@@ -76,6 +76,7 @@ type CourseEntity struct {
 	RatingCount   int            `gorm:"column:rating_count"`
 	RatingAvg     float64        `gorm:"column:rating_avg"`
 	CreatedAt     time.Time      `gorm:"column:created_at"`
+	MainTeacher   *TeacherEntity `gorm:"foreignKey:MainTeacherID;references:ID"`
 }
 
 func (CourseEntity) TableName() string {
@@ -83,17 +84,18 @@ func (CourseEntity) TableName() string {
 }
 
 type ReviewEntity struct {
-	ID           int       `gorm:"column:id"`
-	CourseID     int       `gorm:"column:course_id;index"`
-	Semester     string    `gorm:"column:semester"`
-	UserID       int       `gorm:"column:user_id;index"`
-	Rating       int       `gorm:"column:rating"`
-	Content      string    `gorm:"column:content"`
-	Score        string    `gorm:"column:score"`
-	LikeCount    int       `gorm:"column:like_count"`
-	DislikeCount int       `gorm:"column:dislike_count"`
-	CreatedAt    time.Time `gorm:"column:created_at"`
-	UpdatedAt    time.Time `gorm:"column:updated_at"`
+	ID           int           `gorm:"column:id"`
+	CourseID     int           `gorm:"column:course_id;index"`
+	Semester     string        `gorm:"column:semester"`
+	UserID       int           `gorm:"column:user_id;index"`
+	Rating       int           `gorm:"column:rating"`
+	Content      string        `gorm:"column:content"`
+	Score        string        `gorm:"column:score"`
+	LikeCount    int           `gorm:"column:like_count"`
+	DislikeCount int           `gorm:"column:dislike_count"`
+	CreatedAt    time.Time     `gorm:"column:created_at"`
+	UpdatedAt    time.Time     `gorm:"column:updated_at"`
+	Course       *CourseEntity `gorm:"foreignKey:CourseID;references:ID"`
 }
 
 func (ReviewEntity) TableName() string {

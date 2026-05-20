@@ -8,7 +8,7 @@ import (
 )
 
 type ReviewQuery interface {
-	FindBy(ctx context.Context, filter ReviewFilter) ([]ReviewView, error)
+	FindBy(ctx context.Context, filter ReviewFilter) ([]ReviewView, int64, error)
 	FindRevisions(ctx context.Context, reviewID int) ([]RevisionView, error)
 }
 
@@ -19,8 +19,11 @@ type ReviewFilter struct {
 	Semester     string
 	Rating       int
 	CreatedAfter time.Time
-	Order        string
-	Limit        int
+	OrderBy      string
+	OrderDir     string
+	Page         int
+	PageSize     int
+	WithCourse   bool
 }
 
 // Read model: review with eager-loaded course summary
