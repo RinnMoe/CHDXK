@@ -50,16 +50,14 @@ func newReviewRevisionEntity(r review.Revision) ReviewRevisionEntity {
 
 func newReviewRevisionQuery(e *ReviewRevisionEntity) review.RevisionForQuery {
 	return review.RevisionForQuery{
-		Revision: review.Revision{
-			ReviewID:  e.ReviewID,
-			CourseID:  e.CourseID,
-			Semester:  e.Semester,
-			UserID:    e.UserID,
-			Rating:    e.Rating,
-			Content:   e.Content,
-			Grade:     e.Grade,
-			CreatedAt: e.CreatedAt,
-		},
+		ReviewID:  e.ReviewID,
+		CourseID:  e.CourseID,
+		Semester:  e.Semester,
+		UserID:    e.UserID,
+		Rating:    e.Rating,
+		Content:   e.Content,
+		Grade:     e.Grade,
+		CreatedAt: e.CreatedAt,
 	}
 }
 

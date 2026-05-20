@@ -2,6 +2,7 @@ package review
 
 import (
 	"context"
+	"time"
 
 	"jcourse/internal/domain/course"
 )
@@ -26,5 +27,13 @@ type ReviewForQuery struct {
 }
 
 type RevisionForQuery struct {
-	Revision
+	ID        int
+	ReviewID  int
+	CourseID  int
+	Semester  string
+	UserID    int
+	Rating    int
+	Content   string
+	Grade     string
+	CreatedAt time.Time
 }

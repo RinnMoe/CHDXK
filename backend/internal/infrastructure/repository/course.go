@@ -237,7 +237,21 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 	}
 
 	result := &course.CourseDetailForQuery{
-		CourseForQuery: newCourseQuery(&row),
+		ID:            row.ID,
+		Code:          row.Code,
+		Name:          row.Name,
+		Credit:        row.Credit,
+		Department:    row.Department,
+		MainTeacherID: row.MainTeacherID,
+		ReviewCount:   row.ReviewCount,
+		AvgRating:     row.AvgRating,
+		MainTeacher: &teacher.TeacherForQuery{
+			ID:         row.TeacherID,
+			Code:       row.TeacherCode,
+			Name:       row.TeacherName,
+			Department: row.TeacherDepartment,
+			Title:      row.TeacherTitle,
+		},
 	}
 
 	type ratingCount struct {

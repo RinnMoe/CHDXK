@@ -32,7 +32,15 @@ type CourseForQuery struct {
 }
 
 type CourseDetailForQuery struct {
-	CourseForQuery
+	ID                 int
+	Code               string
+	Name               string
+	Credit             float32
+	Department         string
+	MainTeacherID      int
+	MainTeacher        *teacher.TeacherForQuery
+	ReviewCount        int
+	AvgRating          float64
 	RatingDistribution [5]int
 	OfferedCourses     []*OfferedCourseForQuery
 }
