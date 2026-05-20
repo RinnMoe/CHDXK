@@ -7,9 +7,9 @@ import (
 )
 
 type DepartmentEntity struct {
-	ID        int
-	Name      string
-	CreatedAt time.Time
+	ID        int       `gorm:"column:id"`
+	Name      string    `gorm:"column:name"`
+	CreatedAt time.Time `gorm:"column:created_at"`
 }
 
 func (DepartmentEntity) TableName() string {
@@ -17,10 +17,10 @@ func (DepartmentEntity) TableName() string {
 }
 
 type SemesterEntity struct {
-	ID        int
-	Name      string
-	CanReview bool
-	CreatedAt time.Time
+	ID        int       `gorm:"column:id"`
+	Name      string    `gorm:"column:name"`
+	CanReview bool      `gorm:"column:can_review"`
+	CreatedAt time.Time `gorm:"column:created_at"`
 }
 
 func (SemesterEntity) TableName() string {
@@ -28,19 +28,19 @@ func (SemesterEntity) TableName() string {
 }
 
 type TeacherEntity struct {
-	ID         int
-	Code       string
-	Name       string
-	Department string
-	Title      string
+	ID         int    `gorm:"column:id"`
+	Code       string `gorm:"column:code;uniqueIndex"`
+	Name       string `gorm:"column:name"`
+	Department string `gorm:"column:department;index"`
+	Title      string `gorm:"column:title"`
 
-	Pinyin     string
-	PinyinAbbr string
+	Pinyin     string `gorm:"column:pinyin;index"`
+	PinyinAbbr string `gorm:"column:pinyin_abbr;index"`
 
-	LateSemester string
+	LateSemester string `gorm:"column:late_semester"`
 
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	CreatedAt time.Time `gorm:"column:created_at"`
+	UpdatedAt time.Time `gorm:"column:updated_at"`
 }
 
 func (TeacherEntity) TableName() string {
@@ -54,19 +54,11 @@ type OfferedCourseEntity struct {
 	Language    string         `gorm:"column:language"`
 	TargetYears pq.StringArray `gorm:"column:target_years;type:text[]"`
 	Categories  pq.StringArray `gorm:"column:categories;type:text[]"`
+	TeacherIDs  pq.Int64Array  `gorm:"column:teacher_ids;type:integer[]"`
 }
 
 func (OfferedCourseEntity) TableName() string {
 	return "offered_courses"
-}
-
-type CourseTeacherGroupEntity struct {
-	OfferedCourseID int `gorm:"column:offered_course_id;index:idx_offered_teacher"`
-	TeacherID       int `gorm:"column:teacher_id;index:idx_offered_teacher"`
-}
-
-func (CourseTeacherGroupEntity) TableName() string {
-	return "course_teacher_groups"
 }
 
 type CourseEntity struct {
@@ -79,6 +71,8 @@ type CourseEntity struct {
 	TargetYears   pq.StringArray `gorm:"column:target_years;type:text[]"`
 	Language      string         `gorm:"column:language"`
 	Categories    pq.StringArray `gorm:"column:categories;type:text[]"`
+	TeacherIDs    pq.Int64Array  `gorm:"column:teacher_ids;type:integer[]"`
+	LastSemester  string         `gorm:"column:last_semester"`
 	RatingCount   int            `gorm:"column:rating_count"`
 	RatingAvg     float64        `gorm:"column:rating_avg"`
 	CreatedAt     time.Time      `gorm:"column:created_at"`

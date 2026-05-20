@@ -163,20 +163,12 @@ func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int)
 		Language    string
 		TargetYears pq.StringArray `gorm:"type:text[]"`
 		Categories  pq.StringArray `gorm:"type:text[]"`
-		TeacherID   int
-		TeacherCode string
-		TeacherName string
-		TeacherDept string
-		TeacherTitl string
+		TeacherIDs  pq.Int64Array  `gorm:"type:integer[]"`
 	}
 
 	var rows []ocRow
 	err := r.db.WithContext(ctx).Table("offered_courses oc").
-		Select("oc.id, oc.semester, oc.language, oc.target_years, oc.categories, "+
-			"t.id AS teacher_id, t.code AS teacher_code, t.name AS teacher_name, "+
-			"t.department AS teacher_dept, t.title AS teacher_titl").
-		Joins("LEFT JOIN course_teacher_groups ctg ON ctg.offered_course_id = oc.id").
-		Joins("LEFT JOIN teachers t ON t.id = ctg.teacher_id").
+		Select("oc.id, oc.semester, oc.language, oc.target_years, oc.categories, oc.teacher_ids").
 		Where("oc.course_id = ?", courseID).
 		Order("oc.semester DESC").
 		Scan(&rows).Error
@@ -184,35 +176,52 @@ func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int)
 		return nil, err
 	}
 
-	ocMap := make(map[int]*course.OfferedCourseView)
-	var ocOrder []int
+	// Collect all unique teacher IDs
+	teacherIDSet := make(map[int64]struct{})
 	for _, row := range rows {
-		oc, ok := ocMap[row.ID]
-		if !ok {
-			oc = &course.OfferedCourseView{
-				ID:          row.ID,
-				Semester:    row.Semester,
-				Language:    row.Language,
-				TargetYears: row.TargetYears,
-				Categories:  row.Categories,
-			}
-			ocMap[row.ID] = oc
-			ocOrder = append(ocOrder, row.ID)
-		}
-		if row.TeacherID > 0 {
-			oc.TeacherGroup = append(oc.TeacherGroup, &teacher.TeacherView{
-				ID:         row.TeacherID,
-				Code:       row.TeacherCode,
-				Name:       row.TeacherName,
-				Department: row.TeacherDept,
-				Title:      row.TeacherTitl,
-			})
+		for _, id := range row.TeacherIDs {
+			teacherIDSet[id] = struct{}{}
 		}
 	}
 
-	result := make([]course.OfferedCourseView, 0, len(ocMap))
-	for _, id := range ocOrder {
-		result = append(result, *ocMap[id])
+	// Batch fetch teacher details
+	teacherMap := make(map[int]*teacher.TeacherView)
+	if len(teacherIDSet) > 0 {
+		ids := make([]int64, 0, len(teacherIDSet))
+		for id := range teacherIDSet {
+			ids = append(ids, id)
+		}
+		var teachers []TeacherEntity
+		if err := r.db.WithContext(ctx).Where("id IN ?", ids).Find(&teachers).Error; err != nil {
+			return nil, err
+		}
+		for i := range teachers {
+			t := &teachers[i]
+			teacherMap[t.ID] = &teacher.TeacherView{
+				ID:         t.ID,
+				Code:       t.Code,
+				Name:       t.Name,
+				Department: t.Department,
+				Title:      t.Title,
+			}
+		}
+	}
+
+	result := make([]course.OfferedCourseView, 0, len(rows))
+	for _, row := range rows {
+		oc := course.OfferedCourseView{
+			ID:          row.ID,
+			Semester:    row.Semester,
+			Language:    row.Language,
+			TargetYears: row.TargetYears,
+			Categories:  row.Categories,
+		}
+		for _, id := range row.TeacherIDs {
+			if tv, ok := teacherMap[int(id)]; ok {
+				oc.TeacherGroup = append(oc.TeacherGroup, tv)
+			}
+		}
+		result = append(result, oc)
 	}
 	return result, nil
 }

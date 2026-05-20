@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lib/pq"
+
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/review"
 	"jcourse/internal/infrastructure/repository"
@@ -187,21 +189,15 @@ func TestCourseRepository_GetDetail(t *testing.T) {
 	reviewRepo := repository.NewReviewRepository(db)
 	ctx := context.Background()
 
-	cleanTables(t, db, "offered_courses", "course_teacher_groups", "reviews", "courses", "teachers", "semesters")
+	cleanTables(t, db, "offered_courses", "reviews", "courses", "teachers", "semesters")
 
 	teacher := seedTeacher(t, db)
 	courseEntity := seedCourse(t, db, teacher.ID)
 	user := seedUser(t, db)
 
 	oc := seedOfferedCourseRaw(t, db, courseEntity.ID, "2024-2025-1", "zh", []string{"核心课"}, []string{"2022"})
-
-	ctg := repository.CourseTeacherGroupEntity{
-		OfferedCourseID: oc.ID,
-		TeacherID:       teacher.ID,
-	}
-	if err := db.Create(&ctg).Error; err != nil {
-		t.Fatalf("seed course teacher group: %v", err)
-	}
+	db.Model(&repository.OfferedCourseEntity{}).Where("id = ?", oc.ID).
+		Update("teacher_ids", pq.Int64Array{int64(teacher.ID)})
 
 	now := time.Now()
 	r1 := review.Review{
@@ -261,7 +257,7 @@ func TestCourseRepository_FindOfferedCourses(t *testing.T) {
 	repo := repository.NewCourseRepository(db)
 	ctx := context.Background()
 
-	cleanTables(t, db, "offered_courses", "course_teacher_groups", "courses", "teachers")
+	cleanTables(t, db, "offered_courses", "courses", "teachers")
 
 	teacher := seedTeacher(t, db)
 	courseEntity := seedCourse(t, db, teacher.ID)
@@ -274,13 +270,10 @@ func TestCourseRepository_FindOfferedCourses(t *testing.T) {
 	oc1 := seedOfferedCourseRaw(t, db, courseEntity.ID, "2023-2024-1", "zh", []string{"核心课"}, []string{"2021"})
 	oc2 := seedOfferedCourseRaw(t, db, courseEntity.ID, "2024-2025-1", "en", []string{"选修课"}, []string{"2022"})
 
-	ctg1 := repository.CourseTeacherGroupEntity{OfferedCourseID: oc1.ID, TeacherID: teacher.ID}
-	ctg2 := repository.CourseTeacherGroupEntity{OfferedCourseID: oc2.ID, TeacherID: t2.ID}
-	for _, ctg := range []repository.CourseTeacherGroupEntity{ctg1, ctg2} {
-		if err := db.Create(&ctg).Error; err != nil {
-			t.Fatalf("seed course teacher group: %v", err)
-		}
-	}
+	db.Model(&repository.OfferedCourseEntity{}).Where("id = ?", oc1.ID).
+		Update("teacher_ids", pq.Int64Array{int64(teacher.ID)})
+	db.Model(&repository.OfferedCourseEntity{}).Where("id = ?", oc2.ID).
+		Update("teacher_ids", pq.Int64Array{int64(t2.ID)})
 
 	ocs, err := repo.FindOfferedCourses(ctx, courseEntity.ID)
 	if err != nil {

@@ -42,6 +42,8 @@ CREATE TABLE IF NOT EXISTS courses (
     categories      TEXT    NOT NULL DEFAULT '[]',  -- JSON array
     language        TEXT    NOT NULL,
     target_years    TEXT    NOT NULL DEFAULT '[]',  -- JSON array
+    teacher_ids     TEXT    NOT NULL DEFAULT '[]',  -- JSON array
+    last_semester   TEXT    NOT NULL DEFAULT '',
     rating_count    INTEGER NOT NULL DEFAULT 0,
     rating_avg      REAL    NOT NULL DEFAULT 0,
     created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
@@ -60,24 +62,13 @@ CREATE TABLE IF NOT EXISTS offered_courses (
     language   TEXT    NOT NULL,
     target_years TEXT    NOT NULL DEFAULT '[]',       -- JSON array
     categories TEXT    NOT NULL DEFAULT '[]',       -- JSON array
+    teacher_ids TEXT   NOT NULL DEFAULT '[]',       -- JSON array
 
     FOREIGN KEY (course_id) REFERENCES courses(id)
         ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_offered_courses_course ON offered_courses (course_id);
-
-CREATE TABLE IF NOT EXISTS course_teacher_groups (
-    offered_course_id INTEGER NOT NULL,
-    teacher_id        INTEGER NOT NULL,
-
-    FOREIGN KEY (offered_course_id) REFERENCES offered_courses(id)
-        ON DELETE CASCADE,
-    FOREIGN KEY (teacher_id) REFERENCES teachers(id)
-        ON DELETE CASCADE
-);
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_offered_teacher ON course_teacher_groups (offered_course_id, teacher_id);
 
 CREATE TABLE IF NOT EXISTS users (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,

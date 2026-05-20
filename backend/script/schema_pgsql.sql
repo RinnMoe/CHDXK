@@ -37,6 +37,8 @@ CREATE TABLE IF NOT EXISTS courses (
     categories    TEXT[]  NOT NULL DEFAULT '{}',
     language      TEXT    NOT NULL,
     target_years  TEXT[]  NOT NULL DEFAULT '{}',
+    teacher_ids   INTEGER[] NOT NULL DEFAULT '{}',
+    last_semester TEXT    NOT NULL DEFAULT '',
     rating_count  INTEGER NOT NULL DEFAULT 0,
     rating_avg    DOUBLE PRECISION NOT NULL DEFAULT 0,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -48,6 +50,7 @@ CREATE TABLE IF NOT EXISTS courses (
 
 CREATE INDEX idx_courses_department    ON courses (department);
 CREATE INDEX idx_courses_main_teacher  ON courses (main_teacher_id);
+CREATE INDEX idx_courses_teacher_ids   ON courses USING GIN (teacher_ids);
 
 CREATE TABLE IF NOT EXISTS offered_courses (
     id         SERIAL PRIMARY KEY,
@@ -56,6 +59,7 @@ CREATE TABLE IF NOT EXISTS offered_courses (
     language   TEXT    NOT NULL,
     target_years TEXT[]  NOT NULL DEFAULT '{}',
     categories TEXT[]  NOT NULL DEFAULT '{}',
+    teacher_ids INTEGER[] NOT NULL DEFAULT '{}',
 
     CONSTRAINT fk_offered_courses_course
         FOREIGN KEY (course_id) REFERENCES courses(id)
@@ -63,20 +67,7 @@ CREATE TABLE IF NOT EXISTS offered_courses (
 );
 
 CREATE INDEX idx_offered_courses_course ON offered_courses (course_id);
-
-CREATE TABLE IF NOT EXISTS course_teacher_groups (
-    offered_course_id INTEGER NOT NULL,
-    teacher_id       INTEGER NOT NULL,
-
-    CONSTRAINT fk_ctg_offered_course
-        FOREIGN KEY (offered_course_id) REFERENCES offered_courses(id)
-        ON DELETE CASCADE,
-    CONSTRAINT fk_ctg_teacher
-        FOREIGN KEY (teacher_id) REFERENCES teachers(id)
-        ON DELETE CASCADE
-);
-
-CREATE UNIQUE INDEX idx_offered_teacher ON course_teacher_groups (offered_course_id, teacher_id);
+CREATE INDEX idx_offered_courses_teacher_ids ON offered_courses USING GIN (teacher_ids);
 
 CREATE TABLE IF NOT EXISTS users (
     id           SERIAL PRIMARY KEY,
