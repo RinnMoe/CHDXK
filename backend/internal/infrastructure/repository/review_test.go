@@ -127,7 +127,7 @@ func TestReviewRepository_Delete(t *testing.T) {
 	user := seedUser(t, db)
 	entity := seedReview(t, db, course.ID, user.ID)
 
-	if err := repo.Delete(ctx, entity.ID); err != nil {
+	if err := repo.Delete(ctx, &review.Review{ID: entity.ID, CourseID: course.ID}); err != nil {
 		t.Fatalf("Delete: %v", err)
 	}
 
