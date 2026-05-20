@@ -194,21 +194,7 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 		return nil, err
 	}
 
-	cv := newCourseViewFromEntity(&entity)
-	result := &course.CourseDetailView{
-		ID:             cv.ID,
-		Code:           cv.Code,
-		Name:           cv.Name,
-		Credit:         cv.Credit,
-		Department:     cv.Department,
-		MainTeacherID:  cv.MainTeacherID,
-		Categories:     cv.Categories,
-		Language:       cv.Language,
-		TargetYears:    cv.TargetYears,
-		Rating:         cv.Rating,
-		MainTeacher:    cv.MainTeacher,
-		OfferedCourses: make([]*course.OfferedCourseView, 0),
-	}
+	result := newCourseDetailViewFromEntity(&entity)
 
 	type ratingCount struct {
 		Rating int

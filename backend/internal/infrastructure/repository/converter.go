@@ -36,3 +36,26 @@ func newCourseViewFromEntity(e *CourseEntity) *course.CourseView {
 	}
 	return cv
 }
+
+func newCourseDetailViewFromEntity(e *CourseEntity) *course.CourseDetailView {
+	dv := &course.CourseDetailView{
+		ID:            e.ID,
+		Code:          e.Code,
+		Name:          e.Name,
+		Credit:        e.Credit,
+		Department:    e.Department,
+		MainTeacherID: e.MainTeacherID,
+		Categories:    e.Categories,
+		Language:      e.Language,
+		TargetYears:   e.TargetYears,
+		Rating: course.RatingInfo{
+			Count: e.RatingCount,
+			Avg:   e.RatingAvg,
+		},
+		OfferedCourses: make([]*course.OfferedCourseView, 0),
+	}
+	if e.MainTeacher != nil {
+		dv.MainTeacher = newTeacherView(e.MainTeacher)
+	}
+	return dv
+}
