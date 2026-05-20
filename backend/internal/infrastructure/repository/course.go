@@ -27,51 +27,6 @@ func newCourseDomain(e *CourseEntity) course.Course {
 	}
 }
 
-func newCourseQuery(e *courseRow) course.CourseView {
-	return course.CourseView{
-		ID:            e.ID,
-		Code:          e.Code,
-		Name:          e.Name,
-		Credit:        e.Credit,
-		Department:    e.Department,
-		MainTeacherID: e.MainTeacherID,
-		Categories:    e.Categories,
-		Language:      e.Language,
-		TargetYears:   e.TargetYears,
-		Rating: course.RatingInfo{
-			Count: e.RatingCount,
-			Avg:   e.RatingAvg,
-		},
-		MainTeacher: &teacher.TeacherView{
-			ID:         e.TeacherID,
-			Code:       e.TeacherCode,
-			Name:       e.TeacherName,
-			Department: e.TeacherDepartment,
-			Title:      e.TeacherTitle,
-		},
-	}
-}
-
-type courseRow struct {
-	ID            int
-	Code          string
-	Name          string
-	Credit        float32
-	Department    string
-	MainTeacherID int
-	Categories    pq.StringArray `gorm:"type:text[]"`
-	Language      string
-	TargetYears   pq.StringArray `gorm:"type:text[]"`
-	RatingCount   int
-	RatingAvg     float64
-
-	TeacherID         int
-	TeacherCode       string
-	TeacherName       string
-	TeacherDepartment string
-	TeacherTitle      string
-}
-
 type CourseRepository struct {
 	db *gorm.DB
 }
@@ -81,42 +36,36 @@ func NewCourseRepository(db *gorm.DB) *CourseRepository {
 }
 
 func (r *CourseRepository) baseCourseQuery(ctx context.Context) *gorm.DB {
-	return r.db.WithContext(ctx).Table("courses c").
-		Select(`c.id, c.code, c.name, c.credit, c.department, c.main_teacher_id,
-			c.categories, c.language, c.target_years,
-			c.rating_count, c.rating_avg,
-			t.id AS teacher_id, t.code AS teacher_code, t.name AS teacher_name,
-			t.department AS teacher_department, t.title AS teacher_title`).
-		Joins("LEFT JOIN teachers t ON t.id = c.main_teacher_id")
+	return r.db.WithContext(ctx).Model(&CourseEntity{}).Joins("MainTeacher")
 }
 
 func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm.DB {
 	if f.TeacherID > 0 {
-		db = db.Where("c.main_teacher_id = ?", f.TeacherID)
+		db = db.Where("courses.main_teacher_id = ?", f.TeacherID)
 	}
 	if f.ExcludeID > 0 {
-		db = db.Where("c.id != ?", f.ExcludeID)
+		db = db.Where("courses.id != ?", f.ExcludeID)
 	}
 	if f.Code != "" {
-		db = db.Where("LOWER(c.code) = LOWER(?)", f.Code)
+		db = db.Where("LOWER(courses.code) = LOWER(?)", f.Code)
 	}
 	if f.Department != "" {
-		db = db.Where("c.department = ?", f.Department)
+		db = db.Where("courses.department = ?", f.Department)
 	}
 	if f.Credit != nil {
-		db = db.Where("c.credit = ?", *f.Credit)
+		db = db.Where("courses.credit = ?", *f.Credit)
 	}
 	if f.HasReview != nil && *f.HasReview {
-		db = db.Where("c.rating_count > 0")
+		db = db.Where("courses.rating_count > 0")
 	}
 	if f.Language != "" {
-		db = db.Where("c.language = ?", f.Language)
+		db = db.Where("courses.language = ?", f.Language)
 	}
 	if len(f.Categories) > 0 {
-		db = db.Where("c.categories && ?", pq.StringArray(f.Categories))
+		db = db.Where("courses.categories && ?", pq.StringArray(f.Categories))
 	}
 	if len(f.TargetYears) > 0 {
-		db = db.Where("c.target_years && ?", pq.StringArray(f.TargetYears))
+		db = db.Where("courses.target_years && ?", pq.StringArray(f.TargetYears))
 	}
 	return db
 }
@@ -128,11 +77,11 @@ func (r *CourseRepository) applySort(db *gorm.DB, f course.CourseFilter) *gorm.D
 	}
 	switch f.OrderBy {
 	case "rating_count":
-		db = db.Order(fmt.Sprintf("c.rating_count %s", dir))
+		db = db.Order(fmt.Sprintf("courses.rating_count %s", dir))
 	case "rating_avg":
-		db = db.Order(fmt.Sprintf("c.rating_avg %s", dir))
+		db = db.Order(fmt.Sprintf("courses.rating_avg %s", dir))
 	default:
-		db = db.Order("c.id DESC")
+		db = db.Order("courses.id DESC")
 	}
 	return db
 }
@@ -181,13 +130,7 @@ func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int)
 		}
 		for i := range teachers {
 			t := &teachers[i]
-			teacherMap[t.ID] = &teacher.TeacherView{
-				ID:         t.ID,
-				Code:       t.Code,
-				Name:       t.Name,
-				Department: t.Department,
-				Title:      t.Title,
-			}
+			teacherMap[t.ID] = newTeacherView(t)
 		}
 	}
 
@@ -215,19 +158,20 @@ func (r *CourseRepository) FindBy(ctx context.Context, filter course.CourseFilte
 	db = r.applyFilter(db, filter)
 
 	var total int64
-	r.db.WithContext(ctx).Table("(?) AS sub", db).Count(&total)
+	r.db.WithContext(ctx).Model(&CourseEntity{}).Where(db).Count(&total)
 
 	db = r.applySort(db, filter)
 	db = r.applyPagination(db, filter)
 
-	var rows []courseRow
-	if err := db.Scan(&rows).Error; err != nil {
+	var entities []CourseEntity
+	if err := db.Find(&entities).Error; err != nil {
 		return nil, 0, err
 	}
 
-	cs := make([]course.CourseView, len(rows))
-	for i, row := range rows {
-		cs[i] = newCourseQuery(&row)
+	cs := make([]course.CourseView, len(entities))
+	for i, e := range entities {
+		cv := newCourseViewFromEntity(&e)
+		cs[i] = *cv
 	}
 	return cs, total, nil
 }
@@ -241,38 +185,29 @@ func (r *CourseRepository) Get(ctx context.Context, courseID int) (*course.Cours
 }
 
 func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course.CourseDetailView, error) {
-	var row courseRow
-	err := r.baseCourseQuery(ctx).
-		Where("c.id = ?", courseID).
-		Scan(&row).Error
+	var entity CourseEntity
+	err := r.db.WithContext(ctx).
+		Joins("MainTeacher").
+		Where("courses.id = ?", courseID).
+		Take(&entity).Error
 	if err != nil {
 		return nil, err
 	}
-	if row.ID == 0 {
-		return nil, gorm.ErrRecordNotFound
-	}
 
+	cv := newCourseViewFromEntity(&entity)
 	result := &course.CourseDetailView{
-		ID:            row.ID,
-		Code:          row.Code,
-		Name:          row.Name,
-		Credit:        row.Credit,
-		Department:    row.Department,
-		MainTeacherID: row.MainTeacherID,
-		Categories:    row.Categories,
-		Language:      row.Language,
-		TargetYears:   row.TargetYears,
-		Rating: course.RatingInfo{
-			Count: row.RatingCount,
-			Avg:   row.RatingAvg,
-		},
-		MainTeacher: &teacher.TeacherView{
-			ID:         row.TeacherID,
-			Code:       row.TeacherCode,
-			Name:       row.TeacherName,
-			Department: row.TeacherDepartment,
-			Title:      row.TeacherTitle,
-		},
+		ID:             cv.ID,
+		Code:           cv.Code,
+		Name:           cv.Name,
+		Credit:         cv.Credit,
+		Department:     cv.Department,
+		MainTeacherID:  cv.MainTeacherID,
+		Categories:     cv.Categories,
+		Language:       cv.Language,
+		TargetYears:    cv.TargetYears,
+		Rating:         cv.Rating,
+		MainTeacher:    cv.MainTeacher,
+		OfferedCourses: make([]*course.OfferedCourseView, 0),
 	}
 
 	type ratingCount struct {

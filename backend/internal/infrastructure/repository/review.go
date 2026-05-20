@@ -6,9 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/review"
-	"jcourse/internal/domain/teacher"
 )
 
 func newReviewEntity(r *review.Review) ReviewEntity {
@@ -82,37 +80,9 @@ func newReviewView(e *ReviewEntity) review.ReviewView {
 		UpdatedAt: e.UpdatedAt,
 	}
 	if e.Course != nil {
-		v.Course = newCourseView(e.Course)
+		v.Course = newCourseViewFromEntity(e.Course)
 	}
 	return v
-}
-
-func newCourseView(e *CourseEntity) *course.CourseView {
-	cv := &course.CourseView{
-		ID:            e.ID,
-		Code:          e.Code,
-		Name:          e.Name,
-		Credit:        e.Credit,
-		Department:    e.Department,
-		MainTeacherID: e.MainTeacherID,
-		Categories:    e.Categories,
-		Language:      e.Language,
-		TargetYears:   e.TargetYears,
-		Rating: course.RatingInfo{
-			Count: e.RatingCount,
-			Avg:   e.RatingAvg,
-		},
-	}
-	if e.MainTeacher != nil {
-		cv.MainTeacher = &teacher.TeacherView{
-			ID:         e.MainTeacher.ID,
-			Code:       e.MainTeacher.Code,
-			Name:       e.MainTeacher.Name,
-			Department: e.MainTeacher.Department,
-			Title:      e.MainTeacher.Title,
-		}
-	}
-	return cv
 }
 
 type ReviewRepository struct {
