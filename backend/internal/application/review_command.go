@@ -116,7 +116,7 @@ func (s *ReviewCommandService) DeleteReview(ctx context.Context, u *auth.User, r
 		return errors.New("user cannot delete review")
 	}
 
-	err = s.reviewRepo.Delete(ctx, reviewID)
+	err = s.reviewRepo.Delete(ctx, r)
 	if err != nil {
 		return err
 	}

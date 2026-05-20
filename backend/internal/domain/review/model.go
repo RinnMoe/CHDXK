@@ -59,6 +59,6 @@ type Revision struct {
 type ReviewRepository interface {
 	Create(ctx context.Context, r *Review) error
 	Update(ctx context.Context, r *Review, rv Revision) error
-	Delete(ctx context.Context, reviewID int) error
+	Delete(ctx context.Context, r *Review) error
 	Get(ctx context.Context, reviewID int) (*Review, error)
 }

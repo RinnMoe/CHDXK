@@ -146,10 +146,7 @@ func (r *CourseRepository) applyPagination(db *gorm.DB, f course.CourseFilter) *
 }
 
 func (r *CourseRepository) OfferedCourseExists(ctx context.Context, courseID int, semester string) (bool, error) {
-	var count int64
-	err := r.db.WithContext(ctx).Table("offered_courses").
-		Where("course_id = ? AND semester = ?", courseID, semester).
-		Count(&count).Error
+	count, err := gorm.G[OfferedCourseEntity](r.db).Where("course_id = ? AND semester = ?", courseID, semester).Count(ctx, "id")
 	if err != nil {
 		return false, err
 	}
@@ -157,42 +154,29 @@ func (r *CourseRepository) OfferedCourseExists(ctx context.Context, courseID int
 }
 
 func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int) ([]course.OfferedCourseView, error) {
-	type ocRow struct {
-		ID          int
-		Semester    string
-		Language    string
-		TargetYears pq.StringArray `gorm:"type:text[]"`
-		Categories  pq.StringArray `gorm:"type:text[]"`
-		TeacherIDs  pq.Int64Array  `gorm:"type:integer[]"`
-	}
-
-	var rows []ocRow
-	err := r.db.WithContext(ctx).Table("offered_courses oc").
-		Select("oc.id, oc.semester, oc.language, oc.target_years, oc.categories, oc.teacher_ids").
-		Where("oc.course_id = ?", courseID).
-		Order("oc.semester DESC").
-		Scan(&rows).Error
+	entities, err := gorm.G[OfferedCourseEntity](r.db).
+		Where("course_id = ?", courseID).
+		Order("semester DESC").
+		Find(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	// Collect all unique teacher IDs
 	teacherIDSet := make(map[int64]struct{})
-	for _, row := range rows {
-		for _, id := range row.TeacherIDs {
+	for _, e := range entities {
+		for _, id := range e.TeacherIDs {
 			teacherIDSet[id] = struct{}{}
 		}
 	}
 
-	// Batch fetch teacher details
 	teacherMap := make(map[int]*teacher.TeacherView)
 	if len(teacherIDSet) > 0 {
 		ids := make([]int64, 0, len(teacherIDSet))
 		for id := range teacherIDSet {
 			ids = append(ids, id)
 		}
-		var teachers []TeacherEntity
-		if err := r.db.WithContext(ctx).Where("id IN ?", ids).Find(&teachers).Error; err != nil {
+		teachers, err := gorm.G[TeacherEntity](r.db).Where("id IN ?", ids).Find(ctx)
+		if err != nil {
 			return nil, err
 		}
 		for i := range teachers {
@@ -207,16 +191,16 @@ func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int)
 		}
 	}
 
-	result := make([]course.OfferedCourseView, 0, len(rows))
-	for _, row := range rows {
+	result := make([]course.OfferedCourseView, 0, len(entities))
+	for _, e := range entities {
 		oc := course.OfferedCourseView{
-			ID:          row.ID,
-			Semester:    row.Semester,
-			Language:    row.Language,
-			TargetYears: row.TargetYears,
-			Categories:  row.Categories,
+			ID:          e.ID,
+			Semester:    e.Semester,
+			Language:    e.Language,
+			TargetYears: e.TargetYears,
+			Categories:  e.Categories,
 		}
-		for _, id := range row.TeacherIDs {
+		for _, id := range e.TeacherIDs {
 			if tv, ok := teacherMap[int(id)]; ok {
 				oc.TeacherGroup = append(oc.TeacherGroup, tv)
 			}
@@ -296,11 +280,11 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 		Count  int
 	}
 	var dist []ratingCount
-	r.db.WithContext(ctx).Table("reviews").
+	gorm.G[ReviewEntity](r.db).
 		Select("rating, COUNT(*) AS count").
 		Where("course_id = ?", courseID).
 		Group("rating").
-		Scan(&dist)
+		Scan(ctx, &dist)
 	for _, d := range dist {
 		if d.Rating >= 1 && d.Rating <= 5 {
 			result.Rating.Distribution[d.Rating-1] = d.Count

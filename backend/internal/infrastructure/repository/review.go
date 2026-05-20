@@ -166,16 +166,12 @@ func (r2 *ReviewRepository) Update(ctx context.Context, r *review.Review, rv rev
 	return nil
 }
 
-func (r2 *ReviewRepository) Delete(ctx context.Context, reviewID int) error {
+func (r2 *ReviewRepository) Delete(ctx context.Context, r *review.Review) error {
 	return r2.db.Transaction(func(tx *gorm.DB) error {
-		var courseID int
-		if err := tx.Raw("SELECT course_id FROM reviews WHERE id = ?", reviewID).Scan(&courseID).Error; err != nil {
+		if _, err := gorm.G[ReviewEntity](tx).Where("id = ?", r.ID).Delete(ctx); err != nil {
 			return err
 		}
-		if _, err := gorm.G[ReviewEntity](tx).Where("id = ?", reviewID).Delete(ctx); err != nil {
-			return err
-		}
-		return r2.updateCourseStats(tx, courseID)
+		return r2.updateCourseStats(tx, r.CourseID)
 	})
 }
 
