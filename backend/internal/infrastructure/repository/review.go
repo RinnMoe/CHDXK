@@ -15,7 +15,7 @@ func newReviewEntity(r *review.Review) ReviewEntity {
 		UserID:    r.UserID,
 		Rating:    r.Rating,
 		Content:   r.Content,
-		Grade:     r.Grade,
+		Score:     r.Score,
 		CreatedAt: r.CreatedAt,
 		UpdatedAt: r.UpdatedAt,
 	}
@@ -29,7 +29,7 @@ func newReviewDomain(e *ReviewEntity) review.Review {
 		UserID:    e.UserID,
 		Rating:    e.Rating,
 		Content:   e.Content,
-		Grade:     e.Grade,
+		Score:     e.Score,
 		CreatedAt: e.CreatedAt,
 		UpdatedAt: e.UpdatedAt,
 	}
@@ -43,7 +43,7 @@ func newReviewRevisionEntity(r review.Revision) ReviewRevisionEntity {
 		UserID:    r.UserID,
 		Rating:    r.Rating,
 		Content:   r.Content,
-		Grade:     r.Grade,
+		Score:     r.Score,
 		CreatedAt: r.CreatedAt,
 	}
 }
@@ -56,7 +56,7 @@ func newReviewRevisionQuery(e *ReviewRevisionEntity) review.RevisionView {
 		UserID:    e.UserID,
 		Rating:    e.Rating,
 		Content:   e.Content,
-		Grade:     e.Grade,
+		Score:     e.Score,
 		CreatedAt: e.CreatedAt,
 	}
 }
@@ -69,7 +69,7 @@ func newReviewQuery(e *ReviewEntity) review.ReviewView {
 			UserID:   e.UserID,
 			Rating:   e.Rating,
 			Content:  e.Content,
-			Grade:    e.Grade,
+			Score:    e.Score,
 		},
 	}
 }

@@ -13,19 +13,19 @@ type RatingInfo struct {
 }
 
 type CourseFilter struct {
-	TeacherID  int
-	ExcludeID  int
-	Code       string
-	Department string
-	Categories []string
-	Language   string
-	Grades     []string
-	Credit     *float32
-	HasReview  *bool
-	OrderBy    string // "review_count" | "avg_rating"
-	OrderDir   string // "asc" | "desc"
-	Page       int
-	PageSize   int
+	TeacherID   int
+	ExcludeID   int
+	Code        string
+	Department  string
+	Categories  []string
+	Language    string
+	TargetYears []string
+	Credit      *float32
+	HasReview   *bool
+	OrderBy     string // "review_count" | "avg_rating"
+	OrderDir    string // "asc" | "desc"
+	Page        int
+	PageSize    int
 }
 
 // Read model: course list/search result
@@ -39,7 +39,7 @@ type CourseView struct {
 	MainTeacher   *teacher.TeacherView
 	Categories    []string
 	Language      string
-	Grades        []string
+	TargetYears   []string
 	Rating        RatingInfo
 }
 
@@ -54,7 +54,7 @@ type CourseDetailView struct {
 	MainTeacher    *teacher.TeacherView
 	Categories     []string
 	Language       string
-	Grades         []string
+	TargetYears    []string
 	Rating         RatingInfo
 	OfferedCourses []*OfferedCourseView
 }

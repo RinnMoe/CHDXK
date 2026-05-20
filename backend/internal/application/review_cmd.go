@@ -5,7 +5,7 @@ type CreateReviewCmd struct {
 	Semester string `json:"semester,omitempty"`
 	Rating   int    `json:"rating,omitempty"`
 	Content  string `json:"content,omitempty"`
-	Grade    string `json:"grade,omitempty"`
+	Score    string `json:"score,omitempty"`
 }
 
 type UpdateReviewCmd struct {
@@ -13,5 +13,5 @@ type UpdateReviewCmd struct {
 	Semester string `json:"semester,omitempty"`
 	Rating   int    `json:"rating,omitempty"`
 	Content  string `json:"content,omitempty"`
-	Grade    string `json:"grade,omitempty"`
+	Score    string `json:"score,omitempty"`
 }

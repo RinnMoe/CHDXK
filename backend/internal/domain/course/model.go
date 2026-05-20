@@ -13,7 +13,7 @@ type Course struct {
 	MainTeacherID int
 	Categories    []string
 	Language      string
-	Grades        []string
+	TargetYears   []string
 	RatingCount   int
 	RatingAvg     float64
 	CreatedAt     time.Time

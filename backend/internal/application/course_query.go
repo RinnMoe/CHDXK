@@ -7,17 +7,17 @@ import (
 )
 
 type CourseListFilter struct {
-	Code       string   `form:"code"`
-	Department string   `form:"department"`
-	Language   string   `form:"language"`
-	Categories []string `form:"categories"`
-	Grades     []string `form:"grades"`
-	Credit     *float32 `form:"credit"`
-	HasReview  *bool    `form:"has_review"`
-	OrderBy    string   `form:"order_by"`
-	OrderDir   string   `form:"order_dir"`
-	Page       int      `form:"page"`
-	PageSize   int      `form:"page_size"`
+	Code        string   `form:"code"`
+	Department  string   `form:"department"`
+	Language    string   `form:"language"`
+	Categories  []string `form:"categories"`
+	TargetYears []string `form:"target_years"`
+	Credit      *float32 `form:"credit"`
+	HasReview   *bool    `form:"has_review"`
+	OrderBy     string   `form:"order_by"`
+	OrderDir    string   `form:"order_dir"`
+	Page        int      `form:"page"`
+	PageSize    int      `form:"page_size"`
 }
 
 type CourseQueryService struct {
@@ -32,17 +32,17 @@ func NewCourseQueryService(courseQuery course.CourseQuery) *CourseQueryService {
 
 func (s *CourseQueryService) ListCourses(ctx context.Context, f CourseListFilter) (*PaginatedResult[CourseListItemDTO], error) {
 	filter := course.CourseFilter{
-		Code:       f.Code,
-		Department: f.Department,
-		Language:   f.Language,
-		Categories: f.Categories,
-		Grades:     f.Grades,
-		Credit:     f.Credit,
-		HasReview:  f.HasReview,
-		OrderBy:    f.OrderBy,
-		OrderDir:   f.OrderDir,
-		Page:       f.Page,
-		PageSize:   f.PageSize,
+		Code:        f.Code,
+		Department:  f.Department,
+		Language:    f.Language,
+		Categories:  f.Categories,
+		TargetYears: f.TargetYears,
+		Credit:      f.Credit,
+		HasReview:   f.HasReview,
+		OrderBy:     f.OrderBy,
+		OrderDir:    f.OrderDir,
+		Page:        f.Page,
+		PageSize:    f.PageSize,
 	}
 
 	courses, total, err := s.courseQuery.FindBy(ctx, filter)
@@ -76,7 +76,7 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, courseID int) 
 		Credit:      detail.Credit,
 		Department:  detail.Department,
 		Language:    detail.Language,
-		Grades:      detail.Grades,
+		TargetYears: detail.TargetYears,
 		Categories:  detail.Categories,
 		Rating:      newRatingInfoDTO(detail.Rating),
 		MainTeacher: TeacherDTO{ID: detail.MainTeacherID},
@@ -90,7 +90,7 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, courseID int) 
 		ocView := OfferedCourseDTO{
 			Semester:     oc.Semester,
 			Language:     oc.Language,
-			Grades:       oc.Grades,
+			TargetYears:  oc.TargetYears,
 			Categories:   oc.Categories,
 			TeacherGroup: make([]TeacherDTO, 0, len(oc.TeacherGroup)),
 		}
@@ -133,18 +133,18 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, courseID int) 
 
 func (s *CourseQueryService) ListTeacherCourses(ctx context.Context, teacherID int, f CourseListFilter) (*PaginatedResult[CourseListItemDTO], error) {
 	filter := course.CourseFilter{
-		TeacherID:  teacherID,
-		Code:       f.Code,
-		Department: f.Department,
-		Language:   f.Language,
-		Categories: f.Categories,
-		Grades:     f.Grades,
-		Credit:     f.Credit,
-		HasReview:  f.HasReview,
-		OrderBy:    f.OrderBy,
-		OrderDir:   f.OrderDir,
-		Page:       f.Page,
-		PageSize:   f.PageSize,
+		TeacherID:   teacherID,
+		Code:        f.Code,
+		Department:  f.Department,
+		Language:    f.Language,
+		Categories:  f.Categories,
+		TargetYears: f.TargetYears,
+		Credit:      f.Credit,
+		HasReview:   f.HasReview,
+		OrderBy:     f.OrderBy,
+		OrderDir:    f.OrderDir,
+		Page:        f.Page,
+		PageSize:    f.PageSize,
 	}
 
 	courses, total, err := s.courseQuery.FindBy(ctx, filter)

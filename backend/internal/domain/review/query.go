@@ -36,6 +36,6 @@ type RevisionView struct {
 	UserID    int
 	Rating    int
 	Content   string
-	Grade     string
+	Score     string
 	CreatedAt time.Time
 }

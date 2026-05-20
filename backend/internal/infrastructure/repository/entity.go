@@ -44,12 +44,12 @@ func (TeacherEntity) TableName() string {
 }
 
 type OfferedCourseEntity struct {
-	ID         int      `gorm:"column:id"`
-	CourseID   int      `gorm:"column:course_id;index"`
-	Semester   string   `gorm:"column:semester"`
-	Language   string   `gorm:"column:language"`
-	Grades     []string `gorm:"column:grades;type:text[];serializer:json"`
-	Categories []string `gorm:"column:categories;type:text[];serializer:json"`
+	ID          int      `gorm:"column:id"`
+	CourseID    int      `gorm:"column:course_id;index"`
+	Semester    string   `gorm:"column:semester"`
+	Language    string   `gorm:"column:language"`
+	TargetYears []string `gorm:"column:target_years;type:text[];serializer:json"`
+	Categories  []string `gorm:"column:categories;type:text[];serializer:json"`
 }
 
 func (OfferedCourseEntity) TableName() string {
@@ -72,9 +72,9 @@ type CourseEntity struct {
 	Credit        float32   `gorm:"column:credit"`
 	Department    string    `gorm:"column:department;index"`
 	MainTeacherID int       `gorm:"column:main_teacher_id;index"`
-	Categories    []string  `gorm:"column:categories;type:text[];serializer:json"`
+	TargetYears   []string  `gorm:"column:target_years;type:text[];serializer:json"`
 	Language      string    `gorm:"column:language"`
-	Grades        []string  `gorm:"column:grades;type:text[];serializer:json"`
+	Categories    []string  `gorm:"column:categories;type:text[];serializer:json"`
 	ReviewCount   int       `gorm:"column:review_count"`
 	AvgRating     float64   `gorm:"column:avg_rating"`
 	CreatedAt     time.Time `gorm:"column:created_at"`
@@ -91,7 +91,7 @@ type ReviewEntity struct {
 	UserID    int       `gorm:"column:user_id;index"`
 	Rating    int       `gorm:"column:rating"`
 	Content   string    `gorm:"column:content"`
-	Grade     string    `gorm:"column:grade"`
+	Score     string    `gorm:"column:score"`
 	CreatedAt time.Time `gorm:"column:created_at"`
 	UpdatedAt time.Time `gorm:"column:updated_at"`
 }
@@ -107,7 +107,7 @@ type ReviewRevisionEntity struct {
 	UserID    int       `gorm:"column:user_id"`
 	Rating    int       `gorm:"column:rating"`
 	Content   string    `gorm:"column:content"`
-	Grade     string    `gorm:"column:grade"`
+	Score     string    `gorm:"column:score"`
 	CreatedAt time.Time `gorm:"column:created_at"`
 }
 

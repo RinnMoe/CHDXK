@@ -13,7 +13,7 @@ type Review struct {
 	UserID    int
 	Rating    int
 	Content   string
-	Grade     string
+	Score     string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -26,7 +26,7 @@ func (r *Review) MakeRevision() Revision {
 		UserID:    r.UserID,
 		Rating:    r.Rating,
 		Content:   r.Content,
-		Grade:     r.Grade,
+		Score:     r.Score,
 		CreatedAt: time.Now(),
 	}
 }
@@ -52,7 +52,7 @@ type Revision struct {
 	UserID    int
 	Rating    int
 	Content   string
-	Grade     string
+	Score     string
 	CreatedAt time.Time
 }
 

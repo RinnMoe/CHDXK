@@ -24,7 +24,7 @@ type CourseListItemDTO struct {
 	Name        string        `json:"name"`
 	Credit      float32       `json:"credit"`
 	Language    string        `json:"language"`
-	Grades      []string      `json:"grades"`
+	TargetYears []string      `json:"target_years"`
 	Categories  []string      `json:"categories"`
 	MainTeacher TeacherDTO    `json:"main_teacher"`
 	Rating      RatingInfoDTO `json:"rating"`
@@ -32,14 +32,14 @@ type CourseListItemDTO struct {
 
 func newCourseListItemDTO(c *course.CourseView) CourseListItemDTO {
 	item := CourseListItemDTO{
-		ID:         c.ID,
-		Code:       c.Code,
-		Name:       c.Name,
-		Credit:     c.Credit,
-		Language:   c.Language,
-		Grades:     c.Grades,
-		Categories: c.Categories,
-		Rating:     newRatingInfoDTO(c.Rating),
+		ID:          c.ID,
+		Code:        c.Code,
+		Name:        c.Name,
+		Credit:      c.Credit,
+		Language:    c.Language,
+		TargetYears: c.TargetYears,
+		Categories:  c.Categories,
+		Rating:      newRatingInfoDTO(c.Rating),
 	}
 	if c.MainTeacher != nil {
 		item.MainTeacher = newTeacherDTO(c.MainTeacher)
@@ -51,7 +51,7 @@ func newCourseListItemDTO(c *course.CourseView) CourseListItemDTO {
 type OfferedCourseDTO struct {
 	Semester     string       `json:"semester"`
 	Language     string       `json:"language"`
-	Grades       []string     `json:"grades"`
+	TargetYears  []string     `json:"target_years"`
 	Categories   []string     `json:"categories"`
 	TeacherGroup []TeacherDTO `json:"teacher_group"`
 }
@@ -64,7 +64,7 @@ type CourseDetailDTO struct {
 	Credit         float32             `json:"credit"`
 	Department     string              `json:"department"`
 	Language       string              `json:"language"`
-	Grades         []string            `json:"grades"`
+	TargetYears    []string            `json:"target_years"`
 	Categories     []string            `json:"categories"`
 	MainTeacher    TeacherDTO          `json:"main_teacher"`
 	OfferedCourses []OfferedCourseDTO  `json:"offered_courses"`

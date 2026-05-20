@@ -46,7 +46,7 @@ func (s *ReviewCommandService) CreateReview(ctx context.Context, u *auth.User, c
 		Semester:  cmd.Semester,
 		Rating:    cmd.Rating,
 		Content:   cmd.Content,
-		Grade:     cmd.Grade,
+		Score:     cmd.Score,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -88,7 +88,7 @@ func (s *ReviewCommandService) UpdateReview(ctx context.Context, u *auth.User, c
 	r.Semester = cmd.Semester
 	r.Rating = cmd.Rating
 	r.Content = cmd.Content
-	r.Grade = cmd.Grade
+	r.Score = cmd.Score
 	r.UpdatedAt = time.Now()
 
 	if err := r.Validate(); err != nil {

@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS courses (
     main_teacher_id INTEGER,
     categories    TEXT[]  NOT NULL DEFAULT '{}',
     language      TEXT    NOT NULL,
-    grades        TEXT[]  NOT NULL DEFAULT '{}',
+    target_years  TEXT[]  NOT NULL DEFAULT '{}',
     review_count  INTEGER NOT NULL DEFAULT 0,
     avg_rating    DOUBLE PRECISION NOT NULL DEFAULT 0,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS offered_courses (
     course_id  INTEGER NOT NULL,
     semester   TEXT    NOT NULL,
     language   TEXT    NOT NULL,
-    grades     TEXT[]  NOT NULL DEFAULT '{}',
+    target_years TEXT[]  NOT NULL DEFAULT '{}',
     categories TEXT[]  NOT NULL DEFAULT '{}',
 
     CONSTRAINT fk_offered_courses_course
@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS reviews (
     user_id    INTEGER NOT NULL,
     rating     INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
     content    TEXT    NOT NULL,
-    grade      TEXT    NOT NULL,
+    score     TEXT    NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS review_revisions (
     user_id    INTEGER NOT NULL,
     rating     INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
     content    TEXT    NOT NULL,
-    grade      TEXT    NOT NULL,
+    score      TEXT    NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_review_revisions_review

@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS courses (
     main_teacher_id INTEGER,
     categories      TEXT    NOT NULL DEFAULT '[]',  -- JSON array
     language        TEXT    NOT NULL,
-    grades          TEXT    NOT NULL DEFAULT '[]',  -- JSON array
+    target_years    TEXT    NOT NULL DEFAULT '[]',  -- JSON array
     review_count    INTEGER NOT NULL DEFAULT 0,
     avg_rating      REAL    NOT NULL DEFAULT 0,
     created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS offered_courses (
     course_id  INTEGER NOT NULL,
     semester   TEXT    NOT NULL,
     language   TEXT    NOT NULL,
-    grades     TEXT    NOT NULL DEFAULT '[]',       -- JSON array
+    target_years TEXT    NOT NULL DEFAULT '[]',       -- JSON array
     categories TEXT    NOT NULL DEFAULT '[]',       -- JSON array
 
     FOREIGN KEY (course_id) REFERENCES courses(id)
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS reviews (
     user_id    INTEGER NOT NULL,
     rating     INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
     content    TEXT    NOT NULL,
-    grade      TEXT    NOT NULL,
+    score     TEXT    NOT NULL,
     created_at TEXT    NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT    NOT NULL DEFAULT (datetime('now')),
 
@@ -119,7 +119,7 @@ CREATE TABLE IF NOT EXISTS review_revisions (
     user_id    INTEGER NOT NULL,
     rating     INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
     content    TEXT    NOT NULL,
-    grade      TEXT    NOT NULL,
+    score     TEXT    NOT NULL,
     created_at TEXT    NOT NULL DEFAULT (datetime('now')),
 
     FOREIGN KEY (review_id) REFERENCES reviews(id)
