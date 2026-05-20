@@ -9,6 +9,9 @@ import (
 type CourseListFilter struct {
 	Code       string   `form:"code"`
 	Department string   `form:"department"`
+	Language   string   `form:"language"`
+	Categories []string `form:"categories"`
+	Grades     []string `form:"grades"`
 	Credit     *float32 `form:"credit"`
 	HasReview  *bool    `form:"has_review"`
 	OrderBy    string   `form:"order_by"`
@@ -31,6 +34,9 @@ func (s *CourseQueryService) ListCourses(ctx context.Context, f CourseListFilter
 	filter := course.CourseFilter{
 		Code:       f.Code,
 		Department: f.Department,
+		Language:   f.Language,
+		Categories: f.Categories,
+		Grades:     f.Grades,
 		Credit:     f.Credit,
 		HasReview:  f.HasReview,
 		OrderBy:    f.OrderBy,
@@ -64,15 +70,16 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, courseID int) 
 	}
 
 	dto := &CourseDetailDTO{
-		ID:                 detail.ID,
-		Code:               detail.Code,
-		Name:               detail.Name,
-		Credit:             detail.Credit,
-		Department:         detail.Department,
-		ReviewCount:        detail.ReviewCount,
-		AvgRating:          detail.AvgRating,
-		RatingDistribution: detail.RatingDistribution,
-		MainTeacher:        TeacherDTO{ID: detail.MainTeacherID},
+		ID:          detail.ID,
+		Code:        detail.Code,
+		Name:        detail.Name,
+		Credit:      detail.Credit,
+		Department:  detail.Department,
+		Language:    detail.Language,
+		Grades:      detail.Grades,
+		Categories:  detail.Categories,
+		Rating:      newRatingInfoDTO(detail.Rating),
+		MainTeacher: TeacherDTO{ID: detail.MainTeacherID},
 	}
 	if detail.MainTeacher != nil {
 		dto.MainTeacher = newTeacherDTO(detail.MainTeacher)
@@ -83,7 +90,8 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, courseID int) 
 		ocDTO := OfferedCourseDTO{
 			Semester:     oc.Semester,
 			Language:     oc.Language,
-			Grade:        oc.Grade,
+			Grades:       oc.Grades,
+			Categories:   oc.Categories,
 			TeacherGroup: make([]TeacherDTO, 0, len(oc.TeacherGroup)),
 		}
 		for _, t := range oc.TeacherGroup {
@@ -128,6 +136,9 @@ func (s *CourseQueryService) ListTeacherCourses(ctx context.Context, teacherID i
 		TeacherID:  teacherID,
 		Code:       f.Code,
 		Department: f.Department,
+		Language:   f.Language,
+		Categories: f.Categories,
+		Grades:     f.Grades,
 		Credit:     f.Credit,
 		HasReview:  f.HasReview,
 		OrderBy:    f.OrderBy,

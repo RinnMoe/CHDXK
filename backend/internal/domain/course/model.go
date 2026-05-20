@@ -11,6 +11,11 @@ type Course struct {
 	Name          string
 	Credit        float32
 	MainTeacherID int
+	Categories    []string
+	Language      string
+	Grades        []string
+	RatingCount   int
+	RatingAvg     float64
 	CreatedAt     time.Time
 }
 

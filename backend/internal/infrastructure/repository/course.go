@@ -3,12 +3,21 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"gorm.io/gorm"
 
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/teacher"
 )
+
+func joinStrings(ss []string) string {
+	quoted := make([]string, len(ss))
+	for i := range ss {
+		quoted[i] = fmt.Sprintf(`"%s"`, ss[i])
+	}
+	return strings.Join(quoted, ",")
+}
 
 func newCourseDomain(e *CourseEntity) course.Course {
 	return course.Course{
@@ -17,6 +26,11 @@ func newCourseDomain(e *CourseEntity) course.Course {
 		Name:          e.Name,
 		Credit:        e.Credit,
 		MainTeacherID: e.MainTeacherID,
+		Categories:    e.Categories,
+		Language:      e.Language,
+		Grades:        e.Grades,
+		RatingCount:   e.ReviewCount,
+		RatingAvg:     e.AvgRating,
 		CreatedAt:     e.CreatedAt,
 	}
 }
@@ -29,8 +43,13 @@ func newCourseQuery(e *courseRow) course.CourseForQuery {
 		Credit:        e.Credit,
 		Department:    e.Department,
 		MainTeacherID: e.MainTeacherID,
-		ReviewCount:   e.ReviewCount,
-		AvgRating:     e.AvgRating,
+		Categories:    e.Categories,
+		Language:      e.Language,
+		Grades:        e.Grades,
+		Rating: course.RatingInfo{
+			Count: e.ReviewCount,
+			Avg:   e.AvgRating,
+		},
 		MainTeacher: &teacher.TeacherForQuery{
 			ID:         e.TeacherID,
 			Code:       e.TeacherCode,
@@ -48,6 +67,9 @@ type courseRow struct {
 	Credit        float32
 	Department    string
 	MainTeacherID int
+	Categories    []string
+	Language      string
+	Grades        []string
 	ReviewCount   int
 	AvgRating     float64
 
@@ -69,6 +91,7 @@ func NewCourseRepository(db *gorm.DB) *CourseRepository {
 func (r *CourseRepository) baseCourseQuery(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx).Table("courses c").
 		Select(`c.id, c.code, c.name, c.credit, c.department, c.main_teacher_id,
+			c.categories, c.language, c.grades,
 			c.review_count, c.avg_rating,
 			t.id AS teacher_id, t.code AS teacher_code, t.name AS teacher_name,
 			t.department AS teacher_department, t.title AS teacher_title`).
@@ -77,10 +100,7 @@ func (r *CourseRepository) baseCourseQuery(ctx context.Context) *gorm.DB {
 
 func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm.DB {
 	if f.TeacherID > 0 {
-		db = db.Where(
-			"(c.main_teacher_id = ? OR EXISTS (SELECT 1 FROM offered_courses oc JOIN course_teacher_groups ctg ON ctg.offered_course_id = oc.id WHERE oc.course_id = c.id AND ctg.teacher_id = ?))",
-			f.TeacherID, f.TeacherID,
-		)
+		db = db.Where("c.main_teacher_id = ?", f.TeacherID)
 	}
 	if f.ExcludeID > 0 {
 		db = db.Where("c.id != ?", f.ExcludeID)
@@ -96,6 +116,15 @@ func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm
 	}
 	if f.HasReview != nil && *f.HasReview {
 		db = db.Where("c.review_count > 0")
+	}
+	if f.Language != "" {
+		db = db.Where("c.language = ?", f.Language)
+	}
+	if len(f.Categories) > 0 {
+		db = db.Where("c.categories && ?", fmt.Sprintf("{%s}", joinStrings(f.Categories)))
+	}
+	if len(f.Grades) > 0 {
+		db = db.Where("c.grades && ?", fmt.Sprintf("{%s}", joinStrings(f.Grades)))
 	}
 	return db
 }
@@ -140,7 +169,8 @@ func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int)
 		ID          int
 		Semester    string
 		Language    string
-		Grade       string
+		Grades      []string
+		Categories  []string
 		TeacherID   int
 		TeacherCode string
 		TeacherName string
@@ -150,7 +180,7 @@ func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int)
 
 	var rows []ocRow
 	err := r.db.WithContext(ctx).Table("offered_courses oc").
-		Select("oc.id, oc.semester, oc.language, oc.grade, "+
+		Select("oc.id, oc.semester, oc.language, oc.grades, oc.categories, "+
 			"t.id AS teacher_id, t.code AS teacher_code, t.name AS teacher_name, "+
 			"t.department AS teacher_dept, t.title AS teacher_titl").
 		Joins("LEFT JOIN course_teacher_groups ctg ON ctg.offered_course_id = oc.id").
@@ -168,10 +198,11 @@ func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int)
 		oc, ok := ocMap[row.ID]
 		if !ok {
 			oc = &course.OfferedCourseForQuery{
-				ID:       row.ID,
-				Semester: row.Semester,
-				Language: row.Language,
-				Grade:    row.Grade,
+				ID:         row.ID,
+				Semester:   row.Semester,
+				Language:   row.Language,
+				Grades:     row.Grades,
+				Categories: row.Categories,
 			}
 			ocMap[row.ID] = oc
 			ocOrder = append(ocOrder, row.ID)
@@ -243,8 +274,13 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 		Credit:        row.Credit,
 		Department:    row.Department,
 		MainTeacherID: row.MainTeacherID,
-		ReviewCount:   row.ReviewCount,
-		AvgRating:     row.AvgRating,
+		Categories:    row.Categories,
+		Language:      row.Language,
+		Grades:        row.Grades,
+		Rating: course.RatingInfo{
+			Count: row.ReviewCount,
+			Avg:   row.AvgRating,
+		},
 		MainTeacher: &teacher.TeacherForQuery{
 			ID:         row.TeacherID,
 			Code:       row.TeacherCode,
@@ -266,7 +302,7 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 		Scan(&dist)
 	for _, d := range dist {
 		if d.Rating >= 1 && d.Rating <= 5 {
-			result.RatingDistribution[d.Rating-1] = d.Count
+			result.Rating.Distribution[d.Rating-1] = d.Count
 		}
 	}
 

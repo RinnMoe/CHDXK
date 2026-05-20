@@ -44,11 +44,12 @@ func (TeacherEntity) TableName() string {
 }
 
 type OfferedCourseEntity struct {
-	ID       int
-	CourseID int
-	Semester string
-	Language string
-	Grade    string
+	ID         int
+	CourseID   int
+	Semester   string
+	Language   string
+	Grades     []string `gorm:"type:text[];serializer:json"`
+	Categories []string `gorm:"type:text[];serializer:json"`
 }
 
 func (OfferedCourseEntity) TableName() string {
@@ -71,6 +72,9 @@ type CourseEntity struct {
 	Credit        float32
 	Department    string
 	MainTeacherID int
+	Categories    []string `gorm:"type:text[];serializer:json"`
+	Language      string
+	Grades        []string `gorm:"type:text[];serializer:json"`
 	ReviewCount   int
 	AvgRating     float64
 	CreatedAt     time.Time
