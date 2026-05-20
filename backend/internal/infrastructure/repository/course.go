@@ -118,7 +118,7 @@ func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int)
 		}
 	}
 
-	teacherMap := make(map[int]*teacher.TeacherView)
+	teacherMap := make(map[int]teacher.TeacherView)
 	if len(teacherIDSet) > 0 {
 		ids := make([]int64, 0, len(teacherIDSet))
 		for id := range teacherIDSet {
@@ -130,7 +130,7 @@ func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int)
 		}
 		for i := range teachers {
 			t := &teachers[i]
-			teacherMap[t.ID] = newTeacherView(t)
+			teacherMap[t.ID] = *newTeacherView(t)
 		}
 	}
 
@@ -216,10 +216,7 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 	if err != nil {
 		return nil, err
 	}
-	result.OfferedCourses = make([]*course.OfferedCourseView, len(offeredCourses))
-	for i := range offeredCourses {
-		result.OfferedCourses[i] = &offeredCourses[i]
-	}
+	result.OfferedCourses = offeredCourses
 
 	return result, nil
 }

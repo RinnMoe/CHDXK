@@ -52,7 +52,7 @@ func newCourseDetailViewFromEntity(e *CourseEntity) *course.CourseDetailView {
 			Count: e.RatingCount,
 			Avg:   e.RatingAvg,
 		},
-		OfferedCourses: make([]*course.OfferedCourseView, 0),
+		OfferedCourses: make([]course.OfferedCourseView, 0),
 	}
 	if e.MainTeacher != nil {
 		dv.MainTeacher = newTeacherView(e.MainTeacher)

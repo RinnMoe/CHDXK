@@ -56,7 +56,7 @@ type CourseDetailView struct {
 	Language       string
 	TargetYears    []string
 	Rating         RatingInfo
-	OfferedCourses []*OfferedCourseView
+	OfferedCourses []OfferedCourseView
 }
 
 // Read model interface

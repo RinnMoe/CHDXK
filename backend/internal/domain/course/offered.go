@@ -19,5 +19,5 @@ type OfferedCourseView struct {
 	Language     string
 	TargetYears  []string
 	Categories   []string
-	TeacherGroup []*teacher.TeacherView
+	TeacherGroup []teacher.TeacherView
 }

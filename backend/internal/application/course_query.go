@@ -94,8 +94,8 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, courseID int) 
 			Categories:   oc.Categories,
 			TeacherGroup: make([]TeacherDTO, 0, len(oc.TeacherGroup)),
 		}
-		for _, t := range oc.TeacherGroup {
-			ocView.TeacherGroup = append(ocView.TeacherGroup, newTeacherDTO(t))
+		for i := range oc.TeacherGroup {
+			ocView.TeacherGroup = append(ocView.TeacherGroup, newTeacherDTO(&oc.TeacherGroup[i]))
 		}
 		dto.OfferedCourses = append(dto.OfferedCourses, ocView)
 	}
