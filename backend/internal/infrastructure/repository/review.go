@@ -10,6 +10,7 @@ import (
 
 func newReviewEntity(r *review.Review) ReviewEntity {
 	return ReviewEntity{
+		ID:        r.ID,
 		CourseID:  r.CourseID,
 		Semester:  r.Semester,
 		UserID:    r.UserID,
@@ -140,10 +141,10 @@ func (r2 *ReviewRepository) Create(ctx context.Context, r *review.Review) error 
 	return nil
 }
 
-func (r2 *ReviewRepository) Update(ctx context.Context, r *review.Review) error {
+func (r2 *ReviewRepository) Update(ctx context.Context, r *review.Review, rv review.Revision) error {
 	e := newReviewEntity(r)
-	rr := newReviewRevisionEntity(r.MakeRevision())
 	if err := r2.db.Transaction(func(tx *gorm.DB) error {
+		rr := newReviewRevisionEntity(rv)
 		if _, err := gorm.G[ReviewEntity](tx).Where("id = ?", e.ID).Updates(ctx, e); err != nil {
 			return err
 		}

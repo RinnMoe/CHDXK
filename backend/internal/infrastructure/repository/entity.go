@@ -1,6 +1,10 @@
 package repository
 
-import "time"
+import (
+	"time"
+
+	"github.com/lib/pq"
+)
 
 type DepartmentEntity struct {
 	ID        int
@@ -44,12 +48,12 @@ func (TeacherEntity) TableName() string {
 }
 
 type OfferedCourseEntity struct {
-	ID          int      `gorm:"column:id"`
-	CourseID    int      `gorm:"column:course_id;index"`
-	Semester    string   `gorm:"column:semester"`
-	Language    string   `gorm:"column:language"`
-	TargetYears []string `gorm:"column:target_years;type:text[];serializer:json"`
-	Categories  []string `gorm:"column:categories;type:text[];serializer:json"`
+	ID          int            `gorm:"column:id"`
+	CourseID    int            `gorm:"column:course_id;index"`
+	Semester    string         `gorm:"column:semester"`
+	Language    string         `gorm:"column:language"`
+	TargetYears pq.StringArray `gorm:"column:target_years;type:text[]"`
+	Categories  pq.StringArray `gorm:"column:categories;type:text[]"`
 }
 
 func (OfferedCourseEntity) TableName() string {
@@ -66,18 +70,18 @@ func (CourseTeacherGroupEntity) TableName() string {
 }
 
 type CourseEntity struct {
-	ID            int       `gorm:"column:id"`
-	Code          string    `gorm:"column:code;uniqueIndex"`
-	Name          string    `gorm:"column:name"`
-	Credit        float32   `gorm:"column:credit"`
-	Department    string    `gorm:"column:department;index"`
-	MainTeacherID int       `gorm:"column:main_teacher_id;index"`
-	TargetYears   []string  `gorm:"column:target_years;type:text[];serializer:json"`
-	Language      string    `gorm:"column:language"`
-	Categories    []string  `gorm:"column:categories;type:text[];serializer:json"`
-	ReviewCount   int       `gorm:"column:review_count"`
-	AvgRating     float64   `gorm:"column:avg_rating"`
-	CreatedAt     time.Time `gorm:"column:created_at"`
+	ID            int            `gorm:"column:id"`
+	Code          string         `gorm:"column:code;uniqueIndex"`
+	Name          string         `gorm:"column:name"`
+	Credit        float32        `gorm:"column:credit"`
+	Department    string         `gorm:"column:department;index"`
+	MainTeacherID int            `gorm:"column:main_teacher_id;index"`
+	TargetYears   pq.StringArray `gorm:"column:target_years;type:text[]"`
+	Language      string         `gorm:"column:language"`
+	Categories    pq.StringArray `gorm:"column:categories;type:text[]"`
+	ReviewCount   int            `gorm:"column:review_count"`
+	AvgRating     float64        `gorm:"column:avg_rating"`
+	CreatedAt     time.Time      `gorm:"column:created_at"`
 }
 
 func (CourseEntity) TableName() string {

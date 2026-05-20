@@ -44,6 +44,7 @@ func (u2 *UserRepository) Create(ctx context.Context, u *auth.User) error {
 	if err := gorm.G[UserEntity](u2.db).Create(ctx, &e); err != nil {
 		return err
 	}
+	u.ID = e.ID
 	return nil
 }
 

@@ -85,6 +85,8 @@ func (s *ReviewCommandService) UpdateReview(ctx context.Context, u *auth.User, c
 		return errors.New("user cannot update review")
 	}
 
+	rv := r.MakeRevision()
+
 	r.Semester = cmd.Semester
 	r.Rating = cmd.Rating
 	r.Content = cmd.Content
@@ -95,7 +97,7 @@ func (s *ReviewCommandService) UpdateReview(ctx context.Context, u *auth.User, c
 		return err
 	}
 
-	err = s.reviewRepo.Update(ctx, r)
+	err = s.reviewRepo.Update(ctx, r, rv)
 	if err != nil {
 		return err
 	}

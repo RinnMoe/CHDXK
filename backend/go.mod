@@ -5,6 +5,7 @@ go 1.26.2
 require (
 	github.com/gin-contrib/sessions v1.1.0
 	github.com/gin-gonic/gin v1.12.0
+	github.com/lib/pq v1.12.3
 	github.com/redis/go-redis/v9 v9.19.0
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0

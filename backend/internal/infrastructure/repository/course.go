@@ -3,21 +3,13 @@ package repository
 import (
 	"context"
 	"fmt"
-	"strings"
 
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/teacher"
 )
-
-func joinStrings(ss []string) string {
-	quoted := make([]string, len(ss))
-	for i := range ss {
-		quoted[i] = fmt.Sprintf(`"%s"`, ss[i])
-	}
-	return strings.Join(quoted, ",")
-}
 
 func newCourseDomain(e *CourseEntity) course.Course {
 	return course.Course{
@@ -67,9 +59,9 @@ type courseRow struct {
 	Credit        float32
 	Department    string
 	MainTeacherID int
-	Categories    []string
+	Categories    pq.StringArray `gorm:"type:text[]"`
 	Language      string
-	TargetYears   []string
+	TargetYears   pq.StringArray `gorm:"type:text[]"`
 	ReviewCount   int
 	AvgRating     float64
 
@@ -121,10 +113,10 @@ func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm
 		db = db.Where("c.language = ?", f.Language)
 	}
 	if len(f.Categories) > 0 {
-		db = db.Where("c.categories && ?", fmt.Sprintf("{%s}", joinStrings(f.Categories)))
+		db = db.Where("c.categories && ?", pq.StringArray(f.Categories))
 	}
 	if len(f.TargetYears) > 0 {
-		db = db.Where("c.target_years && ?", fmt.Sprintf("{%s}", joinStrings(f.TargetYears)))
+		db = db.Where("c.target_years && ?", pq.StringArray(f.TargetYears))
 	}
 	return db
 }
@@ -169,8 +161,8 @@ func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int)
 		ID          int
 		Semester    string
 		Language    string
-		TargetYears []string
-		Categories  []string
+		TargetYears pq.StringArray `gorm:"type:text[]"`
+		Categories  pq.StringArray `gorm:"type:text[]"`
 		TeacherID   int
 		TeacherCode string
 		TeacherName string
@@ -297,7 +289,7 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 	var dist []ratingCount
 	r.db.WithContext(ctx).Table("reviews").
 		Select("rating, COUNT(*) AS count").
-		Where("course_id = ? AND deleted_at IS NULL", courseID).
+		Where("course_id = ?", courseID).
 		Group("rating").
 		Scan(&dist)
 	for _, d := range dist {
