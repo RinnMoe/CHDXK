@@ -56,9 +56,9 @@ func TestReviewRepository_Create(t *testing.T) {
 	}
 
 	var count int64
-	db.Model(&repository.CourseEntity{}).Where("id = ?", course.ID).Select("review_count").Scan(&count)
+	db.Model(&repository.CourseEntity{}).Where("id = ?", course.ID).Select("rating_count").Scan(&count)
 	if count != 1 {
-		t.Errorf("course review_count: got %d, want 1", count)
+		t.Errorf("course rating_count: got %d, want 1", count)
 	}
 }
 
@@ -137,9 +137,9 @@ func TestReviewRepository_Delete(t *testing.T) {
 	}
 
 	var count int64
-	db.Model(&repository.CourseEntity{}).Where("id = ?", course.ID).Select("review_count").Scan(&count)
+	db.Model(&repository.CourseEntity{}).Where("id = ?", course.ID).Select("rating_count").Scan(&count)
 	if count != 0 {
-		t.Errorf("course review_count after delete: got %d, want 0", count)
+		t.Errorf("course rating_count after delete: got %d, want 0", count)
 	}
 }
 

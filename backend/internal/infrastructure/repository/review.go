@@ -81,8 +81,8 @@ type ReviewRepository struct {
 
 func (r2 *ReviewRepository) updateCourseStats(tx *gorm.DB, courseID int) error {
 	return tx.Exec(`UPDATE courses SET
-		review_count = (SELECT COUNT(*) FROM reviews WHERE course_id = ?),
-		avg_rating = (SELECT COALESCE(AVG(rating), 0) FROM reviews WHERE course_id = ?)
+		rating_count = (SELECT COUNT(*) FROM reviews WHERE course_id = ?),
+		rating_avg = (SELECT COALESCE(AVG(rating), 0) FROM reviews WHERE course_id = ?)
 		WHERE id = ?`, courseID, courseID, courseID).Error
 }
 

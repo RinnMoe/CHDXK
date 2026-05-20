@@ -37,8 +37,8 @@ CREATE TABLE IF NOT EXISTS courses (
     categories    TEXT[]  NOT NULL DEFAULT '{}',
     language      TEXT    NOT NULL,
     target_years  TEXT[]  NOT NULL DEFAULT '{}',
-    review_count  INTEGER NOT NULL DEFAULT 0,
-    avg_rating    DOUBLE PRECISION NOT NULL DEFAULT 0,
+    rating_count  INTEGER NOT NULL DEFAULT 0,
+    rating_avg    DOUBLE PRECISION NOT NULL DEFAULT 0,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_courses_main_teacher

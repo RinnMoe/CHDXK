@@ -42,8 +42,8 @@ CREATE TABLE IF NOT EXISTS courses (
     categories      TEXT    NOT NULL DEFAULT '[]',  -- JSON array
     language        TEXT    NOT NULL,
     target_years    TEXT    NOT NULL DEFAULT '[]',  -- JSON array
-    review_count    INTEGER NOT NULL DEFAULT 0,
-    avg_rating      REAL    NOT NULL DEFAULT 0,
+    rating_count    INTEGER NOT NULL DEFAULT 0,
+    rating_avg      REAL    NOT NULL DEFAULT 0,
     created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
 
     FOREIGN KEY (main_teacher_id) REFERENCES teachers(id)
