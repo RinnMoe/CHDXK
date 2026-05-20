@@ -64,14 +64,19 @@ func newReviewRevisionQuery(e *ReviewRevisionEntity) review.RevisionView {
 
 func newReviewQuery(e *ReviewEntity) review.ReviewView {
 	return review.ReviewView{
-		Review: review.Review{
-			CourseID: e.CourseID,
-			Semester: e.Semester,
-			UserID:   e.UserID,
-			Rating:   e.Rating,
-			Content:  e.Content,
-			Score:    e.Score,
+		ID:       e.ID,
+		CourseID: e.CourseID,
+		Semester: e.Semester,
+		UserID:   e.UserID,
+		Rating:   e.Rating,
+		Content:  e.Content,
+		Score:    e.Score,
+		Vote: review.ReviewVoteStats{
+			LikeCount:    e.LikeCount,
+			DislikeCount: e.DislikeCount,
 		},
+		CreatedAt: e.CreatedAt,
+		UpdatedAt: e.UpdatedAt,
 	}
 }
 

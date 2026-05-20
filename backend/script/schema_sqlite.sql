@@ -83,15 +83,17 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS reviews (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    course_id  INTEGER NOT NULL,
-    semester   TEXT    NOT NULL,
-    user_id    INTEGER NOT NULL,
-    rating     INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
-    content    TEXT    NOT NULL,
-    score     TEXT    NOT NULL,
-    created_at TEXT    NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT    NOT NULL DEFAULT (datetime('now')),
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    course_id     INTEGER NOT NULL,
+    semester      TEXT    NOT NULL,
+    user_id       INTEGER NOT NULL,
+    rating        INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    content       TEXT    NOT NULL,
+    score         TEXT    NOT NULL,
+    like_count    INTEGER NOT NULL DEFAULT 0,
+    dislike_count INTEGER NOT NULL DEFAULT 0,
+    created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
+    updated_at    TEXT    NOT NULL DEFAULT (datetime('now')),
 
     FOREIGN KEY (course_id) REFERENCES courses(id)
         ON DELETE CASCADE,
@@ -119,3 +121,18 @@ CREATE TABLE IF NOT EXISTS review_revisions (
 
 CREATE INDEX IF NOT EXISTS idx_review_revisions_review ON review_revisions (review_id);
 CREATE INDEX IF NOT EXISTS idx_review_revisions_course ON review_revisions (course_id);
+
+CREATE TABLE IF NOT EXISTS review_votes (
+    review_id  INTEGER NOT NULL,
+    user_id    INTEGER NOT NULL,
+    vote_type  INTEGER NOT NULL CHECK (vote_type IN (1, -1)),
+    created_at TEXT    NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT    NOT NULL DEFAULT (datetime('now')),
+
+    PRIMARY KEY (review_id, user_id),
+
+    FOREIGN KEY (review_id) REFERENCES reviews(id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE CASCADE
+);

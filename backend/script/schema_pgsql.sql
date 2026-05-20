@@ -82,15 +82,17 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS reviews (
-    id         SERIAL PRIMARY KEY,
-    course_id  INTEGER NOT NULL,
-    semester   TEXT    NOT NULL,
-    user_id    INTEGER NOT NULL,
-    rating     INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
-    content    TEXT    NOT NULL,
-    score     TEXT    NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    id            SERIAL PRIMARY KEY,
+    course_id     INTEGER NOT NULL,
+    semester      TEXT    NOT NULL,
+    user_id       INTEGER NOT NULL,
+    rating        INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    content       TEXT    NOT NULL,
+    score         TEXT    NOT NULL,
+    like_count    INTEGER NOT NULL DEFAULT 0,
+    dislike_count INTEGER NOT NULL DEFAULT 0,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_reviews_course
         FOREIGN KEY (course_id) REFERENCES courses(id)
@@ -121,5 +123,22 @@ CREATE TABLE IF NOT EXISTS review_revisions (
 
 CREATE INDEX idx_review_revisions_review ON review_revisions (review_id);
 CREATE INDEX idx_review_revisions_course ON review_revisions (course_id);
+
+CREATE TABLE IF NOT EXISTS review_votes (
+    review_id  INTEGER NOT NULL,
+    user_id    INTEGER NOT NULL,
+    vote_type  SMALLINT NOT NULL CHECK (vote_type IN (1, -1)),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    PRIMARY KEY (review_id, user_id),
+
+    CONSTRAINT fk_review_votes_review
+        FOREIGN KEY (review_id) REFERENCES reviews(id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_review_votes_user
+        FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE CASCADE
+);
 
 COMMIT;

@@ -29,10 +29,8 @@ func (f *fakeReviewQuery) FindRevisions(ctx context.Context, reviewID int) ([]re
 
 func makeView(courseID int, content string) review.ReviewView {
 	return review.ReviewView{
-		Review: review.Review{
-			CourseID: courseID,
-			Content:  content,
-		},
+		CourseID: courseID,
+		Content:  content,
 	}
 }
 

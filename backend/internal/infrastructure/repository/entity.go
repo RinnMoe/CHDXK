@@ -83,15 +83,17 @@ func (CourseEntity) TableName() string {
 }
 
 type ReviewEntity struct {
-	ID        int       `gorm:"column:id"`
-	CourseID  int       `gorm:"column:course_id;index"`
-	Semester  string    `gorm:"column:semester"`
-	UserID    int       `gorm:"column:user_id;index"`
-	Rating    int       `gorm:"column:rating"`
-	Content   string    `gorm:"column:content"`
-	Score     string    `gorm:"column:score"`
-	CreatedAt time.Time `gorm:"column:created_at"`
-	UpdatedAt time.Time `gorm:"column:updated_at"`
+	ID           int       `gorm:"column:id"`
+	CourseID     int       `gorm:"column:course_id;index"`
+	Semester     string    `gorm:"column:semester"`
+	UserID       int       `gorm:"column:user_id;index"`
+	Rating       int       `gorm:"column:rating"`
+	Content      string    `gorm:"column:content"`
+	Score        string    `gorm:"column:score"`
+	LikeCount    int       `gorm:"column:like_count"`
+	DislikeCount int       `gorm:"column:dislike_count"`
+	CreatedAt    time.Time `gorm:"column:created_at"`
+	UpdatedAt    time.Time `gorm:"column:updated_at"`
 }
 
 func (ReviewEntity) TableName() string {
@@ -129,4 +131,16 @@ type UserEntity struct {
 
 func (UserEntity) TableName() string {
 	return "users"
+}
+
+type ReviewVoteEntity struct {
+	ReviewID  int       `gorm:"column:review_id;primaryKey"`
+	UserID    int       `gorm:"column:user_id;primaryKey"`
+	VoteType  int       `gorm:"column:vote_type"`
+	CreatedAt time.Time `gorm:"column:created_at"`
+	UpdatedAt time.Time `gorm:"column:updated_at"`
+}
+
+func (ReviewVoteEntity) TableName() string {
+	return "review_votes"
 }

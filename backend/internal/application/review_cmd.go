@@ -15,3 +15,7 @@ type UpdateReviewCmd struct {
 	Content  string `json:"content,omitempty"`
 	Score    string `json:"score,omitempty"`
 }
+
+type VoteCmd struct {
+	VoteType int `json:"vote_type"`
+}

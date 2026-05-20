@@ -11,11 +11,12 @@ type CourseReviewFilter struct{}
 type UserReviewFilter struct{}
 
 type ReviewQueryService struct {
-	repo review.ReviewQuery
+	repo     review.ReviewQuery
+	voteRepo review.VoteRepository
 }
 
-func NewReviewQueryService(repo review.ReviewQuery) *ReviewQueryService {
-	return &ReviewQueryService{repo: repo}
+func NewReviewQueryService(repo review.ReviewQuery, voteRepo review.VoteRepository) *ReviewQueryService {
+	return &ReviewQueryService{repo: repo, voteRepo: voteRepo}
 }
 
 func (s *ReviewQueryService) GetReviewsByCourse(ctx context.Context, courseID int, filter CourseReviewFilter) ([]ReviewDTO, error) {
@@ -60,5 +61,12 @@ func (s *ReviewQueryService) GetReview(ctx context.Context, u *auth.User, review
 		return nil, err
 	}
 	view := newReviewDTO(&reviews[0])
+	if u != nil {
+		vote, err := s.voteRepo.FindByReviewAndUser(ctx, reviewID, u.ID)
+		if err == nil && vote != nil {
+			vt := vote.VoteType
+			view.Vote.MyVote = &vt
+		}
+	}
 	return &view, nil
 }

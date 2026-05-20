@@ -13,16 +13,20 @@ import (
 type ReviewCommandService struct {
 	courseRepo course.CourseRepository
 	reviewRepo review.ReviewRepository
+	voteRepo   review.VoteRepository
 	policies   []review.CreatePolicy
 }
 
 func NewReviewCommandService(
 	courseRepo course.CourseRepository,
 	reviewRepo review.ReviewRepository,
-	policies []review.CreatePolicy) *ReviewCommandService {
+	voteRepo review.VoteRepository,
+	policies []review.CreatePolicy,
+) *ReviewCommandService {
 	return &ReviewCommandService{
 		courseRepo: courseRepo,
 		reviewRepo: reviewRepo,
+		voteRepo:   voteRepo,
 		policies:   policies,
 	}
 }
@@ -122,4 +126,48 @@ func (s *ReviewCommandService) DeleteReview(ctx context.Context, u *auth.User, r
 	}
 
 	return nil
+}
+
+func (s *ReviewCommandService) VoteReview(ctx context.Context, userID int, reviewID int, voteType int) error {
+	_, err := s.reviewRepo.Get(ctx, reviewID)
+	if err != nil {
+		return err
+	}
+
+	todayCount, err := s.voteRepo.CountTodayByUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if todayCount >= review.MaxDailyVotes {
+		return review.ErrDailyVoteLimitReached
+	}
+
+	existing, err := s.voteRepo.FindByReviewAndUser(ctx, reviewID, userID)
+	if err != nil {
+		return err
+	}
+
+	if existing != nil && existing.VoteType == voteType {
+		return nil
+	}
+
+	if voteType == 0 {
+		if existing == nil {
+			return nil
+		}
+		return s.voteRepo.Delete(ctx, reviewID, userID)
+	}
+
+	now := time.Now()
+	v := &review.Vote{
+		ReviewID:  reviewID,
+		UserID:    userID,
+		VoteType:  voteType,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	if existing != nil {
+		v.CreatedAt = existing.CreatedAt
+	}
+	return s.voteRepo.Save(ctx, v)
 }

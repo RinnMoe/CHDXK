@@ -21,16 +21,17 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	db := persistence.NewPostgres(conf.Postgres)
 
 	reviewRepo := repository.NewReviewRepository(db)
+	voteRepo := repository.NewReviewVoteRepository(db)
 	courseRepo := repository.NewCourseRepository(db)
 	teacherRepo := repository.NewTeacherRepository(db)
 
-	reviewQuery := application.NewReviewQueryService(reviewRepo)
+	reviewQuery := application.NewReviewQueryService(reviewRepo, voteRepo)
 
 	freqPolicy := policy.NewFrequencyPolicy(reviewRepo, policy.DefaultFrequencyPolicyConfig())
 	safetyPolicy := policy.NewSafetyPolicy(nil)
 
 	reviewCommand := application.NewReviewCommandService(
-		courseRepo, reviewRepo, []review.CreatePolicy{freqPolicy, safetyPolicy},
+		courseRepo, reviewRepo, voteRepo, []review.CreatePolicy{freqPolicy, safetyPolicy},
 	)
 	courseQuery := application.NewCourseQueryService(courseRepo)
 	teacherQuery := application.NewTeacherQueryService(teacherRepo)
