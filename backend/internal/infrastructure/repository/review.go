@@ -100,8 +100,14 @@ func (r2 *ReviewRepository) FindBy(ctx context.Context, filter review.ReviewFilt
 	if filter.Rating != 0 {
 		db = db.Where("rating = ?", filter.Rating)
 	}
+	if !filter.CreatedAfter.IsZero() {
+		db = db.Where("created_at > ?", filter.CreatedAfter)
+	}
 	if filter.Order != "" {
 		db = db.Order(filter.Order)
+	}
+	if filter.Limit > 0 {
+		db = db.Limit(filter.Limit)
 	}
 	es, err := db.Find(ctx)
 	if err != nil {

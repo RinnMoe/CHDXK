@@ -3,6 +3,8 @@ package app
 import (
 	"jcourse/config"
 	"jcourse/internal/application"
+	"jcourse/internal/domain/review"
+	"jcourse/internal/domain/review/policy"
 	"jcourse/internal/infrastructure/persistence"
 	"jcourse/internal/infrastructure/repository"
 )
@@ -23,7 +25,13 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	teacherRepo := repository.NewTeacherRepository(db)
 
 	reviewQuery := application.NewReviewQueryService(reviewRepo)
-	reviewCommand := application.NewReviewCommandService(courseRepo, reviewRepo, nil)
+
+	freqPolicy := policy.NewFrequencyPolicy(reviewRepo, policy.DefaultFrequencyPolicyConfig())
+	safetyPolicy := policy.NewSafetyPolicy(nil)
+
+	reviewCommand := application.NewReviewCommandService(
+		courseRepo, reviewRepo, []review.CreatePolicy{freqPolicy, safetyPolicy},
+	)
 	courseQuery := application.NewCourseQueryService(courseRepo)
 	teacherQuery := application.NewTeacherQueryService(teacherRepo)
 
