@@ -137,8 +137,8 @@ func seedCourse(t *testing.T, db *gorm.DB, teacherID int) repository.CourseEntit
 		Categories:    []string{"核心课", "必修课"},
 		Language:      "zh",
 		TargetYears:   []string{"2021", "2022"},
-		ReviewCount:   0,
-		AvgRating:     0,
+		RatingCount:   0,
+		RatingAvg:     0,
 		CreatedAt:     time.Now(),
 	}
 	if err := db.Create(&e).Error; err != nil {
@@ -173,8 +173,8 @@ func seedCourseRaw(t *testing.T, db *gorm.DB, code, name string, credit float32,
 		Categories:    categories,
 		Language:      language,
 		TargetYears:   targetYears,
-		ReviewCount:   0,
-		AvgRating:     0,
+		RatingCount:   0,
+		RatingAvg:     0,
 		CreatedAt:     time.Now(),
 	}
 	if err := db.Create(&e).Error; err != nil {

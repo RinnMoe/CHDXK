@@ -267,12 +267,12 @@ func TestReviewRepository_CourseStatsAggregation(t *testing.T) {
 	if err := db.Where("id = ?", course.ID).Take(&c).Error; err != nil {
 		t.Fatalf("fetch course: %v", err)
 	}
-	if c.ReviewCount != 3 {
-		t.Errorf("ReviewCount: got %d, want 3", c.ReviewCount)
+	if c.RatingCount != 3 {
+		t.Errorf("ReviewCount: got %d, want 3", c.RatingCount)
 	}
 	avg := float64(5+4+3) / 3
-	if c.AvgRating != avg {
-		t.Errorf("AvgRating: got %v, want %v", c.AvgRating, avg)
+	if c.RatingAvg != avg {
+		t.Errorf("AvgRating: got %v, want %v", c.RatingAvg, avg)
 	}
 }
 

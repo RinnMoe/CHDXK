@@ -79,8 +79,8 @@ type CourseEntity struct {
 	TargetYears   pq.StringArray `gorm:"column:target_years;type:text[]"`
 	Language      string         `gorm:"column:language"`
 	Categories    pq.StringArray `gorm:"column:categories;type:text[]"`
-	ReviewCount   int            `gorm:"column:review_count"`
-	AvgRating     float64        `gorm:"column:avg_rating"`
+	RatingCount   int            `gorm:"column:rating_count"`
+	RatingAvg     float64        `gorm:"column:rating_avg"`
 	CreatedAt     time.Time      `gorm:"column:created_at"`
 }
 

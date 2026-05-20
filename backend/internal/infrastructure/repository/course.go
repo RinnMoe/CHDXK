@@ -21,8 +21,8 @@ func newCourseDomain(e *CourseEntity) course.Course {
 		Categories:    e.Categories,
 		Language:      e.Language,
 		TargetYears:   e.TargetYears,
-		RatingCount:   e.ReviewCount,
-		RatingAvg:     e.AvgRating,
+		RatingCount:   e.RatingCount,
+		RatingAvg:     e.RatingAvg,
 		CreatedAt:     e.CreatedAt,
 	}
 }
@@ -84,7 +84,7 @@ func (r *CourseRepository) baseCourseQuery(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx).Table("courses c").
 		Select(`c.id, c.code, c.name, c.credit, c.department, c.main_teacher_id,
 			c.categories, c.language, c.target_years,
-			c.review_count, c.avg_rating,
+			c.rating_count, c.rating_avg,
 			t.id AS teacher_id, t.code AS teacher_code, t.name AS teacher_name,
 			t.department AS teacher_department, t.title AS teacher_title`).
 		Joins("LEFT JOIN teachers t ON t.id = c.main_teacher_id")
@@ -107,7 +107,7 @@ func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm
 		db = db.Where("c.credit = ?", *f.Credit)
 	}
 	if f.HasReview != nil && *f.HasReview {
-		db = db.Where("c.review_count > 0")
+		db = db.Where("c.rating_count > 0")
 	}
 	if f.Language != "" {
 		db = db.Where("c.language = ?", f.Language)
@@ -127,10 +127,10 @@ func (r *CourseRepository) applySort(db *gorm.DB, f course.CourseFilter) *gorm.D
 		dir = "ASC"
 	}
 	switch f.OrderBy {
-	case "review_count":
-		db = db.Order(fmt.Sprintf("c.review_count %s", dir))
-	case "avg_rating":
-		db = db.Order(fmt.Sprintf("c.avg_rating %s", dir))
+	case "rating_count":
+		db = db.Order(fmt.Sprintf("c.rating_count %s", dir))
+	case "rating_avg":
+		db = db.Order(fmt.Sprintf("c.rating_avg %s", dir))
 	default:
 		db = db.Order("c.id DESC")
 	}
