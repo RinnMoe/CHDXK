@@ -30,7 +30,7 @@ func NewCourseQueryService(courseQuery course.CourseQuery) *CourseQueryService {
 	}
 }
 
-func (s *CourseQueryService) ListCourses(ctx context.Context, f CourseListFilter) (*PaginatedResult[CourseListItem], error) {
+func (s *CourseQueryService) ListCourses(ctx context.Context, f CourseListFilter) (*PaginatedResult[CourseListItemDTO], error) {
 	filter := course.CourseFilter{
 		Code:       f.Code,
 		Department: f.Department,
@@ -50,12 +50,12 @@ func (s *CourseQueryService) ListCourses(ctx context.Context, f CourseListFilter
 		return nil, err
 	}
 
-	items := make([]CourseListItem, len(courses))
+	items := make([]CourseListItemDTO, len(courses))
 	for i, c := range courses {
-		items[i] = newCourseListItem(&c)
+		items[i] = newCourseListItemDTO(&c)
 	}
 
-	return &PaginatedResult[CourseListItem]{
+	return &PaginatedResult[CourseListItemDTO]{
 		Items:    items,
 		Total:    total,
 		Page:     f.Page,
@@ -87,7 +87,7 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, courseID int) 
 
 	dto.OfferedCourses = make([]OfferedCourseDTO, 0, len(detail.OfferedCourses))
 	for _, oc := range detail.OfferedCourses {
-		ocDTO := OfferedCourseDTO{
+		ocView := OfferedCourseDTO{
 			Semester:     oc.Semester,
 			Language:     oc.Language,
 			Grades:       oc.Grades,
@@ -95,9 +95,9 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, courseID int) 
 			TeacherGroup: make([]TeacherDTO, 0, len(oc.TeacherGroup)),
 		}
 		for _, t := range oc.TeacherGroup {
-			ocDTO.TeacherGroup = append(ocDTO.TeacherGroup, newTeacherDTO(t))
+			ocView.TeacherGroup = append(ocView.TeacherGroup, newTeacherDTO(t))
 		}
-		dto.OfferedCourses = append(dto.OfferedCourses, ocDTO)
+		dto.OfferedCourses = append(dto.OfferedCourses, ocView)
 	}
 
 	sameCode, _, err := s.courseQuery.FindBy(ctx, course.CourseFilter{
@@ -109,9 +109,9 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, courseID int) 
 	if err != nil {
 		return nil, err
 	}
-	dto.OtherTeachers = make([]CourseListItem, len(sameCode))
+	dto.OtherTeachers = make([]CourseListItemDTO, len(sameCode))
 	for i, c := range sameCode {
-		dto.OtherTeachers[i] = newCourseListItem(&c)
+		dto.OtherTeachers[i] = newCourseListItemDTO(&c)
 	}
 
 	sameTeacher, _, err := s.courseQuery.FindBy(ctx, course.CourseFilter{
@@ -123,15 +123,15 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, courseID int) 
 	if err != nil {
 		return nil, err
 	}
-	dto.OtherCourses = make([]CourseListItem, len(sameTeacher))
+	dto.OtherCourses = make([]CourseListItemDTO, len(sameTeacher))
 	for i, c := range sameTeacher {
-		dto.OtherCourses[i] = newCourseListItem(&c)
+		dto.OtherCourses[i] = newCourseListItemDTO(&c)
 	}
 
 	return dto, nil
 }
 
-func (s *CourseQueryService) ListTeacherCourses(ctx context.Context, teacherID int, f CourseListFilter) (*PaginatedResult[CourseListItem], error) {
+func (s *CourseQueryService) ListTeacherCourses(ctx context.Context, teacherID int, f CourseListFilter) (*PaginatedResult[CourseListItemDTO], error) {
 	filter := course.CourseFilter{
 		TeacherID:  teacherID,
 		Code:       f.Code,
@@ -152,12 +152,12 @@ func (s *CourseQueryService) ListTeacherCourses(ctx context.Context, teacherID i
 		return nil, err
 	}
 
-	items := make([]CourseListItem, len(courses))
+	items := make([]CourseListItemDTO, len(courses))
 	for i, c := range courses {
-		items[i] = newCourseListItem(&c)
+		items[i] = newCourseListItemDTO(&c)
 	}
 
-	return &PaginatedResult[CourseListItem]{
+	return &PaginatedResult[CourseListItemDTO]{
 		Items:    items,
 		Total:    total,
 		Page:     f.Page,

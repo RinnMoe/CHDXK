@@ -28,37 +28,40 @@ type CourseFilter struct {
 	PageSize   int
 }
 
-type CourseForQuery struct {
+// Read model: course list/search result
+type CourseView struct {
 	ID            int
 	Code          string
 	Name          string
 	Credit        float32
 	Department    string
 	MainTeacherID int
-	MainTeacher   *teacher.TeacherForQuery
+	MainTeacher   *teacher.TeacherView
 	Categories    []string
 	Language      string
 	Grades        []string
 	Rating        RatingInfo
 }
 
-type CourseDetailForQuery struct {
+// Read model: course detail with offered courses and rating distribution
+type CourseDetailView struct {
 	ID             int
 	Code           string
 	Name           string
 	Credit         float32
 	Department     string
 	MainTeacherID  int
-	MainTeacher    *teacher.TeacherForQuery
+	MainTeacher    *teacher.TeacherView
 	Categories     []string
 	Language       string
 	Grades         []string
 	Rating         RatingInfo
-	OfferedCourses []*OfferedCourseForQuery
+	OfferedCourses []*OfferedCourseView
 }
 
+// Read model interface
 type CourseQuery interface {
-	FindBy(ctx context.Context, filter CourseFilter) ([]CourseForQuery, int64, error)
-	GetDetail(ctx context.Context, courseID int) (*CourseDetailForQuery, error)
-	FindOfferedCourses(ctx context.Context, courseID int) ([]OfferedCourseForQuery, error)
+	FindBy(ctx context.Context, filter CourseFilter) ([]CourseView, int64, error)
+	GetDetail(ctx context.Context, courseID int) (*CourseDetailView, error)
+	FindOfferedCourses(ctx context.Context, courseID int) ([]OfferedCourseView, error)
 }

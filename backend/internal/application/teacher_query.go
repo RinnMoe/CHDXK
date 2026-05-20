@@ -28,13 +28,13 @@ func (s *TeacherQueryService) ListTeachers(ctx context.Context, f TeacherListFil
 		return nil, err
 	}
 
-	dtos := make([]TeacherDTO, len(teachers))
+	views := make([]TeacherDTO, len(teachers))
 	for i, t := range teachers {
-		dtos[i] = newTeacherDTO(&t)
+		views[i] = newTeacherDTO(&t)
 	}
 
 	return &PaginatedResult[TeacherDTO]{
-		Items:    dtos,
+		Items:    views,
 		Total:    total,
 		Page:     f.Page,
 		PageSize: f.PageSize,

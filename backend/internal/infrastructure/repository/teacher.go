@@ -16,7 +16,7 @@ func NewTeacherRepository(db *gorm.DB) *TeacherRepository {
 	return &TeacherRepository{db: db}
 }
 
-func (r *TeacherRepository) FindBy(ctx context.Context, filter teacher.TeacherFilter) ([]teacher.TeacherForQuery, int64, error) {
+func (r *TeacherRepository) FindBy(ctx context.Context, filter teacher.TeacherFilter) ([]teacher.TeacherView, int64, error) {
 	db := r.db.WithContext(ctx).Model(&TeacherEntity{})
 
 	if filter.Department != "" {
@@ -45,9 +45,9 @@ func (r *TeacherRepository) FindBy(ctx context.Context, filter teacher.TeacherFi
 		return nil, 0, err
 	}
 
-	result := make([]teacher.TeacherForQuery, len(entities))
+	result := make([]teacher.TeacherView, len(entities))
 	for i, e := range entities {
-		result[i] = teacher.TeacherForQuery{
+		result[i] = teacher.TeacherView{
 			ID:         e.ID,
 			Code:       e.Code,
 			Name:       e.Name,

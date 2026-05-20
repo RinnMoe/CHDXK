@@ -48,8 +48,8 @@ func newReviewRevisionEntity(r review.Revision) ReviewRevisionEntity {
 	}
 }
 
-func newReviewRevisionQuery(e *ReviewRevisionEntity) review.RevisionForQuery {
-	return review.RevisionForQuery{
+func newReviewRevisionQuery(e *ReviewRevisionEntity) review.RevisionView {
+	return review.RevisionView{
 		ReviewID:  e.ReviewID,
 		CourseID:  e.CourseID,
 		Semester:  e.Semester,
@@ -61,8 +61,8 @@ func newReviewRevisionQuery(e *ReviewRevisionEntity) review.RevisionForQuery {
 	}
 }
 
-func newReviewQuery(e *ReviewEntity) review.ReviewForQuery {
-	return review.ReviewForQuery{
+func newReviewQuery(e *ReviewEntity) review.ReviewView {
+	return review.ReviewView{
 		Review: review.Review{
 			CourseID: e.CourseID,
 			Semester: e.Semester,
@@ -85,7 +85,7 @@ func (r2 *ReviewRepository) updateCourseStats(tx *gorm.DB, courseID int) error {
 		WHERE id = ?`, courseID, courseID, courseID).Error
 }
 
-func (r2 *ReviewRepository) FindBy(ctx context.Context, filter review.ReviewFilter) ([]review.ReviewForQuery, error) {
+func (r2 *ReviewRepository) FindBy(ctx context.Context, filter review.ReviewFilter) ([]review.ReviewView, error) {
 	db := gorm.G[ReviewEntity](r2.db).Where("1 = 1")
 	if filter.CourseID != 0 {
 		db = db.Where("course_id = ?", filter.CourseID)
@@ -106,19 +106,19 @@ func (r2 *ReviewRepository) FindBy(ctx context.Context, filter review.ReviewFilt
 	if err != nil {
 		return nil, err
 	}
-	rs := make([]review.ReviewForQuery, len(es))
+	rs := make([]review.ReviewView, len(es))
 	for i, e := range es {
 		rs[i] = newReviewQuery(&e)
 	}
 	return rs, nil
 }
 
-func (r2 *ReviewRepository) FindRevisions(ctx context.Context, reviewID int) ([]review.RevisionForQuery, error) {
+func (r2 *ReviewRepository) FindRevisions(ctx context.Context, reviewID int) ([]review.RevisionView, error) {
 	es, err := gorm.G[ReviewRevisionEntity](r2.db).Where("review_id = ?", reviewID).Find(ctx)
 	if err != nil {
 		return nil, err
 	}
-	rs := make([]review.RevisionForQuery, len(es))
+	rs := make([]review.RevisionView, len(es))
 	for i, e := range es {
 		rs[i] = newReviewRevisionQuery(&e)
 	}

@@ -35,8 +35,8 @@ func newCourseDomain(e *CourseEntity) course.Course {
 	}
 }
 
-func newCourseQuery(e *courseRow) course.CourseForQuery {
-	return course.CourseForQuery{
+func newCourseQuery(e *courseRow) course.CourseView {
+	return course.CourseView{
 		ID:            e.ID,
 		Code:          e.Code,
 		Name:          e.Name,
@@ -50,7 +50,7 @@ func newCourseQuery(e *courseRow) course.CourseForQuery {
 			Count: e.ReviewCount,
 			Avg:   e.AvgRating,
 		},
-		MainTeacher: &teacher.TeacherForQuery{
+		MainTeacher: &teacher.TeacherView{
 			ID:         e.TeacherID,
 			Code:       e.TeacherCode,
 			Name:       e.TeacherName,
@@ -164,7 +164,7 @@ func (r *CourseRepository) OfferedCourseExists(ctx context.Context, courseID int
 	return count > 0, nil
 }
 
-func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int) ([]course.OfferedCourseForQuery, error) {
+func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int) ([]course.OfferedCourseView, error) {
 	type ocRow struct {
 		ID          int
 		Semester    string
@@ -192,12 +192,12 @@ func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int)
 		return nil, err
 	}
 
-	ocMap := make(map[int]*course.OfferedCourseForQuery)
+	ocMap := make(map[int]*course.OfferedCourseView)
 	var ocOrder []int
 	for _, row := range rows {
 		oc, ok := ocMap[row.ID]
 		if !ok {
-			oc = &course.OfferedCourseForQuery{
+			oc = &course.OfferedCourseView{
 				ID:         row.ID,
 				Semester:   row.Semester,
 				Language:   row.Language,
@@ -208,7 +208,7 @@ func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int)
 			ocOrder = append(ocOrder, row.ID)
 		}
 		if row.TeacherID > 0 {
-			oc.TeacherGroup = append(oc.TeacherGroup, &teacher.TeacherForQuery{
+			oc.TeacherGroup = append(oc.TeacherGroup, &teacher.TeacherView{
 				ID:         row.TeacherID,
 				Code:       row.TeacherCode,
 				Name:       row.TeacherName,
@@ -218,14 +218,14 @@ func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int)
 		}
 	}
 
-	result := make([]course.OfferedCourseForQuery, 0, len(ocMap))
+	result := make([]course.OfferedCourseView, 0, len(ocMap))
 	for _, id := range ocOrder {
 		result = append(result, *ocMap[id])
 	}
 	return result, nil
 }
 
-func (r *CourseRepository) FindBy(ctx context.Context, filter course.CourseFilter) ([]course.CourseForQuery, int64, error) {
+func (r *CourseRepository) FindBy(ctx context.Context, filter course.CourseFilter) ([]course.CourseView, int64, error) {
 	db := r.baseCourseQuery(ctx)
 	db = r.applyFilter(db, filter)
 
@@ -240,7 +240,7 @@ func (r *CourseRepository) FindBy(ctx context.Context, filter course.CourseFilte
 		return nil, 0, err
 	}
 
-	cs := make([]course.CourseForQuery, len(rows))
+	cs := make([]course.CourseView, len(rows))
 	for i, row := range rows {
 		cs[i] = newCourseQuery(&row)
 	}
@@ -255,7 +255,7 @@ func (r *CourseRepository) Get(ctx context.Context, courseID int) (*course.Cours
 	return new(newCourseDomain(&e)), nil
 }
 
-func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course.CourseDetailForQuery, error) {
+func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course.CourseDetailView, error) {
 	var row courseRow
 	err := r.baseCourseQuery(ctx).
 		Where("c.id = ?", courseID).
@@ -267,7 +267,7 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 		return nil, gorm.ErrRecordNotFound
 	}
 
-	result := &course.CourseDetailForQuery{
+	result := &course.CourseDetailView{
 		ID:            row.ID,
 		Code:          row.Code,
 		Name:          row.Name,
@@ -281,7 +281,7 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 			Count: row.ReviewCount,
 			Avg:   row.AvgRating,
 		},
-		MainTeacher: &teacher.TeacherForQuery{
+		MainTeacher: &teacher.TeacherView{
 			ID:         row.TeacherID,
 			Code:       row.TeacherCode,
 			Name:       row.TeacherName,
@@ -310,7 +310,7 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 	if err != nil {
 		return nil, err
 	}
-	result.OfferedCourses = make([]*course.OfferedCourseForQuery, len(offeredCourses))
+	result.OfferedCourses = make([]*course.OfferedCourseView, len(offeredCourses))
 	for i := range offeredCourses {
 		result.OfferedCourses[i] = &offeredCourses[i]
 	}

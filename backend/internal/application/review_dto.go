@@ -6,18 +6,19 @@ import (
 	"jcourse/internal/domain/review"
 )
 
+// Read model: review with eager-loaded course summary
 type ReviewDTO struct {
-	ID        int             `json:"id"`
-	Course    *CourseListItem `json:"course,omitempty"`
-	CourseID  int             `json:"course_id"`
-	Grade     string          `json:"grade"`
-	Rating    int             `json:"rating"`
-	Content   string          `json:"content"`
-	CreatedAt time.Time       `json:"created_at"`
-	UpdatedAt time.Time       `json:"updated_at"`
+	ID        int                `json:"id"`
+	Course    *CourseListItemDTO `json:"course,omitempty"`
+	CourseID  int                `json:"course_id"`
+	Grade     string             `json:"grade"`
+	Rating    int                `json:"rating"`
+	Content   string             `json:"content"`
+	CreatedAt time.Time          `json:"created_at"`
+	UpdatedAt time.Time          `json:"updated_at"`
 }
 
-func newReviewDTO(r *review.ReviewForQuery) ReviewDTO {
+func newReviewDTO(r *review.ReviewView) ReviewDTO {
 	dto := ReviewDTO{
 		ID:        r.ID,
 		CourseID:  r.CourseID,
@@ -28,12 +29,8 @@ func newReviewDTO(r *review.ReviewForQuery) ReviewDTO {
 		UpdatedAt: r.UpdatedAt,
 	}
 	if r.Course != nil {
-		item := newCourseListItem(r.Course)
+		item := newCourseListItemDTO(r.Course)
 		dto.Course = &item
 	}
 	return dto
 }
-
-type CourseReviewFilter struct{}
-
-type UserReviewFilter struct{}

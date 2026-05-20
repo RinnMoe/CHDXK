@@ -7,6 +7,9 @@ import (
 	"jcourse/internal/domain/review"
 )
 
+type CourseReviewFilter struct{}
+type UserReviewFilter struct{}
+
 type ReviewQueryService struct {
 	repo review.ReviewQuery
 }
@@ -25,12 +28,12 @@ func (s *ReviewQueryService) GetReviewsByCourse(ctx context.Context, courseID in
 		return nil, err
 	}
 
-	reviewDTOs := make([]ReviewDTO, len(reviews))
+	views := make([]ReviewDTO, len(reviews))
 	for i, r := range reviews {
-		reviewDTOs[i] = newReviewDTO(&r)
+		views[i] = newReviewDTO(&r)
 	}
 
-	return reviewDTOs, nil
+	return views, nil
 }
 
 func (s *ReviewQueryService) GetReviewsByUser(ctx context.Context, userID int, filter UserReviewFilter) ([]ReviewDTO, error) {
@@ -43,12 +46,12 @@ func (s *ReviewQueryService) GetReviewsByUser(ctx context.Context, userID int, f
 		return nil, err
 	}
 
-	reviewDTOs := make([]ReviewDTO, len(reviews))
+	views := make([]ReviewDTO, len(reviews))
 	for i, r := range reviews {
-		reviewDTOs[i] = newReviewDTO(&r)
+		views[i] = newReviewDTO(&r)
 	}
 
-	return reviewDTOs, nil
+	return views, nil
 }
 
 func (s *ReviewQueryService) GetReview(ctx context.Context, u *auth.User, reviewID int) (*ReviewDTO, error) {
@@ -56,6 +59,6 @@ func (s *ReviewQueryService) GetReview(ctx context.Context, u *auth.User, review
 	if err != nil {
 		return nil, err
 	}
-	dto := newReviewDTO(&reviews[0])
-	return &dto, nil
+	view := newReviewDTO(&reviews[0])
+	return &view, nil
 }

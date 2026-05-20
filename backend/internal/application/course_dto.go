@@ -2,6 +2,7 @@ package application
 
 import "jcourse/internal/domain/course"
 
+// Read model: rating summary with distribution
 type RatingInfoDTO struct {
 	Count        int     `json:"count"`
 	Avg          float64 `json:"avg"`
@@ -16,7 +17,8 @@ func newRatingInfoDTO(info course.RatingInfo) RatingInfoDTO {
 	}
 }
 
-type CourseListItem struct {
+// Read model: course list/search result
+type CourseListItemDTO struct {
 	ID          int           `json:"id"`
 	Code        string        `json:"code"`
 	Name        string        `json:"name"`
@@ -28,8 +30,8 @@ type CourseListItem struct {
 	Rating      RatingInfoDTO `json:"rating"`
 }
 
-func newCourseListItem(c *course.CourseForQuery) CourseListItem {
-	item := CourseListItem{
+func newCourseListItemDTO(c *course.CourseView) CourseListItemDTO {
+	item := CourseListItemDTO{
 		ID:         c.ID,
 		Code:       c.Code,
 		Name:       c.Name,
@@ -45,6 +47,7 @@ func newCourseListItem(c *course.CourseForQuery) CourseListItem {
 	return item
 }
 
+// Read model: offered course with teacher group
 type OfferedCourseDTO struct {
 	Semester     string       `json:"semester"`
 	Language     string       `json:"language"`
@@ -53,20 +56,21 @@ type OfferedCourseDTO struct {
 	TeacherGroup []TeacherDTO `json:"teacher_group"`
 }
 
+// Read model: course detail with offered courses, related courses, and rating distribution
 type CourseDetailDTO struct {
-	ID             int                `json:"id"`
-	Code           string             `json:"code"`
-	Name           string             `json:"name"`
-	Credit         float32            `json:"credit"`
-	Department     string             `json:"department"`
-	Language       string             `json:"language"`
-	Grades         []string           `json:"grades"`
-	Categories     []string           `json:"categories"`
-	MainTeacher    TeacherDTO         `json:"main_teacher"`
-	OfferedCourses []OfferedCourseDTO `json:"offered_courses"`
-	Rating         RatingInfoDTO      `json:"rating"`
-	OtherTeachers  []CourseListItem   `json:"other_teachers"`
-	OtherCourses   []CourseListItem   `json:"other_courses"`
+	ID             int                 `json:"id"`
+	Code           string              `json:"code"`
+	Name           string              `json:"name"`
+	Credit         float32             `json:"credit"`
+	Department     string              `json:"department"`
+	Language       string              `json:"language"`
+	Grades         []string            `json:"grades"`
+	Categories     []string            `json:"categories"`
+	MainTeacher    TeacherDTO          `json:"main_teacher"`
+	OfferedCourses []OfferedCourseDTO  `json:"offered_courses"`
+	Rating         RatingInfoDTO       `json:"rating"`
+	OtherTeachers  []CourseListItemDTO `json:"other_teachers"`
+	OtherCourses   []CourseListItemDTO `json:"other_courses"`
 }
 
 type PaginatedResult[T any] struct {

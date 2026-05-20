@@ -2,6 +2,7 @@ package application
 
 import "jcourse/internal/domain/teacher"
 
+// Read model: teacher query result
 type TeacherDTO struct {
 	ID         int    `json:"id"`
 	Code       string `json:"code"`
@@ -10,7 +11,7 @@ type TeacherDTO struct {
 	Title      string `json:"title,omitempty"`
 }
 
-func newTeacherDTO(t *teacher.TeacherForQuery) TeacherDTO {
+func newTeacherDTO(t *teacher.TeacherView) TeacherDTO {
 	return TeacherDTO{
 		ID:         t.ID,
 		Code:       t.Code,

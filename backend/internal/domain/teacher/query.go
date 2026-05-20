@@ -10,7 +10,8 @@ type TeacherFilter struct {
 	PageSize   int
 }
 
-type TeacherForQuery struct {
+// Read model: teacher query result
+type TeacherView struct {
 	ID         int
 	Code       string
 	Name       string
@@ -20,6 +21,7 @@ type TeacherForQuery struct {
 	PinyinAbbr string
 }
 
+// Read model interface
 type TeacherQuery interface {
-	FindBy(ctx context.Context, filter TeacherFilter) ([]TeacherForQuery, int64, error)
+	FindBy(ctx context.Context, filter TeacherFilter) ([]TeacherView, int64, error)
 }

@@ -8,8 +8,8 @@ import (
 )
 
 type ReviewQuery interface {
-	FindBy(ctx context.Context, filter ReviewFilter) ([]ReviewForQuery, error)
-	FindRevisions(ctx context.Context, reviewID int) ([]RevisionForQuery, error)
+	FindBy(ctx context.Context, filter ReviewFilter) ([]ReviewView, error)
+	FindRevisions(ctx context.Context, reviewID int) ([]RevisionView, error)
 }
 
 type ReviewFilter struct {
@@ -21,12 +21,14 @@ type ReviewFilter struct {
 	Order    string
 }
 
-type ReviewForQuery struct {
+// Read model: review with eager-loaded course summary
+type ReviewView struct {
 	Review
-	Course *course.CourseForQuery
+	Course *course.CourseView
 }
 
-type RevisionForQuery struct {
+// Read model: review revision snapshot
+type RevisionView struct {
 	ID        int
 	ReviewID  int
 	CourseID  int
