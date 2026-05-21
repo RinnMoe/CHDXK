@@ -2,6 +2,7 @@ package application_test
 
 import (
 	"context"
+	"slices"
 	"testing"
 
 	"jcourse/internal/application"
@@ -26,13 +27,7 @@ func (q *fakeCourseQuery) FindBy(ctx context.Context, filter course.CourseFilter
 	var results []course.CourseView
 	for id, v := range q.views {
 		if len(filter.CourseIDs) > 0 {
-			match := false
-			for _, cid := range filter.CourseIDs {
-				if cid == id {
-					match = true
-					break
-				}
-			}
+			match := slices.Contains(filter.CourseIDs, id)
 			if !match {
 				continue
 			}

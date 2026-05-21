@@ -2,6 +2,7 @@ package application_test
 
 import (
 	"context"
+	"slices"
 	"testing"
 
 	"jcourse/internal/application"
@@ -25,25 +26,13 @@ func (q *fakeReviewQuery) FindBy(ctx context.Context, filter review.ReviewFilter
 			continue
 		}
 		if len(filter.CourseIDs) > 0 {
-			match := false
-			for _, cid := range filter.CourseIDs {
-				if cid == r.CourseID {
-					match = true
-					break
-				}
-			}
+			match := slices.Contains(filter.CourseIDs, r.CourseID)
 			if !match {
 				continue
 			}
 		}
 		if len(filter.ExcludeCourseIDs) > 0 {
-			exclude := false
-			for _, cid := range filter.ExcludeCourseIDs {
-				if cid == r.CourseID {
-					exclude = true
-					break
-				}
-			}
+			exclude := slices.Contains(filter.ExcludeCourseIDs, r.CourseID)
 			if exclude {
 				continue
 			}

@@ -149,10 +149,7 @@ func calculateTransferAmounts(amount int, feePayer FeePayer, feeConfig TransferF
 }
 
 func feeForReceived(received int, feeConfig TransferFeeConfig) int {
-	fee := received * feeConfig.RateBps / 10000
-	if fee < feeConfig.MinFee {
-		fee = feeConfig.MinFee
-	}
+	fee := max(received*feeConfig.RateBps/10000, feeConfig.MinFee)
 	return fee
 }
 
