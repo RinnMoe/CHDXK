@@ -2,6 +2,11 @@ package teacher
 
 import "context"
 
+type FilterItem struct {
+	Name  string `json:"name"`
+	Count int    `json:"count"`
+}
+
 type TeacherFilter struct {
 	Department string
 	Title      string
@@ -21,7 +26,13 @@ type TeacherView struct {
 	PinyinAbbr string
 }
 
+type TeacherFilters struct {
+	Departments []FilterItem `json:"departments"`
+	Titles      []FilterItem `json:"titles"`
+}
+
 // Read model interface
 type TeacherQuery interface {
 	FindBy(ctx context.Context, filter TeacherFilter) ([]TeacherView, int64, error)
+	GetFilters(ctx context.Context) (*TeacherFilters, error)
 }

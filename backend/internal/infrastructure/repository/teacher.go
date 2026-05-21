@@ -60,4 +60,27 @@ func (r *TeacherRepository) FindBy(ctx context.Context, filter teacher.TeacherFi
 	return result, total, nil
 }
 
+func (r *TeacherRepository) GetFilters(ctx context.Context) (*teacher.TeacherFilters, error) {
+	var departments []teacher.FilterItem
+	if err := r.db.WithContext(ctx).Model(&TeacherEntity{}).
+		Select("department AS name, COUNT(*) AS count").
+		Group("department").Order("department").
+		Scan(&departments).Error; err != nil {
+		return nil, err
+	}
+
+	var titles []teacher.FilterItem
+	if err := r.db.WithContext(ctx).Model(&TeacherEntity{}).
+		Select("title AS name, COUNT(*) AS count").
+		Group("title").Order("title").
+		Scan(&titles).Error; err != nil {
+		return nil, err
+	}
+
+	return &teacher.TeacherFilters{
+		Departments: departments,
+		Titles:      titles,
+	}, nil
+}
+
 var _ teacher.TeacherQuery = (*TeacherRepository)(nil)

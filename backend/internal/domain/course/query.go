@@ -61,10 +61,7 @@ type CourseDetailView struct {
 	NotificationLevel NotificationLevel
 }
 
-type FilterItem struct {
-	Name  string `json:"name"`
-	Count int    `json:"count"`
-}
+type FilterItem = teacher.FilterItem
 
 type CourseFilters struct {
 	Credits     []FilterItem `json:"credits"`

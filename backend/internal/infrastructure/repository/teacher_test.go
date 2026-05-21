@@ -126,3 +126,53 @@ func TestTeacherRepository_FindBy(t *testing.T) {
 		}
 	})
 }
+
+func TestTeacherRepository_GetFilters(t *testing.T) {
+	db := newTestDB(t)
+	repo := repository.NewTeacherRepository(db)
+	ctx := context.Background()
+
+	cleanTables(t, db, "teachers")
+
+	for _, e := range []repository.TeacherEntity{
+		{Code: "T001", Name: "张三", Department: "计算机学院", Title: "教授", Pinyin: "zhangsan", PinyinAbbr: "zs"},
+		{Code: "T002", Name: "李四", Department: "数学学院", Title: "副教授", Pinyin: "lisi", PinyinAbbr: "ls"},
+		{Code: "T003", Name: "王五", Department: "计算机学院", Title: "讲师", Pinyin: "wangwu", PinyinAbbr: "ww"},
+	} {
+		if err := db.Create(&e).Error; err != nil {
+			t.Fatalf("seed teacher: %v", err)
+		}
+	}
+
+	filters, err := repo.GetFilters(ctx)
+	if err != nil {
+		t.Fatalf("GetFilters: %v", err)
+	}
+
+	t.Run("departments", func(t *testing.T) {
+		if len(filters.Departments) != 2 {
+			t.Fatalf("departments count: got %d, want 2", len(filters.Departments))
+		}
+		if filters.Departments[0].Name != "数学学院" || filters.Departments[0].Count != 1 {
+			t.Errorf("department 数学学院: got %+v", filters.Departments[0])
+		}
+		if filters.Departments[1].Name != "计算机学院" || filters.Departments[1].Count != 2 {
+			t.Errorf("department 计算机学院: got %+v", filters.Departments[1])
+		}
+	})
+
+	t.Run("titles", func(t *testing.T) {
+		if len(filters.Titles) != 3 {
+			t.Fatalf("titles count: got %d, want 3", len(filters.Titles))
+		}
+		if filters.Titles[0].Name != "副教授" || filters.Titles[0].Count != 1 {
+			t.Errorf("title 副教授: got %+v", filters.Titles[0])
+		}
+		if filters.Titles[1].Name != "教授" || filters.Titles[1].Count != 1 {
+			t.Errorf("title 教授: got %+v", filters.Titles[1])
+		}
+		if filters.Titles[2].Name != "讲师" || filters.Titles[2].Count != 1 {
+			t.Errorf("title 讲师: got %+v", filters.Titles[2])
+		}
+	})
+}

@@ -18,6 +18,15 @@ func NewTeacherController(teacherQuery *application.TeacherQueryService, courseQ
 	return &TeacherController{teacherQuery: teacherQuery, courseQuery: courseQuery}
 }
 
+func (ctrl *TeacherController) GetTeacherFilters(c *gin.Context) {
+	result, err := ctrl.teacherQuery.GetTeacherFilters(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
 func (ctrl *TeacherController) ListTeachers(c *gin.Context) {
 	var f application.TeacherListFilter
 	if err := c.ShouldBindQuery(&f); err != nil {

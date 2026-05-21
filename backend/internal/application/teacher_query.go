@@ -14,6 +14,10 @@ func NewTeacherQueryService(teacherQuery teacher.TeacherQuery) *TeacherQueryServ
 	return &TeacherQueryService{teacherQuery: teacherQuery}
 }
 
+func (s *TeacherQueryService) GetTeacherFilters(ctx context.Context) (*teacher.TeacherFilters, error) {
+	return s.teacherQuery.GetFilters(ctx)
+}
+
 func (s *TeacherQueryService) ListTeachers(ctx context.Context, f TeacherListFilter) (*PaginatedResult[TeacherDTO], error) {
 	filter := teacher.TeacherFilter{
 		Department: f.Department,
