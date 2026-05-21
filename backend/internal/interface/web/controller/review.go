@@ -24,7 +24,7 @@ func NewReviewController(
 	return &ReviewController{query: query, command: command}
 }
 
-func (r *ReviewController) GetCourseReviews(c *gin.Context) {
+func (r *ReviewController) ListCourseReviews(c *gin.Context) {
 	courseID, err := strconv.Atoi(c.Param("courseID"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid course id"})
@@ -58,7 +58,7 @@ func (r *ReviewController) CreateReview(c *gin.Context) {
 		return
 	}
 
-	var cmd application.CreateReviewCmd
+	var cmd application.CreateReviewCommand
 	if err := c.ShouldBindJSON(&cmd); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -84,7 +84,7 @@ func (r *ReviewController) UpdateReview(c *gin.Context) {
 		return
 	}
 
-	var cmd application.UpdateReviewCmd
+	var cmd application.UpdateReviewCommand
 	if err := c.ShouldBindJSON(&cmd); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -118,7 +118,7 @@ func (r *ReviewController) DeleteReview(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "ok"})
 }
 
-func (r *ReviewController) GetMyReviews(c *gin.Context) {
+func (r *ReviewController) ListUserReviews(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Param("userID"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
@@ -145,7 +145,7 @@ func (r *ReviewController) GetMyReviews(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-func (r *ReviewController) GetLatestReviews(c *gin.Context) {
+func (r *ReviewController) ListLatestReviews(c *gin.Context) {
 	var f application.ReviewListFilter
 	if err := c.ShouldBindQuery(&f); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -171,7 +171,7 @@ func (r *ReviewController) GetLatestReviews(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-func (r *ReviewController) GetFollowedReviews(c *gin.Context) {
+func (r *ReviewController) ListFollowedReviews(c *gin.Context) {
 	u := auth.GetUserFromCtx(c.Request.Context())
 	if u == nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -202,7 +202,7 @@ func (r *ReviewController) GetFollowedReviews(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-func (r *ReviewController) GetReviewDetail(c *gin.Context) {
+func (r *ReviewController) GetReview(c *gin.Context) {
 	reviewID, err := strconv.Atoi(c.Param("reviewID"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid review id"})
@@ -210,7 +210,7 @@ func (r *ReviewController) GetReviewDetail(c *gin.Context) {
 	}
 
 	u := auth.GetUserFromCtx(c.Request.Context())
-	detail, err := r.query.GetReview(c.Request.Context(), u, reviewID)
+	detail, err := r.query.GetReviewByID(c.Request.Context(), u, reviewID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "review not found"})
 		return
@@ -225,7 +225,7 @@ func (r *ReviewController) VoteReview(c *gin.Context) {
 		return
 	}
 
-	var cmd application.VoteCmd
+	var cmd application.VoteReviewCommand
 	if err := c.ShouldBindJSON(&cmd); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return

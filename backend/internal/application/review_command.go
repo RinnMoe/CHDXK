@@ -31,7 +31,7 @@ func NewReviewCommandService(
 	}
 }
 
-func (s *ReviewCommandService) CreateReview(ctx context.Context, u *auth.User, cmd *CreateReviewCmd) error {
+func (s *ReviewCommandService) CreateReview(ctx context.Context, u *auth.User, cmd *CreateReviewCommand) error {
 	c, err := s.courseRepo.Get(ctx, cmd.CourseID)
 	if err != nil {
 		return err
@@ -78,7 +78,7 @@ func (s *ReviewCommandService) CreateReview(ctx context.Context, u *auth.User, c
 	return nil
 }
 
-func (s *ReviewCommandService) UpdateReview(ctx context.Context, u *auth.User, cmd *UpdateReviewCmd) error {
+func (s *ReviewCommandService) UpdateReview(ctx context.Context, u *auth.User, cmd *UpdateReviewCommand) error {
 	r, err := s.reviewRepo.Get(ctx, cmd.ReviewID)
 	if err != nil {
 		return err

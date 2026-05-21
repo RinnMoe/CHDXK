@@ -42,7 +42,7 @@ func (ctrl *CourseController) ListCourses(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-func (ctrl *CourseController) GetCourseDetail(c *gin.Context) {
+func (ctrl *CourseController) GetCourse(c *gin.Context) {
 	courseID, err := strconv.Atoi(c.Param("courseID"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid course id"})

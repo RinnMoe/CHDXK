@@ -168,12 +168,12 @@ func (s *ReviewQueryService) GetFollowedReviews(ctx context.Context, userID int,
 	}, nil
 }
 
-func (s *ReviewQueryService) GetReview(ctx context.Context, u *auth.User, reviewID int) (*ReviewDTO, error) {
-	reviews, _, err := s.repo.FindBy(ctx, review.ReviewFilter{ReviewID: reviewID})
+func (s *ReviewQueryService) GetReviewByID(ctx context.Context, u *auth.User, reviewID int) (*ReviewDTO, error) {
+	reviewView, err := s.repo.GetByID(ctx, reviewID)
 	if err != nil {
 		return nil, err
 	}
-	view := newReviewDTO(&reviews[0])
+	view := newReviewDTO(reviewView)
 	if u != nil {
 		vote, err := s.voteRepo.FindByReviewAndUser(ctx, reviewID, u.ID)
 		if err == nil && vote != nil {

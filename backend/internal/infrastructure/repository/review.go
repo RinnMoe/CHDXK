@@ -123,6 +123,19 @@ func (r2 *ReviewRepository) FindBy(ctx context.Context, filter review.ReviewFilt
 	return rs, total, nil
 }
 
+func (r2 *ReviewRepository) GetByID(ctx context.Context, reviewID int) (*review.ReviewView, error) {
+	var entity ReviewEntity
+	if err := r2.db.WithContext(ctx).
+		Joins("Course").
+		Joins("Course.MainTeacher").
+		Where("reviews.id = ?", reviewID).
+		Take(&entity).Error; err != nil {
+		return nil, err
+	}
+	view := newReviewView(&entity)
+	return &view, nil
+}
+
 func (r2 *ReviewRepository) applyFilter(db *gorm.DB, filter review.ReviewFilter) *gorm.DB {
 	if filter.ReviewID != 0 {
 		db = db.Where("id = ?", filter.ReviewID)

@@ -9,6 +9,7 @@ import (
 
 type ReviewQuery interface {
 	FindBy(ctx context.Context, filter ReviewFilter) ([]ReviewView, int64, error)
+	GetByID(ctx context.Context, reviewID int) (*ReviewView, error)
 	FindRevisions(ctx context.Context, reviewID int) ([]RevisionView, error)
 }
 

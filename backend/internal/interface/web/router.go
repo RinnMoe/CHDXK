@@ -29,8 +29,8 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		courseGroup.GET("/", courseController.ListCourses)
 		courseGroup.GET("/followed", courseController.ListFollowedCourses)
 		courseGroup.GET("/ignored", courseController.ListIgnoredCourses)
-		courseGroup.GET("/:courseID", courseController.GetCourseDetail)
-		courseGroup.GET("/:courseID/review", reviewController.GetCourseReviews)
+		courseGroup.GET("/:courseID", courseController.GetCourse)
+		courseGroup.GET("/:courseID/review", reviewController.ListCourseReviews)
 		courseGroup.POST("/:courseID/notification", courseController.SetNotificationLevel)
 	}
 	teacherGroup := apiGroup.Group("/teacher")
@@ -40,9 +40,9 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	}
 	reviewGroup := apiGroup.Group("/review")
 	{
-		reviewGroup.GET("/latest", reviewController.GetLatestReviews)
-		reviewGroup.GET("/followed", reviewController.GetFollowedReviews)
-		reviewGroup.GET("/:reviewID", reviewController.GetReviewDetail)
+		reviewGroup.GET("/latest", reviewController.ListLatestReviews)
+		reviewGroup.GET("/followed", reviewController.ListFollowedReviews)
+		reviewGroup.GET("/:reviewID", reviewController.GetReview)
 		reviewGroup.POST("/", reviewController.CreateReview)
 		reviewGroup.POST("/:reviewID/vote", reviewController.VoteReview)
 		reviewGroup.PUT("/:reviewID", reviewController.UpdateReview)
@@ -50,7 +50,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	}
 	userGroup := apiGroup.Group("/user")
 	{
-		userGroup.GET("/:userID/reviews", reviewController.GetMyReviews)
+		userGroup.GET("/:userID/reviews", reviewController.ListUserReviews)
 	}
 
 	return g

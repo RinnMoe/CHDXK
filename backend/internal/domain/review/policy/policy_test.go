@@ -23,6 +23,10 @@ func (f *fakeReviewQuery) FindBy(ctx context.Context, filter review.ReviewFilter
 	return f.reviews, int64(len(f.reviews)), nil
 }
 
+func (f *fakeReviewQuery) GetByID(ctx context.Context, reviewID int) (*review.ReviewView, error) {
+	return nil, nil
+}
+
 func (f *fakeReviewQuery) FindRevisions(ctx context.Context, reviewID int) ([]review.RevisionView, error) {
 	return nil, nil
 }

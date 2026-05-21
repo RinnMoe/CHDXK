@@ -112,7 +112,7 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 		dto.OfferedCourses = append(dto.OfferedCourses, ocView)
 	}
 
-	sameCode, _, err := s.courseQuery.FindBy(ctx, course.CourseFilter{
+	sameCodeCourses, _, err := s.courseQuery.FindBy(ctx, course.CourseFilter{
 		Code:      detail.Code,
 		ExcludeID: courseID,
 		OrderBy:   "rating_avg",
@@ -121,12 +121,12 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 	if err != nil {
 		return nil, err
 	}
-	dto.OtherTeachers = make([]CourseListItemDTO, len(sameCode))
-	for i, c := range sameCode {
-		dto.OtherTeachers[i] = newCourseListItemDTO(&c)
+	dto.SameCodeCourses = make([]CourseListItemDTO, len(sameCodeCourses))
+	for i, c := range sameCodeCourses {
+		dto.SameCodeCourses[i] = newCourseListItemDTO(&c)
 	}
 
-	sameTeacher, _, err := s.courseQuery.FindBy(ctx, course.CourseFilter{
+	sameTeacherCourses, _, err := s.courseQuery.FindBy(ctx, course.CourseFilter{
 		TeacherID: detail.MainTeacherID,
 		ExcludeID: courseID,
 		OrderBy:   "rating_avg",
@@ -135,9 +135,9 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 	if err != nil {
 		return nil, err
 	}
-	dto.OtherCourses = make([]CourseListItemDTO, len(sameTeacher))
-	for i, c := range sameTeacher {
-		dto.OtherCourses[i] = newCourseListItemDTO(&c)
+	dto.SameTeacherCourses = make([]CourseListItemDTO, len(sameTeacherCourses))
+	for i, c := range sameTeacherCourses {
+		dto.SameTeacherCourses[i] = newCourseListItemDTO(&c)
 	}
 
 	return dto, nil

@@ -53,6 +53,16 @@ func (q *fakeReviewQuery) FindBy(ctx context.Context, filter review.ReviewFilter
 	return results, int64(len(results)), nil
 }
 
+func (q *fakeReviewQuery) GetByID(ctx context.Context, reviewID int) (*review.ReviewView, error) {
+	for _, r := range q.reviews {
+		if r.ID == reviewID {
+			rCopy := r
+			return &rCopy, nil
+		}
+	}
+	return nil, errNotFound
+}
+
 func (q *fakeReviewQuery) FindRevisions(ctx context.Context, reviewID int) ([]review.RevisionView, error) {
 	return nil, nil
 }
