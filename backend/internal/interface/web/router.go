@@ -23,7 +23,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	reviewController := controller.NewReviewController(container.ReviewQuery, container.ReviewCommand)
 	courseController := controller.NewCourseController(container.CourseQuery, container.CourseCommand)
 	teacherController := controller.NewTeacherController(container.TeacherQuery, container.CourseQuery)
-	pointController := controller.NewPointController(container.PointQuery)
+	pointController := controller.NewPointController(container.PointQuery, container.PointCommand)
 	authController := controller.NewAuthController(container.AuthCommand)
 
 	apiGroup := g.Group("/api")
@@ -62,6 +62,11 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	{
 		userGroup.GET("/:userID/points", pointController.GetUserPoints)
 		userGroup.GET("/:userID/reviews", reviewController.ListUserReviews)
+	}
+	pointGroup := apiGroup.Group("/point")
+	{
+		pointGroup.POST("/transfers/preview", pointController.PreviewTransfer)
+		pointGroup.POST("/transfers", pointController.CreateTransfer)
 	}
 
 	return g

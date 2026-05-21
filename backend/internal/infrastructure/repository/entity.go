@@ -148,6 +148,22 @@ func (UserPointRecordEntity) TableName() string {
 	return "user_point_records"
 }
 
+type PointTransferEntity struct {
+	ID              int       `gorm:"column:id"`
+	SenderUserID    int       `gorm:"column:sender_user_id;index"`
+	RecipientUserID int       `gorm:"column:recipient_user_id;index"`
+	Amount          int       `gorm:"column:amount"`
+	Fee             int       `gorm:"column:fee"`
+	FeePayer        string    `gorm:"column:fee_payer"`
+	SenderDelta     int       `gorm:"column:sender_delta"`
+	RecipientDelta  int       `gorm:"column:recipient_delta"`
+	CreatedAt       time.Time `gorm:"column:created_at"`
+}
+
+func (PointTransferEntity) TableName() string {
+	return "point_transfers"
+}
+
 type ReviewVoteEntity struct {
 	ReviewID  int       `gorm:"column:review_id;primaryKey"`
 	UserID    int       `gorm:"column:user_id;primaryKey"`

@@ -13,6 +13,7 @@ type AppConfig struct {
 	Redis    RedisConfig    `mapstructure:"redis"`
 	Session  SessionConfig  `mapstructure:"session"`
 	Auth     AuthConfig     `mapstructure:"auth"`
+	Point    PointConfig    `mapstructure:"point"`
 	Asynq    AsynqConfig    `mapstructure:"asynq"`
 }
 
@@ -30,6 +31,11 @@ type AuthConfig struct {
 	EmailWhitelist           []string `mapstructure:"email_whitelist"`
 	VerificationCodeInterval int      `mapstructure:"verification_code_interval"` // seconds
 	VerificationCodeTTL      int      `mapstructure:"verification_code_ttl"`      // seconds
+}
+
+type PointConfig struct {
+	TransferFeeRateBps int `mapstructure:"transfer_fee_rate_bps"`
+	TransferMinFee     int `mapstructure:"transfer_min_fee"`
 }
 
 type ServerConfig struct {

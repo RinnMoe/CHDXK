@@ -28,5 +28,9 @@ auth:
   verification_code_interval: 60
   verification_code_ttl: 600
 
+point:
+  transfer_fee_rate_bps: 250
+  transfer_min_fee: 1
+
 asynq:
   concurrency: 10

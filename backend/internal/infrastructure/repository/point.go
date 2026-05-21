@@ -21,7 +21,7 @@ func newPointRecordDomain(e *UserPointRecordEntity) point.Record {
 	return point.Record{
 		ID:          e.ID,
 		UserID:      e.UserID,
-		Reason:      e.Reason,
+		Reason:      point.RecordReason(e.Reason),
 		Amount:      e.Amount,
 		Description: e.Description,
 		CreatedAt:   e.CreatedAt,

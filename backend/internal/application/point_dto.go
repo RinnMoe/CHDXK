@@ -7,10 +7,10 @@ import (
 )
 
 type PointRecordDTO struct {
-	Reason      string    `json:"reason"`
-	Amount      int       `json:"amount"`
-	Description string    `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
+	Reason      point.RecordReason `json:"reason"`
+	Amount      int                `json:"amount"`
+	Description string             `json:"description"`
+	CreatedAt   time.Time          `json:"created_at"`
 }
 
 type PointSummaryDTO struct {

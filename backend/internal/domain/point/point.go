@@ -5,10 +5,12 @@ import (
 	"time"
 )
 
+type RecordReason string
+
 type Record struct {
 	ID          int
 	UserID      int
-	Reason      string
+	Reason      RecordReason
 	Amount      int
 	Description string
 	CreatedAt   time.Time

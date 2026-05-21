@@ -2,6 +2,7 @@ package repository_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -26,10 +27,10 @@ func TestPointRepository_SumByUser(t *testing.T) {
 		t.Fatalf("empty total = %d, want 0", total)
 	}
 
-	seedPointRecord(t, db, user.ID, "review_created", 10, "发布课程评价", time.Now())
-	seedPointRecord(t, db, user.ID, "review_deleted", -3, "删除课程评价", time.Now())
+	seedPointRecord(t, db, user.ID, point.RecordReason("review_created"), 10, "发布课程评价", time.Now())
+	seedPointRecord(t, db, user.ID, point.RecordReason("review_deleted"), -3, "删除课程评价", time.Now())
 	other := seedUserRaw(t, db, "other", "other@example.com")
-	seedPointRecord(t, db, other.ID, "review_created", 100, "发布课程评价", time.Now())
+	seedPointRecord(t, db, other.ID, point.RecordReason("review_created"), 100, "发布课程评价", time.Now())
 
 	total, err = repo.SumByUser(ctx, user.ID)
 	if err != nil {
@@ -50,10 +51,10 @@ func TestPointRepository_FindRecordsByUser(t *testing.T) {
 
 	older := time.Now().Add(-time.Hour).Truncate(time.Second)
 	newer := time.Now().Truncate(time.Second)
-	seedPointRecord(t, db, user.ID, "old", 1, "较早记录", older)
-	seedPointRecord(t, db, user.ID, "newer_first", 2, "同一时间较早插入", newer)
-	latest := seedPointRecord(t, db, user.ID, "newer_second", 3, "同一时间较晚插入", newer)
-	seedPointRecord(t, db, other.ID, "other", 100, "其他用户记录", time.Now())
+	seedPointRecord(t, db, user.ID, point.RecordReason("old"), 1, "较早记录", older)
+	seedPointRecord(t, db, user.ID, point.RecordReason("newer_first"), 2, "同一时间较早插入", newer)
+	latest := seedPointRecord(t, db, user.ID, point.RecordReason("newer_second"), 3, "同一时间较晚插入", newer)
+	seedPointRecord(t, db, other.ID, point.RecordReason("other"), 100, "其他用户记录", time.Now())
 
 	records, total, err := repo.FindRecordsByUser(ctx, point.RecordFilter{UserID: user.ID, Page: 1, PageSize: 2})
 	if err != nil {
@@ -81,6 +82,93 @@ func TestPointRepository_FindRecordsByUser(t *testing.T) {
 	}
 }
 
+func TestPointRepository_CreateTransfer(t *testing.T) {
+	db := newTestDB(t)
+	cleanTables(t, db, "point_transfers", "user_point_records", "users")
+	repo := repository.NewPointRepository(db)
+	ctx := context.Background()
+	sender := seedUser(t, db)
+	recipient := seedUserRaw(t, db, "recipient", "recipient@example.com")
+	now := time.Now().Truncate(time.Second)
+	seedPointRecord(t, db, sender.ID, point.RecordReason("seed"), 200, "初始积分", now.Add(-time.Minute))
+
+	transfer := point.Transfer{
+		SenderUserID:    sender.ID,
+		RecipientUserID: recipient.ID,
+		Amount:          100,
+		Fee:             2,
+		FeePayer:        point.FeePayerSender,
+		SenderDelta:     -102,
+		RecipientDelta:  100,
+		CreatedAt:       now,
+	}
+	senderRecord := point.Record{UserID: sender.ID, Reason: point.RecordReasonTransferOut, Amount: -102, Description: "转账给 recipient", CreatedAt: now}
+	recipientRecord := point.Record{UserID: recipient.ID, Reason: point.RecordReasonTransferIn, Amount: 100, Description: "收到 sender 的转账", CreatedAt: now}
+
+	if err := repo.CreateTransfer(ctx, &transfer, senderRecord, recipientRecord); err != nil {
+		t.Fatalf("CreateTransfer: %v", err)
+	}
+	if transfer.ID == 0 {
+		t.Fatal("transfer ID was not set")
+	}
+
+	var transferCount int64
+	if err := db.Model(&repository.PointTransferEntity{}).Count(&transferCount).Error; err != nil {
+		t.Fatalf("count transfers: %v", err)
+	}
+	if transferCount != 1 {
+		t.Fatalf("transfer count = %d, want 1", transferCount)
+	}
+
+	senderTotal, err := repo.SumByUser(ctx, sender.ID)
+	if err != nil {
+		t.Fatalf("sender SumByUser: %v", err)
+	}
+	recipientTotal, err := repo.SumByUser(ctx, recipient.ID)
+	if err != nil {
+		t.Fatalf("recipient SumByUser: %v", err)
+	}
+	if senderTotal != 98 || recipientTotal != 100 {
+		t.Fatalf("totals sender=%d recipient=%d, want 98 and 100", senderTotal, recipientTotal)
+	}
+}
+
+func TestPointRepository_CreateTransferRejectsInsufficientBalance(t *testing.T) {
+	db := newTestDB(t)
+	cleanTables(t, db, "point_transfers", "user_point_records", "users")
+	repo := repository.NewPointRepository(db)
+	ctx := context.Background()
+	sender := seedUser(t, db)
+	recipient := seedUserRaw(t, db, "recipient", "recipient@example.com")
+	seedPointRecord(t, db, sender.ID, point.RecordReason("seed"), 50, "初始积分", time.Now())
+
+	transfer := point.Transfer{
+		SenderUserID:    sender.ID,
+		RecipientUserID: recipient.ID,
+		Amount:          100,
+		Fee:             2,
+		FeePayer:        point.FeePayerSender,
+		SenderDelta:     -102,
+		RecipientDelta:  100,
+		CreatedAt:       time.Now(),
+	}
+	err := repo.CreateTransfer(ctx, &transfer,
+		point.Record{UserID: sender.ID, Reason: point.RecordReasonTransferOut, Amount: -102, Description: "转账给 recipient", CreatedAt: time.Now()},
+		point.Record{UserID: recipient.ID, Reason: point.RecordReasonTransferIn, Amount: 100, Description: "收到 sender 的转账", CreatedAt: time.Now()},
+	)
+	if !errors.Is(err, point.ErrInsufficientBalance) {
+		t.Fatalf("CreateTransfer error = %v, want ErrInsufficientBalance", err)
+	}
+
+	var transferCount int64
+	if err := db.Model(&repository.PointTransferEntity{}).Count(&transferCount).Error; err != nil {
+		t.Fatalf("count transfers: %v", err)
+	}
+	if transferCount != 0 {
+		t.Fatalf("transfer count = %d, want 0", transferCount)
+	}
+}
+
 func seedUserRaw(t *testing.T, db *gorm.DB, username, email string) repository.UserEntity {
 	t.Helper()
 	e := repository.UserEntity{
@@ -97,11 +185,11 @@ func seedUserRaw(t *testing.T, db *gorm.DB, username, email string) repository.U
 	return e
 }
 
-func seedPointRecord(t *testing.T, db *gorm.DB, userID int, reason string, amount int, description string, createdAt time.Time) repository.UserPointRecordEntity {
+func seedPointRecord(t *testing.T, db *gorm.DB, userID int, reason point.RecordReason, amount int, description string, createdAt time.Time) repository.UserPointRecordEntity {
 	t.Helper()
 	e := repository.UserPointRecordEntity{
 		UserID:      userID,
-		Reason:      reason,
+		Reason:      string(reason),
 		Amount:      amount,
 		Description: description,
 		CreatedAt:   createdAt,

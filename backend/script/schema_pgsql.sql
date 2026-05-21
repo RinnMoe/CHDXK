@@ -97,6 +97,30 @@ CREATE TABLE IF NOT EXISTS user_point_records (
 CREATE INDEX idx_user_point_records_user_created
     ON user_point_records (user_id, created_at DESC, id DESC);
 
+CREATE TABLE IF NOT EXISTS point_transfers (
+    id                SERIAL PRIMARY KEY,
+    sender_user_id    INTEGER NOT NULL,
+    recipient_user_id INTEGER NOT NULL,
+    amount            INTEGER NOT NULL,
+    fee               INTEGER NOT NULL,
+    fee_payer         TEXT    NOT NULL,
+    sender_delta      INTEGER NOT NULL,
+    recipient_delta   INTEGER NOT NULL,
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT fk_point_transfers_sender
+        FOREIGN KEY (sender_user_id) REFERENCES users(id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_point_transfers_recipient
+        FOREIGN KEY (recipient_user_id) REFERENCES users(id)
+        ON DELETE CASCADE
+);
+
+CREATE INDEX idx_point_transfers_sender_created
+    ON point_transfers (sender_user_id, created_at DESC, id DESC);
+CREATE INDEX idx_point_transfers_recipient_created
+    ON point_transfers (recipient_user_id, created_at DESC, id DESC);
+
 CREATE TABLE IF NOT EXISTS reviews (
     id            SERIAL PRIMARY KEY,
     course_id     INTEGER NOT NULL,

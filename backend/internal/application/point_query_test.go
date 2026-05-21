@@ -14,8 +14,8 @@ func TestPointQueryService_GetUserPoints(t *testing.T) {
 	repo := &fakePointQuery{
 		total: 15,
 		records: []point.Record{
-			{Reason: "review_created", Amount: 10, Description: "发布课程评价", CreatedAt: createdAt},
-			{Reason: "review_liked", Amount: 5, Description: "评价收到赞同", CreatedAt: createdAt.Add(time.Second)},
+			{Reason: point.RecordReason("review_created"), Amount: 10, Description: "发布课程评价", CreatedAt: createdAt},
+			{Reason: point.RecordReason("review_liked"), Amount: 5, Description: "评价收到赞同", CreatedAt: createdAt.Add(time.Second)},
 		},
 		recordTotal: 2,
 	}

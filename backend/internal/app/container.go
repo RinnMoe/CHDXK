@@ -20,6 +20,7 @@ type ServiceContainer struct {
 	CourseCommand *application.CourseCommandService
 	TeacherQuery  *application.TeacherQueryService
 	PointQuery    *application.PointQueryService
+	PointCommand  *application.PointCommandService
 	AuthCommand   *application.AuthCommandService
 	AuthService   *domainauth.AuthService
 }
@@ -50,6 +51,10 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	courseCommand := application.NewCourseCommandService(courseRepo, notificationRepo)
 	teacherQuery := application.NewTeacherQueryService(teacherRepo)
 	pointQuery := application.NewPointQueryService(pointRepo)
+	pointCommand := application.NewPointCommandService(userRepo, pointRepo, application.PointTransferFeeConfig{
+		RateBps: conf.Point.TransferFeeRateBps,
+		MinFee:  conf.Point.TransferMinFee,
+	})
 	authCommand := application.NewAuthCommandService(
 		userRepo,
 		verificationRepo,
@@ -70,6 +75,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		CourseCommand: courseCommand,
 		TeacherQuery:  teacherQuery,
 		PointQuery:    pointQuery,
+		PointCommand:  pointCommand,
 		AuthCommand:   authCommand,
 		AuthService:   authService,
 	}
