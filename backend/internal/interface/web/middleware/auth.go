@@ -55,6 +55,39 @@ func Auth(authSvc *auth.AuthService) gin.HandlerFunc {
 	}
 }
 
+func OptionalAuth(authSvc *auth.AuthService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		s := sessions.Default(c)
+		userID, ok := sessionInt(s, sessionKeyUserID)
+		if !ok || userID == 0 {
+			c.Next()
+			return
+		}
+
+		user, err := authSvc.GetUser(c.Request.Context(), userID)
+		if err != nil {
+			c.Next()
+			return
+		}
+
+		ctx := auth.WithUser(c.Request.Context(), user)
+		c.Request = c.Request.WithContext(ctx)
+		c.Next()
+	}
+}
+
+func SetSessionUserID(c *gin.Context, userID int) error {
+	s := sessions.Default(c)
+	s.Set(sessionKeyUserID, userID)
+	return s.Save()
+}
+
+func ClearSession(c *gin.Context) error {
+	s := sessions.Default(c)
+	s.Clear()
+	return s.Save()
+}
+
 func CSRF() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		s := sessions.Default(c)

@@ -18,12 +18,21 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		panic(err)
 	}
 	g.Use(sessions.Sessions("jcourse_session", store))
+	g.Use(middleware.OptionalAuth(container.AuthService))
 
 	reviewController := controller.NewReviewController(container.ReviewQuery, container.ReviewCommand)
 	courseController := controller.NewCourseController(container.CourseQuery, container.CourseCommand)
 	teacherController := controller.NewTeacherController(container.TeacherQuery, container.CourseQuery)
+	authController := controller.NewAuthController(container.AuthCommand)
 
 	apiGroup := g.Group("/api")
+	authGroup := apiGroup.Group("/auth")
+	{
+		authGroup.POST("/register/code", authController.SendRegisterCode)
+		authGroup.POST("/register", authController.Register)
+		authGroup.POST("/login", authController.Login)
+		authGroup.POST("/logout", authController.Logout)
+	}
 	courseGroup := apiGroup.Group("/course")
 	{
 		courseGroup.GET("/", courseController.ListCourses)

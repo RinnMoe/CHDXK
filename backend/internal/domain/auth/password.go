@@ -1,0 +1,78 @@
+package auth
+
+import (
+	"crypto/rand"
+	"crypto/sha256"
+	"crypto/subtle"
+	"encoding/base64"
+	"fmt"
+	"strconv"
+	"strings"
+
+	"golang.org/x/crypto/pbkdf2"
+)
+
+const (
+	djangoPBKDF2SHA256Algorithm  = "pbkdf2_sha256"
+	djangoPBKDF2SHA256Iterations = 720000
+	djangoSaltLength             = 12
+)
+
+type PasswordHasher interface {
+	Hash(password string) (string, error)
+	Verify(password, encoded string) bool
+}
+
+type DjangoPBKDF2SHA256PasswordHasher struct {
+	Iterations int
+}
+
+func NewDjangoPBKDF2SHA256PasswordHasher(iterations int) *DjangoPBKDF2SHA256PasswordHasher {
+	if iterations <= 0 {
+		iterations = djangoPBKDF2SHA256Iterations
+	}
+	return &DjangoPBKDF2SHA256PasswordHasher{Iterations: iterations}
+}
+
+func (h *DjangoPBKDF2SHA256PasswordHasher) Hash(password string) (string, error) {
+	salt, err := randomString(djangoSaltLength)
+	if err != nil {
+		return "", err
+	}
+	return h.hashWithSalt(password, salt), nil
+}
+
+func (h *DjangoPBKDF2SHA256PasswordHasher) Verify(password, encoded string) bool {
+	parts := strings.Split(encoded, "$")
+	if len(parts) != 4 || parts[0] != djangoPBKDF2SHA256Algorithm {
+		return false
+	}
+	iterations, err := strconv.Atoi(parts[1])
+	if err != nil || iterations <= 0 {
+		return false
+	}
+	expected := pbkdf2.Key([]byte(password), []byte(parts[2]), iterations, sha256.Size, sha256.New)
+	actual, err := base64.StdEncoding.DecodeString(parts[3])
+	if err != nil {
+		return false
+	}
+	return subtle.ConstantTimeCompare(expected, actual) == 1
+}
+
+func (h *DjangoPBKDF2SHA256PasswordHasher) hashWithSalt(password, salt string) string {
+	encoded := pbkdf2.Key([]byte(password), []byte(salt), h.Iterations, sha256.Size, sha256.New)
+	return fmt.Sprintf("%s$%d$%s$%s", djangoPBKDF2SHA256Algorithm, h.Iterations, salt, base64.StdEncoding.EncodeToString(encoded))
+}
+
+func randomString(n int) (string, error) {
+	buf := make([]byte, n)
+	if _, err := rand.Read(buf); err != nil {
+		return "", err
+	}
+	const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	out := make([]byte, n)
+	for i, b := range buf {
+		out[i] = alphabet[int(b)%len(alphabet)]
+	}
+	return string(out), nil
+}

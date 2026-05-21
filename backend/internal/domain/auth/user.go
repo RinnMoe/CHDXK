@@ -26,7 +26,14 @@ type User struct {
 }
 
 func (u *User) IsSuspended() bool {
-	return u.SuspendTill != nil && u.SuspendTill.After(time.Now())
+	if u.SuspendTill == nil {
+		return u.SuspendedAt != nil
+	}
+	return u.SuspendTill.After(time.Now())
+}
+
+func (u *User) SuspensionExpired() bool {
+	return u.SuspendTill != nil && !u.SuspendTill.After(time.Now())
 }
 
 func (u *User) IsAdmin() bool {
@@ -39,9 +46,15 @@ func (u *User) Suspend(d time.Duration) {
 	u.SuspendedAt = &now
 }
 
+func (u *User) ClearSuspension() {
+	u.SuspendedAt = nil
+	u.SuspendTill = nil
+}
+
 type UserRepository interface {
 	Create(ctx context.Context, u *User) error
 	Update(ctx context.Context, u *User) error
+	TouchLastSeen(ctx context.Context, userID int, at time.Time) error
 	FindByID(ctx context.Context, id int) (*User, error)
 	FindByUsername(ctx context.Context, username string) (*User, error)
 	FindByEmail(ctx context.Context, email string) (*User, error)

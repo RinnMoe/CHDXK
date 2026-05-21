@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/viper"
 
 	"jcourse/config"
+	"jcourse/internal/app"
 	domaintask "jcourse/internal/domain/task"
 	infratask "jcourse/internal/infrastructure/task"
 	"jcourse/internal/interface/async"
@@ -36,6 +37,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
 	}
+	container := app.NewServiceContainer(conf)
 
 	client := infratask.NewClient(conf.Redis)
 	defer func() {
@@ -46,7 +48,7 @@ func main() {
 	domaintask.SetEnqueuer(infratask.NewEnqueuer(client))
 
 	server := infratask.NewServer(conf)
-	mux := async.NewMux()
+	mux := async.NewMux(container)
 
 	fmt.Println("task worker starting...")
 	if err := server.Start(mux); err != nil {

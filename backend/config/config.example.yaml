@@ -17,5 +17,16 @@ redis:
   password: ""
   db: 0
 
+session:
+  secret: "change-me-in-production"
+  max_age: 604800
+  secure: false
+
+auth:
+  email_whitelist:
+    - "@example.edu"
+  verification_code_interval: 60
+  verification_code_ttl: 600
+
 asynq:
   concurrency: 10

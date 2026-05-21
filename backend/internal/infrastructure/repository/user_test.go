@@ -123,6 +123,83 @@ func TestUserRepository_Update(t *testing.T) {
 	}
 }
 
+func TestUserRepository_UpdateClearsSuspension(t *testing.T) {
+	db := newTestDB(t)
+	repo := repository.NewUserRepository(db)
+	ctx := context.Background()
+
+	e := seedUser(t, db)
+	suspendedAt := time.Now().Add(-2 * time.Hour)
+	suspendTill := time.Now().Add(-time.Hour)
+	u := &auth.User{
+		ID:          e.ID,
+		Username:    e.Username,
+		Email:       e.Email,
+		Role:        e.Role,
+		Password:    e.Password,
+		CreatedAt:   e.CreatedAt,
+		LastSeenAt:  e.LastSeenAt,
+		SuspendedAt: &suspendedAt,
+		SuspendTill: &suspendTill,
+	}
+	if err := repo.Update(ctx, u); err != nil {
+		t.Fatalf("Update suspended user: %v", err)
+	}
+
+	u.ClearSuspension()
+	if err := repo.Update(ctx, u); err != nil {
+		t.Fatalf("Update cleared suspension: %v", err)
+	}
+
+	got, err := repo.FindByID(ctx, e.ID)
+	if err != nil {
+		t.Fatalf("FindByID after clear suspension: %v", err)
+	}
+	if got.SuspendedAt != nil || got.SuspendTill != nil {
+		t.Fatalf("expected suspension fields cleared, got suspended_at=%v suspend_till=%v", got.SuspendedAt, got.SuspendTill)
+	}
+}
+
+func TestUserRepository_TouchLastSeenPreservesSuspension(t *testing.T) {
+	db := newTestDB(t)
+	repo := repository.NewUserRepository(db)
+	ctx := context.Background()
+
+	e := seedUser(t, db)
+	suspendedAt := time.Now().Add(-2 * time.Hour)
+	suspendTill := time.Now().Add(time.Hour)
+	u := &auth.User{
+		ID:          e.ID,
+		Username:    e.Username,
+		Email:       e.Email,
+		Role:        e.Role,
+		Password:    e.Password,
+		CreatedAt:   e.CreatedAt,
+		LastSeenAt:  e.LastSeenAt,
+		SuspendedAt: &suspendedAt,
+		SuspendTill: &suspendTill,
+	}
+	if err := repo.Update(ctx, u); err != nil {
+		t.Fatalf("Update suspended user: %v", err)
+	}
+
+	newLastSeen := time.Now().Add(time.Hour)
+	if err := repo.TouchLastSeen(ctx, e.ID, newLastSeen); err != nil {
+		t.Fatalf("TouchLastSeen: %v", err)
+	}
+
+	got, err := repo.FindByID(ctx, e.ID)
+	if err != nil {
+		t.Fatalf("FindByID after TouchLastSeen: %v", err)
+	}
+	if got.LastSeenAt.Before(newLastSeen.Add(-time.Second)) {
+		t.Fatalf("LastSeenAt was not refreshed: got %v, want around %v", got.LastSeenAt, newLastSeen)
+	}
+	if got.SuspendedAt == nil || got.SuspendTill == nil {
+		t.Fatalf("expected suspension fields preserved, got suspended_at=%v suspend_till=%v", got.SuspendedAt, got.SuspendTill)
+	}
+}
+
 func TestUserRepository_FindByID_NotFound(t *testing.T) {
 	db := newTestDB(t)
 	repo := repository.NewUserRepository(db)

@@ -2,13 +2,13 @@ package async
 
 import (
 	"github.com/hibiken/asynq"
+
+	"jcourse/internal/app"
+	domainauth "jcourse/internal/domain/auth"
 )
 
-func NewMux() *asynq.ServeMux {
+func NewMux(container *app.ServiceContainer) *asynq.ServeMux {
 	mux := asynq.NewServeMux()
-	registerHandlers(mux)
+	mux.Handle(domainauth.TaskTypeClearExpiredSuspension, newClearExpiredSuspensionHandler(container.AuthService))
 	return mux
-}
-
-func registerHandlers(_ *asynq.ServeMux) {
 }

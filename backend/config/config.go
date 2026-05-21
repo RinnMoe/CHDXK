@@ -12,6 +12,7 @@ type AppConfig struct {
 	Postgres PostgresConfig `mapstructure:"postgres"`
 	Redis    RedisConfig    `mapstructure:"redis"`
 	Session  SessionConfig  `mapstructure:"session"`
+	Auth     AuthConfig     `mapstructure:"auth"`
 	Asynq    AsynqConfig    `mapstructure:"asynq"`
 }
 
@@ -23,6 +24,12 @@ type SessionConfig struct {
 	Secret string `mapstructure:"secret"`
 	MaxAge int    `mapstructure:"max_age"` // seconds
 	Secure bool   `mapstructure:"secure"`  // HTTPS only
+}
+
+type AuthConfig struct {
+	EmailWhitelist           []string `mapstructure:"email_whitelist"`
+	VerificationCodeInterval int      `mapstructure:"verification_code_interval"` // seconds
+	VerificationCodeTTL      int      `mapstructure:"verification_code_ttl"`      // seconds
 }
 
 type ServerConfig struct {

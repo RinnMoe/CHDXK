@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -36,6 +37,7 @@ func newUserDomain(e *UserEntity) auth.User {
 		CreatedAt:   e.CreatedAt,
 		LastSeenAt:  e.LastSeenAt,
 		SuspendedAt: e.SuspendedAt,
+		SuspendTill: e.SuspendTill,
 	}
 }
 
@@ -50,10 +52,14 @@ func (u2 *UserRepository) Create(ctx context.Context, u *auth.User) error {
 
 func (u2 *UserRepository) Update(ctx context.Context, u *auth.User) error {
 	e := newUserEntity(u)
-	if _, err := gorm.G[UserEntity](u2.db).Updates(ctx, e); err != nil {
-		return err
-	}
-	return nil
+	return u2.db.WithContext(ctx).Save(&e).Error
+}
+
+func (u2 *UserRepository) TouchLastSeen(ctx context.Context, userID int, at time.Time) error {
+	return u2.db.WithContext(ctx).
+		Model(&UserEntity{}).
+		Where("id = ?", userID).
+		Update("last_seen_at", at).Error
 }
 
 func (u2 *UserRepository) FindByID(ctx context.Context, id int) (*auth.User, error) {

@@ -19,6 +19,12 @@ func SetEnqueuer(e Enqueuer) {
 	enqueuer = e
 }
 
+func SetEnqueuerForTest(e Enqueuer) Enqueuer {
+	prev := enqueuer
+	enqueuer = e
+	return prev
+}
+
 func Enqueue(ctx context.Context, t Task, opts ...EnqueueOption) error {
 	if enqueuer == nil {
 		return nil
