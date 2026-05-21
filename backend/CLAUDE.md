@@ -56,7 +56,7 @@ internal/
 - **Authorization uses Guardian objects** (`review.Guardian`) for owner/admin checks, plus **CreatePolicy chain** for review creation rules (safety, frequency).
 - **Soft deletes**: `deleted_at` unix timestamp column; queries filter `deleted_at = 0`.
 - **Review revisions**: on update, a `Revision` snapshot is created in a transaction alongside the review update.
-- **CQRS split in application layer**: review domain is split into `ReviewQueryService` (read, returns `*ForQuery` structs) and `ReviewCommandService` (write, handles creation with CreatePolicy chain). Both live in `application/`.
+- **CQRS split in application layer**: review domain is split into `ReviewQueryService` (read, returns `*ForQuery` structs) and `ReviewCommandService` (write, handles creation with CreatePolicy chain). Course domain similarly has `CourseQueryService` (reads, including `notification_level`) and `CourseCommandService` (writes, including `SetNotificationLevel`). All live in `application/`.
 - **OfferedCourse and TeacherGroup**: `Course` aggregates `OfferedCourse` (a specific semester offering) which contains a `TeacherGroup` (ordered list of instructors).
 - **Entity mapping**: infrastructure layer defines `*Entity` structs (gorm models) with explicit `new*Domain()`/`new*Query()` converters — no auto-mapping.
 - **Config**: `AppConfig` with `Server`, `Postgres`, `Redis`, `Session`, `Asynq` sections; env override via `JCOURSE_` prefix.
@@ -65,11 +65,15 @@ internal/
 ### Routes (all under `/api`)
 
 - `GET /api/course/` — list courses (with pagination, filtering)
+- `GET /api/course/followed` — user's followed courses (auth required)
+- `GET /api/course/ignored` — user's ignored courses (auth required)
 - `GET /api/course/:courseID` — course detail (with stats, related data)
 - `GET /api/course/:courseID/review` — course reviews
+- `POST /api/course/:courseID/notification` — set notification level (0=normal, 1=follow, 2=ignored)
 - `GET /api/teacher/` — list teachers (with pinyin search, filtering)
 - `GET /api/teacher/:teacherID/courses` — teacher's courses
-- `GET /api/review/latest` — latest reviews
+- `GET /api/review/latest` — latest reviews (excludes ignored courses for logged-in users)
+- `GET /api/review/followed` — reviews from followed courses (auth required)
 - `GET /api/review/:reviewID` — review detail
 - `POST /api/review/` — create review
 - `POST /api/review/:reviewID/vote` — vote on a review

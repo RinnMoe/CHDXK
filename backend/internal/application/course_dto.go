@@ -58,19 +58,20 @@ type OfferedCourseDTO struct {
 
 // Read model: course detail with offered courses, related courses, and rating distribution
 type CourseDetailDTO struct {
-	ID             int                 `json:"id"`
-	Code           string              `json:"code"`
-	Name           string              `json:"name"`
-	Credit         float32             `json:"credit"`
-	Department     string              `json:"department"`
-	Language       string              `json:"language"`
-	TargetYears    []string            `json:"target_years"`
-	Categories     []string            `json:"categories"`
-	MainTeacher    TeacherDTO          `json:"main_teacher"`
-	OfferedCourses []OfferedCourseDTO  `json:"offered_courses"`
-	Rating         RatingInfoDTO       `json:"rating"`
-	OtherTeachers  []CourseListItemDTO `json:"other_teachers"`
-	OtherCourses   []CourseListItemDTO `json:"other_courses"`
+	ID                int                 `json:"id"`
+	Code              string              `json:"code"`
+	Name              string              `json:"name"`
+	Credit            float32             `json:"credit"`
+	Department        string              `json:"department"`
+	Language          string              `json:"language"`
+	TargetYears       []string            `json:"target_years"`
+	Categories        []string            `json:"categories"`
+	MainTeacher       TeacherDTO          `json:"main_teacher"`
+	OfferedCourses    []OfferedCourseDTO  `json:"offered_courses"`
+	Rating            RatingInfoDTO       `json:"rating"`
+	OtherTeachers     []CourseListItemDTO `json:"other_teachers"`
+	OtherCourses      []CourseListItemDTO `json:"other_courses"`
+	NotificationLevel int                 `json:"notification_level"`
 }
 
 type PaginatedResult[T any] struct {

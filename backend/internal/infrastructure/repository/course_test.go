@@ -181,6 +181,19 @@ func TestCourseRepository_FindBy(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("filter by course_ids", func(t *testing.T) {
+		results, total, err := repo.FindBy(ctx, course.CourseFilter{CourseIDs: []int{c1.ID, c1.ID + 1}})
+		if err != nil {
+			t.Fatalf("FindBy: %v", err)
+		}
+		if total != 2 {
+			t.Errorf("total: got %d, want 2", total)
+		}
+		if len(results) != 2 {
+			t.Errorf("count: got %d, want 2", len(results))
+		}
+	})
 }
 
 func TestCourseRepository_GetDetail(t *testing.T) {

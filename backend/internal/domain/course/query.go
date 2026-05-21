@@ -13,6 +13,7 @@ type RatingInfo struct {
 }
 
 type CourseFilter struct {
+	CourseIDs   []int
 	TeacherID   int
 	ExcludeID   int
 	Code        string
@@ -45,18 +46,19 @@ type CourseView struct {
 
 // Read model: course detail with offered courses and rating distribution
 type CourseDetailView struct {
-	ID             int
-	Code           string
-	Name           string
-	Credit         float32
-	Department     string
-	MainTeacherID  int
-	MainTeacher    *teacher.TeacherView
-	Categories     []string
-	Language       string
-	TargetYears    []string
-	Rating         RatingInfo
-	OfferedCourses []OfferedCourseView
+	ID                int
+	Code              string
+	Name              string
+	Credit            float32
+	Department        string
+	MainTeacherID     int
+	MainTeacher       *teacher.TeacherView
+	Categories        []string
+	Language          string
+	TargetYears       []string
+	Rating            RatingInfo
+	OfferedCourses    []OfferedCourseView
+	NotificationLevel NotificationLevel
 }
 
 // Read model interface

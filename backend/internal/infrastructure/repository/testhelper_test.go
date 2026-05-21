@@ -93,6 +93,7 @@ func migrateTestDB(t *testing.T, db *gorm.DB) {
 		&repository.ReviewEntity{},
 		&repository.ReviewRevisionEntity{},
 		&repository.ReviewVoteEntity{},
+		&repository.CourseNotificationEntity{},
 	)
 	if err != nil {
 		t.Fatalf("auto migrate: %v", err)

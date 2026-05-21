@@ -20,15 +20,18 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	g.Use(sessions.Sessions("jcourse_session", store))
 
 	reviewController := controller.NewReviewController(container.ReviewQuery, container.ReviewCommand)
-	courseController := controller.NewCourseController(container.CourseQuery)
+	courseController := controller.NewCourseController(container.CourseQuery, container.CourseCommand)
 	teacherController := controller.NewTeacherController(container.TeacherQuery, container.CourseQuery)
 
 	apiGroup := g.Group("/api")
 	courseGroup := apiGroup.Group("/course")
 	{
 		courseGroup.GET("/", courseController.ListCourses)
+		courseGroup.GET("/followed", courseController.ListFollowedCourses)
+		courseGroup.GET("/ignored", courseController.ListIgnoredCourses)
 		courseGroup.GET("/:courseID", courseController.GetCourseDetail)
 		courseGroup.GET("/:courseID/review", reviewController.GetCourseReviews)
+		courseGroup.POST("/:courseID/notification", courseController.SetNotificationLevel)
 	}
 	teacherGroup := apiGroup.Group("/teacher")
 	{
@@ -38,6 +41,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	reviewGroup := apiGroup.Group("/review")
 	{
 		reviewGroup.GET("/latest", reviewController.GetLatestReviews)
+		reviewGroup.GET("/followed", reviewController.GetFollowedReviews)
 		reviewGroup.GET("/:reviewID", reviewController.GetReviewDetail)
 		reviewGroup.POST("/", reviewController.CreateReview)
 		reviewGroup.POST("/:reviewID/vote", reviewController.VoteReview)

@@ -136,3 +136,17 @@ CREATE TABLE IF NOT EXISTS review_votes (
     FOREIGN KEY (user_id) REFERENCES users(id)
         ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS course_notifications (
+    user_id    INTEGER NOT NULL,
+    course_id  INTEGER NOT NULL,
+    level      INTEGER NOT NULL DEFAULT 0 CHECK (level IN (0, 1, 2)),
+    updated_at TEXT    NOT NULL DEFAULT (datetime('now')),
+
+    PRIMARY KEY (user_id, course_id),
+
+    FOREIGN KEY (course_id) REFERENCES courses(id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE CASCADE
+);

@@ -141,4 +141,20 @@ CREATE TABLE IF NOT EXISTS review_votes (
         ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS course_notifications (
+    user_id    INTEGER NOT NULL,
+    course_id  INTEGER NOT NULL,
+    level      SMALLINT NOT NULL DEFAULT 0 CHECK (level IN (0, 1, 2)),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    PRIMARY KEY (user_id, course_id),
+
+    CONSTRAINT fk_course_notifications_course
+        FOREIGN KEY (course_id) REFERENCES courses(id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_course_notifications_user
+        FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE CASCADE
+);
+
 COMMIT;

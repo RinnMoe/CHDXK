@@ -162,7 +162,39 @@ func (r *ReviewController) GetLatestReviews(c *gin.Context) {
 		f.OrderDir = "desc"
 	}
 
-	result, err := r.query.GetLatestReviews(c.Request.Context(), f)
+	u := auth.GetUserFromCtx(c.Request.Context())
+	result, err := r.query.GetLatestReviews(c.Request.Context(), u, f)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
+func (r *ReviewController) GetFollowedReviews(c *gin.Context) {
+	u := auth.GetUserFromCtx(c.Request.Context())
+	if u == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var f application.ReviewListFilter
+	if err := c.ShouldBindQuery(&f); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if f.Page <= 0 {
+		f.Page = 1
+	}
+	if f.PageSize <= 0 {
+		f.PageSize = 20
+	}
+	if f.OrderBy == "" {
+		f.OrderBy = "created_at"
+		f.OrderDir = "desc"
+	}
+
+	result, err := r.query.GetFollowedReviews(c.Request.Context(), u.ID, f)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

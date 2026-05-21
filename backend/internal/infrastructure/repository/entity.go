@@ -146,3 +146,14 @@ type ReviewVoteEntity struct {
 func (ReviewVoteEntity) TableName() string {
 	return "review_votes"
 }
+
+type CourseNotificationEntity struct {
+	UserID    int       `gorm:"column:user_id;primaryKey"`
+	CourseID  int       `gorm:"column:course_id;primaryKey"`
+	Level     int       `gorm:"column:level"`
+	UpdatedAt time.Time `gorm:"column:updated_at"`
+}
+
+func (CourseNotificationEntity) TableName() string {
+	return "course_notifications"
+}

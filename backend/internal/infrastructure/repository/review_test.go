@@ -233,6 +233,26 @@ func TestReviewRepository_FindBy(t *testing.T) {
 			t.Errorf("count: got %d, want 1", len(results))
 		}
 	})
+
+	t.Run("find by course_ids", func(t *testing.T) {
+		results, _, err := repo.FindBy(ctx, review.ReviewFilter{CourseIDs: []int{course.ID}})
+		if err != nil {
+			t.Fatalf("FindBy: %v", err)
+		}
+		if len(results) != 2 {
+			t.Errorf("count: got %d, want 2", len(results))
+		}
+	})
+
+	t.Run("exclude course_ids", func(t *testing.T) {
+		results, _, err := repo.FindBy(ctx, review.ReviewFilter{ExcludeCourseIDs: []int{course.ID}})
+		if err != nil {
+			t.Fatalf("FindBy: %v", err)
+		}
+		if len(results) != 0 {
+			t.Errorf("count: got %d, want 0", len(results))
+		}
+	})
 }
 
 func TestReviewRepository_CourseStatsAggregation(t *testing.T) {

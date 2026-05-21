@@ -13,17 +13,19 @@ type ReviewQuery interface {
 }
 
 type ReviewFilter struct {
-	ReviewID     int
-	CourseID     int
-	UserID       int
-	Semester     string
-	Rating       int
-	CreatedAfter time.Time
-	OrderBy      string
-	OrderDir     string
-	Page         int
-	PageSize     int
-	WithCourse   bool
+	ReviewID         int
+	CourseID         int
+	CourseIDs        []int
+	ExcludeCourseIDs []int
+	UserID           int
+	Semester         string
+	Rating           int
+	CreatedAfter     time.Time
+	OrderBy          string
+	OrderDir         string
+	Page             int
+	PageSize         int
+	WithCourse       bool
 }
 
 // Read model: review with eager-loaded course summary

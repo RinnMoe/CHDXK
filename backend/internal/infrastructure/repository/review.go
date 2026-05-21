@@ -130,6 +130,12 @@ func (r2 *ReviewRepository) applyFilter(db *gorm.DB, filter review.ReviewFilter)
 	if filter.CourseID != 0 {
 		db = db.Where("course_id = ?", filter.CourseID)
 	}
+	if len(filter.CourseIDs) > 0 {
+		db = db.Where("course_id IN ?", filter.CourseIDs)
+	}
+	if len(filter.ExcludeCourseIDs) > 0 {
+		db = db.Where("course_id NOT IN ?", filter.ExcludeCourseIDs)
+	}
 	if filter.UserID != 0 {
 		db = db.Where("user_id = ?", filter.UserID)
 	}

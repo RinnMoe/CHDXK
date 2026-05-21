@@ -40,6 +40,9 @@ func (r *CourseRepository) baseCourseQuery(ctx context.Context) *gorm.DB {
 }
 
 func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm.DB {
+	if len(f.CourseIDs) > 0 {
+		db = db.Where("courses.id IN ?", f.CourseIDs)
+	}
 	if f.TeacherID > 0 {
 		db = db.Where("courses.main_teacher_id = ?", f.TeacherID)
 	}

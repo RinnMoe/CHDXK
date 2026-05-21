@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 
+	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 )
 
@@ -21,12 +22,14 @@ type CourseListFilter struct {
 }
 
 type CourseQueryService struct {
-	courseQuery course.CourseQuery
+	courseQuery      course.CourseQuery
+	notificationRepo course.CourseNotificationRepository
 }
 
-func NewCourseQueryService(courseQuery course.CourseQuery) *CourseQueryService {
+func NewCourseQueryService(courseQuery course.CourseQuery, notificationRepo course.CourseNotificationRepository) *CourseQueryService {
 	return &CourseQueryService{
-		courseQuery: courseQuery,
+		courseQuery:      courseQuery,
+		notificationRepo: notificationRepo,
 	}
 }
 
@@ -63,23 +66,32 @@ func (s *CourseQueryService) ListCourses(ctx context.Context, f CourseListFilter
 	}, nil
 }
 
-func (s *CourseQueryService) GetCourseDetail(ctx context.Context, courseID int) (*CourseDetailDTO, error) {
+func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.User, courseID int) (*CourseDetailDTO, error) {
 	detail, err := s.courseQuery.GetDetail(ctx, courseID)
 	if err != nil {
 		return nil, err
 	}
 
+	if user != nil {
+		level, err := s.notificationRepo.GetLevel(ctx, user.ID, courseID)
+		if err != nil {
+			return nil, err
+		}
+		detail.NotificationLevel = level
+	}
+
 	dto := &CourseDetailDTO{
-		ID:          detail.ID,
-		Code:        detail.Code,
-		Name:        detail.Name,
-		Credit:      detail.Credit,
-		Department:  detail.Department,
-		Language:    detail.Language,
-		TargetYears: detail.TargetYears,
-		Categories:  detail.Categories,
-		Rating:      newRatingInfoDTO(detail.Rating),
-		MainTeacher: TeacherDTO{ID: detail.MainTeacherID},
+		ID:                detail.ID,
+		Code:              detail.Code,
+		Name:              detail.Name,
+		Credit:            detail.Credit,
+		Department:        detail.Department,
+		Language:          detail.Language,
+		TargetYears:       detail.TargetYears,
+		Categories:        detail.Categories,
+		Rating:            newRatingInfoDTO(detail.Rating),
+		MainTeacher:       TeacherDTO{ID: detail.MainTeacherID},
+		NotificationLevel: int(detail.NotificationLevel),
 	}
 	if detail.MainTeacher != nil {
 		dto.MainTeacher = newTeacherDTO(detail.MainTeacher)
@@ -145,6 +157,46 @@ func (s *CourseQueryService) ListTeacherCourses(ctx context.Context, teacherID i
 		OrderDir:    f.OrderDir,
 		Page:        f.Page,
 		PageSize:    f.PageSize,
+	}
+
+	courses, total, err := s.courseQuery.FindBy(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]CourseListItemDTO, len(courses))
+	for i, c := range courses {
+		items[i] = newCourseListItemDTO(&c)
+	}
+
+	return &PaginatedResult[CourseListItemDTO]{
+		Items:    items,
+		Total:    total,
+		Page:     f.Page,
+		PageSize: f.PageSize,
+	}, nil
+}
+
+func (s *CourseQueryService) ListCoursesByNotificationLevel(ctx context.Context, userID int, level course.NotificationLevel, f CourseListFilter) (*PaginatedResult[CourseListItemDTO], error) {
+	courseIDs, err := s.notificationRepo.GetCoursesByLevel(ctx, userID, level)
+	if err != nil {
+		return nil, err
+	}
+	if len(courseIDs) == 0 {
+		return &PaginatedResult[CourseListItemDTO]{
+			Items:    []CourseListItemDTO{},
+			Total:    0,
+			Page:     f.Page,
+			PageSize: f.PageSize,
+		}, nil
+	}
+
+	filter := course.CourseFilter{
+		CourseIDs: courseIDs,
+		OrderBy:   f.OrderBy,
+		OrderDir:  f.OrderDir,
+		Page:      f.Page,
+		PageSize:  f.PageSize,
 	}
 
 	courses, total, err := s.courseQuery.FindBy(ctx, filter)
