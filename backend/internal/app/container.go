@@ -25,6 +25,7 @@ type ServiceContainer struct {
 	SiteStatsCommand *application.SiteStatsCommandService
 	AuthCommand      *application.AuthCommandService
 	AuthService      *domainauth.AuthService
+	AnnouncementQuery *application.AnnouncementQueryService
 }
 
 func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
@@ -36,6 +37,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	voteRepo := repository.NewReviewVoteRepository(db)
 	courseRepo := repository.NewCourseRepository(db)
 	teacherRepo := repository.NewTeacherRepository(db)
+	announcementRepo := repository.NewAnnouncementRepository(db)
 	notificationRepo := repository.NewCourseNotificationRepository(db)
 	pointRepo := repository.NewPointRepository(db)
 	userRepo := repository.NewUserRepository(db)
@@ -53,6 +55,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	courseQuery := application.NewCourseQueryService(courseRepo, notificationRepo)
 	courseCommand := application.NewCourseCommandService(courseRepo, notificationRepo)
 	teacherQuery := application.NewTeacherQueryService(teacherRepo)
+	announcementQuery := application.NewAnnouncementQueryService(announcementRepo)
 	pointQuery := application.NewPointQueryService(pointRepo)
 	pointCommand := application.NewPointCommandService(userRepo, pointRepo, application.PointTransferFeeConfig{
 		RateBps: conf.Point.TransferFeeRateBps,
@@ -85,5 +88,6 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		SiteStatsCommand: siteStatsCommand,
 		AuthCommand:      authCommand,
 		AuthService:      authService,
+		AnnouncementQuery: announcementQuery,
 	}
 }

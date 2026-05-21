@@ -211,3 +211,17 @@ type CategoryEntity struct {
 func (CategoryEntity) TableName() string {
 	return "categories"
 }
+
+type AnnouncementEntity struct {
+	ID        int       `gorm:"column:id"`
+	Title     string    `gorm:"column:title"`
+	Body      string    `gorm:"column:body"`
+	Priority  int       `gorm:"column:priority"`
+	ShowStart time.Time `gorm:"column:show_start"`
+	ShowEnd   time.Time `gorm:"column:show_end"`
+	CreatedAt time.Time `gorm:"column:created_at"`
+}
+
+func (AnnouncementEntity) TableName() string {
+	return "announcements"
+}

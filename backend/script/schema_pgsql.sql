@@ -230,4 +230,18 @@ CREATE TABLE IF NOT EXISTS site_daily_stats
     updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS announcements
+(
+    id         SERIAL PRIMARY KEY,
+    title      TEXT        NOT NULL,
+    body       TEXT        NOT NULL,
+    priority   INTEGER     NOT NULL DEFAULT 0,
+    show_start TIMESTAMPTZ NOT NULL,
+    show_end   TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_announcements_active ON announcements (priority DESC, created_at DESC)
+    WHERE show_start <= NOW() AND show_end >= NOW();
+
 COMMIT;

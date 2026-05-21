@@ -26,6 +26,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	pointController := controller.NewPointController(container.PointQuery, container.PointCommand)
 	authController := controller.NewAuthController(container.AuthCommand)
 	siteStatsController := controller.NewSiteStatsController(container.SiteStatsQuery)
+	announcementController := controller.NewAnnouncementController(container.AnnouncementQuery)
 
 	apiGroup := g.Group("/api")
 	authGroup := apiGroup.Group("/auth")
@@ -75,6 +76,10 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	{
 		siteStatsGroup.GET("/daily/yesterday", siteStatsController.GetYesterday)
 		siteStatsGroup.GET("/daily", siteStatsController.ListDaily)
+	}
+	announcementGroup := apiGroup.Group("/announcement")
+	{
+		announcementGroup.GET("/", announcementController.ListAnnouncements)
 	}
 
 	return g
