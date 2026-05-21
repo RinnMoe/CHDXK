@@ -8,81 +8,99 @@
 
 PRAGMA foreign_keys = ON;
 
-CREATE TABLE IF NOT EXISTS departments (
+CREATE TABLE IF NOT EXISTS departments
+(
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    name       TEXT    NOT NULL
+    name       TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE IF NOT EXISTS semesters (
+CREATE TABLE IF NOT EXISTS categories
+(
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    name       TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS semesters
+(
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     name       TEXT    NOT NULL,
-    can_review INTEGER NOT NULL DEFAULT 0  -- 0 = false, 1 = true
+    can_review INTEGER NOT NULL DEFAULT 0, -- 0 = false, 1 = true
+    created_at TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE IF NOT EXISTS teachers (
+CREATE TABLE IF NOT EXISTS teachers
+(
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    code          TEXT    NOT NULL,
-    name          TEXT    NOT NULL,
-    department    TEXT    NOT NULL,
-    title         TEXT    NOT NULL,
-    pinyin        TEXT    NOT NULL,
-    pinyin_abbr   TEXT    NOT NULL,
-    late_semester TEXT    NOT NULL DEFAULT '',
-    created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
-    updated_at    TEXT    NOT NULL DEFAULT (datetime('now'))
+    code          TEXT NOT NULL UNIQUE,
+    name          TEXT NOT NULL,
+    department    TEXT NOT NULL,
+    title         TEXT NOT NULL,
+    pinyin        TEXT NOT NULL,
+    pinyin_abbr   TEXT NOT NULL,
+    last_semester TEXT NOT NULL DEFAULT '',
+    created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE IF NOT EXISTS courses (
+CREATE TABLE IF NOT EXISTS courses
+(
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    code            TEXT    NOT NULL UNIQUE,
+    code            TEXT    NOT NULL,
     name            TEXT    NOT NULL,
     credit          REAL    NOT NULL,
     department      TEXT    NOT NULL,
     main_teacher_id INTEGER,
-    categories      TEXT    NOT NULL DEFAULT '[]',  -- JSON array
+    categories      TEXT, -- JSON array
     language        TEXT    NOT NULL,
-    target_years    TEXT    NOT NULL DEFAULT '[]',  -- JSON array
-    teacher_ids     TEXT    NOT NULL DEFAULT '[]',  -- JSON array
+    target_years    TEXT, -- JSON array
+    teacher_ids     TEXT, -- JSON array
     last_semester   TEXT    NOT NULL DEFAULT '',
     rating_count    INTEGER NOT NULL DEFAULT 0,
     rating_avg      REAL    NOT NULL DEFAULT 0,
     created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
 
-    FOREIGN KEY (main_teacher_id) REFERENCES teachers(id)
+    FOREIGN KEY (main_teacher_id) REFERENCES teachers (id)
         ON DELETE SET NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_courses_department   ON courses (department);
+CREATE INDEX IF NOT EXISTS idx_courses_department ON courses (department);
 CREATE INDEX IF NOT EXISTS idx_courses_main_teacher ON courses (main_teacher_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_courses_code_teacher ON courses (code, main_teacher_id);
 
-CREATE TABLE IF NOT EXISTS offered_courses (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    course_id  INTEGER NOT NULL,
-    semester   TEXT    NOT NULL,
-    language   TEXT    NOT NULL,
-    target_years TEXT    NOT NULL DEFAULT '[]',       -- JSON array
-    categories TEXT    NOT NULL DEFAULT '[]',       -- JSON array
-    teacher_ids TEXT   NOT NULL DEFAULT '[]',       -- JSON array
+CREATE TABLE IF NOT EXISTS offered_courses
+(
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    course_id    INTEGER NOT NULL,
+    semester     TEXT    NOT NULL,
+    language     TEXT    NOT NULL,
+    target_years TEXT, -- JSON array
+    categories   TEXT, -- JSON array
+    teacher_ids  TEXT, -- JSON array
+    created_at   TEXT    NOT NULL DEFAULT (datetime('now')),
 
-    FOREIGN KEY (course_id) REFERENCES courses(id)
+    FOREIGN KEY (course_id) REFERENCES courses (id)
         ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_offered_courses_course ON offered_courses (course_id);
 
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS users
+(
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    username     TEXT    NOT NULL UNIQUE,
-    email        TEXT    NOT NULL UNIQUE,
-    role         TEXT    NOT NULL,
-    password     TEXT    NOT NULL,
-    created_at   TEXT    NOT NULL DEFAULT (datetime('now')),
-    last_seen_at TEXT    NOT NULL DEFAULT (datetime('now')),
+    username     TEXT NOT NULL UNIQUE,
+    email        TEXT NOT NULL UNIQUE,
+    role         TEXT NOT NULL,
+    password     TEXT NOT NULL,
+    created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+    last_seen_at TEXT NOT NULL DEFAULT (datetime('now')),
     suspended_at TEXT,
     suspend_till TEXT
 );
 
-CREATE TABLE IF NOT EXISTS user_point_records (
+CREATE TABLE IF NOT EXISTS user_point_records
+(
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id     INTEGER NOT NULL,
     reason      TEXT    NOT NULL,
@@ -90,14 +108,15 @@ CREATE TABLE IF NOT EXISTS user_point_records (
     description TEXT    NOT NULL,
     created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
 
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users (id)
         ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_point_records_user_created
     ON user_point_records (user_id, created_at DESC, id DESC);
 
-CREATE TABLE IF NOT EXISTS point_transfers (
+CREATE TABLE IF NOT EXISTS point_transfers
+(
     id                INTEGER PRIMARY KEY AUTOINCREMENT,
     sender_user_id    INTEGER NOT NULL,
     recipient_user_id INTEGER NOT NULL,
@@ -108,9 +127,9 @@ CREATE TABLE IF NOT EXISTS point_transfers (
     recipient_delta   INTEGER NOT NULL,
     created_at        TEXT    NOT NULL DEFAULT (datetime('now')),
 
-    FOREIGN KEY (sender_user_id) REFERENCES users(id)
+    FOREIGN KEY (sender_user_id) REFERENCES users (id)
         ON DELETE CASCADE,
-    FOREIGN KEY (recipient_user_id) REFERENCES users(id)
+    FOREIGN KEY (recipient_user_id) REFERENCES users (id)
         ON DELETE CASCADE
 );
 
@@ -119,7 +138,8 @@ CREATE INDEX IF NOT EXISTS idx_point_transfers_sender_created
 CREATE INDEX IF NOT EXISTS idx_point_transfers_recipient_created
     ON point_transfers (recipient_user_id, created_at DESC, id DESC);
 
-CREATE TABLE IF NOT EXISTS reviews (
+CREATE TABLE IF NOT EXISTS reviews
+(
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     course_id     INTEGER NOT NULL,
     semester      TEXT    NOT NULL,
@@ -132,16 +152,17 @@ CREATE TABLE IF NOT EXISTS reviews (
     created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
     updated_at    TEXT    NOT NULL DEFAULT (datetime('now')),
 
-    FOREIGN KEY (course_id) REFERENCES courses(id)
+    FOREIGN KEY (course_id) REFERENCES courses (id)
         ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users (id)
         ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_reviews_course ON reviews (course_id);
-CREATE INDEX IF NOT EXISTS idx_reviews_user   ON reviews (user_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_user ON reviews (user_id);
 
-CREATE TABLE IF NOT EXISTS review_revisions (
+CREATE TABLE IF NOT EXISTS review_revisions
+(
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     review_id  INTEGER NOT NULL,
     course_id  INTEGER NOT NULL,
@@ -149,17 +170,18 @@ CREATE TABLE IF NOT EXISTS review_revisions (
     user_id    INTEGER NOT NULL,
     rating     INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
     content    TEXT    NOT NULL,
-    score     TEXT    NOT NULL,
+    score      TEXT    NOT NULL,
     created_at TEXT    NOT NULL DEFAULT (datetime('now')),
 
-    FOREIGN KEY (review_id) REFERENCES reviews(id)
+    FOREIGN KEY (review_id) REFERENCES reviews (id)
         ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_review_revisions_review ON review_revisions (review_id);
 CREATE INDEX IF NOT EXISTS idx_review_revisions_course ON review_revisions (course_id);
 
-CREATE TABLE IF NOT EXISTS review_votes (
+CREATE TABLE IF NOT EXISTS review_votes
+(
     review_id  INTEGER NOT NULL,
     user_id    INTEGER NOT NULL,
     vote_type  INTEGER NOT NULL CHECK (vote_type IN (1, -1)),
@@ -168,29 +190,33 @@ CREATE TABLE IF NOT EXISTS review_votes (
 
     PRIMARY KEY (review_id, user_id),
 
-    FOREIGN KEY (review_id) REFERENCES reviews(id)
+    FOREIGN KEY (review_id) REFERENCES reviews (id)
         ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users (id)
         ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS course_notifications (
+CREATE TABLE IF NOT EXISTS course_notifications
+(
     user_id    INTEGER NOT NULL,
     course_id  INTEGER NOT NULL,
     level      INTEGER NOT NULL DEFAULT 0 CHECK (level IN (0, 1, 2)),
+    created_at TEXT    NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT    NOT NULL DEFAULT (datetime('now')),
 
     PRIMARY KEY (user_id, course_id),
 
-    FOREIGN KEY (course_id) REFERENCES courses(id)
+    FOREIGN KEY (course_id) REFERENCES courses (id)
         ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users (id)
         ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS site_daily_stats (
+CREATE TABLE IF NOT EXISTS site_daily_stats
+(
     stat_date    TEXT PRIMARY KEY,
     metrics      JSON NOT NULL DEFAULT '{}',
     generated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    created_at   TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
 );

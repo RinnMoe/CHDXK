@@ -3,117 +3,136 @@
 
 BEGIN;
 
-CREATE TABLE IF NOT EXISTS departments (
-    id       SERIAL PRIMARY KEY,
-    name     TEXT    NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS semesters (
+CREATE TABLE IF NOT EXISTS departments
+(
     id         SERIAL PRIMARY KEY,
-    name       TEXT    NOT NULL,
-    can_review BOOLEAN NOT NULL DEFAULT FALSE
+    name       TEXT        NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS teachers (
+CREATE TABLE IF NOT EXISTS categories
+(
+    id         SERIAL PRIMARY KEY,
+    name       TEXT        NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS semesters
+(
+    id         SERIAL PRIMARY KEY,
+    name       TEXT        NOT NULL,
+    can_review BOOLEAN     NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS teachers
+(
     id            SERIAL PRIMARY KEY,
-    code          TEXT    NOT NULL,
-    name          TEXT    NOT NULL,
-    department    TEXT    NOT NULL,
-    title         TEXT    NOT NULL,
-    pinyin        TEXT    NOT NULL,
-    pinyin_abbr   TEXT    NOT NULL,
-    late_semester TEXT    NOT NULL DEFAULT '',
+    code          TEXT        NOT NULL UNIQUE,
+    name          TEXT        NOT NULL,
+    department    TEXT        NOT NULL,
+    title         TEXT        NOT NULL,
+    pinyin        TEXT        NOT NULL,
+    pinyin_abbr   TEXT        NOT NULL,
+    last_semester TEXT        NOT NULL DEFAULT '',
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS courses (
-    id            SERIAL PRIMARY KEY,
-    code          TEXT    NOT NULL UNIQUE,
-    name          TEXT    NOT NULL,
-    credit        REAL    NOT NULL,
-    department    TEXT    NOT NULL,
+CREATE TABLE IF NOT EXISTS courses
+(
+    id              SERIAL PRIMARY KEY,
+    code            TEXT             NOT NULL,
+    name            TEXT             NOT NULL,
+    credit          REAL             NOT NULL,
+    department      TEXT             NOT NULL,
     main_teacher_id INTEGER,
-    categories    TEXT[]  NOT NULL DEFAULT '{}',
-    language      TEXT    NOT NULL,
-    target_years  TEXT[]  NOT NULL DEFAULT '{}',
-    teacher_ids   INTEGER[] NOT NULL DEFAULT '{}',
-    last_semester TEXT    NOT NULL DEFAULT '',
-    rating_count  INTEGER NOT NULL DEFAULT 0,
-    rating_avg    DOUBLE PRECISION NOT NULL DEFAULT 0,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    categories      TEXT[],
+    language        TEXT             NOT NULL,
+    target_years    TEXT[],
+    teacher_ids     INTEGER[],
+    last_semester   TEXT             NOT NULL DEFAULT '',
+    rating_count    INTEGER          NOT NULL DEFAULT 0,
+    rating_avg      DOUBLE PRECISION NOT NULL DEFAULT 0,
+    created_at      TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_courses_main_teacher
-        FOREIGN KEY (main_teacher_id) REFERENCES teachers(id)
-        ON DELETE SET NULL
+        FOREIGN KEY (main_teacher_id) REFERENCES teachers (id)
+            ON DELETE SET NULL
 );
 
-CREATE INDEX idx_courses_department    ON courses (department);
-CREATE INDEX idx_courses_main_teacher  ON courses (main_teacher_id);
-CREATE INDEX idx_courses_teacher_ids   ON courses USING GIN (teacher_ids);
+CREATE INDEX idx_courses_department ON courses (department);
+CREATE INDEX idx_courses_main_teacher ON courses (main_teacher_id);
+CREATE INDEX idx_courses_teacher_ids ON courses USING GIN (teacher_ids);
+CREATE UNIQUE INDEX uniq_courses_code_teacher ON courses (code, main_teacher_id);
 
-CREATE TABLE IF NOT EXISTS offered_courses (
-    id         SERIAL PRIMARY KEY,
-    course_id  INTEGER NOT NULL,
-    semester   TEXT    NOT NULL,
-    language   TEXT    NOT NULL,
-    target_years TEXT[]  NOT NULL DEFAULT '{}',
-    categories TEXT[]  NOT NULL DEFAULT '{}',
-    teacher_ids INTEGER[] NOT NULL DEFAULT '{}',
+CREATE TABLE IF NOT EXISTS offered_courses
+(
+    id           SERIAL PRIMARY KEY,
+    course_id    INTEGER     NOT NULL,
+    semester     TEXT        NOT NULL,
+    language     TEXT        NOT NULL,
+    target_years TEXT[],
+    categories   TEXT[],
+    teacher_ids  INTEGER[],
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_offered_courses_course
-        FOREIGN KEY (course_id) REFERENCES courses(id)
-        ON DELETE CASCADE
+        FOREIGN KEY (course_id) REFERENCES courses (id)
+            ON DELETE CASCADE
 );
 
 CREATE INDEX idx_offered_courses_course ON offered_courses (course_id);
 CREATE INDEX idx_offered_courses_teacher_ids ON offered_courses USING GIN (teacher_ids);
 
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS users
+(
     id           SERIAL PRIMARY KEY,
-    username     TEXT    NOT NULL UNIQUE,
-    email        TEXT    NOT NULL UNIQUE,
-    role         TEXT    NOT NULL,
-    password     TEXT    NOT NULL,
+    username     TEXT        NOT NULL UNIQUE,
+    email        TEXT        NOT NULL UNIQUE,
+    role         TEXT        NOT NULL,
+    password     TEXT        NOT NULL,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     suspended_at TIMESTAMPTZ,
     suspend_till TIMESTAMPTZ
 );
 
-CREATE TABLE IF NOT EXISTS user_point_records (
+CREATE TABLE IF NOT EXISTS user_point_records
+(
     id          SERIAL PRIMARY KEY,
-    user_id     INTEGER NOT NULL,
-    reason      TEXT    NOT NULL,
-    amount      INTEGER NOT NULL,
-    description TEXT    NOT NULL,
+    user_id     INTEGER     NOT NULL,
+    reason      TEXT        NOT NULL,
+    amount      INTEGER     NOT NULL,
+    description TEXT        NOT NULL,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_user_point_records_user
-        FOREIGN KEY (user_id) REFERENCES users(id)
-        ON DELETE CASCADE
+        FOREIGN KEY (user_id) REFERENCES users (id)
+            ON DELETE CASCADE
 );
 
 CREATE INDEX idx_user_point_records_user_created
     ON user_point_records (user_id, created_at DESC, id DESC);
 
-CREATE TABLE IF NOT EXISTS point_transfers (
+CREATE TABLE IF NOT EXISTS point_transfers
+(
     id                SERIAL PRIMARY KEY,
-    sender_user_id    INTEGER NOT NULL,
-    recipient_user_id INTEGER NOT NULL,
-    amount            INTEGER NOT NULL,
-    fee               INTEGER NOT NULL,
-    fee_payer         TEXT    NOT NULL,
-    sender_delta      INTEGER NOT NULL,
-    recipient_delta   INTEGER NOT NULL,
+    sender_user_id    INTEGER     NOT NULL,
+    recipient_user_id INTEGER     NOT NULL,
+    amount            INTEGER     NOT NULL,
+    fee               INTEGER     NOT NULL,
+    fee_payer         TEXT        NOT NULL,
+    sender_delta      INTEGER     NOT NULL,
+    recipient_delta   INTEGER     NOT NULL,
     created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_point_transfers_sender
-        FOREIGN KEY (sender_user_id) REFERENCES users(id)
-        ON DELETE CASCADE,
+        FOREIGN KEY (sender_user_id) REFERENCES users (id)
+            ON DELETE CASCADE,
     CONSTRAINT fk_point_transfers_recipient
-        FOREIGN KEY (recipient_user_id) REFERENCES users(id)
-        ON DELETE CASCADE
+        FOREIGN KEY (recipient_user_id) REFERENCES users (id)
+            ON DELETE CASCADE
 );
 
 CREATE INDEX idx_point_transfers_sender_created
@@ -121,86 +140,93 @@ CREATE INDEX idx_point_transfers_sender_created
 CREATE INDEX idx_point_transfers_recipient_created
     ON point_transfers (recipient_user_id, created_at DESC, id DESC);
 
-CREATE TABLE IF NOT EXISTS reviews (
+CREATE TABLE IF NOT EXISTS reviews
+(
     id            SERIAL PRIMARY KEY,
-    course_id     INTEGER NOT NULL,
-    semester      TEXT    NOT NULL,
-    user_id       INTEGER NOT NULL,
-    rating        INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
-    content       TEXT    NOT NULL,
-    score         TEXT    NOT NULL,
-    like_count    INTEGER NOT NULL DEFAULT 0,
-    dislike_count INTEGER NOT NULL DEFAULT 0,
+    course_id     INTEGER     NOT NULL,
+    semester      TEXT        NOT NULL,
+    user_id       INTEGER     NOT NULL,
+    rating        INTEGER     NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    content       TEXT        NOT NULL,
+    score         TEXT        NOT NULL,
+    like_count    INTEGER     NOT NULL DEFAULT 0,
+    dislike_count INTEGER     NOT NULL DEFAULT 0,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_reviews_course
-        FOREIGN KEY (course_id) REFERENCES courses(id)
-        ON DELETE CASCADE,
+        FOREIGN KEY (course_id) REFERENCES courses (id)
+            ON DELETE CASCADE,
     CONSTRAINT fk_reviews_user
-        FOREIGN KEY (user_id) REFERENCES users(id)
-        ON DELETE CASCADE
+        FOREIGN KEY (user_id) REFERENCES users (id)
+            ON DELETE CASCADE
 );
 
 CREATE INDEX idx_reviews_course ON reviews (course_id);
-CREATE INDEX idx_reviews_user  ON reviews (user_id);
+CREATE INDEX idx_reviews_user ON reviews (user_id);
 
-CREATE TABLE IF NOT EXISTS review_revisions (
+CREATE TABLE IF NOT EXISTS review_revisions
+(
     id         SERIAL PRIMARY KEY,
-    review_id  INTEGER NOT NULL,
-    course_id  INTEGER NOT NULL,
-    semester   TEXT    NOT NULL,
-    user_id    INTEGER NOT NULL,
-    rating     INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
-    content    TEXT    NOT NULL,
-    score      TEXT    NOT NULL,
+    review_id  INTEGER     NOT NULL,
+    course_id  INTEGER     NOT NULL,
+    semester   TEXT        NOT NULL,
+    user_id    INTEGER     NOT NULL,
+    rating     INTEGER     NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    content    TEXT        NOT NULL,
+    score      TEXT        NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_review_revisions_review
-        FOREIGN KEY (review_id) REFERENCES reviews(id)
-        ON DELETE CASCADE
+        FOREIGN KEY (review_id) REFERENCES reviews (id)
+            ON DELETE CASCADE
 );
 
 CREATE INDEX idx_review_revisions_review ON review_revisions (review_id);
 CREATE INDEX idx_review_revisions_course ON review_revisions (course_id);
 
-CREATE TABLE IF NOT EXISTS review_votes (
-    review_id  INTEGER NOT NULL,
-    user_id    INTEGER NOT NULL,
-    vote_type  SMALLINT NOT NULL CHECK (vote_type IN (1, -1)),
+CREATE TABLE IF NOT EXISTS review_votes
+(
+    review_id  INTEGER     NOT NULL,
+    user_id    INTEGER     NOT NULL,
+    vote_type  SMALLINT    NOT NULL CHECK (vote_type IN (1, -1)),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY (review_id, user_id),
 
     CONSTRAINT fk_review_votes_review
-        FOREIGN KEY (review_id) REFERENCES reviews(id)
-        ON DELETE CASCADE,
+        FOREIGN KEY (review_id) REFERENCES reviews (id)
+            ON DELETE CASCADE,
     CONSTRAINT fk_review_votes_user
-        FOREIGN KEY (user_id) REFERENCES users(id)
-        ON DELETE CASCADE
+        FOREIGN KEY (user_id) REFERENCES users (id)
+            ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS course_notifications (
-    user_id    INTEGER NOT NULL,
-    course_id  INTEGER NOT NULL,
-    level      SMALLINT NOT NULL DEFAULT 0 CHECK (level IN (0, 1, 2)),
+CREATE TABLE IF NOT EXISTS course_notifications
+(
+    user_id    INTEGER     NOT NULL,
+    course_id  INTEGER     NOT NULL,
+    level      SMALLINT    NOT NULL DEFAULT 0 CHECK (level IN (0, 1, 2)),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY (user_id, course_id),
 
     CONSTRAINT fk_course_notifications_course
-        FOREIGN KEY (course_id) REFERENCES courses(id)
-        ON DELETE CASCADE,
+        FOREIGN KEY (course_id) REFERENCES courses (id)
+            ON DELETE CASCADE,
     CONSTRAINT fk_course_notifications_user
-        FOREIGN KEY (user_id) REFERENCES users(id)
-        ON DELETE CASCADE
+        FOREIGN KEY (user_id) REFERENCES users (id)
+            ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS site_daily_stats (
+CREATE TABLE IF NOT EXISTS site_daily_stats
+(
     stat_date    DATE PRIMARY KEY,
-    metrics      JSONB NOT NULL DEFAULT '{}'::jsonb,
+    metrics      JSONB       NOT NULL DEFAULT '{}'::jsonb,
     generated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

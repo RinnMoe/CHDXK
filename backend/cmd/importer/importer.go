@@ -1,0 +1,374 @@
+package main
+
+import (
+	"log"
+	"strings"
+	"time"
+
+	"github.com/lib/pq"
+	pinyin "github.com/mozillazg/go-pinyin"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+
+	"jcourse/internal/infrastructure/repository"
+)
+
+const batchSize = 100
+
+type Importer struct {
+	db       *gorm.DB
+	semester string
+}
+
+func NewImporter(db *gorm.DB, semester string) *Importer {
+	return &Importer{db: db, semester: semester}
+}
+
+func (imp *Importer) Run(rows []CSVRow) error {
+	log.Println("Collecting unique entities from CSV data...")
+	departments, categories, teachers, courses := collectUnique(rows)
+
+	log.Printf("  Departments: %d, Categories: %d, Teachers: %d, Courses: %d",
+		len(departments), len(categories), len(teachers), len(courses))
+
+	log.Println("Upserting departments...")
+	imp.upsertDepartments(departments)
+
+	log.Println("Upserting categories...")
+	imp.upsertCategories(categories)
+
+	log.Println("Upserting semester...")
+	imp.upsertSemester()
+
+	log.Println("Upserting teachers...")
+	imp.upsertTeachers(teachers)
+
+	log.Println("Resolving teacher IDs...")
+	teacherIDMap := imp.resolveTeacherIDs()
+
+	log.Println("Upserting courses...")
+	imp.upsertCourses(courses, teacherIDMap)
+
+	log.Println("Resolving course IDs...")
+	courseIDMap := imp.resolveCourseIDs()
+
+	log.Println("Creating offered courses...")
+	if imp.semesterAlreadyImported() {
+		log.Println("  Semester already imported, skipping offered courses.")
+	} else {
+		imp.createOfferedCourses(rows, teacherIDMap, courseIDMap)
+	}
+
+	log.Println("Import complete!")
+	return nil
+}
+
+func (imp *Importer) semesterAlreadyImported() bool {
+	var count int64
+	imp.db.Model(&repository.OfferedCourseEntity{}).Where("semester = ?", imp.semester).Count(&count)
+	return count > 0
+}
+
+// courseKey returns the composite key for a course: code|teacherCode
+func courseKey(code, teacherCode string) string {
+	return code + "|" + teacherCode
+}
+
+func collectUnique(rows []CSVRow) (
+	departments map[string]bool,
+	categories map[string]bool,
+	teachers map[string]TeacherInfo,
+	courses map[string]CSVRow,
+) {
+	departments = make(map[string]bool)
+	categories = make(map[string]bool)
+	teachers = make(map[string]TeacherInfo)
+	courses = make(map[string]CSVRow)
+
+	for _, r := range rows {
+		if r.Department != "" {
+			departments[r.Department] = true
+		}
+		for _, c := range r.Categories {
+			categories[c] = true
+		}
+		for _, t := range r.AllTeachers {
+			if t.Code != "" {
+				teachers[t.Code] = t
+				if t.Department != "" {
+					departments[t.Department] = true
+				}
+			}
+		}
+		if r.CourseCode != "" && r.MainTeacher.Code != "" {
+			courses[courseKey(r.CourseCode, r.MainTeacher.Code)] = r
+		}
+	}
+	return
+}
+
+func (imp *Importer) upsertDepartments(departments map[string]bool) {
+	var batch []repository.DepartmentEntity
+	for name := range departments {
+		batch = append(batch, repository.DepartmentEntity{Name: name, CreatedAt: time.Now()})
+		if len(batch) >= batchSize {
+			imp.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&batch)
+			batch = batch[:0]
+		}
+	}
+	if len(batch) > 0 {
+		imp.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&batch)
+	}
+}
+
+func (imp *Importer) upsertCategories(categories map[string]bool) {
+	var batch []repository.CategoryEntity
+	for name := range categories {
+		batch = append(batch, repository.CategoryEntity{Name: name})
+		if len(batch) >= batchSize {
+			imp.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&batch)
+			batch = batch[:0]
+		}
+	}
+	if len(batch) > 0 {
+		imp.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&batch)
+	}
+}
+
+func (imp *Importer) upsertSemester() {
+	imp.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&repository.SemesterEntity{
+		Name:      imp.semester,
+		CanReview: true,
+		CreatedAt: time.Now(),
+	})
+}
+
+func generatePinyin(name string) (string, string) {
+	a := pinyin.NewArgs()
+	a.Style = pinyin.Normal
+	py := pinyin.LazyPinyin(name, a)
+	full := strings.Join(py, " ")
+
+	a.Style = pinyin.FirstLetter
+	abbrPy := pinyin.LazyPinyin(name, a)
+	abbr := strings.Join(abbrPy, "")
+	return full, abbr
+}
+
+func (imp *Importer) upsertTeachers(teachers map[string]TeacherInfo) {
+	onConflict := clause.OnConflict{
+		Columns: []clause.Column{{Name: "code"}},
+		DoUpdates: clause.Assignments(map[string]interface{}{
+			"department":    clause.Column{Table: "excluded", Name: "department"},
+			"title":         clause.Column{Table: "excluded", Name: "title"},
+			"last_semester": clause.Column{Table: "excluded", Name: "last_semester"},
+			"updated_at":    clause.Column{Table: "excluded", Name: "updated_at"},
+		}),
+		Where: clause.Where{
+			Exprs: []clause.Expression{
+				clause.Expr{SQL: "teachers.last_semester < ?", Vars: []interface{}{imp.semester}},
+			},
+		},
+	}
+
+	var batch []repository.TeacherEntity
+	count := 0
+	for code, info := range teachers {
+		fullPy, abbrPy := generatePinyin(info.Name)
+		batch = append(batch, repository.TeacherEntity{
+			Code:         code,
+			Name:         info.Name,
+			Department:   info.Department,
+			Title:        info.Title,
+			Pinyin:       fullPy,
+			PinyinAbbr:   abbrPy,
+			LastSemester: imp.semester,
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
+		})
+		if len(batch) >= batchSize {
+			imp.db.Clauses(onConflict).Create(&batch)
+			batch = batch[:0]
+		}
+		count++
+		if count%500 == 0 {
+			log.Printf("  Processed %d/%d teachers...", count, len(teachers))
+		}
+	}
+	if len(batch) > 0 {
+		imp.db.Clauses(onConflict).Create(&batch)
+	}
+	log.Printf("  Teachers: %d processed", count)
+}
+
+func (imp *Importer) resolveTeacherIDs() map[string]int {
+	var teachers []repository.TeacherEntity
+	imp.db.Select("id, code").Find(&teachers)
+	m := make(map[string]int, len(teachers))
+	for _, t := range teachers {
+		m[t.Code] = t.ID
+	}
+	log.Printf("  Resolved %d teacher IDs", len(m))
+	return m
+}
+
+func (imp *Importer) upsertCourses(courses map[string]CSVRow, teacherIDMap map[string]int) {
+	onConflict := clause.OnConflict{
+		Columns: []clause.Column{{Name: "code"}, {Name: "main_teacher_id"}},
+		DoUpdates: clause.Assignments(map[string]interface{}{
+			"department":    clause.Column{Table: "excluded", Name: "department"},
+			"language":      clause.Column{Table: "excluded", Name: "language"},
+			"last_semester": clause.Column{Table: "excluded", Name: "last_semester"},
+		}),
+		Where: clause.Where{
+			Exprs: []clause.Expression{
+				clause.Expr{SQL: "courses.last_semester < ?", Vars: []interface{}{imp.semester}},
+			},
+		},
+	}
+
+	var batch []repository.CourseEntity
+	skipped := 0
+	for _, row := range courses {
+		mainTeacherID := teacherIDMap[row.MainTeacher.Code]
+		if mainTeacherID == 0 {
+			log.Printf("  Skipping course %s (%s): no main teacher found (code=%q)", row.CourseCode, row.CourseName, row.MainTeacher.Code)
+			skipped++
+			continue
+		}
+		batch = append(batch, repository.CourseEntity{
+			Code:          row.CourseCode,
+			Name:          row.CourseName,
+			Credit:        row.Credit,
+			Department:    row.Department,
+			MainTeacherID: mainTeacherID,
+			Language:      row.Language,
+			LastSemester:  imp.semester,
+			CreatedAt:     time.Now(),
+		})
+		if len(batch) >= batchSize {
+			imp.db.Clauses(onConflict).Create(&batch)
+			batch = batch[:0]
+		}
+	}
+	if len(batch) > 0 {
+		imp.db.Clauses(onConflict).Create(&batch)
+	}
+	log.Printf("  Courses: %d imported, %d skipped", len(courses)-skipped, skipped)
+}
+
+func (imp *Importer) resolveCourseIDs() map[string]int {
+	var courses []repository.CourseEntity
+	imp.db.Model(&repository.CourseEntity{}).
+		Joins("MainTeacher").
+		Find(&courses)
+	m := make(map[string]int, len(courses))
+	for _, c := range courses {
+		m[courseKey(c.Code, c.MainTeacher.Code)] = c.ID
+	}
+	log.Printf("  Resolved %d course IDs", len(m))
+	return m
+}
+
+type offeredRow struct {
+	language    string
+	categories  []string
+	targetYears []string
+	teacherIDs  []int64
+}
+
+type courseAgg struct {
+	mainTeacherCode string
+	yearSet         map[string]bool
+	catSet          map[string]bool
+	tidSet          map[int64]bool
+	offered         []offeredRow
+}
+
+func (imp *Importer) createOfferedCourses(rows []CSVRow, teacherIDMap map[string]int, courseIDMap map[string]int) {
+	aggMap := make(map[string]*courseAgg)
+	for _, r := range rows {
+		if r.CourseCode == "" || r.MainTeacher.Code == "" {
+			continue
+		}
+		key := courseKey(r.CourseCode, r.MainTeacher.Code)
+		agg, ok := aggMap[key]
+		if !ok {
+			agg = &courseAgg{
+				mainTeacherCode: r.MainTeacher.Code,
+				yearSet:         make(map[string]bool),
+				catSet:          make(map[string]bool),
+				tidSet:          make(map[int64]bool),
+			}
+			aggMap[key] = agg
+		}
+
+		var tids []int64
+		for _, t := range r.AllTeachers {
+			if id, ok := teacherIDMap[t.Code]; ok {
+				tid := int64(id)
+				agg.tidSet[tid] = true
+				tids = append(tids, tid)
+			}
+		}
+		for _, y := range r.TargetYears {
+			agg.yearSet[y] = true
+		}
+		for _, c := range r.Categories {
+			agg.catSet[c] = true
+		}
+		agg.offered = append(agg.offered, offeredRow{
+			language:    r.Language,
+			categories:  r.Categories,
+			targetYears: r.TargetYears,
+			teacherIDs:  tids,
+		})
+	}
+
+	for key, agg := range aggMap {
+		courseID, ok := courseIDMap[key]
+		if !ok {
+			continue
+		}
+
+		var targetYears pq.StringArray
+		for y := range agg.yearSet {
+			targetYears = append(targetYears, y)
+		}
+		var courseCats pq.StringArray
+		for c := range agg.catSet {
+			courseCats = append(courseCats, c)
+		}
+		var allTIDs pq.Int64Array
+		for tid := range agg.tidSet {
+			allTIDs = append(allTIDs, tid)
+		}
+		mainTeacherID := teacherIDMap[agg.mainTeacherCode]
+
+		imp.db.Model(&repository.CourseEntity{}).Where("id = ? AND last_semester = ?", courseID, imp.semester).Updates(map[string]interface{}{
+			"main_teacher_id": mainTeacherID,
+			"target_years":    targetYears,
+			"categories":      courseCats,
+			"teacher_ids":     allTIDs,
+		})
+
+		var batch []repository.OfferedCourseEntity
+		for _, od := range agg.offered {
+			batch = append(batch, repository.OfferedCourseEntity{
+				CourseID:    courseID,
+				Semester:    imp.semester,
+				Language:    od.language,
+				TargetYears: pq.StringArray(od.targetYears),
+				Categories:  pq.StringArray(od.categories),
+				TeacherIDs:  pq.Int64Array(od.teacherIDs),
+			})
+			if len(batch) >= batchSize {
+				imp.db.Create(&batch)
+				batch = batch[:0]
+			}
+		}
+		if len(batch) > 0 {
+			imp.db.Create(&batch)
+		}
+	}
+}

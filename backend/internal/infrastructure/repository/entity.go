@@ -38,7 +38,7 @@ type TeacherEntity struct {
 	Pinyin     string `gorm:"column:pinyin;index"`
 	PinyinAbbr string `gorm:"column:pinyin_abbr;index"`
 
-	LateSemester string `gorm:"column:late_semester"`
+	LastSemester string `gorm:"column:last_semester"`
 
 	CreatedAt time.Time `gorm:"column:created_at"`
 	UpdatedAt time.Time `gorm:"column:updated_at"`
@@ -56,6 +56,7 @@ type OfferedCourseEntity struct {
 	TargetYears pq.StringArray `gorm:"column:target_years;type:text[]"`
 	Categories  pq.StringArray `gorm:"column:categories;type:text[]"`
 	TeacherIDs  pq.Int64Array  `gorm:"column:teacher_ids;type:integer[]"`
+	CreatedAt   time.Time      `gorm:"column:created_at"`
 }
 
 func (OfferedCourseEntity) TableName() string {
@@ -64,11 +65,11 @@ func (OfferedCourseEntity) TableName() string {
 
 type CourseEntity struct {
 	ID            int            `gorm:"column:id"`
-	Code          string         `gorm:"column:code;uniqueIndex"`
+	Code          string         `gorm:"column:code;uniqueIndex:idx_courses_code_teacher"`
 	Name          string         `gorm:"column:name"`
 	Credit        float32        `gorm:"column:credit"`
 	Department    string         `gorm:"column:department;index"`
-	MainTeacherID int            `gorm:"column:main_teacher_id;index"`
+	MainTeacherID int            `gorm:"column:main_teacher_id;uniqueIndex:idx_courses_code_teacher"`
 	TargetYears   pq.StringArray `gorm:"column:target_years;type:text[]"`
 	Language      string         `gorm:"column:language"`
 	Categories    pq.StringArray `gorm:"column:categories;type:text[]"`
@@ -181,6 +182,7 @@ type CourseNotificationEntity struct {
 	UserID    int       `gorm:"column:user_id;primaryKey"`
 	CourseID  int       `gorm:"column:course_id;primaryKey"`
 	Level     int       `gorm:"column:level"`
+	CreatedAt time.Time `gorm:"column:created_at"`
 	UpdatedAt time.Time `gorm:"column:updated_at"`
 }
 
@@ -192,9 +194,20 @@ type SiteDailyStatEntity struct {
 	StatDate    time.Time         `gorm:"column:stat_date;primaryKey;type:date"`
 	Metrics     datatypes.JSONMap `gorm:"column:metrics;type:jsonb"`
 	GeneratedAt time.Time         `gorm:"column:generated_at"`
+	CreatedAt   time.Time         `gorm:"column:created_at"`
 	UpdatedAt   time.Time         `gorm:"column:updated_at"`
 }
 
 func (SiteDailyStatEntity) TableName() string {
 	return "site_daily_stats"
+}
+
+type CategoryEntity struct {
+	ID        int       `gorm:"column:id"`
+	Name      string    `gorm:"column:name;uniqueIndex"`
+	CreatedAt time.Time `gorm:"column:created_at"`
+}
+
+func (CategoryEntity) TableName() string {
+	return "categories"
 }
