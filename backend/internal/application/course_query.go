@@ -33,6 +33,10 @@ func NewCourseQueryService(courseQuery course.CourseQuery, notificationRepo cour
 	}
 }
 
+func (s *CourseQueryService) GetCourseFilters(ctx context.Context) (*course.CourseFilters, error) {
+	return s.courseQuery.GetFilters(ctx)
+}
+
 func (s *CourseQueryService) ListCourses(ctx context.Context, f CourseListFilter) (*PaginatedResult[CourseListItemDTO], error) {
 	filter := course.CourseFilter{
 		Code:        f.Code,

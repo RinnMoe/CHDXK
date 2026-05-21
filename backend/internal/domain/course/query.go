@@ -61,9 +61,22 @@ type CourseDetailView struct {
 	NotificationLevel NotificationLevel
 }
 
+type FilterItem struct {
+	Name  string `json:"name"`
+	Count int    `json:"count"`
+}
+
+type CourseFilters struct {
+	Credits     []FilterItem `json:"credits"`
+	Departments []FilterItem `json:"departments"`
+	Categories  []FilterItem `json:"categories"`
+	TargetYears []FilterItem `json:"target_years"`
+}
+
 // Read model interface
 type CourseQuery interface {
 	FindBy(ctx context.Context, filter CourseFilter) ([]CourseView, int64, error)
 	GetDetail(ctx context.Context, courseID int) (*CourseDetailView, error)
 	FindOfferedCourses(ctx context.Context, courseID int) ([]OfferedCourseView, error)
+	GetFilters(ctx context.Context) (*CourseFilters, error)
 }

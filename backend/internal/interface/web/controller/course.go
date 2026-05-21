@@ -21,6 +21,15 @@ func NewCourseController(query *application.CourseQueryService, command *applica
 	return &CourseController{query: query, command: command}
 }
 
+func (ctrl *CourseController) GetCourseFilters(c *gin.Context) {
+	result, err := ctrl.query.GetCourseFilters(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
 func (ctrl *CourseController) ListCourses(c *gin.Context) {
 	var f application.CourseListFilter
 	if err := c.ShouldBindQuery(&f); err != nil {

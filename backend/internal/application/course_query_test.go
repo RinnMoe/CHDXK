@@ -58,6 +58,10 @@ func (q *fakeCourseQuery) FindOfferedCourses(ctx context.Context, courseID int) 
 	return nil, nil
 }
 
+func (q *fakeCourseQuery) GetFilters(ctx context.Context) (*course.CourseFilters, error) {
+	return &course.CourseFilters{}, nil
+}
+
 var errNotFound = errorString("not found")
 
 type errorString string

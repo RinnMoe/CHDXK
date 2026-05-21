@@ -240,5 +240,48 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 	return result, nil
 }
 
+func (r *CourseRepository) GetFilters(ctx context.Context) (*course.CourseFilters, error) {
+	var credits []course.FilterItem
+	if err := r.db.WithContext(ctx).Model(&CourseEntity{}).
+		Select("CAST(credit AS TEXT) AS name, COUNT(*) AS count").
+		Group("credit").Order("credit").
+		Scan(&credits).Error; err != nil {
+		return nil, err
+	}
+
+	var departments []course.FilterItem
+	if err := r.db.WithContext(ctx).Model(&CourseEntity{}).
+		Select("department AS name, COUNT(*) AS count").
+		Group("department").Order("department").
+		Scan(&departments).Error; err != nil {
+		return nil, err
+	}
+
+	var categories []course.FilterItem
+	if err := r.db.WithContext(ctx).Model(&CourseEntity{}).
+		Select("category AS name, COUNT(*) AS count").
+		Joins("CROSS JOIN LATERAL unnest(courses.categories) AS category").
+		Group("category").Order("category").
+		Scan(&categories).Error; err != nil {
+		return nil, err
+	}
+
+	var targetYears []course.FilterItem
+	if err := r.db.WithContext(ctx).Model(&CourseEntity{}).
+		Select("year AS name, COUNT(*) AS count").
+		Joins("CROSS JOIN LATERAL unnest(courses.target_years) AS year").
+		Group("year").Order("year").
+		Scan(&targetYears).Error; err != nil {
+		return nil, err
+	}
+
+	return &course.CourseFilters{
+		Credits:     credits,
+		Departments: departments,
+		Categories:  categories,
+		TargetYears: targetYears,
+	}, nil
+}
+
 var _ course.CourseRepository = (*CourseRepository)(nil)
 var _ course.CourseQuery = (*CourseRepository)(nil)

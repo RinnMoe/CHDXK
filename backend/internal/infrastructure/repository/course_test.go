@@ -369,6 +369,77 @@ func TestCourseRepository_FindOfferedCourses(t *testing.T) {
 	}
 }
 
+func TestCourseRepository_GetFilters(t *testing.T) {
+	db := newTestDB(t)
+	repo := repository.NewCourseRepository(db)
+	ctx := context.Background()
+
+	cleanTables(t, db, "courses", "teachers")
+
+	t1 := seedTeacher(t, db)
+	t2 := repository.TeacherEntity{Code: "T002", Name: "李老师", Department: "数学学院", Title: "副教授", Pinyin: "lilaoshi", PinyinAbbr: "lls"}
+	if err := db.Create(&t2).Error; err != nil {
+		t.Fatalf("seed teacher t2: %v", err)
+	}
+
+	seedCourseRaw(t, db, "CS101", "数据结构", 3.0, "计算机学院", t1.ID, "zh", []string{"核心课"}, []string{"2021"})
+	seedCourseRaw(t, db, "CS102", "算法设计", 3.0, "计算机学院", t1.ID, "en", []string{"选修课"}, []string{"2022"})
+	seedCourseRaw(t, db, "MA101", "高等数学", 4.0, "数学学院", t2.ID, "zh", []string{"核心课"}, []string{"2021", "2022"})
+
+	filters, err := repo.GetFilters(ctx)
+	if err != nil {
+		t.Fatalf("GetFilters: %v", err)
+	}
+
+	t.Run("credits", func(t *testing.T) {
+		if len(filters.Credits) != 2 {
+			t.Fatalf("credits count: got %d, want 2", len(filters.Credits))
+		}
+		if filters.Credits[0].Name != "3" || filters.Credits[0].Count != 2 {
+			t.Errorf("credit 3: got %+v, want name=3 count=2", filters.Credits[0])
+		}
+		if filters.Credits[1].Name != "4" || filters.Credits[1].Count != 1 {
+			t.Errorf("credit 4: got %+v, want name=4 count=1", filters.Credits[1])
+		}
+	})
+
+	t.Run("departments", func(t *testing.T) {
+		if len(filters.Departments) != 2 {
+			t.Fatalf("departments count: got %d, want 2", len(filters.Departments))
+		}
+		if filters.Departments[0].Name != "数学学院" || filters.Departments[0].Count != 1 {
+			t.Errorf("department 数学学院: got %+v", filters.Departments[0])
+		}
+		if filters.Departments[1].Name != "计算机学院" || filters.Departments[1].Count != 2 {
+			t.Errorf("department 计算机学院: got %+v", filters.Departments[1])
+		}
+	})
+
+	t.Run("categories", func(t *testing.T) {
+		if len(filters.Categories) != 2 {
+			t.Fatalf("categories count: got %d, want 2", len(filters.Categories))
+		}
+		if filters.Categories[0].Name != "核心课" || filters.Categories[0].Count != 2 {
+			t.Errorf("category 核心课: got %+v", filters.Categories[0])
+		}
+		if filters.Categories[1].Name != "选修课" || filters.Categories[1].Count != 1 {
+			t.Errorf("category 选修课: got %+v", filters.Categories[1])
+		}
+	})
+
+	t.Run("target_years", func(t *testing.T) {
+		if len(filters.TargetYears) != 2 {
+			t.Fatalf("target_years count: got %d, want 2", len(filters.TargetYears))
+		}
+		if filters.TargetYears[0].Name != "2021" || filters.TargetYears[0].Count != 2 {
+			t.Errorf("target_year 2021: got %+v", filters.TargetYears[0])
+		}
+		if filters.TargetYears[1].Name != "2022" || filters.TargetYears[1].Count != 2 {
+			t.Errorf("target_year 2022: got %+v", filters.TargetYears[1])
+		}
+	})
+}
+
 func TestCourseRepository_OfferedCourseExists(t *testing.T) {
 	db := newTestDB(t)
 	repo := repository.NewCourseRepository(db)
