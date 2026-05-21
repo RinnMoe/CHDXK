@@ -212,6 +212,17 @@ func (CategoryEntity) TableName() string {
 	return "categories"
 }
 
+type ApiKeyEntity struct {
+	ID        int       `gorm:"column:id"`
+	Name      string    `gorm:"column:name"`
+	Key       string    `gorm:"column:key;uniqueIndex"`
+	CreatedAt time.Time `gorm:"column:created_at"`
+}
+
+func (ApiKeyEntity) TableName() string {
+	return "api_keys"
+}
+
 type AnnouncementEntity struct {
 	ID        int       `gorm:"column:id"`
 	Title     string    `gorm:"column:title"`

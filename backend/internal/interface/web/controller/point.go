@@ -118,3 +118,22 @@ func (ctrl *PointController) PreviewTransfer(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, preview)
 }
+
+func (ctrl *PointController) GetPointsByEmail(c *gin.Context) {
+	email := c.Query("email")
+	if email == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "email is required"})
+		return
+	}
+
+	total, err := ctrl.query.GetUserPointsByEmail(c.Request.Context(), email)
+	if err != nil {
+		if errors.Is(err, application.ErrPointUserNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"email": email, "total": total})
+}

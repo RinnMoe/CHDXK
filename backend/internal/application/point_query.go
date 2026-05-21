@@ -2,7 +2,9 @@ package application
 
 import (
 	"context"
+	"errors"
 
+	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/point"
 )
 
@@ -12,11 +14,12 @@ type PointRecordListFilter struct {
 }
 
 type PointQueryService struct {
-	query point.Query
+	query    point.Query
+	userRepo auth.UserRepository
 }
 
-func NewPointQueryService(query point.Query) *PointQueryService {
-	return &PointQueryService{query: query}
+func NewPointQueryService(query point.Query, userRepo auth.UserRepository) *PointQueryService {
+	return &PointQueryService{query: query, userRepo: userRepo}
 }
 
 func (s *PointQueryService) GetUserPoints(ctx context.Context, userID int, f PointRecordListFilter) (*PointSummaryDTO, error) {
@@ -48,4 +51,17 @@ func (s *PointQueryService) GetUserPoints(ctx context.Context, userID int, f Poi
 			PageSize: f.PageSize,
 		},
 	}, nil
+}
+
+var ErrPointUserNotFound = errors.New("user not found")
+
+func (s *PointQueryService) GetUserPointsByEmail(ctx context.Context, email string) (int, error) {
+	u, err := s.userRepo.FindByEmail(ctx, email)
+	if err != nil {
+		return 0, err
+	}
+	if u == nil {
+		return 0, ErrPointUserNotFound
+	}
+	return s.query.SumByUser(ctx, u.ID)
 }

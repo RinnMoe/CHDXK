@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"jcourse/internal/application"
+	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/point"
 )
 
@@ -19,7 +20,7 @@ func TestPointQueryService_GetUserPoints(t *testing.T) {
 		},
 		recordTotal: 2,
 	}
-	svc := application.NewPointQueryService(repo)
+	svc := application.NewPointQueryService(repo, &fakeUserRepoForQuery{})
 
 	result, err := svc.GetUserPoints(context.Background(), 7, application.PointRecordListFilter{Page: 1, PageSize: 20})
 	if err != nil {
@@ -54,4 +55,21 @@ func (q *fakePointQuery) SumByUser(_ context.Context, userID int) (int, error) {
 func (q *fakePointQuery) FindRecordsByUser(_ context.Context, filter point.RecordFilter) ([]point.Record, int64, error) {
 	q.userID = filter.UserID
 	return q.records, q.recordTotal, nil
+}
+
+type fakeUserRepoForQuery struct{}
+
+func (r *fakeUserRepoForQuery) Create(_ context.Context, _ *auth.User) error { return nil }
+func (r *fakeUserRepoForQuery) Update(_ context.Context, _ *auth.User) error { return nil }
+func (r *fakeUserRepoForQuery) TouchLastSeen(_ context.Context, _ int, _ time.Time) error {
+	return nil
+}
+func (r *fakeUserRepoForQuery) FindByID(_ context.Context, _ int) (*auth.User, error) {
+	return nil, nil
+}
+func (r *fakeUserRepoForQuery) FindByUsername(_ context.Context, _ string) (*auth.User, error) {
+	return nil, nil
+}
+func (r *fakeUserRepoForQuery) FindByEmail(_ context.Context, _ string) (*auth.User, error) {
+	return nil, nil
 }

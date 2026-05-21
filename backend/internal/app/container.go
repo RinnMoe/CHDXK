@@ -26,6 +26,7 @@ type ServiceContainer struct {
 	AuthCommand      *application.AuthCommandService
 	AuthService      *domainauth.AuthService
 	AnnouncementQuery *application.AnnouncementQueryService
+	ApiKeySvc        *domainauth.ApiKeyService
 }
 
 func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
@@ -41,8 +42,11 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	notificationRepo := repository.NewCourseNotificationRepository(db)
 	pointRepo := repository.NewPointRepository(db)
 	userRepo := repository.NewUserRepository(db)
+	apiKeyRepo := repository.NewApiKeyRepository(db)
 	statRepo := repository.NewSiteDailyStatRepository(db)
 	verificationRepo := repository.NewVerificationCodeRepository(redisClient)
+	resetCodeRepo := repository.NewVerificationCodeRepositoryWithPrefix(redisClient, "reset")
+	loginAttemptRepo := repository.NewLoginAttemptRepository(redisClient, time.Duration(conf.Auth.LoginLockoutDuration)*time.Second)
 
 	reviewQuery := application.NewReviewQueryService(reviewRepo, voteRepo, notificationRepo)
 
@@ -56,7 +60,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	courseCommand := application.NewCourseCommandService(courseRepo, notificationRepo)
 	teacherQuery := application.NewTeacherQueryService(teacherRepo)
 	announcementQuery := application.NewAnnouncementQueryService(announcementRepo)
-	pointQuery := application.NewPointQueryService(pointRepo)
+	pointQuery := application.NewPointQueryService(pointRepo, userRepo)
 	pointCommand := application.NewPointCommandService(userRepo, pointRepo, application.PointTransferFeeConfig{
 		RateBps: conf.Point.TransferFeeRateBps,
 		MinFee:  conf.Point.TransferMinFee,
@@ -66,6 +70,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	authCommand := application.NewAuthCommandService(
 		userRepo,
 		verificationRepo,
+		resetCodeRepo,
 		email.NewSMTPVerificationCodeSender(conf.SMTP),
 		domainauth.NewDjangoPBKDF2SHA256PasswordHasher(0),
 		application.AuthCommandConfig{
@@ -73,8 +78,16 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 			CodeInterval:   time.Duration(conf.Auth.VerificationCodeInterval) * time.Second,
 			CodeTTL:        time.Duration(conf.Auth.VerificationCodeTTL) * time.Second,
 		},
+		domainauth.PasswordResetConfig{
+			CodeInterval: time.Duration(conf.Auth.VerificationCodeInterval) * time.Second,
+			CodeTTL:      time.Duration(conf.Auth.VerificationCodeTTL) * time.Second,
+		},
+		loginAttemptRepo,
+		conf.Auth.MaxLoginAttempts,
+		time.Duration(conf.Auth.LoginLockoutDuration)*time.Second,
 	)
 	authService := domainauth.NewAuthService(userRepo)
+	apiKeySvc := domainauth.NewApiKeyService(apiKeyRepo)
 
 	return &ServiceContainer{
 		ReviewQuery:      reviewQuery,
@@ -89,5 +102,6 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		AuthCommand:      authCommand,
 		AuthService:      authService,
 		AnnouncementQuery: announcementQuery,
+		ApiKeySvc:        apiKeySvc,
 	}
 }

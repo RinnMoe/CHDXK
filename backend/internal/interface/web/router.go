@@ -35,6 +35,8 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		authGroup.POST("/register", authController.Register)
 		authGroup.POST("/login", authController.Login)
 		authGroup.POST("/logout", authController.Logout)
+			authGroup.POST("/password-reset/code", authController.SendResetCode)
+			authGroup.POST("/password-reset", authController.ResetPassword)
 	}
 	courseGroup := apiGroup.Group("/course")
 	{
@@ -80,6 +82,11 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	announcementGroup := apiGroup.Group("/announcement")
 	{
 		announcementGroup.GET("/", announcementController.ListAnnouncements)
+	}
+
+	extGroup := apiGroup.Group("/ext", middleware.APIKeyAuth(container.ApiKeySvc))
+	{
+		extGroup.GET("/points", pointController.GetPointsByEmail)
 	}
 
 	return g
