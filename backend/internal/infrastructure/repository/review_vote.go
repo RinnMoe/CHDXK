@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"gorm.io/gorm"
@@ -40,7 +41,7 @@ func newVoteDomain(e *ReviewVoteEntity) review.Vote {
 func (r *ReviewVoteRepository) FindByReviewAndUser(ctx context.Context, reviewID, userID int) (*review.Vote, error) {
 	e, err := gorm.G[ReviewVoteEntity](r.db).Where("review_id = ? AND user_id = ?", reviewID, userID).First(ctx)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, err

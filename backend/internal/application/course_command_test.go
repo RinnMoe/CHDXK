@@ -55,7 +55,7 @@ func (r *fakeCourseRepo) Get(ctx context.Context, courseID int) (*course.Course,
 	if c, ok := r.courses[courseID]; ok {
 		return c, nil
 	}
-	return nil, errors.New("not found")
+	return nil, nil
 }
 
 func (r *fakeCourseRepo) OfferedCourseExists(ctx context.Context, courseID int, semester string) (bool, error) {

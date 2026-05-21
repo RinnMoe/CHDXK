@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"gorm.io/gorm"
-
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/infrastructure/repository"
 )
@@ -71,9 +69,12 @@ func TestUserRepository_FindByUsername_NotFound(t *testing.T) {
 	repo := repository.NewUserRepository(db)
 	ctx := context.Background()
 
-	_, err := repo.FindByUsername(ctx, "nobody")
-	if err == nil {
-		t.Fatal("expected error for missing user, got nil")
+	got, err := repo.FindByUsername(ctx, "nobody")
+	if err != nil {
+		t.Fatalf("FindByUsername: %v", err)
+	}
+	if got != nil {
+		t.Fatalf("FindByUsername got %+v, want nil", got)
 	}
 }
 
@@ -205,11 +206,11 @@ func TestUserRepository_FindByID_NotFound(t *testing.T) {
 	repo := repository.NewUserRepository(db)
 	ctx := context.Background()
 
-	_, err := repo.FindByID(ctx, 999999)
-	if err == nil {
-		t.Fatal("expected error for missing ID, got nil")
+	got, err := repo.FindByID(ctx, 999999)
+	if err != nil {
+		t.Fatalf("FindByID: %v", err)
 	}
-	if err != gorm.ErrRecordNotFound {
-		t.Errorf("expected ErrRecordNotFound, got %v", err)
+	if got != nil {
+		t.Fatalf("FindByID got %+v, want nil", got)
 	}
 }

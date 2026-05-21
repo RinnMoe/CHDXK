@@ -2,6 +2,8 @@ package auth
 
 import (
 	"context"
+	"crypto/subtle"
+	"strings"
 	"time"
 )
 
@@ -9,6 +11,13 @@ type VerificationCode struct {
 	Email     string
 	Code      string
 	ExpiresAt time.Time
+}
+
+func (c *VerificationCode) Matches(value string, now time.Time) bool {
+	if c == nil || now.After(c.ExpiresAt) {
+		return false
+	}
+	return subtle.ConstantTimeCompare([]byte(c.Code), []byte(strings.TrimSpace(value))) == 1
 }
 
 type VerificationCodeRepository interface {

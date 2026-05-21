@@ -2,8 +2,13 @@ package stat
 
 import (
 	"context"
+	"errors"
 	"time"
 )
+
+const DateLayout = "2006-01-02"
+
+var ErrInvalidDateRange = errors.New("invalid date range")
 
 const (
 	MetricActiveUserCount     = "active_user_count"
@@ -22,6 +27,99 @@ type DailyStat struct {
 	Metrics     Metrics
 	GeneratedAt time.Time
 	UpdatedAt   time.Time
+}
+
+type Calendar struct {
+	loc *time.Location
+}
+
+func NewCalendar(loc *time.Location) Calendar {
+	if loc == nil {
+		loc = time.UTC
+	}
+	return Calendar{loc: loc}
+}
+
+func (c Calendar) DateOnly(value time.Time) time.Time {
+	v := value.In(c.loc)
+	return time.Date(v.Year(), v.Month(), v.Day(), 0, 0, 0, 0, c.loc)
+}
+
+func (c Calendar) Yesterday() time.Time {
+	return c.DateOnly(time.Now().In(c.loc).AddDate(0, 0, -1))
+}
+
+func (c Calendar) ParseDate(value string) (time.Time, error) {
+	date, err := time.ParseInLocation(DateLayout, value, c.loc)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return c.DateOnly(date), nil
+}
+
+func (c Calendar) ParseDateRange(startDate, endDate string) (time.Time, time.Time, error) {
+	if startDate == "" || endDate == "" {
+		return time.Time{}, time.Time{}, ErrInvalidDateRange
+	}
+	start, err := c.ParseDate(startDate)
+	if err != nil {
+		return time.Time{}, time.Time{}, err
+	}
+	end, err := c.ParseDate(endDate)
+	if err != nil {
+		return time.Time{}, time.Time{}, err
+	}
+	if end.Before(start) {
+		return time.Time{}, time.Time{}, ErrInvalidDateRange
+	}
+	return start, end, nil
+}
+
+type DailyStatService struct {
+	collector DailyStatCollector
+	repo      DailyStatCommandRepository
+	calendar  Calendar
+}
+
+func NewDailyStatService(collector DailyStatCollector, repo DailyStatCommandRepository, loc *time.Location) *DailyStatService {
+	return &DailyStatService{collector: collector, repo: repo, calendar: NewCalendar(loc)}
+}
+
+func (s *DailyStatService) CollectYesterday(ctx context.Context) (*DailyStat, error) {
+	return s.CollectDaily(ctx, s.calendar.Yesterday())
+}
+
+func (s *DailyStatService) CollectDailyByDateString(ctx context.Context, statDate string) (*DailyStat, error) {
+	if statDate == "" {
+		return s.CollectYesterday(ctx)
+	}
+	date, err := s.calendar.ParseDate(statDate)
+	if err != nil {
+		return nil, err
+	}
+	return s.CollectDaily(ctx, date)
+}
+
+func (s *DailyStatService) CollectDaily(ctx context.Context, statDate time.Time) (*DailyStat, error) {
+	date := s.calendar.DateOnly(statDate)
+	periodStart := date
+	periodEnd := periodStart.AddDate(0, 0, 1)
+
+	metrics, err := s.collector.Collect(ctx, periodStart, periodEnd)
+	if err != nil {
+		return nil, err
+	}
+	now := time.Now().In(s.calendar.loc)
+	daily := &DailyStat{
+		StatDate:    date,
+		Metrics:     metrics,
+		GeneratedAt: now,
+		UpdatedAt:   now,
+	}
+	if err := s.repo.Upsert(ctx, daily); err != nil {
+		return nil, err
+	}
+	return daily, nil
 }
 
 type DailyStatView struct {

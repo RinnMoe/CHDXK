@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"gorm.io/gorm"
-
 	"jcourse/internal/domain/task"
 )
 
@@ -65,7 +63,7 @@ func (r *authServiceFakeRepo) Update(_ context.Context, u *User) error {
 func (r *authServiceFakeRepo) TouchLastSeen(_ context.Context, userID int, at time.Time) error {
 	u, ok := r.users[userID]
 	if !ok {
-		return gorm.ErrRecordNotFound
+		return errors.New("user not found")
 	}
 	u.LastSeenAt = at
 	return nil
@@ -74,7 +72,7 @@ func (r *authServiceFakeRepo) TouchLastSeen(_ context.Context, userID int, at ti
 func (r *authServiceFakeRepo) FindByID(_ context.Context, id int) (*User, error) {
 	u, ok := r.users[id]
 	if !ok {
-		return nil, gorm.ErrRecordNotFound
+		return nil, nil
 	}
 	copy := *u
 	return &copy, nil
@@ -96,7 +94,7 @@ func (r *authServiceFakeRepo) FindByUsername(_ context.Context, username string)
 			return &copy, nil
 		}
 	}
-	return nil, gorm.ErrRecordNotFound
+	return nil, nil
 }
 
 func (r *authServiceFakeRepo) FindByEmail(_ context.Context, email string) (*User, error) {
@@ -106,5 +104,5 @@ func (r *authServiceFakeRepo) FindByEmail(_ context.Context, email string) (*Use
 			return &copy, nil
 		}
 	}
-	return nil, gorm.ErrRecordNotFound
+	return nil, nil
 }

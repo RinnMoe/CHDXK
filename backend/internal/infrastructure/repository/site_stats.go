@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"time"
 
 	"gorm.io/datatypes"
@@ -155,6 +156,9 @@ func (r *SiteDailyStatRepository) Upsert(ctx context.Context, s *stat.DailyStat)
 func (r *SiteDailyStatRepository) GetByDate(ctx context.Context, statDate time.Time) (*stat.DailyStatView, error) {
 	e, err := gorm.G[SiteDailyStatEntity](r.db).Where("stat_date = ?", statDate).First(ctx)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	v := newDailyStatView(&e)

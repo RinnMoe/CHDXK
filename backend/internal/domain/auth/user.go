@@ -51,6 +51,17 @@ func (u *User) ClearSuspension() {
 	u.SuspendTill = nil
 }
 
+func NewRegisteredUser(username, passwordHash string, now time.Time) *User {
+	return &User{
+		Username:   username,
+		Email:      username,
+		Role:       RoleUser,
+		Password:   passwordHash,
+		CreatedAt:  now,
+		LastSeenAt: now,
+	}
+}
+
 type UserRepository interface {
 	Create(ctx context.Context, u *User) error
 	Update(ctx context.Context, u *User) error

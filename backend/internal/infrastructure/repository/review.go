@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -132,6 +133,9 @@ func (r2 *ReviewRepository) GetByID(ctx context.Context, reviewID int) (*review.
 		Joins("Course.MainTeacher").
 		Where("reviews.id = ?", reviewID).
 		Take(&entity).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	view := newReviewView(&entity)
@@ -246,6 +250,9 @@ func (r2 *ReviewRepository) Delete(ctx context.Context, r *review.Review) error 
 func (r2 *ReviewRepository) Get(ctx context.Context, reviewID int) (*review.Review, error) {
 	e, err := gorm.G[ReviewEntity](r2.db).Where("id = ?", reviewID).First(ctx)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	r := newReviewDomain(&e)

@@ -71,6 +71,9 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 	if err != nil {
 		return nil, err
 	}
+	if detail == nil {
+		return nil, ErrCourseNotFound
+	}
 
 	if user != nil {
 		level, err := s.notificationRepo.GetLevel(ctx, user.ID, courseID)

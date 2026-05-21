@@ -3,10 +3,8 @@ package async
 import (
 	"context"
 	"encoding/json"
-	"errors"
 
 	"github.com/hibiken/asynq"
-	"gorm.io/gorm"
 
 	domainauth "jcourse/internal/domain/auth"
 )
@@ -25,9 +23,6 @@ func (h *clearExpiredSuspensionHandler) ProcessTask(ctx context.Context, t *asyn
 		return err
 	}
 	if err := h.authService.ClearExpiredSuspension(ctx, payload.UserID); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil
-		}
 		return err
 	}
 	return nil

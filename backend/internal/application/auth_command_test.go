@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"gorm.io/gorm"
-
 	"jcourse/internal/application"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/task"
@@ -211,7 +209,7 @@ func (r *fakeUserRepo) TouchLastSeen(_ context.Context, userID int, at time.Time
 	r.touchCount++
 	u, ok := r.usersByID[userID]
 	if !ok {
-		return gorm.ErrRecordNotFound
+		return errors.New("user not found")
 	}
 	u.LastSeenAt = at
 	return nil
@@ -220,7 +218,7 @@ func (r *fakeUserRepo) TouchLastSeen(_ context.Context, userID int, at time.Time
 func (r *fakeUserRepo) FindByID(_ context.Context, id int) (*auth.User, error) {
 	u, ok := r.usersByID[id]
 	if !ok {
-		return nil, gorm.ErrRecordNotFound
+		return nil, nil
 	}
 	copy := *u
 	return &copy, nil
@@ -233,7 +231,7 @@ func (r *fakeUserRepo) FindByUsername(_ context.Context, username string) (*auth
 func (r *fakeUserRepo) FindByEmail(_ context.Context, email string) (*auth.User, error) {
 	u, ok := r.usersByEmail[email]
 	if !ok {
-		return nil, gorm.ErrRecordNotFound
+		return nil, nil
 	}
 	copy := *u
 	return &copy, nil

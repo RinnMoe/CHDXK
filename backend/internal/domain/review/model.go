@@ -31,6 +31,22 @@ func (r *Review) MakeRevision() Revision {
 	}
 }
 
+func (r *Review) ApplyUpdate(cmd Update) {
+	r.Semester = cmd.Semester
+	r.Rating = cmd.Rating
+	r.Content = cmd.Content
+	r.Score = cmd.Score
+	r.UpdatedAt = cmd.Now
+}
+
+type Update struct {
+	Semester string
+	Rating   int
+	Content  string
+	Score    string
+	Now      time.Time
+}
+
 func (r *Review) Validate() error {
 	if r.Rating < 0 || r.Rating > 5 {
 		return errors.New("invalid rating")

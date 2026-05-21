@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"gorm.io/gorm"
-
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/point"
 )
@@ -15,7 +13,7 @@ import (
 var (
 	ErrPointTransferInvalidAmount        = point.ErrTransferInvalidAmount
 	ErrPointTransferInvalidFeePayer      = point.ErrTransferInvalidFeePayer
-	ErrPointTransferSelf                 = errors.New("cannot transfer points to self")
+	ErrPointTransferSelf                 = point.ErrTransferSelf
 	ErrPointTransferRecipientNotFound    = errors.New("point transfer recipient not found")
 	ErrPointTransferRecipientAmountSmall = point.ErrTransferRecipientAmountSmall
 )
@@ -45,13 +43,10 @@ func NewPointCommandService(userRepo auth.UserRepository, transferRepo point.Tra
 func (s *PointCommandService) CreateTransfer(ctx context.Context, sender *auth.User, cmd CreatePointTransferCommand) (*PointTransferDTO, error) {
 	recipient, err := s.userRepo.FindByUsername(ctx, strings.TrimSpace(cmd.RecipientUsername))
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrPointTransferRecipientNotFound
-		}
 		return nil, err
 	}
-	if recipient.ID == sender.ID {
-		return nil, ErrPointTransferSelf
+	if recipient == nil {
+		return nil, ErrPointTransferRecipientNotFound
 	}
 
 	now := time.Now()

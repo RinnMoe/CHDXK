@@ -37,7 +37,7 @@ func newSiteDailyStatDTO(s *stat.DailyStat) SiteDailyStatDTO {
 
 func newSiteDailyStatViewDTO(s *stat.DailyStatView) SiteDailyStatDTO {
 	return SiteDailyStatDTO{
-		StatDate:            s.StatDate.Format(dateLayout),
+		StatDate:            s.StatDate.Format(stat.DateLayout),
 		ActiveUserCount:     s.ActiveUserCount,
 		NewUserCount:        s.NewUserCount,
 		NewReviewCount:      s.NewReviewCount,

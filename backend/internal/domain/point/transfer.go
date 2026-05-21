@@ -22,6 +22,7 @@ var (
 	ErrInsufficientBalance          = errors.New("insufficient point balance")
 	ErrTransferInvalidAmount        = errors.New("point transfer amount must be positive")
 	ErrTransferInvalidFeePayer      = errors.New("invalid point transfer fee payer")
+	ErrTransferSelf                 = errors.New("cannot transfer points to self")
 	ErrTransferRecipientAmountSmall = errors.New("point transfer amount is too small after fee")
 )
 
@@ -87,6 +88,9 @@ func (s *TransferService) Preview(amount int, feePayer FeePayer) (*TransferPrevi
 }
 
 func (s *TransferService) NewTransfer(sender UserRef, recipient UserRef, amount int, feePayer FeePayer, now time.Time) (*Transfer, Record, Record, error) {
+	if sender.ID == recipient.ID {
+		return nil, Record{}, Record{}, ErrTransferSelf
+	}
 	preview, err := s.Preview(amount, feePayer)
 	if err != nil {
 		return nil, Record{}, Record{}, err

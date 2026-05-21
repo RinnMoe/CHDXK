@@ -44,7 +44,7 @@ func Auth(authSvc *auth.AuthService) gin.HandlerFunc {
 		}
 
 		user, err := authSvc.GetUser(c.Request.Context(), userID)
-		if err != nil {
+		if err != nil || user == nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 			return
 		}
@@ -65,7 +65,7 @@ func OptionalAuth(authSvc *auth.AuthService) gin.HandlerFunc {
 		}
 
 		user, err := authSvc.GetUser(c.Request.Context(), userID)
-		if err != nil {
+		if err != nil || user == nil {
 			c.Next()
 			return
 		}

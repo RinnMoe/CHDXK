@@ -2,15 +2,12 @@ package application
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"jcourse/internal/domain/stat"
 )
 
-const dateLayout = "2006-01-02"
-
-var ErrInvalidDateRange = errors.New("invalid date range")
+var ErrInvalidDateRange = stat.ErrInvalidDateRange
 
 type SiteDailyStatListFilter struct {
 	StartDate string `form:"start_date"`
@@ -20,51 +17,37 @@ type SiteDailyStatListFilter struct {
 }
 
 type SiteStatsCommandService struct {
-	collector stat.DailyStatCollector
-	repo      stat.DailyStatCommandRepository
-	loc       *time.Location
+	daily *stat.DailyStatService
 }
 
 func NewSiteStatsCommandService(
 	collector stat.DailyStatCollector,
 	repo stat.DailyStatCommandRepository,
 ) *SiteStatsCommandService {
-	return &SiteStatsCommandService{collector: collector, repo: repo, loc: mustStatsLocation()}
+	return &SiteStatsCommandService{daily: stat.NewDailyStatService(collector, repo, mustStatsLocation())}
 }
 
 func (s *SiteStatsCommandService) CollectYesterday(ctx context.Context) (*SiteDailyStatDTO, error) {
-	return s.CollectDaily(ctx, time.Now().In(s.loc).AddDate(0, 0, -1))
+	daily, err := s.daily.CollectYesterday(ctx)
+	if err != nil {
+		return nil, err
+	}
+	dto := newSiteDailyStatDTO(daily)
+	return &dto, nil
 }
 
 func (s *SiteStatsCommandService) CollectDailyByDateString(ctx context.Context, statDate string) (*SiteDailyStatDTO, error) {
-	if statDate == "" {
-		return s.CollectYesterday(ctx)
-	}
-	date, err := s.parseDate(statDate)
+	daily, err := s.daily.CollectDailyByDateString(ctx, statDate)
 	if err != nil {
 		return nil, err
 	}
-	return s.CollectDaily(ctx, date)
+	dto := newSiteDailyStatDTO(daily)
+	return &dto, nil
 }
 
 func (s *SiteStatsCommandService) CollectDaily(ctx context.Context, statDate time.Time) (*SiteDailyStatDTO, error) {
-	date := s.dateOnly(statDate)
-	periodStart := date
-	periodEnd := periodStart.AddDate(0, 0, 1)
-
-	metrics, err := s.collector.Collect(ctx, periodStart, periodEnd)
+	daily, err := s.daily.CollectDaily(ctx, statDate)
 	if err != nil {
-		return nil, err
-	}
-
-	now := time.Now().In(s.loc)
-	daily := &stat.DailyStat{
-		StatDate:    date,
-		Metrics:     metrics,
-		GeneratedAt: now,
-		UpdatedAt:   now,
-	}
-	if err := s.repo.Upsert(ctx, daily); err != nil {
 		return nil, err
 	}
 	dto := newSiteDailyStatDTO(daily)
@@ -72,26 +55,29 @@ func (s *SiteStatsCommandService) CollectDaily(ctx context.Context, statDate tim
 }
 
 type SiteStatsQueryService struct {
-	query stat.DailyStatQuery
-	loc   *time.Location
+	query    stat.DailyStatQuery
+	calendar stat.Calendar
 }
 
 func NewSiteStatsQueryService(query stat.DailyStatQuery) *SiteStatsQueryService {
-	return &SiteStatsQueryService{query: query, loc: mustStatsLocation()}
+	return &SiteStatsQueryService{query: query, calendar: stat.NewCalendar(mustStatsLocation())}
 }
 
 func (s *SiteStatsQueryService) GetYesterday(ctx context.Context) (*SiteDailyStatDTO, error) {
-	yesterday := s.dateOnly(time.Now().In(s.loc).AddDate(0, 0, -1))
+	yesterday := s.calendar.Yesterday()
 	stat, err := s.query.GetByDate(ctx, yesterday)
 	if err != nil {
 		return nil, err
+	}
+	if stat == nil {
+		return nil, nil
 	}
 	dto := newSiteDailyStatViewDTO(stat)
 	return &dto, nil
 }
 
 func (s *SiteStatsQueryService) ListDaily(ctx context.Context, f SiteDailyStatListFilter) (*PaginatedResult[SiteDailyStatDTO], error) {
-	startDate, endDate, err := s.parseDateRange(f.StartDate, f.EndDate)
+	startDate, endDate, err := s.calendar.ParseDateRange(f.StartDate, f.EndDate)
 	if err != nil {
 		return nil, err
 	}
@@ -117,50 +103,6 @@ func (s *SiteStatsQueryService) ListDaily(ctx context.Context, f SiteDailyStatLi
 		Page:     f.Page,
 		PageSize: f.PageSize,
 	}, nil
-}
-
-func (s *SiteStatsQueryService) parseDateRange(startDate, endDate string) (time.Time, time.Time, error) {
-	if startDate == "" || endDate == "" {
-		return time.Time{}, time.Time{}, ErrInvalidDateRange
-	}
-	start, err := s.parseDate(startDate)
-	if err != nil {
-		return time.Time{}, time.Time{}, err
-	}
-	end, err := s.parseDate(endDate)
-	if err != nil {
-		return time.Time{}, time.Time{}, err
-	}
-	if end.Before(start) {
-		return time.Time{}, time.Time{}, ErrInvalidDateRange
-	}
-	return start, end, nil
-}
-
-func (s *SiteStatsCommandService) parseDate(value string) (time.Time, error) {
-	date, err := time.ParseInLocation(dateLayout, value, s.loc)
-	if err != nil {
-		return time.Time{}, err
-	}
-	return s.dateOnly(date), nil
-}
-
-func (s *SiteStatsCommandService) dateOnly(value time.Time) time.Time {
-	v := value.In(s.loc)
-	return time.Date(v.Year(), v.Month(), v.Day(), 0, 0, 0, 0, s.loc)
-}
-
-func (s *SiteStatsQueryService) parseDate(value string) (time.Time, error) {
-	date, err := time.ParseInLocation(dateLayout, value, s.loc)
-	if err != nil {
-		return time.Time{}, err
-	}
-	return s.dateOnly(date), nil
-}
-
-func (s *SiteStatsQueryService) dateOnly(value time.Time) time.Time {
-	v := value.In(s.loc)
-	return time.Date(v.Year(), v.Month(), v.Day(), 0, 0, 0, 0, s.loc)
 }
 
 func mustStatsLocation() *time.Location {

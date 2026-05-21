@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/lib/pq"
 	"gorm.io/gorm"
@@ -189,6 +190,9 @@ func (r *CourseRepository) FindBy(ctx context.Context, filter course.CourseFilte
 func (r *CourseRepository) Get(ctx context.Context, courseID int) (*course.Course, error) {
 	e, err := gorm.G[CourseEntity](r.db).Where("id = ?", courseID).Take(ctx)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return new(newCourseDomain(&e)), nil
@@ -201,6 +205,9 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 		Where("courses.id = ?", courseID).
 		Take(&entity).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 

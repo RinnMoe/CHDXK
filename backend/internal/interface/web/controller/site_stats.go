@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 
 	"jcourse/internal/application"
 )
@@ -21,11 +20,11 @@ func NewSiteStatsController(query *application.SiteStatsQueryService) *SiteStats
 func (ctrl *SiteStatsController) GetYesterday(c *gin.Context) {
 	result, err := ctrl.query.GetYesterday(c.Request.Context())
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "site daily stats not found"})
-			return
-		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if result == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "site daily stats not found"})
 		return
 	}
 	c.JSON(http.StatusOK, result)

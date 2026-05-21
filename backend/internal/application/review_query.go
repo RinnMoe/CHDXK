@@ -173,6 +173,9 @@ func (s *ReviewQueryService) GetReviewByID(ctx context.Context, u *auth.User, re
 	if err != nil {
 		return nil, err
 	}
+	if reviewView == nil {
+		return nil, review.ErrReviewNotFound
+	}
 	view := newReviewDTO(reviewView)
 	if u != nil {
 		vote, err := s.voteRepo.FindByReviewAndUser(ctx, reviewID, u.ID)

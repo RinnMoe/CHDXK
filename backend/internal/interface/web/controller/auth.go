@@ -52,7 +52,7 @@ func (ctrl *AuthController) Register(c *gin.Context) {
 	u, err := ctrl.command.Register(c.Request.Context(), cmd)
 	if err != nil {
 		switch {
-		case errors.Is(err, auth.ErrEmailNotAllowed), errors.Is(err, auth.ErrVerificationCodeInvalid):
+		case errors.Is(err, auth.ErrEmailNotAllowed), errors.Is(err, auth.ErrVerificationCodeInvalid), errors.Is(err, auth.ErrPasswordRequired):
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		case errors.Is(err, auth.ErrUserAlreadyExists):
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})

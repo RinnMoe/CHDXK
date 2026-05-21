@@ -131,9 +131,12 @@ func TestReviewRepository_Delete(t *testing.T) {
 		t.Fatalf("Delete: %v", err)
 	}
 
-	_, err := repo.Get(ctx, entity.ID)
-	if err == nil {
-		t.Fatal("expected error after Delete, got nil")
+	got, err := repo.Get(ctx, entity.ID)
+	if err != nil {
+		t.Fatalf("Get after Delete: %v", err)
+	}
+	if got != nil {
+		t.Fatalf("Get after Delete got %+v, want nil", got)
 	}
 
 	var count int64
@@ -148,9 +151,12 @@ func TestReviewRepository_Get_NotFound(t *testing.T) {
 	repo := repository.NewReviewRepository(db)
 	ctx := context.Background()
 
-	_, err := repo.Get(ctx, 999999)
-	if err == nil {
-		t.Fatal("expected error for missing review, got nil")
+	got, err := repo.Get(ctx, 999999)
+	if err != nil {
+		t.Fatalf("Get: %v", err)
+	}
+	if got != nil {
+		t.Fatalf("Get got %+v, want nil", got)
 	}
 }
 

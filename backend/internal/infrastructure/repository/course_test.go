@@ -44,9 +44,12 @@ func TestCourseRepository_Get_NotFound(t *testing.T) {
 	repo := repository.NewCourseRepository(db)
 	ctx := context.Background()
 
-	_, err := repo.Get(ctx, 999999)
-	if err == nil {
-		t.Fatal("expected error for missing course, got nil")
+	got, err := repo.Get(ctx, 999999)
+	if err != nil {
+		t.Fatalf("Get: %v", err)
+	}
+	if got != nil {
+		t.Fatalf("Get got %+v, want nil", got)
 	}
 }
 

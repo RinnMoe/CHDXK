@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"gorm.io/gorm"
@@ -20,7 +21,7 @@ func NewCourseNotificationRepository(db *gorm.DB) *CourseNotificationRepository 
 func (r *CourseNotificationRepository) GetLevel(ctx context.Context, userID, courseID int) (course.NotificationLevel, error) {
 	e, err := gorm.G[CourseNotificationEntity](r.db).Where("user_id = ? AND course_id = ?", userID, courseID).First(ctx)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return course.NotificationLevelNormal, nil
 		}
 		return 0, err

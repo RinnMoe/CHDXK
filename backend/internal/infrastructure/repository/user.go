@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"gorm.io/gorm"
@@ -65,6 +66,9 @@ func (u2 *UserRepository) TouchLastSeen(ctx context.Context, userID int, at time
 func (u2 *UserRepository) FindByID(ctx context.Context, id int) (*auth.User, error) {
 	e, err := gorm.G[UserEntity](u2.db).Where("id = ?", id).Take(ctx)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return new(newUserDomain(&e)), nil
@@ -73,6 +77,9 @@ func (u2 *UserRepository) FindByID(ctx context.Context, id int) (*auth.User, err
 func (u2 *UserRepository) FindByUsername(ctx context.Context, username string) (*auth.User, error) {
 	e, err := gorm.G[UserEntity](u2.db).Where("username = ?", username).Take(ctx)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return new(newUserDomain(&e)), nil
@@ -81,6 +88,9 @@ func (u2 *UserRepository) FindByUsername(ctx context.Context, username string) (
 func (u2 *UserRepository) FindByEmail(ctx context.Context, email string) (*auth.User, error) {
 	e, err := gorm.G[UserEntity](u2.db).Where("email = ?", email).Take(ctx)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return new(newUserDomain(&e)), nil
