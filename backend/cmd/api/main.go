@@ -15,6 +15,8 @@ import (
 
 	"jcourse/config"
 	"jcourse/internal/app"
+	"jcourse/internal/domain/task"
+	infratask "jcourse/internal/infrastructure/task"
 	"jcourse/internal/interface/web"
 )
 
@@ -41,6 +43,10 @@ func main() {
 
 	container := app.NewServiceContainer(conf)
 	engine := web.NewRouter(container, conf)
+
+	taskClient := infratask.NewClient(conf.Redis)
+	defer taskClient.Close()
+	task.SetEnqueuer(infratask.NewEnqueuer(taskClient))
 
 	srv := &http.Server{
 		Addr:    conf.Server.Addr,

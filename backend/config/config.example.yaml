@@ -16,3 +16,6 @@ redis:
   username: ""
   password: ""
   db: 0
+
+asynq:
+  concurrency: 10

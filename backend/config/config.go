@@ -12,6 +12,11 @@ type AppConfig struct {
 	Postgres PostgresConfig `mapstructure:"postgres"`
 	Redis    RedisConfig    `mapstructure:"redis"`
 	Session  SessionConfig  `mapstructure:"session"`
+	Asynq    AsynqConfig    `mapstructure:"asynq"`
+}
+
+type AsynqConfig struct {
+	Concurrency int `mapstructure:"concurrency"`
 }
 
 type SessionConfig struct {
