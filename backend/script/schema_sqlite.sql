@@ -82,6 +82,21 @@ CREATE TABLE IF NOT EXISTS users (
     suspend_till TEXT
 );
 
+CREATE TABLE IF NOT EXISTS user_point_records (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER NOT NULL,
+    reason      TEXT    NOT NULL,
+    amount      INTEGER NOT NULL,
+    description TEXT    NOT NULL,
+    created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+
+    FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_point_records_user_created
+    ON user_point_records (user_id, created_at DESC, id DESC);
+
 CREATE TABLE IF NOT EXISTS reviews (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     course_id     INTEGER NOT NULL,

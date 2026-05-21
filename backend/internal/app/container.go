@@ -19,6 +19,7 @@ type ServiceContainer struct {
 	CourseQuery   *application.CourseQueryService
 	CourseCommand *application.CourseCommandService
 	TeacherQuery  *application.TeacherQueryService
+	PointQuery    *application.PointQueryService
 	AuthCommand   *application.AuthCommandService
 	AuthService   *domainauth.AuthService
 }
@@ -33,6 +34,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	courseRepo := repository.NewCourseRepository(db)
 	teacherRepo := repository.NewTeacherRepository(db)
 	notificationRepo := repository.NewCourseNotificationRepository(db)
+	pointRepo := repository.NewPointRepository(db)
 	userRepo := repository.NewUserRepository(db)
 	verificationRepo := repository.NewVerificationCodeRepository(redisClient)
 
@@ -47,6 +49,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	courseQuery := application.NewCourseQueryService(courseRepo, notificationRepo)
 	courseCommand := application.NewCourseCommandService(courseRepo, notificationRepo)
 	teacherQuery := application.NewTeacherQueryService(teacherRepo)
+	pointQuery := application.NewPointQueryService(pointRepo)
 	authCommand := application.NewAuthCommandService(
 		userRepo,
 		verificationRepo,
@@ -66,6 +69,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		CourseQuery:   courseQuery,
 		CourseCommand: courseCommand,
 		TeacherQuery:  teacherQuery,
+		PointQuery:    pointQuery,
 		AuthCommand:   authCommand,
 		AuthService:   authService,
 	}

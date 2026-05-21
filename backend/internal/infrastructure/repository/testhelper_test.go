@@ -90,6 +90,7 @@ func migrateTestDB(t *testing.T, db *gorm.DB) {
 		&repository.CourseEntity{},
 		&repository.OfferedCourseEntity{},
 		&repository.UserEntity{},
+		&repository.UserPointRecordEntity{},
 		&repository.ReviewEntity{},
 		&repository.ReviewRevisionEntity{},
 		&repository.ReviewVoteEntity{},

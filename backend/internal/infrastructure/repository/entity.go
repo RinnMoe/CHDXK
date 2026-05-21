@@ -135,6 +135,19 @@ func (UserEntity) TableName() string {
 	return "users"
 }
 
+type UserPointRecordEntity struct {
+	ID          int       `gorm:"column:id"`
+	UserID      int       `gorm:"column:user_id;index"`
+	Reason      string    `gorm:"column:reason"`
+	Amount      int       `gorm:"column:amount"`
+	Description string    `gorm:"column:description"`
+	CreatedAt   time.Time `gorm:"column:created_at"`
+}
+
+func (UserPointRecordEntity) TableName() string {
+	return "user_point_records"
+}
+
 type ReviewVoteEntity struct {
 	ReviewID  int       `gorm:"column:review_id;primaryKey"`
 	UserID    int       `gorm:"column:user_id;primaryKey"`
