@@ -66,6 +66,9 @@ func TestCourseRepository_FindBy(t *testing.T) {
 	c1 := seedCourseRaw(t, db, "CS101", "数据结构", 3.0, "计算机学院", t1.ID, "zh", []string{"核心课"}, []string{"2021"})
 	seedCourseRaw(t, db, "CS102", "算法设计", 3.0, "计算机学院", t1.ID, "en", []string{"选修课"}, []string{"2022"})
 	seedCourseRaw(t, db, "MA101", "高等数学", 4.0, "数学学院", t2.ID, "zh", []string{"核心课"}, []string{"2021", "2022"})
+	if err := db.Model(&repository.CourseEntity{}).Where("id = ?", c1.ID).Update("rating_count", 1).Error; err != nil {
+		t.Fatalf("mark course reviewed: %v", err)
+	}
 
 	t.Run("list all", func(t *testing.T) {
 		results, total, err := repo.FindBy(ctx, course.CourseFilter{})
@@ -167,6 +170,19 @@ func TestCourseRepository_FindBy(t *testing.T) {
 		}
 	})
 
+	t.Run("default sort honors ascend", func(t *testing.T) {
+		results, _, err := repo.FindBy(ctx, course.CourseFilter{Ascend: true})
+		if err != nil {
+			t.Fatalf("FindBy default ascend: %v", err)
+		}
+		if len(results) != 3 {
+			t.Fatalf("count: got %d, want 3", len(results))
+		}
+		if results[0].ID != c1.ID {
+			t.Errorf("first id: got %d, want %d", results[0].ID, c1.ID)
+		}
+	})
+
 	t.Run("exclude_id", func(t *testing.T) {
 		results, total, err := repo.FindBy(ctx, course.CourseFilter{ExcludeID: c1.ID})
 		if err != nil {
@@ -192,6 +208,52 @@ func TestCourseRepository_FindBy(t *testing.T) {
 		}
 		if len(results) != 2 {
 			t.Errorf("count: got %d, want 2", len(results))
+		}
+	})
+
+	t.Run("filter by has_review", func(t *testing.T) {
+		hasReview := true
+		results, total, err := repo.FindBy(ctx, course.CourseFilter{HasReview: &hasReview})
+		if err != nil {
+			t.Fatalf("FindBy has_review=true: %v", err)
+		}
+		if total != 1 || len(results) != 1 {
+			t.Fatalf("reviewed count: got total=%d len=%d, want 1", total, len(results))
+		}
+		if results[0].ID != c1.ID {
+			t.Errorf("reviewed course id: got %d, want %d", results[0].ID, c1.ID)
+		}
+
+		hasReview = false
+		results, total, err = repo.FindBy(ctx, course.CourseFilter{HasReview: &hasReview})
+		if err != nil {
+			t.Fatalf("FindBy has_review=false: %v", err)
+		}
+		if total != 2 || len(results) != 2 {
+			t.Fatalf("unreviewed count: got total=%d len=%d, want 2", total, len(results))
+		}
+		for _, r := range results {
+			if r.ID == c1.ID {
+				t.Errorf("HasReview=false should have filtered out reviewed course id=%d", c1.ID)
+			}
+		}
+	})
+
+	t.Run("sort by rating_count", func(t *testing.T) {
+		results, _, err := repo.FindBy(ctx, course.CourseFilter{OrderBy: "rating_count"})
+		if err != nil {
+			t.Fatalf("FindBy rating_count desc: %v", err)
+		}
+		if len(results) == 0 || results[0].ID != c1.ID {
+			t.Fatalf("desc first id: got %v, want %d", results, c1.ID)
+		}
+
+		results, _, err = repo.FindBy(ctx, course.CourseFilter{OrderBy: "rating_count", Ascend: true})
+		if err != nil {
+			t.Fatalf("FindBy rating_count ascend: %v", err)
+		}
+		if len(results) == 0 || results[len(results)-1].ID != c1.ID {
+			t.Fatalf("asc last id: got %v, want %d", results, c1.ID)
 		}
 	})
 }
@@ -253,6 +315,10 @@ func TestCourseRepository_GetDetail(t *testing.T) {
 	avg := float64(5+3) / 2
 	if detail.Rating.Avg != avg {
 		t.Errorf("Rating.Avg: got %v, want %v", detail.Rating.Avg, avg)
+	}
+	expectedDist := [5]int{0, 0, 1, 0, 1}
+	if detail.Rating.Distribution != expectedDist {
+		t.Errorf("Rating.Distribution: got %v, want %v", detail.Rating.Distribution, expectedDist)
 	}
 	if len(detail.OfferedCourses) != 1 {
 		t.Fatalf("OfferedCourses count: got %d, want 1", len(detail.OfferedCourses))

@@ -45,7 +45,11 @@ func main() {
 	engine := web.NewRouter(container, conf)
 
 	taskClient := infratask.NewClient(conf.Redis)
-	defer taskClient.Close()
+	defer func() {
+		if err := taskClient.Close(); err != nil {
+			log.Printf("close task client: %v", err)
+		}
+	}()
 	task.SetEnqueuer(infratask.NewEnqueuer(taskClient))
 
 	srv := &http.Server{

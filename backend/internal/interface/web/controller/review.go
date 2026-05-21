@@ -159,7 +159,6 @@ func (r *ReviewController) ListLatestReviews(c *gin.Context) {
 	}
 	if f.OrderBy == "" {
 		f.OrderBy = "created_at"
-		f.OrderDir = "desc"
 	}
 
 	u := auth.GetUserFromCtx(c.Request.Context())
@@ -191,7 +190,6 @@ func (r *ReviewController) ListFollowedReviews(c *gin.Context) {
 	}
 	if f.OrderBy == "" {
 		f.OrderBy = "created_at"
-		f.OrderDir = "desc"
 	}
 
 	result, err := r.query.GetFollowedReviews(c.Request.Context(), u.ID, f)

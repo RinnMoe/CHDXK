@@ -23,7 +23,7 @@ type ReviewFilter struct {
 	Rating           int
 	CreatedAfter     time.Time
 	OrderBy          string
-	OrderDir         string
+	Ascend           bool
 	Page             int
 	PageSize         int
 	WithCourse       bool

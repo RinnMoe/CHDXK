@@ -12,7 +12,7 @@ type ReviewListFilter struct {
 	Semester string `form:"semester"`
 	Rating   int    `form:"rating"`
 	OrderBy  string `form:"order_by"`
-	OrderDir string `form:"order_dir"`
+	Ascend   bool   `form:"ascend"`
 	Page     int    `form:"page"`
 	PageSize int    `form:"page_size"`
 }
@@ -33,7 +33,7 @@ func (s *ReviewQueryService) GetReviewsByCourse(ctx context.Context, courseID in
 		Semester: f.Semester,
 		Rating:   f.Rating,
 		OrderBy:  f.OrderBy,
-		OrderDir: f.OrderDir,
+		Ascend:   f.Ascend,
 		Page:     f.Page,
 		PageSize: f.PageSize,
 	}
@@ -63,7 +63,7 @@ func (s *ReviewQueryService) GetReviewsByUser(ctx context.Context, userID int, f
 		Semester:   f.Semester,
 		Rating:     f.Rating,
 		OrderBy:    f.OrderBy,
-		OrderDir:   f.OrderDir,
+		Ascend:     f.Ascend,
 		Page:       f.Page,
 		PageSize:   f.PageSize,
 	}
@@ -91,7 +91,7 @@ func (s *ReviewQueryService) GetLatestReviews(ctx context.Context, user *auth.Us
 		Semester:   f.Semester,
 		Rating:     f.Rating,
 		OrderBy:    f.OrderBy,
-		OrderDir:   f.OrderDir,
+		Ascend:     f.Ascend,
 		Page:       f.Page,
 		PageSize:   f.PageSize,
 		WithCourse: true,
@@ -144,7 +144,7 @@ func (s *ReviewQueryService) GetFollowedReviews(ctx context.Context, userID int,
 		Semester:   f.Semester,
 		Rating:     f.Rating,
 		OrderBy:    f.OrderBy,
-		OrderDir:   f.OrderDir,
+		Ascend:     f.Ascend,
 		Page:       f.Page,
 		PageSize:   f.PageSize,
 		WithCourse: true,

@@ -2,10 +2,10 @@ package repository
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/lib/pq"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/teacher"
@@ -58,8 +58,12 @@ func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm
 	if f.Credit != nil {
 		db = db.Where("courses.credit = ?", *f.Credit)
 	}
-	if f.HasReview != nil && *f.HasReview {
-		db = db.Where("courses.rating_count > 0")
+	if f.HasReview != nil {
+		if *f.HasReview {
+			db = db.Where("courses.rating_count > 0")
+		} else {
+			db = db.Where("courses.rating_count = 0")
+		}
 	}
 	if f.Language != "" {
 		db = db.Where("courses.language = ?", f.Language)
@@ -74,19 +78,18 @@ func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm
 }
 
 func (r *CourseRepository) applySort(db *gorm.DB, f course.CourseFilter) *gorm.DB {
-	dir := "DESC"
-	if f.OrderDir == "asc" {
-		dir = "ASC"
+	desc := !f.Ascend
+	order := clause.OrderByColumn{
+		Column: clause.Column{Table: "courses", Name: "id"},
+		Desc:   desc,
 	}
 	switch f.OrderBy {
 	case "rating_count":
-		db = db.Order(fmt.Sprintf("courses.rating_count %s", dir))
+		order = clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_count"}, Desc: desc}
 	case "rating_avg":
-		db = db.Order(fmt.Sprintf("courses.rating_avg %s", dir))
-	default:
-		db = db.Order("courses.id DESC")
+		order = clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_avg"}, Desc: desc}
 	}
-	return db
+	return db.Order(order)
 }
 
 func (r *CourseRepository) applyPagination(db *gorm.DB, f course.CourseFilter) *gorm.DB {
@@ -108,7 +111,7 @@ func (r *CourseRepository) OfferedCourseExists(ctx context.Context, courseID int
 func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int) ([]course.OfferedCourseView, error) {
 	entities, err := gorm.G[OfferedCourseEntity](r.db).
 		Where("course_id = ?", courseID).
-		Order("semester DESC").
+		Order(clause.OrderByColumn{Column: clause.Column{Table: "offered_courses", Name: "semester"}, Desc: true}).
 		Find(ctx)
 	if err != nil {
 		return nil, err
@@ -161,7 +164,11 @@ func (r *CourseRepository) FindBy(ctx context.Context, filter course.CourseFilte
 	db = r.applyFilter(db, filter)
 
 	var total int64
-	r.db.WithContext(ctx).Model(&CourseEntity{}).Where(db).Count(&total)
+	countDB := r.db.WithContext(ctx).Model(&CourseEntity{})
+	countDB = r.applyFilter(countDB, filter)
+	if err := countDB.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
 
 	db = r.applySort(db, filter)
 	db = r.applyPagination(db, filter)
@@ -204,11 +211,13 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 		Count  int
 	}
 	var dist []ratingCount
-	gorm.G[ReviewEntity](r.db).
+	if err := gorm.G[ReviewEntity](r.db).
 		Select("rating, COUNT(*) AS count").
 		Where("course_id = ?", courseID).
 		Group("rating").
-		Scan(ctx, &dist)
+		Scan(ctx, &dist); err != nil {
+		return nil, err
+	}
 	for _, d := range dist {
 		if d.Rating >= 1 && d.Rating <= 5 {
 			result.Rating.Distribution[d.Rating-1] = d.Count

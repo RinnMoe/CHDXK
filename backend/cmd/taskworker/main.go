@@ -38,7 +38,11 @@ func main() {
 	}
 
 	client := infratask.NewClient(conf.Redis)
-	defer client.Close()
+	defer func() {
+		if err := client.Close(); err != nil {
+			log.Printf("close task client: %v", err)
+		}
+	}()
 	domaintask.SetEnqueuer(infratask.NewEnqueuer(client))
 
 	server := infratask.NewServer(conf)

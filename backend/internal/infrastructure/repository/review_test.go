@@ -253,6 +253,47 @@ func TestReviewRepository_FindBy(t *testing.T) {
 			t.Errorf("count: got %d, want 0", len(results))
 		}
 	})
+
+	t.Run("with course filters and sorts on review columns", func(t *testing.T) {
+		results, total, err := repo.FindBy(ctx, review.ReviewFilter{
+			UserID:       user.ID,
+			CreatedAfter: time.Now().Add(-time.Hour),
+			OrderBy:      "created_at",
+			WithCourse:   true,
+		})
+		if err != nil {
+			t.Fatalf("FindBy WithCourse: %v", err)
+		}
+		if total != 2 || len(results) != 2 {
+			t.Fatalf("count: got total=%d len=%d, want 2", total, len(results))
+		}
+		if results[0].Content != "一般" {
+			t.Errorf("first review content: got %q, want 一般", results[0].Content)
+		}
+		if results[0].Course == nil {
+			t.Fatal("expected course to be loaded")
+		}
+		if results[0].Course.MainTeacher == nil {
+			t.Fatal("expected course main teacher to be loaded")
+		}
+	})
+
+	t.Run("sorts ascending when requested", func(t *testing.T) {
+		results, total, err := repo.FindBy(ctx, review.ReviewFilter{
+			UserID:  user.ID,
+			OrderBy: "created_at",
+			Ascend:  true,
+		})
+		if err != nil {
+			t.Fatalf("FindBy ascending: %v", err)
+		}
+		if total != 2 || len(results) != 2 {
+			t.Fatalf("count: got total=%d len=%d, want 2", total, len(results))
+		}
+		if results[0].Content != "很好" {
+			t.Errorf("first review content: got %q, want 很好", results[0].Content)
+		}
+	})
 }
 
 func TestReviewRepository_CourseStatsAggregation(t *testing.T) {

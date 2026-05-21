@@ -49,7 +49,6 @@ func (p *FrequencyPolicy) CanCreate(ctx context.Context, u *auth.User, c *course
 		UserID:       u.ID,
 		CreatedAfter: time.Now().Add(-p.config.Window),
 		OrderBy:      "created_at",
-		OrderDir:     "desc",
 		PageSize:     p.config.MaxReviews,
 	})
 	if err != nil {

@@ -2,8 +2,10 @@ package auth
 
 import "context"
 
+type ctxKey string
+
 const (
-	CtxUserKey = "user"
+	CtxUserKey ctxKey = "user"
 )
 
 func GetUserFromCtx(c context.Context) *User {

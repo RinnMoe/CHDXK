@@ -24,7 +24,7 @@ type CourseFilter struct {
 	Credit      *float32
 	HasReview   *bool
 	OrderBy     string // "rating_count" | "rating_avg"
-	OrderDir    string // "asc" | "desc"
+	Ascend      bool
 	Page        int
 	PageSize    int
 }

@@ -16,7 +16,7 @@ type CourseListFilter struct {
 	Credit      *float32 `form:"credit"`
 	HasReview   *bool    `form:"has_review"`
 	OrderBy     string   `form:"order_by"`
-	OrderDir    string   `form:"order_dir"`
+	Ascend      bool     `form:"ascend"`
 	Page        int      `form:"page"`
 	PageSize    int      `form:"page_size"`
 }
@@ -43,7 +43,7 @@ func (s *CourseQueryService) ListCourses(ctx context.Context, f CourseListFilter
 		Credit:      f.Credit,
 		HasReview:   f.HasReview,
 		OrderBy:     f.OrderBy,
-		OrderDir:    f.OrderDir,
+		Ascend:      f.Ascend,
 		Page:        f.Page,
 		PageSize:    f.PageSize,
 	}
@@ -116,7 +116,6 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 		Code:      detail.Code,
 		ExcludeID: courseID,
 		OrderBy:   "rating_avg",
-		OrderDir:  "desc",
 	})
 	if err != nil {
 		return nil, err
@@ -130,7 +129,6 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 		TeacherID: detail.MainTeacherID,
 		ExcludeID: courseID,
 		OrderBy:   "rating_avg",
-		OrderDir:  "desc",
 	})
 	if err != nil {
 		return nil, err
@@ -154,7 +152,7 @@ func (s *CourseQueryService) ListTeacherCourses(ctx context.Context, teacherID i
 		Credit:      f.Credit,
 		HasReview:   f.HasReview,
 		OrderBy:     f.OrderBy,
-		OrderDir:    f.OrderDir,
+		Ascend:      f.Ascend,
 		Page:        f.Page,
 		PageSize:    f.PageSize,
 	}
@@ -194,7 +192,7 @@ func (s *CourseQueryService) ListCoursesByNotificationLevel(ctx context.Context,
 	filter := course.CourseFilter{
 		CourseIDs: courseIDs,
 		OrderBy:   f.OrderBy,
-		OrderDir:  f.OrderDir,
+		Ascend:    f.Ascend,
 		Page:      f.Page,
 		PageSize:  f.PageSize,
 	}

@@ -2,9 +2,9 @@ package repository
 
 import (
 	"context"
-	"fmt"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"jcourse/internal/domain/review"
 )
@@ -106,7 +106,9 @@ func (r2 *ReviewRepository) FindBy(ctx context.Context, filter review.ReviewFilt
 	db = r2.applyFilter(db, filter)
 
 	var total int64
-	db.Count(&total)
+	if err := db.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
 
 	db = r2.applySort(db, filter)
 	db = r2.applyPagination(db, filter)
@@ -138,48 +140,44 @@ func (r2 *ReviewRepository) GetByID(ctx context.Context, reviewID int) (*review.
 
 func (r2 *ReviewRepository) applyFilter(db *gorm.DB, filter review.ReviewFilter) *gorm.DB {
 	if filter.ReviewID != 0 {
-		db = db.Where("id = ?", filter.ReviewID)
+		db = db.Where("reviews.id = ?", filter.ReviewID)
 	}
 	if filter.CourseID != 0 {
-		db = db.Where("course_id = ?", filter.CourseID)
+		db = db.Where("reviews.course_id = ?", filter.CourseID)
 	}
 	if len(filter.CourseIDs) > 0 {
-		db = db.Where("course_id IN ?", filter.CourseIDs)
+		db = db.Where("reviews.course_id IN ?", filter.CourseIDs)
 	}
 	if len(filter.ExcludeCourseIDs) > 0 {
-		db = db.Where("course_id NOT IN ?", filter.ExcludeCourseIDs)
+		db = db.Where("reviews.course_id NOT IN ?", filter.ExcludeCourseIDs)
 	}
 	if filter.UserID != 0 {
-		db = db.Where("user_id = ?", filter.UserID)
+		db = db.Where("reviews.user_id = ?", filter.UserID)
 	}
 	if filter.Semester != "" {
-		db = db.Where("semester = ?", filter.Semester)
+		db = db.Where("reviews.semester = ?", filter.Semester)
 	}
 	if filter.Rating != 0 {
-		db = db.Where("rating = ?", filter.Rating)
+		db = db.Where("reviews.rating = ?", filter.Rating)
 	}
 	if !filter.CreatedAfter.IsZero() {
-		db = db.Where("created_at > ?", filter.CreatedAfter)
+		db = db.Where("reviews.created_at > ?", filter.CreatedAfter)
 	}
 	return db
 }
 
 func (r2 *ReviewRepository) applySort(db *gorm.DB, filter review.ReviewFilter) *gorm.DB {
-	dir := "DESC"
-	if filter.OrderDir == "asc" {
-		dir = "ASC"
-	}
+	desc := !filter.Ascend
+	order := clause.OrderByColumn{Column: clause.Column{Table: "reviews", Name: "id"}, Desc: desc}
 	switch filter.OrderBy {
 	case "rating":
-		db = db.Order(fmt.Sprintf("rating %s", dir))
+		order = clause.OrderByColumn{Column: clause.Column{Table: "reviews", Name: "rating"}, Desc: desc}
 	case "like_count":
-		db = db.Order(fmt.Sprintf("like_count %s", dir))
+		order = clause.OrderByColumn{Column: clause.Column{Table: "reviews", Name: "like_count"}, Desc: desc}
 	case "created_at":
-		db = db.Order(fmt.Sprintf("created_at %s", dir))
-	default:
-		db = db.Order(fmt.Sprintf("id %s", dir))
+		order = clause.OrderByColumn{Column: clause.Column{Table: "reviews", Name: "created_at"}, Desc: desc}
 	}
-	return db
+	return db.Order(order)
 }
 
 func (r2 *ReviewRepository) applyPagination(db *gorm.DB, filter review.ReviewFilter) *gorm.DB {
