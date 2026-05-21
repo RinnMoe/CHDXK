@@ -6,12 +6,14 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	"jcourse/config"
 	"jcourse/internal/app"
+	domainstat "jcourse/internal/domain/stat"
 	domaintask "jcourse/internal/domain/task"
 	infratask "jcourse/internal/infrastructure/task"
 	"jcourse/internal/interface/async"
@@ -47,6 +49,22 @@ func main() {
 	}()
 	domaintask.SetEnqueuer(infratask.NewEnqueuer(client))
 
+	statsLoc := mustLoadStatsLocation()
+	scheduler := infratask.NewScheduler(conf, statsLoc)
+	defer scheduler.Shutdown()
+	if conf.Stats.SchedulerEnabled && conf.Stats.DailyCron != "" {
+		if _, err := infratask.RegisterScheduledTask(
+			scheduler,
+			conf.Stats.DailyCron,
+			domainstat.NewCollectDailySiteStatsTask(""),
+		); err != nil {
+			log.Fatalf("register site stats scheduler: %v", err)
+		}
+		if err := scheduler.Start(); err != nil {
+			log.Fatalf("start scheduler: %v", err)
+		}
+	}
+
 	server := infratask.NewServer(conf)
 	mux := async.NewMux(container)
 
@@ -60,6 +78,15 @@ func main() {
 	<-quit
 
 	fmt.Println("shutting down task worker...")
+	scheduler.Shutdown()
 	server.Shutdown()
 	fmt.Println("task worker exited")
+}
+
+func mustLoadStatsLocation() *time.Location {
+	loc, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		log.Fatalf("load stats timezone: %v", err)
+	}
+	return loc
 }

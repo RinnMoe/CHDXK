@@ -34,3 +34,14 @@ point:
 
 asynq:
   concurrency: 10
+
+stats:
+  daily_cron: "10 0 * * *"
+  scheduler_enabled: true
+
+smtp:
+  host: "smtp.example.com"
+  port: 587
+  username: "noreply@example.com"
+  password: ""
+  from: "noreply@example.com"

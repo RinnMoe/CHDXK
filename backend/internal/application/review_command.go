@@ -48,6 +48,7 @@ func (s *ReviewCommandService) CreateReview(ctx context.Context, u *auth.User, c
 	r := review.Review{
 		CourseID:  cmd.CourseID,
 		Semester:  cmd.Semester,
+		UserID:    u.ID,
 		Rating:    cmd.Rating,
 		Content:   cmd.Content,
 		Score:     cmd.Score,

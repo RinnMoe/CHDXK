@@ -2,6 +2,7 @@ package task
 
 import (
 	"context"
+	"time"
 
 	"github.com/hibiken/asynq"
 
@@ -49,4 +50,18 @@ func NewServer(conf config.AppConfig) *asynq.Server {
 	return asynq.NewServer(redisOpt(conf.Redis), asynq.Config{
 		Concurrency: concurrency,
 	})
+}
+
+func NewScheduler(conf config.AppConfig, loc *time.Location) *asynq.Scheduler {
+	return asynq.NewScheduler(redisOpt(conf.Redis), &asynq.SchedulerOpts{Location: loc})
+}
+
+func RegisterScheduledTask(s *asynq.Scheduler, cronspec string, t domaintask.Task, opts ...domaintask.EnqueueOption) (string, error) {
+	asynqOpts := make([]asynq.Option, 0, len(opts))
+	for _, o := range opts {
+		if ao, ok := o.(asynq.Option); ok {
+			asynqOpts = append(asynqOpts, ao)
+		}
+	}
+	return s.Register(cronspec, asynq.NewTask(t.Type(), t.Payload()), asynqOpts...)
 }

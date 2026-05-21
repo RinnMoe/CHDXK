@@ -25,6 +25,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	teacherController := controller.NewTeacherController(container.TeacherQuery, container.CourseQuery)
 	pointController := controller.NewPointController(container.PointQuery, container.PointCommand)
 	authController := controller.NewAuthController(container.AuthCommand)
+	siteStatsController := controller.NewSiteStatsController(container.SiteStatsQuery)
 
 	apiGroup := g.Group("/api")
 	authGroup := apiGroup.Group("/auth")
@@ -67,6 +68,11 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	{
 		pointGroup.POST("/transfers/preview", pointController.PreviewTransfer)
 		pointGroup.POST("/transfers", pointController.CreateTransfer)
+	}
+	siteStatsGroup := apiGroup.Group("/site-stats", middleware.Admin())
+	{
+		siteStatsGroup.GET("/daily/yesterday", siteStatsController.GetYesterday)
+		siteStatsGroup.GET("/daily", siteStatsController.ListDaily)
 	}
 
 	return g

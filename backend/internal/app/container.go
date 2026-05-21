@@ -14,15 +14,17 @@ import (
 )
 
 type ServiceContainer struct {
-	ReviewQuery   *application.ReviewQueryService
-	ReviewCommand *application.ReviewCommandService
-	CourseQuery   *application.CourseQueryService
-	CourseCommand *application.CourseCommandService
-	TeacherQuery  *application.TeacherQueryService
-	PointQuery    *application.PointQueryService
-	PointCommand  *application.PointCommandService
-	AuthCommand   *application.AuthCommandService
-	AuthService   *domainauth.AuthService
+	ReviewQuery      *application.ReviewQueryService
+	ReviewCommand    *application.ReviewCommandService
+	CourseQuery      *application.CourseQueryService
+	CourseCommand    *application.CourseCommandService
+	TeacherQuery     *application.TeacherQueryService
+	PointQuery       *application.PointQueryService
+	PointCommand     *application.PointCommandService
+	SiteStatsQuery   *application.SiteStatsQueryService
+	SiteStatsCommand *application.SiteStatsCommandService
+	AuthCommand      *application.AuthCommandService
+	AuthService      *domainauth.AuthService
 }
 
 func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
@@ -37,6 +39,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	notificationRepo := repository.NewCourseNotificationRepository(db)
 	pointRepo := repository.NewPointRepository(db)
 	userRepo := repository.NewUserRepository(db)
+	statRepo := repository.NewSiteDailyStatRepository(db)
 	verificationRepo := repository.NewVerificationCodeRepository(redisClient)
 
 	reviewQuery := application.NewReviewQueryService(reviewRepo, voteRepo, notificationRepo)
@@ -55,10 +58,12 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		RateBps: conf.Point.TransferFeeRateBps,
 		MinFee:  conf.Point.TransferMinFee,
 	})
+	siteStatsQuery := application.NewSiteStatsQueryService(statRepo)
+	siteStatsCommand := application.NewSiteStatsCommandService(statRepo, statRepo)
 	authCommand := application.NewAuthCommandService(
 		userRepo,
 		verificationRepo,
-		email.NewLogVerificationCodeSender(),
+		email.NewSMTPVerificationCodeSender(conf.SMTP),
 		domainauth.NewDjangoPBKDF2SHA256PasswordHasher(0),
 		application.AuthCommandConfig{
 			EmailWhitelist: conf.Auth.EmailWhitelist,
@@ -69,14 +74,16 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	authService := domainauth.NewAuthService(userRepo)
 
 	return &ServiceContainer{
-		ReviewQuery:   reviewQuery,
-		ReviewCommand: reviewCommand,
-		CourseQuery:   courseQuery,
-		CourseCommand: courseCommand,
-		TeacherQuery:  teacherQuery,
-		PointQuery:    pointQuery,
-		PointCommand:  pointCommand,
-		AuthCommand:   authCommand,
-		AuthService:   authService,
+		ReviewQuery:      reviewQuery,
+		ReviewCommand:    reviewCommand,
+		CourseQuery:      courseQuery,
+		CourseCommand:    courseCommand,
+		TeacherQuery:     teacherQuery,
+		PointQuery:       pointQuery,
+		PointCommand:     pointCommand,
+		SiteStatsQuery:   siteStatsQuery,
+		SiteStatsCommand: siteStatsCommand,
+		AuthCommand:      authCommand,
+		AuthService:      authService,
 	}
 }

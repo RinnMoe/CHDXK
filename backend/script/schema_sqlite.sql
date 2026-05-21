@@ -187,3 +187,10 @@ CREATE TABLE IF NOT EXISTS course_notifications (
     FOREIGN KEY (user_id) REFERENCES users(id)
         ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS site_daily_stats (
+    stat_date    TEXT PRIMARY KEY,
+    metrics      JSON NOT NULL DEFAULT '{}',
+    generated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
+);

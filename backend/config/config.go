@@ -15,10 +15,25 @@ type AppConfig struct {
 	Auth     AuthConfig     `mapstructure:"auth"`
 	Point    PointConfig    `mapstructure:"point"`
 	Asynq    AsynqConfig    `mapstructure:"asynq"`
+	Stats    StatsConfig    `mapstructure:"stats"`
+	SMTP     SMTPConfig     `mapstructure:"smtp"`
+}
+
+type SMTPConfig struct {
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+	From     string `mapstructure:"from"`
 }
 
 type AsynqConfig struct {
 	Concurrency int `mapstructure:"concurrency"`
+}
+
+type StatsConfig struct {
+	DailyCron        string `mapstructure:"daily_cron"`
+	SchedulerEnabled bool   `mapstructure:"scheduler_enabled"`
 }
 
 type SessionConfig struct {
@@ -67,6 +82,8 @@ func Load(configPath string) (AppConfig, error) {
 	v.SetEnvPrefix("JCOURSE")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
+	v.SetDefault("stats.daily_cron", "10 0 * * *")
+	v.SetDefault("stats.scheduler_enabled", true)
 
 	if err := v.ReadInConfig(); err != nil {
 		return AppConfig{}, fmt.Errorf("read config: %w", err)

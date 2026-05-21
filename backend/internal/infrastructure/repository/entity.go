@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/lib/pq"
+	"gorm.io/datatypes"
 )
 
 type DepartmentEntity struct {
@@ -185,4 +186,15 @@ type CourseNotificationEntity struct {
 
 func (CourseNotificationEntity) TableName() string {
 	return "course_notifications"
+}
+
+type SiteDailyStatEntity struct {
+	StatDate    time.Time         `gorm:"column:stat_date;primaryKey;type:date"`
+	Metrics     datatypes.JSONMap `gorm:"column:metrics;type:jsonb"`
+	GeneratedAt time.Time         `gorm:"column:generated_at"`
+	UpdatedAt   time.Time         `gorm:"column:updated_at"`
+}
+
+func (SiteDailyStatEntity) TableName() string {
+	return "site_daily_stats"
 }

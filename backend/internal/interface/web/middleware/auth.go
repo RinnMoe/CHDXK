@@ -76,6 +76,21 @@ func OptionalAuth(authSvc *auth.AuthService) gin.HandlerFunc {
 	}
 }
 
+func Admin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		u := auth.GetUserFromCtx(c.Request.Context())
+		if u == nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+		if !u.IsAdmin() {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
+		c.Next()
+	}
+}
+
 func SetSessionUserID(c *gin.Context, userID int) error {
 	s := sessions.Default(c)
 	s.Set(sessionKeyUserID, userID)
