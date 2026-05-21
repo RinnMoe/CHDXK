@@ -46,6 +46,8 @@ type AuthConfig struct {
 	EmailWhitelist           []string `mapstructure:"email_whitelist"`
 	VerificationCodeInterval int      `mapstructure:"verification_code_interval"` // seconds
 	VerificationCodeTTL      int      `mapstructure:"verification_code_ttl"`      // seconds
+	MaxLoginAttempts         int      `mapstructure:"max_login_attempts"`
+	LoginLockoutDuration     int      `mapstructure:"login_lockout_duration"` // seconds
 }
 
 type PointConfig struct {

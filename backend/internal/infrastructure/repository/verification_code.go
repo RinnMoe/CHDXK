@@ -14,15 +14,20 @@ import (
 )
 
 type VerificationCodeRepository struct {
-	client *redis.Client
+	client    *redis.Client
+	keyPrefix string
 }
 
 func NewVerificationCodeRepository(client *redis.Client) *VerificationCodeRepository {
-	return &VerificationCodeRepository{client: client}
+	return NewVerificationCodeRepositoryWithPrefix(client, "register")
+}
+
+func NewVerificationCodeRepositoryWithPrefix(client *redis.Client, prefix string) *VerificationCodeRepository {
+	return &VerificationCodeRepository{client: client, keyPrefix: prefix}
 }
 
 func (r *VerificationCodeRepository) ReserveSend(ctx context.Context, email string, interval time.Duration) (time.Duration, error) {
-	key := verificationCooldownKey(email)
+	key := r.cooldownKey(email)
 	ok, err := r.client.SetNX(ctx, key, "1", interval).Result()
 	if err != nil {
 		return 0, err
@@ -42,11 +47,11 @@ func (r *VerificationCodeRepository) ReserveSend(ctx context.Context, email stri
 
 func (r *VerificationCodeRepository) Save(ctx context.Context, code auth.VerificationCode, ttl time.Duration) error {
 	value := fmt.Sprintf("%s|%d", code.Code, code.ExpiresAt.Unix())
-	return r.client.Set(ctx, verificationCodeKey(code.Email), value, ttl).Err()
+	return r.client.Set(ctx, r.codeKey(code.Email), value, ttl).Err()
 }
 
 func (r *VerificationCodeRepository) Get(ctx context.Context, email string) (*auth.VerificationCode, error) {
-	value, err := r.client.Get(ctx, verificationCodeKey(email)).Result()
+	value, err := r.client.Get(ctx, r.codeKey(email)).Result()
 	if errors.Is(err, redis.Nil) {
 		return nil, nil
 	}
@@ -66,15 +71,15 @@ func (r *VerificationCodeRepository) Get(ctx context.Context, email string) (*au
 }
 
 func (r *VerificationCodeRepository) Delete(ctx context.Context, email string) error {
-	return r.client.Del(ctx, verificationCodeKey(email)).Err()
+	return r.client.Del(ctx, r.codeKey(email)).Err()
 }
 
-func verificationCodeKey(email string) string {
-	return "auth:register_code:" + strings.ToLower(email)
+func (r *VerificationCodeRepository) codeKey(email string) string {
+	return "auth:" + r.keyPrefix + "_code:" + strings.ToLower(email)
 }
 
-func verificationCooldownKey(email string) string {
-	return "auth:register_code_cooldown:" + strings.ToLower(email)
+func (r *VerificationCodeRepository) cooldownKey(email string) string {
+	return "auth:" + r.keyPrefix + "_code_cooldown:" + strings.ToLower(email)
 }
 
 var _ auth.VerificationCodeRepository = (*VerificationCodeRepository)(nil)

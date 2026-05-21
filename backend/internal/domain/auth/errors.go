@@ -10,4 +10,6 @@ var (
 	ErrPasswordRequired        = errors.New("password is required")
 	ErrUserAlreadyExists       = errors.New("user already exists")
 	ErrUserSuspended           = errors.New("user is suspended")
+	ErrUserNotFound            = errors.New("user not found")
+	ErrLoginLocked             = errors.New("too many failed login attempts, please try again later")
 )

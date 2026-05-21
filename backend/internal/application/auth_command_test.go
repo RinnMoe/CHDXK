@@ -162,6 +162,7 @@ func newAuthService(repo *fakeUserRepo, codes *fakeCodeRepo, sender *fakeCodeSen
 	return application.NewAuthCommandService(
 		repo,
 		codes,
+		newFakeCodeRepo(),
 		sender,
 		auth.NewDjangoPBKDF2SHA256PasswordHasher(1),
 		application.AuthCommandConfig{
@@ -169,6 +170,13 @@ func newAuthService(repo *fakeUserRepo, codes *fakeCodeRepo, sender *fakeCodeSen
 			CodeInterval:   time.Minute,
 			CodeTTL:        10 * time.Minute,
 		},
+		auth.PasswordResetConfig{
+			CodeInterval: time.Minute,
+			CodeTTL:      10 * time.Minute,
+		},
+		&fakeLoginAttemptRepo{},
+		5,
+		15*time.Minute,
 	)
 }
 
@@ -289,4 +297,157 @@ type fakeEnqueuer struct{ enqueued bool }
 func (f *fakeEnqueuer) Enqueue(context.Context, task.Task, ...task.EnqueueOption) error {
 	f.enqueued = true
 	return nil
+}
+
+type fakeLoginAttemptRepo struct {
+	counts map[string]int
+}
+
+func (r *fakeLoginAttemptRepo) Increment(_ context.Context, email string) (int, error) {
+	if r.counts == nil {
+		r.counts = map[string]int{}
+	}
+	r.counts[email]++
+	return r.counts[email], nil
+}
+
+func (r *fakeLoginAttemptRepo) Get(_ context.Context, email string) (int, error) {
+	if r.counts == nil {
+		r.counts = map[string]int{}
+	}
+	return r.counts[email], nil
+}
+
+func (r *fakeLoginAttemptRepo) Reset(_ context.Context, email string) error {
+	if r.counts == nil {
+		r.counts = map[string]int{}
+	}
+	r.counts[email] = 0
+	return nil
+}
+
+func TestAuthCommandService_LoginLockedAfterMaxAttempts(t *testing.T) {
+	repo := newFakeUserRepo()
+	attempts := &fakeLoginAttemptRepo{counts: map[string]int{"alice@example.edu": 5}}
+	hasher := auth.NewDjangoPBKDF2SHA256PasswordHasher(1)
+	password, err := hasher.Hash("secret")
+	if err != nil {
+		t.Fatalf("Hash: %v", err)
+	}
+	repo.usersByEmail["alice@example.edu"] = &auth.User{ID: 1, Username: "alice@example.edu", Email: "alice@example.edu", Password: password, Role: auth.RoleUser}
+
+	svc := application.NewAuthCommandService(
+		repo,
+		newFakeCodeRepo(),
+		newFakeCodeRepo(),
+		&fakeCodeSender{},
+		hasher,
+		application.AuthCommandConfig{EmailWhitelist: []string{"@example.edu"}, CodeInterval: time.Minute, CodeTTL: 10 * time.Minute},
+		auth.PasswordResetConfig{CodeInterval: time.Minute, CodeTTL: 10 * time.Minute},
+		attempts,
+		5,
+		15*time.Minute,
+	)
+
+	_, err = svc.Login(context.Background(), application.LoginCommand{Email: "alice@example.edu", Password: "secret"})
+	if !errors.Is(err, auth.ErrLoginLocked) {
+		t.Fatalf("Login error = %v, want ErrLoginLocked", err)
+	}
+}
+
+func TestAuthCommandService_SendResetCodeAndResetPassword(t *testing.T) {
+	repo := newFakeUserRepo()
+	hasher := auth.NewDjangoPBKDF2SHA256PasswordHasher(1)
+	password, err := hasher.Hash("oldpass")
+	if err != nil {
+		t.Fatalf("Hash: %v", err)
+	}
+	repo.usersByEmail["alice@example.edu"] = &auth.User{ID: 1, Username: "alice@example.edu", Email: "alice@example.edu", Password: password, Role: auth.RoleUser}
+	repo.usersByID[1] = repo.usersByEmail["alice@example.edu"]
+
+	sender := &fakeCodeSender{}
+	svc := newAuthService(repo, newFakeCodeRepo(), sender)
+	ctx := context.Background()
+
+	if err := svc.SendResetCode(ctx, application.SendResetCodeCommand{Email: "alice@example.edu"}); err != nil {
+		t.Fatalf("SendResetCode: %v", err)
+	}
+	if sender.email != "alice@example.edu" {
+		t.Fatalf("sender email = %q, want alice@example.edu", sender.email)
+	}
+
+	if err := svc.ResetPassword(ctx, application.ResetPasswordCommand{
+		Email: "alice@example.edu", Code: sender.code, NewPassword: "newpass",
+	}); err != nil {
+		t.Fatalf("ResetPassword: %v", err)
+	}
+
+	loggedIn, err := svc.Login(ctx, application.LoginCommand{Email: "alice@example.edu", Password: "newpass"})
+	if err != nil {
+		t.Fatalf("Login after reset: %v", err)
+	}
+	if loggedIn.ID != 1 {
+		t.Fatalf("Login ID = %d, want 1", loggedIn.ID)
+	}
+}
+
+func TestAuthCommandService_SendResetCodeRejectsUnknownEmail(t *testing.T) {
+	svc := newAuthService(newFakeUserRepo(), newFakeCodeRepo(), &fakeCodeSender{})
+
+	err := svc.SendResetCode(context.Background(), application.SendResetCodeCommand{Email: "nobody@example.edu"})
+	if !errors.Is(err, auth.ErrUserNotFound) {
+		t.Fatalf("SendResetCode error = %v, want ErrUserNotFound", err)
+	}
+}
+
+func TestAuthCommandService_ResetPasswordRejectsWrongCode(t *testing.T) {
+	repo := newFakeUserRepo()
+	hasher := auth.NewDjangoPBKDF2SHA256PasswordHasher(1)
+	password, _ := hasher.Hash("oldpass")
+	repo.usersByEmail["alice@example.edu"] = &auth.User{ID: 1, Email: "alice@example.edu", Password: password, Role: auth.RoleUser}
+	repo.usersByID[1] = repo.usersByEmail["alice@example.edu"]
+
+	svc := newAuthService(repo, newFakeCodeRepo(), &fakeCodeSender{})
+
+	err := svc.ResetPassword(context.Background(), application.ResetPasswordCommand{
+		Email: "alice@example.edu", Code: "000000", NewPassword: "newpass",
+	})
+	if !errors.Is(err, auth.ErrVerificationCodeInvalid) {
+		t.Fatalf("ResetPassword error = %v, want ErrVerificationCodeInvalid", err)
+	}
+}
+
+func TestAuthCommandService_LoginFailedIncrementsAndLocks(t *testing.T) {
+	repo := newFakeUserRepo()
+	hasher := auth.NewDjangoPBKDF2SHA256PasswordHasher(1)
+	password, _ := hasher.Hash("secret")
+	repo.usersByEmail["alice@example.edu"] = &auth.User{ID: 1, Email: "alice@example.edu", Password: password, Role: auth.RoleUser}
+	repo.usersByID[1] = repo.usersByEmail["alice@example.edu"]
+
+	attempts := &fakeLoginAttemptRepo{counts: map[string]int{}}
+	svc := application.NewAuthCommandService(
+		repo,
+		newFakeCodeRepo(),
+		newFakeCodeRepo(),
+		&fakeCodeSender{},
+		hasher,
+		application.AuthCommandConfig{EmailWhitelist: []string{"@example.edu"}, CodeInterval: time.Minute, CodeTTL: 10 * time.Minute},
+		auth.PasswordResetConfig{CodeInterval: time.Minute, CodeTTL: 10 * time.Minute},
+		attempts,
+		3,
+		15*time.Minute,
+	)
+	ctx := context.Background()
+
+	for i := 1; i <= 3; i++ {
+		_, err := svc.Login(ctx, application.LoginCommand{Email: "alice@example.edu", Password: "wrong"})
+		if !errors.Is(err, auth.ErrInvalidCredentials) {
+			t.Fatalf("attempt %d error = %v, want ErrInvalidCredentials", i, err)
+		}
+	}
+
+	_, err := svc.Login(ctx, application.LoginCommand{Email: "alice@example.edu", Password: "secret"})
+	if !errors.Is(err, auth.ErrLoginLocked) {
+		t.Fatalf("error after 3 failures = %v, want ErrLoginLocked", err)
+	}
 }

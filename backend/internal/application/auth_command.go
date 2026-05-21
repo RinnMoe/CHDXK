@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"time"
 
 	"jcourse/internal/domain/auth"
 )
@@ -11,18 +12,25 @@ type AuthCommandConfig = auth.RegistrationConfig
 type AuthCommandService struct {
 	registration   *auth.RegistrationService
 	authentication *auth.AuthenticationService
+	passwordReset  *auth.PasswordResetService
 }
 
 func NewAuthCommandService(
 	userRepo auth.UserRepository,
 	codes auth.VerificationCodeRepository,
+	resetCodes auth.VerificationCodeRepository,
 	sender auth.VerificationCodeSender,
 	hasher auth.PasswordHasher,
 	config AuthCommandConfig,
+	resetConfig auth.PasswordResetConfig,
+	loginAttempts auth.LoginAttemptRepository,
+	maxLoginAttempts int,
+	loginLockout time.Duration,
 ) *AuthCommandService {
 	return &AuthCommandService{
 		registration:   auth.NewRegistrationService(userRepo, codes, sender, hasher, config),
-		authentication: auth.NewAuthenticationService(userRepo, hasher),
+		authentication: auth.NewAuthenticationService(userRepo, hasher, loginAttempts, maxLoginAttempts, loginLockout),
+		passwordReset:  auth.NewPasswordResetService(userRepo, resetCodes, sender, hasher, resetConfig),
 	}
 }
 
@@ -44,6 +52,14 @@ func (s *AuthCommandService) Login(ctx context.Context, cmd LoginCommand) (*Auth
 		return nil, err
 	}
 	return newAuthUserDTO(u), nil
+}
+
+func (s *AuthCommandService) SendResetCode(ctx context.Context, cmd SendResetCodeCommand) error {
+	return s.passwordReset.SendResetCode(ctx, cmd.Email)
+}
+
+func (s *AuthCommandService) ResetPassword(ctx context.Context, cmd ResetPasswordCommand) error {
+	return s.passwordReset.ResetPassword(ctx, cmd.Email, cmd.Code, cmd.NewPassword)
 }
 
 func newAuthUserDTO(u *auth.User) *AuthUserDTO {

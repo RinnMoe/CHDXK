@@ -21,3 +21,13 @@ type AuthUserDTO struct {
 	Email    string `json:"email"`
 	Role     string `json:"role"`
 }
+
+type SendResetCodeCommand struct {
+	Email string `json:"email"`
+}
+
+type ResetPasswordCommand struct {
+	Email       string `json:"email"`
+	Code        string `json:"code"`
+	NewPassword string `json:"new_password"`
+}

@@ -4,3 +4,6 @@ dist/
 .idea/
 .vscode/
 data/
+
+*.exe
+backend/config/config.yaml

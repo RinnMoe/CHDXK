@@ -81,6 +81,10 @@ func (ctrl *AuthController) Login(c *gin.Context) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			return
 		}
+		if errors.Is(err, auth.ErrLoginLocked) {
+			c.JSON(http.StatusTooManyRequests, gin.H{"error": err.Error()})
+			return
+		}
 		if errors.Is(err, auth.ErrUserSuspended) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
@@ -98,6 +102,50 @@ func (ctrl *AuthController) Login(c *gin.Context) {
 func (ctrl *AuthController) Logout(c *gin.Context) {
 	if err := middleware.ClearSession(c); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "ok"})
+}
+
+func (ctrl *AuthController) SendResetCode(c *gin.Context) {
+	var cmd application.SendResetCodeCommand
+	if err := c.ShouldBindJSON(&cmd); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := ctrl.command.SendResetCode(c.Request.Context(), cmd); err != nil {
+		switch {
+		case errors.Is(err, auth.ErrEmailNotAllowed):
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		case errors.Is(err, auth.ErrUserNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		case errors.Is(err, auth.ErrVerificationTooSoon):
+			c.JSON(http.StatusTooManyRequests, gin.H{"error": err.Error()})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "ok"})
+}
+
+func (ctrl *AuthController) ResetPassword(c *gin.Context) {
+	var cmd application.ResetPasswordCommand
+	if err := c.ShouldBindJSON(&cmd); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := ctrl.command.ResetPassword(c.Request.Context(), cmd); err != nil {
+		switch {
+		case errors.Is(err, auth.ErrEmailNotAllowed), errors.Is(err, auth.ErrVerificationCodeInvalid), errors.Is(err, auth.ErrPasswordRequired):
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		case errors.Is(err, auth.ErrUserNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "ok"})
