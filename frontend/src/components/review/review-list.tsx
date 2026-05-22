@@ -11,7 +11,7 @@ interface ReviewListProps {
 
 function ReviewCardSkeleton() {
   return (
-    <div className="rounded-lg border p-4 space-y-3">
+    <div className="space-y-3 border-b px-4 py-3">
       <div className="flex gap-2">
         <Skeleton className="h-4 w-24" />
         <Skeleton className="h-4 w-12" />
@@ -31,7 +31,7 @@ export function ReviewList({
 }: ReviewListProps) {
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <div className="border-t">
         {Array.from({ length: 4 }).map((_, i) => (
           <ReviewCardSkeleton key={i} />
         ))}
@@ -48,7 +48,7 @@ export function ReviewList({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="border-t">
       {reviews.map((review) => (
         <ReviewCard key={review.id} review={review} showCourse={showCourse} />
       ))}

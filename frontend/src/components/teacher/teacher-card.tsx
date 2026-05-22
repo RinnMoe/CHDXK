@@ -1,6 +1,4 @@
 import { Link } from "react-router-dom"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import type { TeacherDTO } from "@/api/teacher"
 
 interface TeacherCardProps {
@@ -9,27 +7,30 @@ interface TeacherCardProps {
 
 export function TeacherCard({ teacher }: TeacherCardProps) {
   return (
-    <Link to={`/teachers/${teacher.id}`} className="block">
-      <Card className="transition-shadow hover:shadow-md hover:border-primary/30">
-        <CardContent className="pt-4 space-y-2">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <div className="font-semibold">{teacher.name}</div>
-              {teacher.title && (
-                <div className="text-sm text-muted-foreground">
-                  {teacher.title}
-                </div>
-              )}
-            </div>
+    <Link
+      to={`/teachers/${teacher.id}`}
+      className="block border-b px-4 py-3 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <div className="space-y-2">
+        <div className="space-y-1">
+          <div className="flex min-w-0 items-center justify-between gap-2 text-xs text-muted-foreground">
+            <span className="shrink-0 font-mono">
+              {teacher.code}
+            </span>
+            {teacher.title && (
+              <span className="min-w-0 truncate text-right text-sm">
+                {teacher.title}
+              </span>
+            )}
           </div>
-          <div className="text-sm text-muted-foreground font-mono">
-            {teacher.code}
+          <div className="font-semibold leading-tight">
+            {teacher.name}
           </div>
-          <Badge variant="outline" className="text-xs">
-            {teacher.department}
-          </Badge>
-        </CardContent>
-      </Card>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          {teacher.department}
+        </div>
+      </div>
     </Link>
   )
 }

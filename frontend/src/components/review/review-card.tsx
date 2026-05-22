@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
 import { VoteButtons } from "./vote-buttons"
 import { RatingStars } from "./rating-stars"
 import type { ReviewDTO } from "@/api/review"
@@ -42,8 +41,8 @@ export function ReviewCard({
     : undefined
 
   return (
-    <Card className="py-3 gap-0">
-      <CardContent className="space-y-2">
+    <article className="border-b px-4 py-3 transition-colors hover:bg-muted/30">
+      <div className="space-y-2">
         {showCourse && review.course && (
           <Link
             to={`/courses/${review.course.id}`}
@@ -100,7 +99,7 @@ export function ReviewCard({
             myVote={review.vote.my_vote}
           />
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </article>
   )
 }

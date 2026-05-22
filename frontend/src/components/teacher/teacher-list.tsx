@@ -9,10 +9,13 @@ interface TeacherListProps {
 
 function TeacherCardSkeleton() {
   return (
-    <div className="rounded-lg border p-4 space-y-2">
+    <div className="space-y-2 border-b px-4 py-3">
+      <div className="flex items-center justify-between gap-2">
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-4 w-20" />
+      </div>
       <Skeleton className="h-5 w-24" />
-      <Skeleton className="h-4 w-16" />
-      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-40" />
     </div>
   )
 }
@@ -20,7 +23,7 @@ function TeacherCardSkeleton() {
 export function TeacherList({ teachers, isLoading }: TeacherListProps) {
   if (isLoading) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="border-t">
         {Array.from({ length: 6 }).map((_, i) => (
           <TeacherCardSkeleton key={i} />
         ))}
@@ -37,7 +40,7 @@ export function TeacherList({ teachers, isLoading }: TeacherListProps) {
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="border-t">
       {teachers.map((teacher) => (
         <TeacherCard key={teacher.id} teacher={teacher} />
       ))}
