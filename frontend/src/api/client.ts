@@ -1,13 +1,14 @@
 import type { ApiError } from "./types"
 
 class HttpError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-    public body?: ApiError
-  ) {
+  status: number
+  body?: ApiError
+
+  constructor(message: string, status: number, body?: ApiError) {
     super(message)
     this.name = "HttpError"
+    this.status = status
+    this.body = body
   }
 }
 

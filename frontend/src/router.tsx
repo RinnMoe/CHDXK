@@ -10,6 +10,11 @@ import { NewReviewPage } from "@/pages/new-review-page"
 import { EditReviewPage } from "@/pages/edit-review-page"
 import { TeachersPage } from "@/pages/teachers-page"
 import { TeacherDetailPage } from "@/pages/teacher-detail-page"
+import { LoginPage } from "@/pages/login-page"
+import { RegisterPage } from "@/pages/register-page"
+import { PasswordResetPage } from "@/pages/password-reset-page"
+import { UserPointsPage } from "@/pages/user-points-page"
+import { SiteStatsPage } from "@/pages/admin/site-stats-page"
 
 export const router = createBrowserRouter([
   {
@@ -26,6 +31,11 @@ export const router = createBrowserRouter([
       { path: "/reviews/:reviewID/edit", element: <EditReviewPage /> },
       { path: "/teachers", element: <TeachersPage /> },
       { path: "/teachers/:teacherID", element: <TeacherDetailPage /> },
+      { path: "/login", element: <LoginPage /> },
+      { path: "/register", element: <RegisterPage /> },
+      { path: "/password-reset", element: <PasswordResetPage /> },
+      { path: "/points", element: <UserPointsPage /> },
+      { path: "/admin/site-stats", element: <SiteStatsPage /> },
     ],
   },
 ])

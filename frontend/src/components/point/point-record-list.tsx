@@ -1,0 +1,54 @@
+import type { PointRecordDTO } from "@/api/point"
+
+const REASON_LABELS: Record<string, string> = {
+  review_create: "发表点评",
+  review_vote: "点评点赞",
+  daily_login: "每日登录",
+  transfer_in: "转账收入",
+  transfer_out: "转账支出",
+}
+
+function formatDate(s: string) {
+  const d = new Date(s)
+  if (Number.isNaN(d.getTime())) return s
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, "0")
+  const dd = String(d.getDate()).padStart(2, "0")
+  const hh = String(d.getHours()).padStart(2, "0")
+  const min = String(d.getMinutes()).padStart(2, "0")
+  return `${yyyy}-${mm}-${dd} ${hh}:${min}`
+}
+
+export function PointRecordList({ records }: { records: PointRecordDTO[] }) {
+  if (records.length === 0) {
+    return <p className="text-sm text-muted-foreground py-6 text-center">暂无积分记录</p>
+  }
+  return (
+    <div className="border rounded-md divide-y">
+      {records.map((r, i) => (
+        <div key={i} className="flex items-start justify-between gap-4 px-4 py-3">
+          <div className="space-y-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                {REASON_LABELS[r.reason] ?? r.reason}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {formatDate(r.created_at)}
+              </span>
+            </div>
+            <p className="text-sm truncate">{r.description}</p>
+          </div>
+          <span
+            className={
+              r.amount >= 0
+                ? "font-medium text-green-600 shrink-0"
+                : "font-medium text-destructive shrink-0"
+            }
+          >
+            {r.amount >= 0 ? `+${r.amount}` : r.amount}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}

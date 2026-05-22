@@ -1,0 +1,90 @@
+import type { PaginatedResult } from "./types"
+import { apiClient } from "./client"
+
+const BASE = "/api"
+
+export type FeePayer = "sender" | "recipient"
+
+export type RecordReason =
+  | "transfer_out"
+  | "transfer_in"
+  | string
+
+export interface PointRecordDTO {
+  reason: RecordReason
+  amount: number
+  description: string
+  created_at: string
+}
+
+export interface PointSummaryDTO {
+  total: number
+  records: PaginatedResult<PointRecordDTO>
+}
+
+export interface PointTransferDTO {
+  id: number
+  sender_user_id: number
+  recipient_user_id: number
+  amount: number
+  fee: number
+  fee_payer: FeePayer
+  sender_delta: number
+  recipient_delta: number
+  created_at: string
+}
+
+export interface PointTransferPreviewDTO {
+  amount: number
+  fee: number
+  fee_payer: FeePayer
+  sender_debit: number
+  recipient_credit: number
+}
+
+export interface CreatePointTransferCommand {
+  recipient_username: string
+  amount: number
+  fee_payer: FeePayer
+}
+
+export interface PointRecordListFilter {
+  page?: number
+  page_size?: number
+  [key: string]: unknown
+}
+
+function buildQuery(filter: Record<string, unknown>): string {
+  const params = new URLSearchParams()
+  for (const [key, value] of Object.entries(filter)) {
+    if (value === undefined || value === null || value === "") continue
+    params.append(key, String(value))
+  }
+  const q = params.toString()
+  return q ? `?${q}` : ""
+}
+
+export function getUserPoints(
+  userID: number,
+  filter: PointRecordListFilter = {}
+): Promise<PointSummaryDTO> {
+  return apiClient(`${BASE}/user/${userID}/points${buildQuery(filter)}`)
+}
+
+export function previewTransfer(
+  cmd: CreatePointTransferCommand
+): Promise<PointTransferPreviewDTO> {
+  return apiClient(`${BASE}/point/transfers/preview`, {
+    method: "POST",
+    body: JSON.stringify(cmd),
+  })
+}
+
+export function createTransfer(
+  cmd: CreatePointTransferCommand
+): Promise<PointTransferDTO> {
+  return apiClient(`${BASE}/point/transfers`, {
+    method: "POST",
+    body: JSON.stringify(cmd),
+  })
+}

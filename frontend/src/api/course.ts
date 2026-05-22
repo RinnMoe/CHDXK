@@ -4,6 +4,7 @@ import type {
   RatingInfoDTO,
   TeacherDTO,
 } from "./types"
+export type { RatingInfoDTO } from "./types"
 import type { ReviewDTO, ReviewListFilter } from "./review"
 import { apiClient } from "./client"
 
@@ -65,6 +66,7 @@ export interface CourseListFilter {
   ascend?: boolean
   page?: number
   page_size?: number
+  [key: string]: unknown
 }
 
 function buildQuery(filter: Record<string, unknown>): string {

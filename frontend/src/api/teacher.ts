@@ -28,6 +28,7 @@ export interface TeacherListFilter {
   pinyin?: string
   page?: number
   page_size?: number
+  [key: string]: unknown
 }
 
 function buildQuery(filter: Record<string, unknown>): string {

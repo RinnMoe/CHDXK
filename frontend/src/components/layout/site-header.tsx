@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom"
+import { UserMenu } from "@/components/auth/user-menu"
 
 export function SiteHeader() {
   return (
@@ -27,6 +28,7 @@ export function SiteHeader() {
             最新评价
           </Link>
         </nav>
+        <UserMenu />
       </div>
     </header>
   )

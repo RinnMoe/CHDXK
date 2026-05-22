@@ -20,6 +20,7 @@ export interface ReviewDTO {
   id: number
   course?: CourseListItemDTO
   course_id: number
+  semester?: string
   score: string
   rating: number
   content: string
@@ -35,6 +36,7 @@ export interface ReviewListFilter {
   ascend?: boolean
   page?: number
   page_size?: number
+  [key: string]: unknown
 }
 
 export interface CreateReviewCommand {
