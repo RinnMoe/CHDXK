@@ -17,10 +17,13 @@ export function LoginPage() {
   if (isLoading) return null
 
   return (
-    <PageShell>
+    <>
+      <title>登录 - JCourse</title>
+      <PageShell>
       <div className="flex justify-center">
         <LoginForm />
       </div>
-    </PageShell>
+      </PageShell>
+    </>
   )
 }

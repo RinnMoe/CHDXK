@@ -16,7 +16,9 @@ export function FollowedReviewsPage() {
   }
 
   return (
-    <PageShell>
+    <>
+      <title>关注动态 - JCourse</title>
+      <PageShell>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold">关注动态</h1>
@@ -49,5 +51,6 @@ export function FollowedReviewsPage() {
         )}
       </div>
     </PageShell>
+    </>
   )
 }

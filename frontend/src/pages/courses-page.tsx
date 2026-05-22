@@ -41,7 +41,9 @@ export function CoursesPage() {
   }
 
   return (
-    <PageShell>
+    <>
+      <title>课程 - JCourse</title>
+      <PageShell>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold">课程</h1>
@@ -80,6 +82,7 @@ export function CoursesPage() {
           </div>
         </div>
       </div>
-    </PageShell>
+      </PageShell>
+    </>
   )
 }

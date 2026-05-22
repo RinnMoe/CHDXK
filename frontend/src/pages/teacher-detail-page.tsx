@@ -27,7 +27,9 @@ export function TeacherDetailPage() {
   }
 
   return (
-    <PageShell>
+    <>
+      <title>{mockTeacher?.name ?? "教师"} - JCourse</title>
+      <PageShell>
       <Button asChild variant="ghost" size="sm" className="mb-4">
         <Link to="/teachers">
           <RiArrowLeftLine data-icon="inline-start" />
@@ -96,6 +98,7 @@ export function TeacherDetailPage() {
           )}
         </section>
       </div>
-    </PageShell>
+      </PageShell>
+    </>
   )
 }

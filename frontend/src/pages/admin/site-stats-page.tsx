@@ -29,14 +29,19 @@ export function SiteStatsPage() {
   if (!user) return <Navigate to="/login" replace />
   if (user.role !== "admin") {
     return (
-      <PageShell>
-        <p className="text-center text-muted-foreground py-12">需要管理员权限</p>
-      </PageShell>
+      <>
+        <title>站点统计 - JCourse</title>
+        <PageShell>
+          <p className="text-center text-muted-foreground py-12">需要管理员权限</p>
+        </PageShell>
+      </>
     )
   }
 
   return (
-    <PageShell>
+    <>
+      <title>站点统计 - JCourse</title>
+      <PageShell>
       <div className="space-y-6">
         <h1 className="text-2xl font-semibold">站点统计</h1>
 
@@ -113,5 +118,6 @@ export function SiteStatsPage() {
         )}
       </div>
     </PageShell>
+    </>
   )
 }

@@ -22,17 +22,22 @@ export function EditReviewPage() {
 
   if (isLoading || !review) {
     return (
-      <PageShell>
+      <>
+        <title>编辑评价 - JCourse</title>
+        <PageShell>
         <div className="space-y-4">
           <Skeleton className="h-8 w-1/2" />
           <Skeleton className="h-64 w-full" />
         </div>
       </PageShell>
+      </>
     )
   }
 
   return (
-    <PageShell>
+    <>
+      <title>编辑评价 - JCourse</title>
+      <PageShell>
       <Button asChild variant="ghost" size="sm" className="mb-4">
         <Link to={`/reviews/${id}`}>
           <RiArrowLeftLine data-icon="inline-start" />
@@ -73,5 +78,6 @@ export function EditReviewPage() {
         </CardContent>
       </Card>
     </PageShell>
+    </>
   )
 }

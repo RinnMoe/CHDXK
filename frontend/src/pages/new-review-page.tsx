@@ -21,7 +21,9 @@ export function NewReviewPage() {
   }
 
   return (
-    <PageShell>
+    <>
+      <title>写评价 - JCourse</title>
+      <PageShell>
       <Button asChild variant="ghost" size="sm" className="mb-4">
         <Link to={`/courses/${id}`}>
           <RiArrowLeftLine data-icon="inline-start" />
@@ -60,5 +62,6 @@ export function NewReviewPage() {
         </CardContent>
       </Card>
     </PageShell>
+    </>
   )
 }

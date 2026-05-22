@@ -17,10 +17,13 @@ export function PasswordResetPage() {
   if (isLoading) return null
 
   return (
-    <PageShell>
+    <>
+      <title>重置密码 - JCourse</title>
+      <PageShell>
       <div className="flex justify-center">
         <PasswordResetForm />
       </div>
-    </PageShell>
+      </PageShell>
+    </>
   )
 }

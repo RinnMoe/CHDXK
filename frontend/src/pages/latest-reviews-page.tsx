@@ -16,7 +16,9 @@ export function LatestReviewsPage() {
   }
 
   return (
-    <PageShell>
+    <>
+      <title>最新评价 - JCourse</title>
+      <PageShell>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold">最新评价</h1>
@@ -48,6 +50,7 @@ export function LatestReviewsPage() {
           </div>
         )}
       </div>
-    </PageShell>
+      </PageShell>
+    </>
   )
 }

@@ -19,19 +19,24 @@ export function CourseDetailPage() {
 
   if (isLoading) {
     return (
-      <PageShell>
+      <>
+        <title>课程 - JCourse</title>
+        <PageShell>
         <div className="space-y-4">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-8 w-2/3" />
           <Skeleton className="h-32 w-full" />
         </div>
       </PageShell>
+      </>
     )
   }
 
   if (!course) {
     return (
-      <PageShell>
+      <>
+        <title>课程 - JCourse</title>
+        <PageShell>
         <div className="py-16 text-center">
           <p className="text-muted-foreground">课程不存在</p>
           <Button asChild variant="link" className="mt-4">
@@ -39,11 +44,14 @@ export function CourseDetailPage() {
           </Button>
         </div>
       </PageShell>
+      </>
     )
   }
 
   return (
-    <PageShell>
+    <>
+      <title>{course.name} - JCourse</title>
+      <PageShell>
       <Button asChild variant="ghost" size="sm" className="mb-4">
         <Link to="/courses">
           <RiArrowLeftLine data-icon="inline-start" />
@@ -172,5 +180,6 @@ export function CourseDetailPage() {
         <Separator />
       </div>
     </PageShell>
+    </>
   )
 }

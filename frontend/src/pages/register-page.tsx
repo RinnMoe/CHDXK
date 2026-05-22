@@ -17,10 +17,13 @@ export function RegisterPage() {
   if (isLoading) return null
 
   return (
-    <PageShell>
+    <>
+      <title>注册 - JCourse</title>
+      <PageShell>
       <div className="flex justify-center">
         <RegisterForm />
       </div>
-    </PageShell>
+      </PageShell>
+    </>
   )
 }

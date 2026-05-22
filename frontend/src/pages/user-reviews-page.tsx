@@ -18,7 +18,9 @@ export function UserReviewsPage() {
   }
 
   return (
-    <PageShell>
+    <>
+      <title>我的评价 - JCourse</title>
+      <PageShell>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold">我的评价</h1>
@@ -51,5 +53,6 @@ export function UserReviewsPage() {
         )}
       </div>
     </PageShell>
+    </>
   )
 }

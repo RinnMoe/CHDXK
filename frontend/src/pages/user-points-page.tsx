@@ -19,14 +19,19 @@ export function UserPointsPage() {
 
   if (!user) {
     return (
-      <PageShell>
-        <p className="text-center text-muted-foreground py-12">请先登录</p>
-      </PageShell>
+      <>
+        <title>我的积分 - JCourse</title>
+        <PageShell>
+          <p className="text-center text-muted-foreground py-12">请先登录</p>
+        </PageShell>
+      </>
     )
   }
 
   return (
-    <PageShell>
+    <>
+      <title>我的积分 - JCourse</title>
+      <PageShell>
       <div className="space-y-6">
         <Card>
           <CardHeader>
@@ -77,5 +82,6 @@ export function UserPointsPage() {
         )}
       </div>
     </PageShell>
+    </>
   )
 }

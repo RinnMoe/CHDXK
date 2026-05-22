@@ -13,7 +13,9 @@ export function ReviewDetailPage() {
 
   if (isLoading) {
     return (
-      <PageShell>
+      <>
+        <title>评价 - JCourse</title>
+        <PageShell>
         <Button asChild variant="ghost" size="sm" className="mb-4">
           <Link to="/reviews/latest">
             <RiArrowLeftLine data-icon="inline-start" />
@@ -25,12 +27,15 @@ export function ReviewDetailPage() {
           <Skeleton className="h-32 w-full" />
         </div>
       </PageShell>
+      </>
     )
   }
 
   if (!review) {
     return (
-      <PageShell>
+      <>
+        <title>评价 - JCourse</title>
+        <PageShell>
         <div className="py-16 text-center">
           <p className="text-muted-foreground">评价不存在</p>
           <Button asChild variant="link" className="mt-4">
@@ -38,11 +43,14 @@ export function ReviewDetailPage() {
           </Button>
         </div>
       </PageShell>
+      </>
     )
   }
 
   return (
-    <PageShell>
+    <>
+      <title>评价 - JCourse</title>
+      <PageShell>
       <Button asChild variant="ghost" size="sm" className="mb-4">
         <Link to="/reviews/latest">
           <RiArrowLeftLine data-icon="inline-start" />
@@ -54,5 +62,6 @@ export function ReviewDetailPage() {
         <ReviewCard review={review} showCourse showVoteButtons />
       </div>
     </PageShell>
+    </>
   )
 }
