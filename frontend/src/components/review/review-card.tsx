@@ -1,5 +1,8 @@
+import { useEffect, useRef, useState } from "react"
 import { Link } from "react-router-dom"
+import { RiShareForwardLine } from "@remixicon/react"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { VoteButtons } from "./vote-buttons"
 import { RatingStars } from "./rating-stars"
 import type { ReviewDTO } from "@/api/review"
@@ -29,16 +32,59 @@ function isEdited(review: ReviewDTO) {
   )
 }
 
+function getReviewUrl(reviewID: number) {
+  const path = `/reviews/${reviewID}`
+  if (typeof window === "undefined") return path
+  return new URL(path, window.location.origin).toString()
+}
+
+async function copyText(text: string) {
+  if (navigator.clipboard?.writeText && window.isSecureContext) {
+    await navigator.clipboard.writeText(text)
+    return
+  }
+
+  const textarea = document.createElement("textarea")
+  textarea.value = text
+  textarea.setAttribute("readonly", "")
+  textarea.style.position = "fixed"
+  textarea.style.top = "0"
+  textarea.style.left = "0"
+  textarea.style.opacity = "0"
+  document.body.appendChild(textarea)
+  textarea.select()
+
+  try {
+    const copied = document.execCommand("copy")
+    if (!copied) throw new Error("Copy command failed")
+  } finally {
+    document.body.removeChild(textarea)
+  }
+}
+
 export function ReviewCard({
   review,
   showCourse = false,
   showVoteButtons = true,
 }: ReviewCardProps) {
+  const [copied, setCopied] = useState(false)
+  const resetCopiedTimer = useRef<number | undefined>(undefined)
   const edited = isEdited(review)
   const displayTime = edited ? review.updated_at : review.created_at
   const tooltip = edited
     ? `创建于 ${formatDateTime(review.created_at)}`
     : undefined
+
+  useEffect(() => {
+    return () => window.clearTimeout(resetCopiedTimer.current)
+  }, [])
+
+  async function handleShare() {
+    await copyText(getReviewUrl(review.id))
+    setCopied(true)
+    window.clearTimeout(resetCopiedTimer.current)
+    resetCopiedTimer.current = window.setTimeout(() => setCopied(false), 1600)
+  }
 
   return (
     <article className="border-b px-4 py-3 transition-colors hover:bg-muted/30">
@@ -91,14 +137,31 @@ export function ReviewCard({
           {review.content}
         </p>
 
-        {showVoteButtons && (
-          <VoteButtons
-            reviewID={review.id}
-            likeCount={review.vote.like_count}
-            dislikeCount={review.vote.dislike_count}
-            myVote={review.vote.my_vote}
-          />
-        )}
+        <div className="flex items-center justify-between gap-2">
+          {showVoteButtons ? (
+            <VoteButtons
+              reviewID={review.id}
+              likeCount={review.vote.like_count}
+              dislikeCount={review.vote.dislike_count}
+              myVote={review.vote.my_vote}
+            />
+          ) : (
+            <span />
+          )}
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleShare}
+            className="gap-1 text-muted-foreground"
+            aria-label="复制评价链接"
+            title="复制评价链接"
+          >
+            <RiShareForwardLine data-icon="inline-start" />
+            {copied && <span className="text-xs">已复制</span>}
+          </Button>
+        </div>
       </div>
     </article>
   )
