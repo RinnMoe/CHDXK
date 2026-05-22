@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import { VoteButtons } from "./vote-buttons"
 import { RatingStars } from "./rating-stars"
 import type { ReviewDTO } from "@/api/review"
@@ -43,26 +42,24 @@ export function ReviewCard({
     : undefined
 
   return (
-    <Card>
-      <CardContent className="pt-4 space-y-3">
+    <Card className="py-3 gap-0">
+      <CardContent className="space-y-2">
         {showCourse && review.course && (
           <Link
             to={`/courses/${review.course.id}`}
-            className="flex items-start justify-between gap-2 hover:bg-muted/50 -m-2 p-2 rounded-md transition-colors"
+            className="flex items-center gap-2 hover:bg-muted/50 -m-2 px-2 py-1.5 rounded-md transition-colors text-sm mb-2"
           >
-            <div className="min-w-0">
-              <div className="text-xs text-muted-foreground font-mono">
-                {review.course.code}
-              </div>
-              <div className="font-medium truncate">{review.course.name}</div>
-              <div className="text-xs text-muted-foreground mt-0.5">
-                {review.course.main_teacher.name}
-              </div>
-            </div>
+            <span className="font-mono text-xs text-muted-foreground">
+              {review.course.code}
+            </span>
+            <span className="font-medium truncate max-w-[200px]">
+              {review.course.name}
+            </span>
+            <span className="text-xs text-muted-foreground truncate max-w-[120px]">
+              {review.course.main_teacher.name}
+            </span>
           </Link>
         )}
-
-        {showCourse && review.course && <Separator />}
 
         <div className="flex items-center gap-2 flex-wrap">
           <RatingStars value={review.rating} readOnly size="sm" />
@@ -96,15 +93,12 @@ export function ReviewCard({
         </p>
 
         {showVoteButtons && (
-          <>
-            <Separator />
-            <VoteButtons
-              reviewID={review.id}
-              likeCount={review.vote.like_count}
-              dislikeCount={review.vote.dislike_count}
-              myVote={review.vote.my_vote}
-            />
-          </>
+          <VoteButtons
+            reviewID={review.id}
+            likeCount={review.vote.like_count}
+            dislikeCount={review.vote.dislike_count}
+            myVote={review.vote.my_vote}
+          />
         )}
       </CardContent>
     </Card>
