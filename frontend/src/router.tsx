@@ -8,6 +8,8 @@ import { UserReviewsPage } from "@/pages/user-reviews-page"
 import { ReviewDetailPage } from "@/pages/review-detail-page"
 import { NewReviewPage } from "@/pages/new-review-page"
 import { EditReviewPage } from "@/pages/edit-review-page"
+import { TeachersPage } from "@/pages/teachers-page"
+import { TeacherDetailPage } from "@/pages/teacher-detail-page"
 
 export const router = createBrowserRouter([
   {
@@ -22,6 +24,8 @@ export const router = createBrowserRouter([
       { path: "/reviews/mine", element: <UserReviewsPage /> },
       { path: "/reviews/:reviewID", element: <ReviewDetailPage /> },
       { path: "/reviews/:reviewID/edit", element: <EditReviewPage /> },
+      { path: "/teachers", element: <TeachersPage /> },
+      { path: "/teachers/:teacherID", element: <TeacherDetailPage /> },
     ],
   },
 ])

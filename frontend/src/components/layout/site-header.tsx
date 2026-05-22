@@ -15,6 +15,12 @@ export function SiteHeader() {
             课程
           </Link>
           <Link
+            to="/teachers"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            教师
+          </Link>
+          <Link
             to="/reviews/latest"
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
