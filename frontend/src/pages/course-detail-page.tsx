@@ -158,7 +158,7 @@ export function CourseDetailPage() {
         {course.same_code_courses.length > 0 && (
           <section>
             <h2 className="text-lg font-semibold mb-3">同代码课程</h2>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="border-t">
               {course.same_code_courses.map((c) => (
                 <CourseCard key={c.id} course={c} />
               ))}
@@ -169,7 +169,7 @@ export function CourseDetailPage() {
         {course.same_teacher_courses.length > 0 && (
           <section>
             <h2 className="text-lg font-semibold mb-3">同教师其他课程</h2>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="border-t">
               {course.same_teacher_courses.map((c) => (
                 <CourseCard key={c.id} course={c} />
               ))}

@@ -9,10 +9,12 @@ interface CourseListProps {
 
 function CourseCardSkeleton() {
   return (
-    <div className="rounded-lg border p-4 space-y-2">
-      <Skeleton className="h-3 w-16" />
+    <div className="space-y-2 border-b px-4 py-3">
+      <div className="flex items-center justify-between gap-2">
+        <Skeleton className="h-3 w-16" />
+        <Skeleton className="h-4 w-20" />
+      </div>
       <Skeleton className="h-4 w-3/4" />
-      <Skeleton className="h-3 w-1/2" />
       <div className="flex gap-1">
         <Skeleton className="h-5 w-12" />
         <Skeleton className="h-5 w-16" />
@@ -26,7 +28,7 @@ function CourseCardSkeleton() {
 export function CourseList({ courses, isLoading }: CourseListProps) {
   if (isLoading) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="border-t">
         {Array.from({ length: 6 }).map((_, i) => (
           <CourseCardSkeleton key={i} />
         ))}
@@ -62,7 +64,7 @@ export function CourseList({ courses, isLoading }: CourseListProps) {
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="border-t">
       {courses.map((course) => (
         <CourseCard key={course.id} course={course} />
       ))}

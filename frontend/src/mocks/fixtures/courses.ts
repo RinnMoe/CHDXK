@@ -162,6 +162,29 @@ export const mockCourses: CourseListItemDTO[] = Array.from({ length: 64 }, (_, i
   makeCourse(i + 1)
 )
 
+mockCourses[0] = {
+  ...mockCourses[0],
+  name: "面向复杂真实世界系统的超大规模分布式数据库架构设计与性能调优实践",
+  language: "中文及英文双语研讨",
+  categories: ["跨学科综合实践课程", "研究型专业选修模块"],
+  main_teacher: makeTeacher("欧阳明远清和"),
+}
+
+mockCourses[1] = {
+  ...mockCourses[1],
+  name: "人工智能安全、可信机器学习与大模型治理专题前沿导论",
+  categories: ["通识核心-科技伦理与社会", "专业方向拓展"],
+  main_teacher: makeTeacher("司徒嘉言"),
+}
+
+mockCourses[2] = {
+  ...mockCourses[2],
+  name: "计算社会科学中的因果推断、网络实验与高维数据分析方法",
+  language: "全英文授课与中文讨论",
+  categories: ["方法论强化训练", "通识选修-社会科学"],
+  main_teacher: makeTeacher("Alexander Christopher Johnson-Smith"),
+}
+
 export function makeCourseDetail(course: CourseListItemDTO): CourseDetailDTO {
   const sameCode = mockCourses
     .filter((c) => c.id !== course.id)
