@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"jcourse/internal/domain/teacher"
 )
@@ -25,15 +26,31 @@ func (r *TeacherRepository) FindBy(ctx context.Context, filter teacher.TeacherFi
 	if filter.Title != "" {
 		db = db.Where("title = ?", filter.Title)
 	}
+	if filter.Q != "" {
+		db = applySearchVectorFilter(db, "search_vector", filter.Q)
+	}
+	if filter.Code != "" {
+		db = db.Where("LOWER(code) = LOWER(?)", filter.Code)
+	}
+	if filter.Name != "" {
+		db = db.Where("name = ?", filter.Name)
+	}
 	if filter.Pinyin != "" {
-		like := "%" + filter.Pinyin + "%"
-		db = db.Where("pinyin LIKE ? OR pinyin_abbr LIKE ?", like, like)
+		db = db.Where("pinyin = ?", filter.Pinyin)
 	}
 
 	var total int64
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
+
+	if searchQuery(filter.Q) != "" {
+		db = db.Order(clause.Expr{
+			SQL:  searchRankOrder("search_vector", filter.Q),
+			Vars: []interface{}{searchConfig(db), searchQuery(filter.Q)},
+		})
+	}
+	db = db.Order("id DESC")
 
 	if filter.Page > 0 && filter.PageSize > 0 {
 		offset := (filter.Page - 1) * filter.PageSize

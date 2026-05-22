@@ -19,9 +19,9 @@ export function TeachersPage() {
   const page = Number(searchParams.get("page") ?? "1")
   const department = searchParams.get("department") ?? ""
   const title = searchParams.get("title") ?? ""
-  const pinyin = searchParams.get("pinyin") ?? ""
+  const q = searchParams.get("q") ?? ""
 
-  const filter = { department: department || undefined, title: title || undefined, pinyin: pinyin || undefined, page, page_size: 20 }
+  const filter = { department: department || undefined, title: title || undefined, q: q || undefined, page, page_size: 20 }
   const { data: filters, isLoading: filtersLoading } = useTeacherFilters()
   const { data, isLoading } = useTeachers(filter)
 
@@ -54,9 +54,9 @@ export function TeachersPage() {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
             <Input
-              placeholder="拼音首字母或姓名搜索..."
-              value={pinyin}
-              onChange={(e) => update("pinyin", e.target.value)}
+              placeholder="搜索教师、工号或拼音..."
+              value={q}
+              onChange={(e) => update("q", e.target.value)}
             />
           </div>
           <div className="w-full sm:w-48">

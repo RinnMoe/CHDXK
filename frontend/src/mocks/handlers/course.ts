@@ -36,7 +36,7 @@ function paginate<T>(items: T[], page: number, pageSize: number) {
 }
 
 function applyCourseFilter(url: URL) {
-  const code = url.searchParams.get("code") ?? ""
+  const q = (url.searchParams.get("q") ?? "").toLowerCase()
   const department = url.searchParams.get("department") ?? ""
   const language = url.searchParams.get("language") ?? ""
   const categories = url.searchParams.getAll("categories")
@@ -45,11 +45,12 @@ function applyCourseFilter(url: URL) {
   const ascend = url.searchParams.get("ascend") === "1"
 
   let list = [...mockCourses]
-  if (code)
+  if (q)
     list = list.filter(
       (c) =>
-        c.code.toLowerCase().includes(code.toLowerCase()) ||
-        c.name.includes(code)
+        c.code.toLowerCase().includes(q) ||
+        c.name.toLowerCase().includes(q) ||
+        c.main_teacher.name.toLowerCase().includes(q)
     )
   if (department) list = list.filter((c) => c.department === department)
   if (language) list = list.filter((c) => c.language === language)

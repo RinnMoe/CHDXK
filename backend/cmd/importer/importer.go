@@ -59,6 +59,16 @@ func (imp *Importer) Run(rows []CSVRow) error {
 		imp.createOfferedCourses(rows, teacherIDMap, courseIDMap)
 	}
 
+	log.Println("Refreshing teacher search vectors...")
+	if err := repository.RefreshTeacherSearchVectors(imp.db); err != nil {
+		return err
+	}
+
+	log.Println("Refreshing course search vectors...")
+	if err := repository.RefreshCourseSearchVectors(imp.db); err != nil {
+		return err
+	}
+
 	log.Println("Import complete!")
 	return nil
 }

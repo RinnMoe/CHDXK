@@ -25,7 +25,7 @@ export interface TeacherDTO {
 export interface TeacherListFilter {
   department?: string
   title?: string
-  pinyin?: string
+  q?: string
   page?: number
   page_size?: number
   [key: string]: unknown

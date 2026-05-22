@@ -72,6 +72,12 @@ func TestCourseRepository_FindBy(t *testing.T) {
 	if err := db.Model(&repository.CourseEntity{}).Where("id = ?", c1.ID).Update("rating_count", 1).Error; err != nil {
 		t.Fatalf("mark course reviewed: %v", err)
 	}
+	if err := repository.RefreshTeacherSearchVectors(db); err != nil {
+		t.Fatalf("refresh teacher search vectors: %v", err)
+	}
+	if err := repository.RefreshCourseSearchVectors(db); err != nil {
+		t.Fatalf("refresh course search vectors: %v", err)
+	}
 
 	t.Run("list all", func(t *testing.T) {
 		results, total, err := repo.FindBy(ctx, course.CourseFilter{})
@@ -106,6 +112,32 @@ func TestCourseRepository_FindBy(t *testing.T) {
 		}
 		if results[0].Name != "数据结构" {
 			t.Errorf("Name: got %q, want 数据结构", results[0].Name)
+		}
+	})
+
+	t.Run("search by q course name", func(t *testing.T) {
+		results, total, err := repo.FindBy(ctx, course.CourseFilter{Q: "数据结构"})
+		if err != nil {
+			t.Fatalf("FindBy: %v", err)
+		}
+		if total != 1 {
+			t.Errorf("total: got %d, want 1", total)
+		}
+		if len(results) == 0 || results[0].Code != "CS101" {
+			t.Errorf("Code: got %v, want CS101", results)
+		}
+	})
+
+	t.Run("search by q teacher name", func(t *testing.T) {
+		results, total, err := repo.FindBy(ctx, course.CourseFilter{Q: "张三"})
+		if err != nil {
+			t.Fatalf("FindBy: %v", err)
+		}
+		if total != 2 {
+			t.Errorf("total: got %d, want 2", total)
+		}
+		if len(results) == 0 || results[0].MainTeacher == nil || results[0].MainTeacher.Name != "张三" {
+			t.Errorf("MainTeacher: got %v, want 张三", results)
 		}
 	})
 

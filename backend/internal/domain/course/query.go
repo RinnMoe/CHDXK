@@ -13,20 +13,23 @@ type RatingInfo struct {
 }
 
 type CourseFilter struct {
-	CourseIDs   []int
-	TeacherID   int
-	ExcludeID   int
-	Code        string
-	Department  string
-	Categories  []string
-	Language    string
-	TargetYears []string
-	Credit      *float32
-	HasReview   *bool
-	OrderBy     string // "rating_count" | "rating_avg"
-	Ascend      bool
-	Page        int
-	PageSize    int
+	CourseIDs       []int
+	TeacherID       int
+	ExcludeID       int
+	Q               string
+	Code            string
+	Name            string
+	MainTeacherName string
+	Department      string
+	Categories      []string
+	Language        string
+	TargetYears     []string
+	Credit          *float32
+	HasReview       *bool
+	OrderBy         string // "rating_count" | "rating_avg"
+	Ascend          bool
+	Page            int
+	PageSize        int
 }
 
 // Read model: course list/search result

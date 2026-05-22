@@ -4,17 +4,17 @@ import { Input } from "@/components/ui/input"
 
 export function CourseSearchBar() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [value, setValue] = useState(searchParams.get("code") ?? "")
+  const [value, setValue] = useState(searchParams.get("q") ?? "")
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      const current = searchParams.get("code") ?? ""
+      const current = searchParams.get("q") ?? ""
       if (value === current) return
       const next = new URLSearchParams(searchParams)
       if (value) {
-        next.set("code", value)
+        next.set("q", value)
       } else {
-        next.delete("code")
+        next.delete("q")
       }
       next.delete("page")
       setSearchParams(next)
@@ -24,7 +24,7 @@ export function CourseSearchBar() {
 
   return (
     <Input
-      placeholder="搜索课程代码或名称..."
+      placeholder="搜索课程、代码或教师..."
       value={value}
       onChange={(e) => setValue(e.target.value)}
       className="max-w-md"

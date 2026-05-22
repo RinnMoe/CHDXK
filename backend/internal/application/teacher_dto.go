@@ -24,7 +24,7 @@ func newTeacherDTO(t *teacher.TeacherView) TeacherDTO {
 type TeacherListFilter struct {
 	Department string `form:"department"`
 	Title      string `form:"title"`
-	Pinyin     string `form:"pinyin"`
+	Q          string `form:"q"`
 	Page       int    `form:"page"`
 	PageSize   int    `form:"page_size"`
 }

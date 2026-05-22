@@ -27,14 +27,19 @@ export const teacherHandlers = [
     const url = new URL(request.url)
     const department = url.searchParams.get("department") ?? ""
     const title = url.searchParams.get("title") ?? ""
-    const pinyin = (url.searchParams.get("pinyin") ?? "").toLowerCase()
+    const q = (url.searchParams.get("q") ?? "").toLowerCase()
     const page = Number(url.searchParams.get("page") ?? "1")
     const pageSize = Number(url.searchParams.get("page_size") ?? "20")
 
     let list = getMockTeachers()
     if (department) list = list.filter((t) => t.department === department)
     if (title) list = list.filter((t) => t.title === title)
-    if (pinyin) list = list.filter((t) => t.name.toLowerCase().includes(pinyin))
+    if (q)
+      list = list.filter(
+        (t) =>
+          t.code.toLowerCase().includes(q) ||
+          t.name.toLowerCase().includes(q)
+      )
 
     return HttpResponse.json(paginate(list, page, pageSize))
   }),

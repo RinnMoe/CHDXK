@@ -22,7 +22,7 @@ func (s *TeacherQueryService) ListTeachers(ctx context.Context, f TeacherListFil
 	filter := teacher.TeacherFilter{
 		Department: f.Department,
 		Title:      f.Title,
-		Pinyin:     f.Pinyin,
+		Q:          f.Q,
 		Page:       f.Page,
 		PageSize:   f.PageSize,
 	}

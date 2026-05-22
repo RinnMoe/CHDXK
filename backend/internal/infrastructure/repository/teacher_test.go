@@ -24,6 +24,9 @@ func TestTeacherRepository_FindBy(t *testing.T) {
 			t.Fatalf("seed teacher: %v", err)
 		}
 	}
+	if err := repository.RefreshTeacherSearchVectors(db); err != nil {
+		t.Fatalf("refresh teacher search vectors: %v", err)
+	}
 
 	t.Run("list all", func(t *testing.T) {
 		results, total, err := repo.FindBy(ctx, teacher.TeacherFilter{})
@@ -67,7 +70,7 @@ func TestTeacherRepository_FindBy(t *testing.T) {
 	})
 
 	t.Run("filter by pinyin", func(t *testing.T) {
-		results, total, err := repo.FindBy(ctx, teacher.TeacherFilter{Pinyin: "zhang"})
+		results, total, err := repo.FindBy(ctx, teacher.TeacherFilter{Pinyin: "zhangsan"})
 		if err != nil {
 			t.Fatalf("FindBy: %v", err)
 		}
@@ -79,8 +82,8 @@ func TestTeacherRepository_FindBy(t *testing.T) {
 		}
 	})
 
-	t.Run("pinyin abbr match", func(t *testing.T) {
-		results, total, err := repo.FindBy(ctx, teacher.TeacherFilter{Pinyin: "zs"})
+	t.Run("search by q pinyin abbr", func(t *testing.T) {
+		results, total, err := repo.FindBy(ctx, teacher.TeacherFilter{Q: "zs"})
 		if err != nil {
 			t.Fatalf("FindBy: %v", err)
 		}
@@ -89,6 +92,19 @@ func TestTeacherRepository_FindBy(t *testing.T) {
 		}
 		if len(results) == 0 || results[0].Name != "张三" {
 			t.Errorf("Name: got %v, want 张三", results)
+		}
+	})
+
+	t.Run("search by q code", func(t *testing.T) {
+		results, total, err := repo.FindBy(ctx, teacher.TeacherFilter{Q: "T002"})
+		if err != nil {
+			t.Fatalf("FindBy: %v", err)
+		}
+		if total != 1 {
+			t.Errorf("total: got %d, want 1", total)
+		}
+		if len(results) == 0 || results[0].Name != "李四" {
+			t.Errorf("Name: got %v, want 李四", results)
 		}
 	})
 

@@ -35,8 +35,9 @@ type TeacherEntity struct {
 	Department string `gorm:"column:department;index"`
 	Title      string `gorm:"column:title"`
 
-	Pinyin     string `gorm:"column:pinyin;index"`
-	PinyinAbbr string `gorm:"column:pinyin_abbr;index"`
+	Pinyin       string `gorm:"column:pinyin;index"`
+	PinyinAbbr   string `gorm:"column:pinyin_abbr;index"`
+	SearchVector string `gorm:"column:search_vector;type:tsvector;index:,type:gin;<-:false"`
 
 	LastSemester string `gorm:"column:last_semester"`
 
@@ -74,6 +75,7 @@ type CourseEntity struct {
 	Language      string         `gorm:"column:language"`
 	Categories    pq.StringArray `gorm:"column:categories;type:text[]"`
 	TeacherIDs    pq.Int64Array  `gorm:"column:teacher_ids;type:integer[]"`
+	SearchVector  string         `gorm:"column:search_vector;type:tsvector;index:,type:gin;<-:false"`
 	LastSemester  string         `gorm:"column:last_semester"`
 	RatingCount   int            `gorm:"column:rating_count"`
 	RatingAvg     float64        `gorm:"column:rating_avg"`

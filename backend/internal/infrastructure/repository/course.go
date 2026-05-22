@@ -50,8 +50,17 @@ func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm
 	if f.ExcludeID > 0 {
 		db = db.Where("courses.id != ?", f.ExcludeID)
 	}
+	if f.Q != "" {
+		db = applySearchVectorFilter(db, "courses.search_vector", f.Q)
+	}
 	if f.Code != "" {
 		db = db.Where("LOWER(courses.code) = LOWER(?)", f.Code)
+	}
+	if f.Name != "" {
+		db = db.Where("courses.name = ?", f.Name)
+	}
+	if f.MainTeacherName != "" {
+		db = db.Where("courses.main_teacher_id IN (SELECT id FROM teachers WHERE name = ?)", f.MainTeacherName)
 	}
 	if f.Department != "" {
 		db = db.Where("courses.department = ?", f.Department)
@@ -80,6 +89,12 @@ func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm
 
 func (r *CourseRepository) applySort(db *gorm.DB, f course.CourseFilter) *gorm.DB {
 	desc := !f.Ascend
+	if searchQuery(f.Q) != "" && f.OrderBy == "" {
+		db = db.Order(clause.Expr{
+			SQL:  searchRankOrder("courses.search_vector", f.Q),
+			Vars: []interface{}{searchConfig(db), searchQuery(f.Q)},
+		})
+	}
 	order := clause.OrderByColumn{
 		Column: clause.Column{Table: "courses", Name: "id"},
 		Desc:   desc,

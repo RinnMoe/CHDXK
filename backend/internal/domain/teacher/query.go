@@ -10,7 +10,10 @@ type FilterItem struct {
 type TeacherFilter struct {
 	Department string
 	Title      string
-	Pinyin     string // matches pinyin and pinyin_abbr with LIKE
+	Q          string
+	Code       string
+	Name       string
+	Pinyin     string
 	Page       int
 	PageSize   int
 }

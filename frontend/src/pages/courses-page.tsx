@@ -18,7 +18,7 @@ export function CoursesPage() {
       .map(Number)
       .filter(Boolean)
     return {
-      code: searchParams.get("code") ?? undefined,
+      q: searchParams.get("q") ?? undefined,
       department: departments[0] ?? undefined,
       language: searchParams.get("language") ?? undefined,
       categories: categories.length > 0 ? categories : undefined,

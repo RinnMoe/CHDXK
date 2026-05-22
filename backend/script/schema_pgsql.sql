@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS teachers
     title         TEXT        NOT NULL,
     pinyin        TEXT        NOT NULL,
     pinyin_abbr   TEXT        NOT NULL,
+    search_vector TSVECTOR    NOT NULL DEFAULT '',
     last_semester TEXT        NOT NULL DEFAULT '',
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -51,6 +52,7 @@ CREATE TABLE IF NOT EXISTS courses
     language        TEXT             NOT NULL,
     target_years    TEXT[],
     teacher_ids     INTEGER[],
+    search_vector   TSVECTOR         NOT NULL DEFAULT '',
     last_semester   TEXT             NOT NULL DEFAULT '',
     rating_count    INTEGER          NOT NULL DEFAULT 0,
     rating_avg      DOUBLE PRECISION NOT NULL DEFAULT 0,
@@ -64,7 +66,10 @@ CREATE TABLE IF NOT EXISTS courses
 CREATE INDEX idx_courses_department ON courses (department);
 CREATE INDEX idx_courses_main_teacher ON courses (main_teacher_id);
 CREATE INDEX idx_courses_teacher_ids ON courses USING GIN (teacher_ids);
+CREATE INDEX idx_courses_search_vector ON courses USING GIN (search_vector);
 CREATE UNIQUE INDEX uniq_courses_code_teacher ON courses (code, main_teacher_id);
+
+CREATE INDEX idx_teachers_search_vector ON teachers USING GIN (search_vector);
 
 CREATE TABLE IF NOT EXISTS offered_courses
 (

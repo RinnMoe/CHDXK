@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS teachers
     title         TEXT NOT NULL,
     pinyin        TEXT NOT NULL,
     pinyin_abbr   TEXT NOT NULL,
+    search_vector TEXT NOT NULL DEFAULT '',
     last_semester TEXT NOT NULL DEFAULT '',
     created_at    TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
@@ -56,6 +57,7 @@ CREATE TABLE IF NOT EXISTS courses
     language        TEXT    NOT NULL,
     target_years    TEXT, -- JSON array
     teacher_ids     TEXT, -- JSON array
+    search_vector   TEXT    NOT NULL DEFAULT '',
     last_semester   TEXT    NOT NULL DEFAULT '',
     rating_count    INTEGER NOT NULL DEFAULT 0,
     rating_avg      REAL    NOT NULL DEFAULT 0,
