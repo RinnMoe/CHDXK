@@ -2,13 +2,7 @@ import { useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { RiFilterLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
@@ -63,38 +57,25 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
     <div className="space-y-6">
       <div className="space-y-2">
         <Label>排序</Label>
-        <Select
+        <Tabs
           value={searchParams.get("order_by") ?? ALL}
           onValueChange={(v) => updateFilter("order_by", v)}
         >
-          <SelectTrigger>
-            <SelectValue placeholder="默认排序" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>默认排序</SelectItem>
-            <SelectItem value="rating_count">评价数量</SelectItem>
-            <SelectItem value="rating_avg">平均评分</SelectItem>
-          </SelectContent>
-        </Select>
+          <TabsList>
+            <TabsTrigger value={ALL}>默认</TabsTrigger>
+            <TabsTrigger value="rating_count">评价数量</TabsTrigger>
+            <TabsTrigger value="rating_avg">平均评分</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
-      <div className="space-y-2">
-        <Label>授课语言</Label>
-        <Select
-          value={searchParams.get("language") ?? ALL}
-          onValueChange={(v) => updateFilter("language", v)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="全部语言" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>全部语言</SelectItem>
-            <SelectItem value="中文">中文</SelectItem>
-            <SelectItem value="英文">英文</SelectItem>
-            <SelectItem value="双语">双语</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <FilterCheckGroup
+        label="授课语言"
+        items={filters.languages}
+        paramKey="language"
+        selected={searchParams.getAll("language")}
+        onToggle={toggleMulti}
+      />
 
       <Separator />
 
@@ -128,26 +109,16 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
 
       <Separator />
 
-      <div className="space-y-3">
-        <Label>学分</Label>
-        <div className="flex gap-2">
-          {filters.credits.map((c) => (
-            <Button
-              key={c.name}
-              size="sm"
-              variant={
-                searchParams.getAll("credit").includes(c.name) ? "default" : "outline"
-              }
-              onClick={() => toggleMulti("credit", c.name)}
-            >
-              {c.name}
-            </Button>
-          ))}
-        </div>
-      </div>
+      <FilterCheckGroup
+        label="学分"
+        items={filters.credits}
+        paramKey="credit"
+        selected={searchParams.getAll("credit")}
+        onToggle={toggleMulti}
+      />
 
       <Button
-        variant="ghost"
+        variant="outline"
         className="w-full"
         onClick={() => {
           const next = new URLSearchParams()
@@ -163,7 +134,7 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
 
   return (
     <>
-      <aside className="scrollbar-none hidden w-56 shrink-0 overflow-y-auto overscroll-contain pr-2 pb-4 lg:block">
+      <aside className="hidden w-56 shrink-0 lg:block">
         {content}
       </aside>
       <div className="lg:hidden">

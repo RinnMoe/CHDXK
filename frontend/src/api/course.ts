@@ -15,6 +15,7 @@ export interface CourseFilters {
   departments: FilterItem[]
   categories: FilterItem[]
   target_years: FilterItem[]
+  languages: FilterItem[]
 }
 
 export interface CourseReviewFilters {

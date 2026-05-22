@@ -302,5 +302,6 @@ export function makeCourseFilters(): CourseFilters {
     departments: counts(DEPARTMENTS),
     categories: counts(CATEGORIES),
     target_years: counts(TARGET_YEARS),
+    languages: counts(["中文", "英文", "双语"]),
   }
 }

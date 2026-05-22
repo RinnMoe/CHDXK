@@ -20,6 +20,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import Markdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import { useAuth } from "@/contexts/auth-context"
 import { useDeleteReview } from "@/hooks/use-review"
 import { VoteButtons } from "./vote-buttons"
@@ -163,9 +165,9 @@ export function ReviewCard({
           )}
         </div>
 
-        <p className="text-sm whitespace-pre-wrap leading-relaxed">
-          {review.content}
-        </p>
+        <div className="text-sm leading-relaxed prose prose-sm max-w-none dark:prose-invert">
+          <Markdown remarkPlugins={[remarkGfm]}>{review.content}</Markdown>
+        </div>
 
         <div className="flex items-center justify-between gap-2">
           {showVoteButtons ? (

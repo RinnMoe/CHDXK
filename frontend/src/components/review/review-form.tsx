@@ -1,4 +1,6 @@
 import { useState } from "react"
+import Markdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -117,14 +119,29 @@ export function ReviewForm({
 
       <div className="space-y-2">
         <Label htmlFor="content">评价内容</Label>
-        <Textarea
-          id="content"
-          placeholder="分享你对这门课程的看法..."
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows={6}
-          className="resize-y"
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">编辑</p>
+            <Textarea
+              id="content"
+              placeholder="分享你对这门课程的看法...（支持 Markdown）"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={10}
+              className="resize-y font-mono text-sm"
+            />
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">预览</p>
+            <div className="min-h-[10rem] text-sm prose prose-sm max-w-none dark:prose-invert">
+              {content.trim() ? (
+                <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
+              ) : (
+                <span className="text-muted-foreground italic">预览区域</span>
+              )}
+            </div>
+          </div>
+        </div>
         <p className="text-xs text-muted-foreground">{content.length} / 至少 10 字</p>
       </div>
 

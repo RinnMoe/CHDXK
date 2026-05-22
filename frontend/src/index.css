@@ -5,6 +5,7 @@
 @import "@fontsource/noto-sans-sc/400.css";
 @import "@fontsource/noto-sans-sc/500.css";
 @import "@fontsource/noto-sans-sc/700.css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -133,6 +134,23 @@
 }
 
 @layer utilities {
+  .prose table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  .prose th,
+  .prose td {
+    border: 1px solid var(--color-border);
+    padding: 0.5rem 0.75rem;
+  }
+  .prose th {
+    background: var(--color-muted);
+    font-weight: 600;
+  }
+  .prose tr:nth-child(even) td {
+    background: var(--color-muted);
+  }
+
   .scrollbar-none {
     scrollbar-width: none;
     -ms-overflow-style: none;

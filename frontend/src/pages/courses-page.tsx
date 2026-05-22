@@ -44,7 +44,7 @@ export function CoursesPage() {
     <>
       <title>课程 - JCourse</title>
       <PageShell>
-      <div className="space-y-6 lg:flex lg:h-[calc(100svh-6.5rem)] lg:min-h-0 lg:flex-col lg:space-y-0 lg:gap-6">
+      <div className="space-y-6 lg:flex lg:flex-col lg:space-y-0 lg:gap-6">
         <div>
           <h1 className="text-2xl font-bold">课程</h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -54,10 +54,10 @@ export function CoursesPage() {
 
         <CourseSearchBar />
 
-        <div className="flex flex-col gap-6 lg:min-h-0 lg:flex-1 lg:flex-row lg:overflow-hidden">
+        <div className="flex flex-col gap-6 lg:flex-row">
           {filters && <CourseFilters filters={filters} />}
 
-          <div className="scrollbar-none min-w-0 flex-1 space-y-4 lg:overflow-y-auto lg:overscroll-contain lg:pr-2 lg:pb-4">
+          <div className="min-w-0 flex-1 space-y-4">
             {data && (
               <div className="text-sm text-muted-foreground">
                 共 {data.total} 门课程

@@ -290,11 +290,21 @@ func (r *CourseRepository) GetFilters(ctx context.Context) (*course.CourseFilter
 		return nil, err
 	}
 
+	var languages []course.FilterItem
+	if err := r.db.WithContext(ctx).Model(&CourseEntity{}).
+		Select("language AS name, COUNT(*) AS count").
+		Where("language != ''").
+		Group("language").Order("language").
+		Scan(&languages).Error; err != nil {
+		return nil, err
+	}
+
 	return &course.CourseFilters{
 		Credits:     credits,
 		Departments: departments,
 		Categories:  categories,
 		TargetYears: targetYears,
+		Languages:   languages,
 	}, nil
 }
 
