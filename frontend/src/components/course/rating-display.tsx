@@ -16,10 +16,7 @@ export function RatingDisplay({ rating, size = "md" }: RatingDisplayProps) {
       <div className="flex">
         {stars.map((on, i) =>
           on ? (
-            <RiStarFill
-              key={i}
-              className={`${sizeClass} text-yellow-400`}
-            />
+            <RiStarFill key={i} className={`${sizeClass} text-yellow-400`} />
           ) : (
             <RiStarLine
               key={i}
@@ -31,7 +28,9 @@ export function RatingDisplay({ rating, size = "md" }: RatingDisplayProps) {
       {rating.avg > 0 && (
         <span className="text-sm font-medium">{rating.avg.toFixed(1)}</span>
       )}
-      <span className="text-xs text-muted-foreground">({rating.count})</span>
+      <span className="text-xs text-muted-foreground">
+        ({rating.count}条点评)
+      </span>
     </div>
   )
 }

@@ -6,7 +6,7 @@ interface RatingDistributionProps {
 }
 
 export function RatingDistribution({ rating }: RatingDistributionProps) {
-  const max = Math.max(...rating.distribution, 1)
+  const total = Math.max(rating.count, 1)
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-8">
@@ -17,21 +17,21 @@ export function RatingDistribution({ rating }: RatingDistributionProps) {
         <RatingDisplay rating={rating} />
       </div>
 
-      <div className="flex-1 space-y-1.5 max-w-xs">
+      <div className="max-w-xs flex-1 space-y-1.5">
         {[5, 4, 3, 2, 1].map((star) => {
           const count = rating.distribution[star - 1]
-          const pct = (count / max) * 100
+          const pct = (count / total) * 100
           return (
             <div key={star} className="flex items-center gap-2 text-xs">
               <span className="w-6 text-muted-foreground">{star} 星</span>
-              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                 <div
                   className="h-full bg-yellow-400"
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              <span className="w-8 text-right text-muted-foreground tabular-nums">
-                {count}
+              <span className="w-16 text-right text-muted-foreground tabular-nums">
+                {count}条点评
               </span>
             </div>
           )

@@ -1,11 +1,11 @@
 import { Link, useParams, useSearchParams } from "react-router-dom"
 import { RiArrowLeftLine, RiAddLine } from "@remixicon/react"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CourseCard } from "@/components/course/course-card"
+import { CourseBadge, CourseBadges } from "@/components/course/course-badges"
 import { RatingDistribution } from "@/components/course/rating-distribution"
 import { PageShell } from "@/components/layout/page-shell"
 import {
@@ -113,38 +113,61 @@ export function CourseDetailPage() {
               <span>·</span>
               <span>{course.department}</span>
             </div>
-            <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="space-y-2">
               <h1 className="text-3xl font-bold">{course.name}</h1>
-              <Badge variant="secondary">{course.credit} 学分</Badge>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              <Badge variant="outline">{course.language}</Badge>
-              {course.categories.map((c) => (
-                <Badge key={c} variant="outline">
-                  {c}
-                </Badge>
-              ))}
-              {course.target_years.map((y) => (
-                <Badge key={y} variant="outline">
-                  {y}
-                </Badge>
-              ))}
-            </div>
-            <div className="text-sm">
-              主讲教师：
-              <Link
-                to={`/teachers/${course.main_teacher.id}`}
-                className="text-primary hover:underline"
-              >
-                {course.main_teacher.name}
+              <div className="text-base">
+                主讲教师：
+                <Link
+                  to={`/teachers/${course.main_teacher.id}`}
+                  className="font-medium text-primary hover:underline"
+                >
+                  {course.main_teacher.name}
+                </Link>
                 {course.main_teacher.title && (
                   <span className="ml-1 text-muted-foreground">
                     ({course.main_teacher.title})
                   </span>
                 )}
-              </Link>
+              </div>
             </div>
+            <CourseBadges
+              credit={course.credit}
+              language={course.language}
+              categories={course.categories}
+              targetYears={course.target_years}
+            />
           </header>
+
+          {course.offered_courses.length > 0 && (
+            <section className="space-y-3">
+              <h2 className="text-lg font-semibold">历史开课</h2>
+              <div className="space-y-3">
+                {course.offered_courses.map((oc) => (
+                  <div
+                    key={oc.semester}
+                    className="flex items-center gap-3 text-sm"
+                  >
+                    <CourseBadge kind="targetYear" className="font-mono">
+                      {oc.semester}
+                    </CourseBadge>
+                    <span className="text-muted-foreground">
+                      {oc.teacher_group.map((t, index) => (
+                        <span key={t.id}>
+                          {index > 0 && <span className="mx-1">/</span>}
+                          <Link
+                            to={`/teachers/${t.id}`}
+                            className="hover:text-primary hover:underline"
+                          >
+                            {t.name}
+                          </Link>
+                        </span>
+                      ))}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           <Card>
             <CardHeader>
@@ -154,29 +177,6 @@ export function CourseDetailPage() {
               <RatingDistribution rating={course.rating} />
             </CardContent>
           </Card>
-
-          {course.offered_courses.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">历史开课</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {course.offered_courses.map((oc) => (
-                  <div
-                    key={oc.semester}
-                    className="flex items-center gap-3 text-sm"
-                  >
-                    <Badge variant="outline" className="font-mono">
-                      {oc.semester}
-                    </Badge>
-                    <span className="text-muted-foreground">
-                      {oc.teacher_group.map((t) => t.name).join(" / ")}
-                    </span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
 
           <section>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">

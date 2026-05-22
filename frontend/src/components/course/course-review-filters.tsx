@@ -1,7 +1,6 @@
 import { RiThumbUpLine, RiTimeLine } from "@remixicon/react"
 import type { FilterItem } from "@/api/types"
 import type { ReviewListFilter } from "@/api/review"
-import { Button } from "@/components/ui/button"
 import {
   Select,
   SelectContent,
@@ -9,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { cn } from "@/lib/utils"
 
 const ALL = "all"
 
@@ -92,24 +92,42 @@ export function CourseReviewFilters({
 
       <div className="flex items-center gap-1">
         <span className="px-1 text-sm text-muted-foreground">排序</span>
-        <Button
-          type="button"
-          size="sm"
-          variant={value.orderBy === "created_at" ? "secondary" : "outline"}
-          onClick={() => onChange({ orderBy: "created_at" })}
+        <div
+          role="tablist"
+          aria-label="评价排序"
+          className="inline-flex h-8 items-center rounded-md bg-muted p-0.5"
         >
-          <RiTimeLine data-icon="inline-start" />
-          最新
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={value.orderBy === "like_count" ? "secondary" : "outline"}
-          onClick={() => onChange({ orderBy: "like_count" })}
-        >
-          <RiThumbUpLine data-icon="inline-start" />
-          获赞最多
-        </Button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={value.orderBy === "created_at"}
+            className={cn(
+              "inline-flex h-7 items-center gap-1 rounded-sm px-2.5 text-sm font-normal transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+              value.orderBy === "created_at"
+                ? "bg-background text-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+            onClick={() => onChange({ orderBy: "created_at" })}
+          >
+            <RiTimeLine className="size-3" data-icon="inline-start" />
+            最新
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={value.orderBy === "like_count"}
+            className={cn(
+              "inline-flex h-7 items-center gap-1 rounded-sm px-2.5 text-sm font-normal transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+              value.orderBy === "like_count"
+                ? "bg-background text-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+            onClick={() => onChange({ orderBy: "like_count" })}
+          >
+            <RiThumbUpLine className="size-3" data-icon="inline-start" />
+            获赞最多
+          </button>
+        </div>
       </div>
     </div>
   )
