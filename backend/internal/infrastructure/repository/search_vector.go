@@ -62,3 +62,24 @@ func RefreshCourseSearchVectors(db *gorm.DB) error {
 		WHERE c.main_teacher_id = t.id
 	`, config, config).Error
 }
+
+func RefreshReviewSearchVectors(db *gorm.DB) error {
+	config := searchConfig(db)
+	return db.Exec(`
+		UPDATE reviews
+		SET search_vector =
+			setweight(to_tsvector(?::regconfig, coalesce(content, '')), 'A') ||
+			setweight(to_tsvector(?::regconfig, coalesce(score, '')), 'B')
+	`, config, config).Error
+}
+
+func refreshReviewSearchVector(tx *gorm.DB, reviewID int) error {
+	config := searchConfig(tx)
+	return tx.Exec(`
+		UPDATE reviews
+		SET search_vector =
+			setweight(to_tsvector(?::regconfig, coalesce(content, '')), 'A') ||
+			setweight(to_tsvector(?::regconfig, coalesce(score, '')), 'B')
+		WHERE id = ?
+	`, config, config, reviewID).Error
+}

@@ -58,6 +58,10 @@ func newTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("connect to test database: %v", err)
 	}
 
+	if err := db.Exec("CREATE EXTENSION IF NOT EXISTS pg_jieba;").Error; err != nil {
+		t.Fatalf("create pg_jieba extension: %v", err)
+	}
+
 	migrateTestDB(t, db)
 
 	t.Cleanup(func() {

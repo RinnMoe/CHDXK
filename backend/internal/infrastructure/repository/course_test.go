@@ -274,6 +274,43 @@ func TestCourseRepository_FindBy(t *testing.T) {
 		}
 	})
 
+	t.Run("filter by main_teacher_name", func(t *testing.T) {
+		results, total, err := repo.FindBy(ctx, course.CourseFilter{MainTeacherName: "张三"})
+		if err != nil {
+			t.Fatalf("FindBy main_teacher_name=张三: %v", err)
+		}
+		if total != 2 {
+			t.Errorf("total: got %d, want 2", total)
+		}
+		if len(results) != 2 {
+			t.Fatalf("count: got %d, want 2", len(results))
+		}
+		for _, r := range results {
+			if r.MainTeacher == nil || r.MainTeacher.Name != "张三" {
+				t.Errorf("MainTeacher.Name: got %v, want 张三", r.MainTeacher)
+			}
+		}
+
+		results, total, err = repo.FindBy(ctx, course.CourseFilter{MainTeacherName: "李老师"})
+		if err != nil {
+			t.Fatalf("FindBy main_teacher_name=李老师: %v", err)
+		}
+		if total != 1 {
+			t.Errorf("total: got %d, want 1", total)
+		}
+		if len(results) == 0 || results[0].Code != "MA101" {
+			t.Errorf("Code: got %v, want MA101", results)
+		}
+
+		results, total, err = repo.FindBy(ctx, course.CourseFilter{MainTeacherName: "不存在"})
+		if err != nil {
+			t.Fatalf("FindBy main_teacher_name=不存在: %v", err)
+		}
+		if total != 0 {
+			t.Errorf("total: got %d, want 0", total)
+		}
+	})
+
 	t.Run("sort by rating_count", func(t *testing.T) {
 		results, _, err := repo.FindBy(ctx, course.CourseFilter{OrderBy: "rating_count"})
 		if err != nil {

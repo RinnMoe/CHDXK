@@ -30,6 +30,7 @@ type ReviewFilter struct {
 	CourseIDs        []int
 	ExcludeCourseIDs []int
 	UserID           int
+	Q                string
 	Semester         string
 	Rating           int
 	CreatedAfter     time.Time

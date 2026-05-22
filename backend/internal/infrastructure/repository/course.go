@@ -60,7 +60,7 @@ func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm
 		db = db.Where("courses.name = ?", f.Name)
 	}
 	if f.MainTeacherName != "" {
-		db = db.Where("courses.main_teacher_id IN (SELECT id FROM teachers WHERE name = ?)", f.MainTeacherName)
+		db = db.Where(`"MainTeacher".name = ?`, f.MainTeacherName)
 	}
 	if f.Department != "" {
 		db = db.Where("courses.department = ?", f.Department)
@@ -180,7 +180,7 @@ func (r *CourseRepository) FindBy(ctx context.Context, filter course.CourseFilte
 	db = r.applyFilter(db, filter)
 
 	var total int64
-	countDB := r.db.WithContext(ctx).Model(&CourseEntity{})
+	countDB := r.baseCourseQuery(ctx)
 	countDB = r.applyFilter(countDB, filter)
 	if err := countDB.Count(&total).Error; err != nil {
 		return nil, 0, err

@@ -148,7 +148,9 @@ func (r *lockFakeUserRepo) TouchLastSeen(_ context.Context, _ int, _ time.Time) 
 
 func (r *lockFakeUserRepo) FindByID(_ context.Context, _ int) (*User, error) { return nil, nil }
 
-func (r *lockFakeUserRepo) FindByUsername(_ context.Context, _ string) (*User, error) { return nil, nil }
+func (r *lockFakeUserRepo) FindByUsername(_ context.Context, _ string) (*User, error) {
+	return nil, nil
+}
 
 func (r *lockFakeUserRepo) FindByEmail(_ context.Context, email string) (*User, error) {
 	u, ok := r.users[email]

@@ -1,6 +1,11 @@
 services:
   postgres:
-    image: postgres:18
+    build:
+      context: ./postgres
+      dockerfile: Dockerfile
+      args:
+        PG_MAJOR: "18"
+    image: postgres-pg-jieba:18
     container_name: jcourse_postgres
     environment:
       POSTGRES_USER: postgres

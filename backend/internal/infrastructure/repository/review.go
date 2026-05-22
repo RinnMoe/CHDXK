@@ -200,6 +200,9 @@ func (r2 *ReviewRepository) applyFilter(db *gorm.DB, filter review.ReviewFilter)
 	if filter.UserID != 0 {
 		db = db.Where("reviews.user_id = ?", filter.UserID)
 	}
+	if filter.Q != "" {
+		db = applySearchVectorFilter(db, "reviews.search_vector", filter.Q)
+	}
 	if filter.Semester != "" {
 		db = db.Where("reviews.semester = ?", filter.Semester)
 	}
@@ -214,6 +217,12 @@ func (r2 *ReviewRepository) applyFilter(db *gorm.DB, filter review.ReviewFilter)
 
 func (r2 *ReviewRepository) applySort(db *gorm.DB, filter review.ReviewFilter) *gorm.DB {
 	desc := !filter.Ascend
+	if searchQuery(filter.Q) != "" && filter.OrderBy == "" {
+		db = db.Order(clause.Expr{
+			SQL:  searchRankOrder("reviews.search_vector", filter.Q),
+			Vars: []interface{}{searchConfig(db), searchQuery(filter.Q)},
+		})
+	}
 	order := clause.OrderByColumn{Column: clause.Column{Table: "reviews", Name: "id"}, Desc: desc}
 	switch filter.OrderBy {
 	case "rating":
@@ -252,6 +261,9 @@ func (r2 *ReviewRepository) Create(ctx context.Context, r *review.Review) error 
 		if err := gorm.G[ReviewEntity](tx).Create(ctx, &e); err != nil {
 			return err
 		}
+		if err := refreshReviewSearchVector(tx, e.ID); err != nil {
+			return err
+		}
 		return r2.updateCourseStats(tx, r.CourseID)
 	}); err != nil {
 		return err
@@ -266,6 +278,9 @@ func (r2 *ReviewRepository) Update(ctx context.Context, r *review.Review, rv rev
 	if err := r2.db.Transaction(func(tx *gorm.DB) error {
 		rr := newReviewRevisionEntity(rv)
 		if _, err := gorm.G[ReviewEntity](tx).Where("id = ?", e.ID).Updates(ctx, e); err != nil {
+			return err
+		}
+		if err := refreshReviewSearchVector(tx, e.ID); err != nil {
 			return err
 		}
 		if err := gorm.G[ReviewRevisionEntity](tx).Create(ctx, &rr); err != nil {

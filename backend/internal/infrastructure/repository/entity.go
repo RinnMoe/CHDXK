@@ -80,7 +80,7 @@ type CourseEntity struct {
 	RatingCount   int            `gorm:"column:rating_count"`
 	RatingAvg     float64        `gorm:"column:rating_avg"`
 	CreatedAt     time.Time      `gorm:"column:created_at"`
-	MainTeacher   *TeacherEntity `gorm:"foreignKey:MainTeacherID;references:ID"`
+	MainTeacher   *TeacherEntity `gorm:"foreignKey:main_teacher_id;references:id"`
 }
 
 func (CourseEntity) TableName() string {
@@ -97,9 +97,10 @@ type ReviewEntity struct {
 	Score        string        `gorm:"column:score"`
 	LikeCount    int           `gorm:"column:like_count"`
 	DislikeCount int           `gorm:"column:dislike_count"`
+	SearchVector string        `gorm:"column:search_vector;type:tsvector;index:,type:gin;<-:false"`
 	CreatedAt    time.Time     `gorm:"column:created_at"`
 	UpdatedAt    time.Time     `gorm:"column:updated_at"`
-	Course       *CourseEntity `gorm:"foreignKey:CourseID;references:ID"`
+	Course       *CourseEntity `gorm:"foreignKey:course_id;references:id"`
 }
 
 func (ReviewEntity) TableName() string {

@@ -156,6 +156,7 @@ CREATE TABLE IF NOT EXISTS reviews
     score         TEXT        NOT NULL,
     like_count    INTEGER     NOT NULL DEFAULT 0,
     dislike_count INTEGER     NOT NULL DEFAULT 0,
+    search_vector TSVECTOR    NOT NULL DEFAULT '',
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
@@ -169,6 +170,7 @@ CREATE TABLE IF NOT EXISTS reviews
 
 CREATE INDEX idx_reviews_course ON reviews (course_id);
 CREATE INDEX idx_reviews_user ON reviews (user_id);
+CREATE INDEX idx_reviews_search_vector ON reviews USING GIN (search_vector);
 
 CREATE TABLE IF NOT EXISTS review_revisions
 (

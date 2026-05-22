@@ -14,8 +14,8 @@ type PointRecordListFilter struct {
 }
 
 type PointQueryService struct {
-	query            point.Query
-	userRepo         auth.UserRepository
+	query           point.Query
+	userRepo        auth.UserRepository
 	transferService *point.TransferService
 }
 

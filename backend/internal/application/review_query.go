@@ -9,6 +9,7 @@ import (
 )
 
 type ReviewListFilter struct {
+	Q        string `form:"q"`
 	Semester string `form:"semester"`
 	Rating   int    `form:"rating"`
 	OrderBy  string `form:"order_by"`
@@ -34,6 +35,7 @@ func (s *ReviewQueryService) GetCourseReviewFilters(ctx context.Context, courseI
 func (s *ReviewQueryService) GetReviewsByCourse(ctx context.Context, courseID int, f ReviewListFilter) (*PaginatedResult[ReviewDTO], error) {
 	reviewFilter := review.ReviewFilter{
 		CourseID: courseID,
+		Q:        f.Q,
 		Semester: f.Semester,
 		Rating:   f.Rating,
 		OrderBy:  f.OrderBy,
@@ -64,6 +66,7 @@ func (s *ReviewQueryService) GetReviewsByUser(ctx context.Context, userID int, f
 	reviewFilter := review.ReviewFilter{
 		UserID:     userID,
 		WithCourse: true,
+		Q:          f.Q,
 		Semester:   f.Semester,
 		Rating:     f.Rating,
 		OrderBy:    f.OrderBy,
@@ -92,6 +95,7 @@ func (s *ReviewQueryService) GetReviewsByUser(ctx context.Context, userID int, f
 
 func (s *ReviewQueryService) GetLatestReviews(ctx context.Context, user *auth.User, f ReviewListFilter) (*PaginatedResult[ReviewDTO], error) {
 	reviewFilter := review.ReviewFilter{
+		Q:          f.Q,
 		Semester:   f.Semester,
 		Rating:     f.Rating,
 		OrderBy:    f.OrderBy,
@@ -145,6 +149,7 @@ func (s *ReviewQueryService) GetFollowedReviews(ctx context.Context, userID int,
 
 	reviewFilter := review.ReviewFilter{
 		CourseIDs:  followed,
+		Q:          f.Q,
 		Semester:   f.Semester,
 		Rating:     f.Rating,
 		OrderBy:    f.OrderBy,

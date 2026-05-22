@@ -302,6 +302,145 @@ func TestReviewRepository_FindBy(t *testing.T) {
 	})
 }
 
+func TestReviewRepository_SearchVector(t *testing.T) {
+	db := newTestDB(t)
+	repo := repository.NewReviewRepository(db)
+	ctx := context.Background()
+
+	cleanTables(t, db, "reviews", "review_revisions", "courses", "teachers", "users")
+
+	teacher := seedTeacher(t, db)
+	course := seedCourse(t, db, teacher.ID)
+	user := seedUser(t, db)
+
+	rows := []repository.ReviewEntity{
+		{CourseID: course.ID, Semester: "2024-2025-1", UserID: user.ID, Rating: 5, Content: "这门数据结构课非常好，讲解清晰", Score: "A", CreatedAt: time.Now(), UpdatedAt: time.Now()},
+		{CourseID: course.ID, Semester: "2024-2025-1", UserID: user.ID, Rating: 4, Content: "算法设计的内容很有深度", Score: "B+", CreatedAt: time.Now().Add(time.Hour), UpdatedAt: time.Now().Add(time.Hour)},
+		{CourseID: course.ID, Semester: "2024-2025-2", UserID: user.ID, Rating: 3, Content: "课程作业太多了", Score: "C", CreatedAt: time.Now().Add(2 * time.Hour), UpdatedAt: time.Now().Add(2 * time.Hour)},
+	}
+	for _, r := range rows {
+		if err := db.Create(&r).Error; err != nil {
+			t.Fatalf("seed review: %v", err)
+		}
+	}
+	if err := repository.RefreshReviewSearchVectors(db); err != nil {
+		t.Fatalf("RefreshReviewSearchVectors: %v", err)
+	}
+
+	t.Run("search by q content", func(t *testing.T) {
+		results, total, err := repo.FindBy(ctx, review.ReviewFilter{Q: "数据结构"})
+		if err != nil {
+			t.Fatalf("FindBy: %v", err)
+		}
+		if total != 1 {
+			t.Errorf("total: got %d, want 1", total)
+		}
+		if len(results) == 0 || results[0].Content != "这门数据结构课非常好，讲解清晰" {
+			t.Errorf("Content: got %v", results)
+		}
+	})
+
+	t.Run("search by q score", func(t *testing.T) {
+		results, total, err := repo.FindBy(ctx, review.ReviewFilter{Q: "B+"})
+		if err != nil {
+			t.Fatalf("FindBy: %v", err)
+		}
+		if total != 1 {
+			t.Errorf("total: got %d, want 1", total)
+		}
+		if len(results) == 0 || results[0].Score != "B+" {
+			t.Errorf("Score: got %v", results)
+		}
+	})
+
+	t.Run("search by q combined with filter", func(t *testing.T) {
+		results, total, err := repo.FindBy(ctx, review.ReviewFilter{Q: "课程", Semester: "2024-2025-2"})
+		if err != nil {
+			t.Fatalf("FindBy: %v", err)
+		}
+		if total != 1 {
+			t.Errorf("total: got %d, want 1", total)
+		}
+		if len(results) == 0 || results[0].Semester != "2024-2025-2" {
+			t.Errorf("Semester: got %v", results)
+		}
+	})
+
+	t.Run("search by q no match", func(t *testing.T) {
+		_, total, err := repo.FindBy(ctx, review.ReviewFilter{Q: "不存在的关键词"})
+		if err != nil {
+			t.Fatalf("FindBy: %v", err)
+		}
+		if total != 0 {
+			t.Errorf("total: got %d, want 0", total)
+		}
+	})
+
+	t.Run("search vector refreshed on create", func(t *testing.T) {
+		r := &review.Review{
+			CourseID:  course.ID,
+			Semester:  "2024-2025-1",
+			UserID:    user.ID,
+			Rating:    5,
+			Content:   "高等数学的进阶内容",
+			Score:     "A+",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		}
+		if err := repo.Create(ctx, r); err != nil {
+			t.Fatalf("Create: %v", err)
+		}
+
+		results, total, err := repo.FindBy(ctx, review.ReviewFilter{Q: "高等数学"})
+		if err != nil {
+			t.Fatalf("FindBy: %v", err)
+		}
+		if total != 1 {
+			t.Errorf("total after create: got %d, want 1", total)
+		}
+		if len(results) == 0 || results[0].ID != r.ID {
+			t.Errorf("ID: got %v, want %d", results, r.ID)
+		}
+	})
+
+	t.Run("search vector refreshed on update", func(t *testing.T) {
+		entity := seedReview(t, db, course.ID, user.ID)
+		if err := repository.RefreshReviewSearchVectors(db); err != nil {
+			t.Fatalf("RefreshReviewSearchVectors: %v", err)
+		}
+
+		r, err := repo.Get(ctx, entity.ID)
+		if err != nil {
+			t.Fatalf("Get: %v", err)
+		}
+		rv := r.MakeRevision()
+		r.Content = "线性代数的内容很有趣"
+		r.UpdatedAt = time.Now()
+
+		if err := repo.Update(ctx, r, rv); err != nil {
+			t.Fatalf("Update: %v", err)
+		}
+
+		results, total, err := repo.FindBy(ctx, review.ReviewFilter{Q: "线性代数"})
+		if err != nil {
+			t.Fatalf("FindBy: %v", err)
+		}
+		if total < 1 {
+			t.Errorf("total after update: got %d, want >= 1", total)
+		}
+		found := false
+		for _, v := range results {
+			if v.ID == r.ID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("updated review not found by search, results: %v", results)
+		}
+	})
+}
+
 func TestReviewRepository_CourseStatsAggregation(t *testing.T) {
 	db := newTestDB(t)
 	repo := repository.NewReviewRepository(db)
