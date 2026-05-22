@@ -109,8 +109,8 @@ export function CourseDetailPage() {
 
         <div className="space-y-6">
           <header className="space-y-3">
-            <div className="flex items-center gap-2 font-mono text-sm text-muted-foreground">
-              <span>{course.code}</span>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="font-mono">{course.code}</span>
               <span>·</span>
               <span>{course.department}</span>
             </div>

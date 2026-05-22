@@ -10,6 +10,17 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rolldownOptions: {
+      output: {
+        assetFileNames: (assetInfo) => {
+          if (/\.(woff2?|ttf|eot|otf)$/.test(assetInfo.name ?? ""))
+            return "assets/fonts/[name].[ext]"
+          return "assets/[name]-[hash][extname]"
+        },
+      },
+    },
+  },
   server: {
     proxy: {
       "/api": {
