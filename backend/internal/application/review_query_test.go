@@ -114,7 +114,7 @@ func TestReviewQueryService_GetFollowedReviews(t *testing.T) {
 	svc := application.NewReviewQueryService(reviewRepo, voteRepo, notifRepo)
 
 	t.Run("returns only followed course reviews", func(t *testing.T) {
-		result, err := svc.GetFollowedReviews(ctx, 100, application.ReviewListFilter{})
+		result, err := svc.GetFollowedReviews(ctx, 100, nil, application.ReviewListFilter{})
 		if err != nil {
 			t.Fatalf("GetFollowedReviews: %v", err)
 		}
@@ -124,7 +124,7 @@ func TestReviewQueryService_GetFollowedReviews(t *testing.T) {
 	})
 
 	t.Run("returns empty when no followed courses", func(t *testing.T) {
-		result, err := svc.GetFollowedReviews(ctx, 999, application.ReviewListFilter{})
+		result, err := svc.GetFollowedReviews(ctx, 999, nil, application.ReviewListFilter{})
 		if err != nil {
 			t.Fatalf("GetFollowedReviews: %v", err)
 		}

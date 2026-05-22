@@ -1,2 +1,6 @@
+minimumReleaseAge: 1440
+
 allowBuilds:
   msw: true
+
+nodeVersion: 24
