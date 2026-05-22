@@ -22,6 +22,8 @@ export interface CourseReviewFilters {
   ratings: FilterItem[]
 }
 
+export type CourseNotificationLevel = 0 | 1 | 2
+
 export interface CourseListItemDTO {
   id: number
   code: string
@@ -57,7 +59,7 @@ export interface CourseDetailDTO {
   rating: RatingInfoDTO
   same_code_courses: CourseListItemDTO[]
   same_teacher_courses: CourseListItemDTO[]
-  notification_level: number
+  notification_level: CourseNotificationLevel
 }
 
 export interface CourseListFilter {
@@ -122,7 +124,7 @@ export function getCourseReviewFilters(
 
 export function setNotificationLevel(
   courseID: number,
-  level: number
+  level: CourseNotificationLevel
 ): Promise<{ message: string }> {
   return apiClient(`${BASE}/course/${courseID}/notification`, {
     method: "POST",

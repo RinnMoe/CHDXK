@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CourseCard } from "@/components/course/course-card"
 import { CourseBadge, CourseBadges } from "@/components/course/course-badges"
+import { CourseNotificationControl } from "@/components/course/course-notification-control"
 import { RatingDistribution } from "@/components/course/rating-distribution"
 import { PageShell } from "@/components/layout/page-shell"
 import {
@@ -137,6 +138,11 @@ export function CourseDetailPage() {
               targetYears={course.target_years}
             />
           </header>
+
+          <CourseNotificationControl
+            courseID={course.id}
+            level={course.notification_level}
+          />
 
           {course.offered_courses.length > 0 && (
             <section className="space-y-3">

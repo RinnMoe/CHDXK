@@ -13,7 +13,9 @@ import {
   setNotificationLevel,
   listFollowedCourses,
   listIgnoredCourses,
+  type CourseDetailDTO,
   type CourseListFilter,
+  type CourseNotificationLevel,
 } from "@/api/course"
 import type { ReviewListFilter } from "@/api/review"
 
@@ -63,26 +65,54 @@ export function useCourseReviewFilters(courseID: number) {
 export function useSetNotificationLevel() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ courseID, level }: { courseID: number; level: number }) =>
-      setNotificationLevel(courseID, level),
+    mutationFn: ({
+      courseID,
+      level,
+    }: {
+      courseID: number
+      level: CourseNotificationLevel
+    }) => setNotificationLevel(courseID, level),
+    onMutate: async ({ courseID, level }) => {
+      await queryClient.cancelQueries({ queryKey: ["course", courseID] })
+      const previous = queryClient.getQueryData<CourseDetailDTO>([
+        "course",
+        courseID,
+      ])
+      queryClient.setQueryData<CourseDetailDTO>(["course", courseID], (course) =>
+        course ? { ...course, notification_level: level } : course
+      )
+      return { previous, courseID }
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["course", context.courseID], context.previous)
+      }
+    },
     onSuccess: (_, { courseID }) => {
       queryClient.invalidateQueries({ queryKey: ["course", courseID] })
+      queryClient.invalidateQueries({ queryKey: ["followed-courses"] })
+      queryClient.invalidateQueries({ queryKey: ["ignored-courses"] })
     },
   })
 }
 
-export function useFollowedCourses(filter: CourseListFilter = {}) {
+export function useFollowedCourses(
+  filter: CourseListFilter = {},
+  enabled = true
+) {
   return useQuery({
     queryKey: ["followed-courses", filter],
     queryFn: () => listFollowedCourses(filter),
+    enabled,
     placeholderData: keepPreviousData,
   })
 }
 
-export function useIgnoredCourses(filter: CourseListFilter = {}) {
+export function useIgnoredCourses(filter: CourseListFilter = {}, enabled = true) {
   return useQuery({
     queryKey: ["ignored-courses", filter],
     queryFn: () => listIgnoredCourses(filter),
+    enabled,
     placeholderData: keepPreviousData,
   })
 }

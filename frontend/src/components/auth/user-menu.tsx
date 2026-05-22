@@ -56,6 +56,9 @@ export function UserMenu() {
             <Link to={`/reviews/mine`}>我的评价</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
+            <Link to="/courses/mine">我的课程</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
             <Link to="/points">积分</Link>
           </DropdownMenuItem>
           {user.role === "admin" && (

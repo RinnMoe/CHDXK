@@ -14,6 +14,7 @@ import { LoginPage } from "@/pages/login-page"
 import { RegisterPage } from "@/pages/register-page"
 import { PasswordResetPage } from "@/pages/password-reset-page"
 import { UserPointsPage } from "@/pages/user-points-page"
+import { UserCoursesPage } from "@/pages/user-courses-page"
 import { SiteStatsPage } from "@/pages/admin/site-stats-page"
 
 export const router = createBrowserRouter([
@@ -27,6 +28,7 @@ export const router = createBrowserRouter([
       { path: "/reviews/latest", element: <LatestReviewsPage /> },
       { path: "/reviews/followed", element: <FollowedReviewsPage /> },
       { path: "/reviews/mine", element: <UserReviewsPage /> },
+      { path: "/courses/mine", element: <UserCoursesPage /> },
       { path: "/reviews/:reviewID", element: <ReviewDetailPage /> },
       { path: "/reviews/:reviewID/edit", element: <EditReviewPage /> },
       { path: "/teachers", element: <TeachersPage /> },

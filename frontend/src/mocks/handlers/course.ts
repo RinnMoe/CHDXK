@@ -6,9 +6,24 @@ import {
 } from "../fixtures/courses"
 import { mockReviews } from "../fixtures/reviews"
 import { randomDelay } from "../utils"
+import type { CourseNotificationLevel } from "@/api/course"
 import type { ReviewDTO } from "@/api/review"
 
 const filters = makeCourseFilters()
+const notificationLevels = new Map<number, CourseNotificationLevel>([
+  [1, 1],
+  [2, 1],
+  [3, 1],
+  [4, 1],
+  [5, 1],
+  [6, 2],
+  [7, 2],
+  [8, 2],
+])
+
+function getNotificationLevel(courseID: number): CourseNotificationLevel {
+  return notificationLevels.get(courseID) ?? 0
+}
 
 function paginate<T>(items: T[], page: number, pageSize: number) {
   const start = (page - 1) * pageSize
@@ -120,7 +135,7 @@ export const courseHandlers = [
   http.get("/api/course/followed", async ({ request }) => {
     await randomDelay()
     const url = new URL(request.url)
-    const list = mockCourses.slice(0, 5)
+    const list = mockCourses.filter((course) => getNotificationLevel(course.id) === 1)
     const page = Number(url.searchParams.get("page") ?? "1")
     const pageSize = Number(url.searchParams.get("page_size") ?? "20")
     return HttpResponse.json(paginate(list, page, pageSize))
@@ -129,7 +144,7 @@ export const courseHandlers = [
   http.get("/api/course/ignored", async ({ request }) => {
     await randomDelay()
     const url = new URL(request.url)
-    const list = mockCourses.slice(5, 8)
+    const list = mockCourses.filter((course) => getNotificationLevel(course.id) === 2)
     const page = Number(url.searchParams.get("page") ?? "1")
     const pageSize = Number(url.searchParams.get("page_size") ?? "20")
     return HttpResponse.json(paginate(list, page, pageSize))
@@ -142,7 +157,10 @@ export const courseHandlers = [
     if (!course) {
       return HttpResponse.json({ error: "course not found" }, { status: 404 })
     }
-    return HttpResponse.json(makeCourseDetail(course))
+    return HttpResponse.json({
+      ...makeCourseDetail(course),
+      notification_level: getNotificationLevel(id),
+    })
   }),
 
   http.get("/api/course/:courseID/review", async ({ params, request }) => {
@@ -165,9 +183,15 @@ export const courseHandlers = [
     return HttpResponse.json(makeReviewFilters(reviews))
   }),
 
-  http.post("/api/course/:courseID/notification", async ({ request }) => {
+  http.post("/api/course/:courseID/notification", async ({ params, request }) => {
     await randomDelay()
-    await request.json()
+    const id = Number(params.courseID)
+    const body = (await request.json()) as { level: CourseNotificationLevel }
+    if (![0, 1, 2].includes(body.level)) {
+      return HttpResponse.json({ error: "level must be 0, 1, or 2" }, { status: 400 })
+    }
+    if (body.level === 0) notificationLevels.delete(id)
+    else notificationLevels.set(id, body.level)
     return HttpResponse.json({ message: "ok" })
   }),
 ]
