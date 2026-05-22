@@ -107,6 +107,20 @@ func (ctrl *AuthController) Logout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "ok"})
 }
 
+func (ctrl *AuthController) Me(c *gin.Context) {
+	u := auth.GetUserFromCtx(c.Request.Context())
+	if u == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	c.JSON(http.StatusOK, &application.AuthUserDTO{
+		ID:       u.ID,
+		Username: u.Username,
+		Email:    u.Email,
+		Role:     u.Role,
+	})
+}
+
 func (ctrl *AuthController) SendResetCode(c *gin.Context) {
 	var cmd application.SendResetCodeCommand
 	if err := c.ShouldBindJSON(&cmd); err != nil {

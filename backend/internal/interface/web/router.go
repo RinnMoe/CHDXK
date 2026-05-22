@@ -35,6 +35,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		authGroup.POST("/register", authController.Register)
 		authGroup.POST("/login", authController.Login)
 		authGroup.POST("/logout", authController.Logout)
+		authGroup.GET("/me", authController.Me)
 			authGroup.POST("/password-reset/code", authController.SendResetCode)
 			authGroup.POST("/password-reset", authController.ResetPassword)
 	}
