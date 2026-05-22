@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useAuth } from "@/contexts/auth-context"
 import { useCreateTransfer, usePreviewTransfer, useUserPoints } from "@/hooks/use-point"
-import type { FeePayer } from "@/api/point"
+import type { FeePayer, PointTransferPreviewDTO } from "@/api/point"
 
 interface TransferFormProps {
   onSuccess?: () => void
@@ -20,19 +20,13 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
   const [recipient, setRecipient] = useState("")
   const [amount, setAmount] = useState("")
   const [feePayer, setFeePayer] = useState<FeePayer>("sender")
-  const [preview, setPreview] = useState<{
-    fee: number
-    sender_debit: number
-    recipient_credit: number
-    sender_remaining: number
-  } | null>(null)
+  const [preview, setPreview] = useState<PointTransferPreviewDTO | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const previewMutate = previewMutation.mutateAsync
   useEffect(() => {
     const num = Number(amount)
     if (!amount || !Number.isFinite(num) || num <= 0) {
-      setPreview(null)
       return
     }
     const handler = setTimeout(async () => {
@@ -42,12 +36,7 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
           amount: num,
           fee_payer: feePayer,
         })
-        setPreview({
-          fee: result.fee,
-          sender_debit: result.sender_debit,
-          recipient_credit: result.recipient_credit,
-          sender_remaining: result.sender_remaining,
-        })
+        setPreview(result)
       } catch (err) {
         setPreview(null)
         setError(err instanceof Error ? err.message : "预览失败")
@@ -67,6 +56,10 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
       setError("请输入有效金额")
       return
     }
+    if (amountExceedsBalance || insufficientBalance) {
+      setError("积分不足，不能发起转账")
+      return
+    }
     try {
       await transferMutation.mutateAsync({
         recipient_username: recipient,
@@ -84,7 +77,13 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
 
   const isLoading = previewMutation.isPending || transferMutation.isPending
   const currentBalance = pointsData?.total ?? 0
-  const insufficientBalance = preview != null && preview.sender_remaining < 0
+  const amountNumber = Number(amount)
+  const hasValidAmount = amount !== "" && Number.isFinite(amountNumber) && amountNumber > 0
+  const activePreview =
+    hasValidAmount && preview?.amount === amountNumber && preview.fee_payer === feePayer ? preview : null
+  const insufficientBalance = activePreview != null && activePreview.sender_remaining < 0
+  const amountExceedsBalance =
+    pointsData != null && amount !== "" && Number.isFinite(amountNumber) && amountNumber > currentBalance
 
   return (
     <div className="space-y-4">
@@ -109,6 +108,7 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           min={1}
+          aria-invalid={insufficientBalance || amountExceedsBalance}
         />
       </div>
       <div className="space-y-2">
@@ -129,7 +129,7 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
         </RadioGroup>
       </div>
 
-      {preview && (
+      {activePreview && (
         <div className="rounded-md border p-3 space-y-1 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">当前积分</span>
@@ -141,33 +141,33 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">手续费</span>
-            <span>-{preview.fee}</span>
+            <span>-{activePreview.fee}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">对方收入</span>
-            <span className="text-green-600">+{preview.recipient_credit}</span>
+            <span className="text-green-600">+{activePreview.recipient_credit}</span>
           </div>
           <div className="flex justify-between font-medium">
             <span>转账后剩余</span>
             <span className={insufficientBalance ? "text-destructive" : ""}>
-              {preview.sender_remaining}
+              {activePreview.sender_remaining}
             </span>
           </div>
           <p className="text-xs text-muted-foreground pt-1">* 实际结果以转账后为准</p>
         </div>
       )}
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
-
       {insufficientBalance && (
-        <p className="text-sm text-destructive">积分不足，转账后剩余 {preview!.sender_remaining}</p>
+        <p className="text-sm text-destructive">积分不足，转账后剩余 {activePreview!.sender_remaining}</p>
       )}
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
       <Button
         type="button"
         className="w-full"
         onClick={handleSubmit}
-        disabled={isLoading || !preview || !recipient || insufficientBalance}
+        disabled={isLoading || !activePreview || !recipient || insufficientBalance || amountExceedsBalance}
       >
         {transferMutation.isPending ? "转账中..." : "确认转账"}
       </Button>

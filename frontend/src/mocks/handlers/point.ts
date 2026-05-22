@@ -18,7 +18,10 @@ function calcFee(amount: number): number {
   return Math.max(Math.floor((amount * FEE_RATE_BPS) / 10000), MIN_FEE)
 }
 
-function calcPreview(cmd: CreatePointTransferCommand): PointTransferPreviewDTO | { error: string; status: number } {
+function calcPreview(
+  cmd: CreatePointTransferCommand,
+  senderBalance: number
+): PointTransferPreviewDTO | { error: string; status: number } {
   const amount = Number(cmd.amount)
   if (!Number.isFinite(amount) || amount <= 0) {
     return { error: "invalid amount", status: 400 }
@@ -34,6 +37,8 @@ function calcPreview(cmd: CreatePointTransferCommand): PointTransferPreviewDTO |
     fee_payer: feePayer,
     sender_debit: feePayer === "sender" ? amount + fee : amount,
     recipient_credit: feePayer === "recipient" ? amount - fee : amount,
+    sender_balance: senderBalance,
+    sender_remaining: senderBalance - (feePayer === "sender" ? amount + fee : amount),
   }
 }
 
@@ -72,7 +77,7 @@ export const pointHandlers = [
       return HttpResponse.json({ error: "unauthorized" }, { status: 401 })
     }
     const cmd = (await request.json()) as CreatePointTransferCommand
-    const preview = calcPreview(cmd)
+    const preview = calcPreview(cmd, getMockPointTotal(mockSession.userID))
     if ("status" in preview) {
       return HttpResponse.json({ error: preview.error }, { status: preview.status })
     }
@@ -95,11 +100,11 @@ export const pointHandlers = [
     if (recipient.id === sender.id) {
       return HttpResponse.json({ error: "cannot transfer to self" }, { status: 400 })
     }
-    const preview = calcPreview(cmd)
+    const senderBalance = getMockPointTotal(sender.id)
+    const preview = calcPreview(cmd, senderBalance)
     if ("status" in preview) {
       return HttpResponse.json({ error: preview.error }, { status: preview.status })
     }
-    const senderBalance = getMockPointTotal(sender.id)
     if (senderBalance < preview.sender_debit) {
       return HttpResponse.json({ error: "insufficient balance" }, { status: 409 })
     }
