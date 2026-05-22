@@ -16,6 +16,7 @@ type ReviewDTO struct {
 	ID        int                `json:"id"`
 	Course    *CourseListItemDTO `json:"course,omitempty"`
 	CourseID  int                `json:"course_id"`
+	Semester  string             `json:"semester"`
 	Score     string             `json:"score"`
 	Rating    int                `json:"rating"`
 	Content   string             `json:"content"`
@@ -28,6 +29,7 @@ func newReviewDTO(r *review.ReviewView) ReviewDTO {
 	dto := ReviewDTO{
 		ID:       r.ID,
 		CourseID: r.CourseID,
+		Semester: r.Semester,
 		Score:    r.Score,
 		Rating:   r.Rating,
 		Content:  r.Content,
