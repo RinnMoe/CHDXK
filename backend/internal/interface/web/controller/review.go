@@ -46,7 +46,7 @@ func (r *ReviewController) ListCourseReviews(c *gin.Context) {
 		f.OrderBy = "created_at"
 	}
 
-	result, err := r.query.GetReviewsByCourse(c.Request.Context(), courseID, f)
+	result, err := r.query.GetReviewsByCourse(c.Request.Context(), courseID, auth.GetUserFromCtx(c.Request.Context()), f)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -155,7 +155,7 @@ func (r *ReviewController) ListUserReviews(c *gin.Context) {
 		f.PageSize = 20
 	}
 
-	result, err := r.query.GetReviewsByUser(c.Request.Context(), userID, f)
+	result, err := r.query.GetReviewsByUser(c.Request.Context(), userID, auth.GetUserFromCtx(c.Request.Context()), f)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -210,7 +210,7 @@ func (r *ReviewController) ListFollowedReviews(c *gin.Context) {
 		f.OrderBy = "created_at"
 	}
 
-	result, err := r.query.GetFollowedReviews(c.Request.Context(), u.ID, f)
+	result, err := r.query.GetFollowedReviews(c.Request.Context(), u.ID, u, f)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

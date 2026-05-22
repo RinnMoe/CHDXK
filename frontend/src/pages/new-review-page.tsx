@@ -14,6 +14,7 @@ export function NewReviewPage() {
   const navigate = useNavigate()
   const { data: course } = useCourseDetail(id)
   const { mutateAsync, isPending } = useCreateReview()
+  const semesters = course?.offered_courses?.map((oc) => oc.semester) ?? []
 
   async function handleSubmit(cmd: CreateReviewCommand | UpdateReviewCommand) {
     await mutateAsync(cmd as CreateReviewCommand)
@@ -55,6 +56,7 @@ export function NewReviewPage() {
         <CardContent>
           <ReviewForm
             courseID={id}
+            semesters={semesters}
             onSubmit={handleSubmit}
             onCancel={() => navigate(`/courses/${id}`)}
             isSubmitting={isPending}

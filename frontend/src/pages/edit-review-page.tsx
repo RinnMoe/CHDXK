@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { PageShell } from "@/components/layout/page-shell"
 import { ReviewForm } from "@/components/review/review-form"
+import { useCourseDetail } from "@/hooks/use-course"
 import { useReview, useUpdateReview } from "@/hooks/use-review"
 import type { CreateReviewCommand, UpdateReviewCommand } from "@/api/review"
 
@@ -13,7 +14,9 @@ export function EditReviewPage() {
   const id = Number(reviewID)
   const navigate = useNavigate()
   const { data: review, isLoading } = useReview(id)
+  const { data: course } = useCourseDetail(review?.course_id ?? 0)
   const { mutateAsync, isPending } = useUpdateReview()
+  const semesters = course?.offered_courses?.map((oc) => oc.semester) ?? []
 
   async function handleSubmit(cmd: CreateReviewCommand | UpdateReviewCommand) {
     await mutateAsync({ reviewID: id, cmd: cmd as UpdateReviewCommand })
@@ -71,6 +74,7 @@ export function EditReviewPage() {
         <CardContent>
           <ReviewForm
             initialReview={review}
+            semesters={semesters}
             onSubmit={handleSubmit}
             onCancel={() => navigate(`/reviews/${id}`)}
             isSubmitting={isPending}

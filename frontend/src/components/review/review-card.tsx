@@ -1,8 +1,27 @@
 import { useEffect, useRef, useState } from "react"
-import { Link } from "react-router-dom"
-import { RiShareForwardLine } from "@remixicon/react"
+import { Link, useNavigate } from "react-router-dom"
+import { RiShareForwardLine, RiWrenchLine } from "@remixicon/react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { useAuth } from "@/contexts/auth-context"
+import { useDeleteReview } from "@/hooks/use-review"
 import { VoteButtons } from "./vote-buttons"
 import { RatingStars } from "./rating-stars"
 import type { ReviewDTO } from "@/api/review"
@@ -67,6 +86,9 @@ export function ReviewCard({
   showCourse = false,
   showVoteButtons = true,
 }: ReviewCardProps) {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const { mutateAsync: deleteReview } = useDeleteReview()
   const [copied, setCopied] = useState(false)
   const resetCopiedTimer = useRef<number | undefined>(undefined)
   const edited = isEdited(review)
@@ -74,6 +96,7 @@ export function ReviewCard({
   const tooltip = edited
     ? `创建于 ${formatDateTime(review.created_at)}`
     : undefined
+  const canManage = review.user_id != null && user != null && (user.id === review.user_id || user.role === "admin")
 
   useEffect(() => {
     return () => window.clearTimeout(resetCopiedTimer.current)
@@ -84,6 +107,10 @@ export function ReviewCard({
     setCopied(true)
     window.clearTimeout(resetCopiedTimer.current)
     resetCopiedTimer.current = window.setTimeout(() => setCopied(false), 1600)
+  }
+
+  async function handleDelete() {
+    await deleteReview(review.id)
   }
 
   return (
@@ -106,16 +133,7 @@ export function ReviewCard({
           </Link>
         )}
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <RatingStars value={review.rating} readOnly size="sm" />
-          {review.score && review.score !== "未公布" && (
-            <Badge variant="secondary">{review.score}</Badge>
-          )}
-          {review.semester && (
-            <Badge variant="outline" className="font-mono">
-              {review.semester}
-            </Badge>
-          )}
+        <div className="flex items-center gap-2">
           <Link
             to={`/reviews/${review.id}`}
             className="text-xs text-muted-foreground font-mono hover:text-foreground"
@@ -131,6 +149,18 @@ export function ReviewCard({
               <span className="ml-1 text-muted-foreground/70">(已修改)</span>
             )}
           </span>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <RatingStars value={review.rating} readOnly size="sm" />
+          {review.semester && (
+            <Badge variant="outline" className="font-mono">
+              {review.semester}
+            </Badge>
+          )}
+          {review.score && (
+            <Badge variant="secondary">{review.score}</Badge>
+          )}
         </div>
 
         <p className="text-sm whitespace-pre-wrap leading-relaxed">
@@ -149,18 +179,61 @@ export function ReviewCard({
             <span />
           )}
 
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={handleShare}
-            className="gap-1 text-muted-foreground"
-            aria-label="复制评价链接"
-            title="复制评价链接"
-          >
-            <RiShareForwardLine data-icon="inline-start" />
-            {copied && <span className="text-xs">已复制</span>}
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleShare}
+              className="gap-1 text-muted-foreground"
+              aria-label="复制评价链接"
+              title="复制评价链接"
+            >
+              <RiShareForwardLine data-icon="inline-start" />
+              {copied && <span className="text-xs">已复制</span>}
+            </Button>
+            {canManage && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="size-8 text-muted-foreground">
+                    <RiWrenchLine className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate(`/reviews/${review.id}/edit`)}>
+                    修改点评
+                  </DropdownMenuItem>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onSelect={(e) => e.preventDefault()}
+                      >
+                        删除点评
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>确认删除</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          删除后无法恢复，确定要删除这条点评吗？
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>取消</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          onClick={handleDelete}
+                        >
+                          删除
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         </div>
       </div>
     </article>

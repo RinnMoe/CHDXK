@@ -27,7 +27,7 @@ let reviewIDSeed = 1
 
 export function generateReviewsForCourse(courseID: number, n = 8): ReviewDTO[] {
   const course = mockCourses.find((c) => c.id === courseID)
-  return Array.from({ length: n }, () => {
+  return Array.from({ length: n }, (_, i) => {
     const created = new Date(Date.now() - randInt(1, 365) * 86400000)
     // ~30% chance the review was edited later
     const updated =
@@ -40,6 +40,7 @@ export function generateReviewsForCourse(courseID: number, n = 8): ReviewDTO[] {
       id: reviewIDSeed++,
       course_id: courseID,
       course,
+      user_id: i < 2 ? 1 : 0,
       semester: pick(SEMESTERS),
       score: pick(SCORES),
       rating: randInt(1, 5),

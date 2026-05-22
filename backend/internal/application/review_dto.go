@@ -16,6 +16,7 @@ type ReviewDTO struct {
 	ID        int                `json:"id"`
 	Course    *CourseListItemDTO `json:"course,omitempty"`
 	CourseID  int                `json:"course_id"`
+	UserID    int                `json:"user_id,omitempty"`
 	Semester  string             `json:"semester"`
 	Score     string             `json:"score"`
 	Rating    int                `json:"rating"`
@@ -25,7 +26,7 @@ type ReviewDTO struct {
 	UpdatedAt time.Time          `json:"updated_at"`
 }
 
-func newReviewDTO(r *review.ReviewView) ReviewDTO {
+func newReviewDTO(r *review.ReviewView, showUserID bool) ReviewDTO {
 	dto := ReviewDTO{
 		ID:       r.ID,
 		CourseID: r.CourseID,
@@ -39,6 +40,9 @@ func newReviewDTO(r *review.ReviewView) ReviewDTO {
 		},
 		CreatedAt: r.CreatedAt,
 		UpdatedAt: r.UpdatedAt,
+	}
+	if showUserID {
+		dto.UserID = r.UserID
 	}
 	if r.Course != nil {
 		item := newCourseListItemDTO(r.Course)

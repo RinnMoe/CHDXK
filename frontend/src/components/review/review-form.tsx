@@ -2,6 +2,13 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { RatingStars } from "./rating-stars"
 import type {
@@ -13,6 +20,7 @@ import type {
 interface ReviewFormProps {
   courseID?: number
   initialReview?: ReviewDTO
+  semesters?: string[]
   onSubmit: (cmd: CreateReviewCommand | UpdateReviewCommand) => Promise<void> | void
   onCancel?: () => void
   isSubmitting?: boolean
@@ -21,6 +29,7 @@ interface ReviewFormProps {
 export function ReviewForm({
   courseID,
   initialReview,
+  semesters,
   onSubmit,
   onCancel,
   isSubmitting,
@@ -35,6 +44,10 @@ export function ReviewForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    if (!semester) {
+      setError("请选择学期")
+      return
+    }
     if (rating < 1 || rating > 5) {
       setError("请选择评分（1-5 星）")
       return
@@ -77,13 +90,19 @@ export function ReviewForm({
 
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="semester">学期（可选）</Label>
-          <Input
-            id="semester"
-            placeholder="如 2025-2026-1"
-            value={semester}
-            onChange={(e) => setSemester(e.target.value)}
-          />
+          <Label>学期</Label>
+          <Select value={semester} onValueChange={setSemester}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="选择学期" />
+            </SelectTrigger>
+            <SelectContent>
+              {semesters?.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-2">
           <Label htmlFor="score">分数（可选）</Label>

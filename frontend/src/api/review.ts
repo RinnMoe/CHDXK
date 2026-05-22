@@ -20,6 +20,7 @@ export interface ReviewDTO {
   id: number
   course?: CourseListItemDTO
   course_id: number
+  user_id?: number
   semester?: string
   score: string
   rating: number

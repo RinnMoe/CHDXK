@@ -32,7 +32,16 @@ func (s *ReviewQueryService) GetCourseReviewFilters(ctx context.Context, courseI
 	return s.repo.GetCourseFilters(ctx, courseID)
 }
 
-func (s *ReviewQueryService) GetReviewsByCourse(ctx context.Context, courseID int, f ReviewListFilter) (*PaginatedResult[ReviewDTO], error) {
+func (s *ReviewQueryService) buildDTOs(reviews []review.ReviewView, u *auth.User) []ReviewDTO {
+	items := make([]ReviewDTO, len(reviews))
+	for i, r := range reviews {
+		g := review.NewViewGuardian(u, &reviews[i])
+		items[i] = newReviewDTO(&r, g.CanViewPrivate())
+	}
+	return items
+}
+
+func (s *ReviewQueryService) GetReviewsByCourse(ctx context.Context, courseID int, u *auth.User, f ReviewListFilter) (*PaginatedResult[ReviewDTO], error) {
 	reviewFilter := review.ReviewFilter{
 		CourseID: courseID,
 		Q:        f.Q,
@@ -49,20 +58,15 @@ func (s *ReviewQueryService) GetReviewsByCourse(ctx context.Context, courseID in
 		return nil, err
 	}
 
-	items := make([]ReviewDTO, len(reviews))
-	for i, r := range reviews {
-		items[i] = newReviewDTO(&r)
-	}
-
 	return &PaginatedResult[ReviewDTO]{
-		Items:    items,
+		Items:    s.buildDTOs(reviews, u),
 		Total:    total,
 		Page:     f.Page,
 		PageSize: f.PageSize,
 	}, nil
 }
 
-func (s *ReviewQueryService) GetReviewsByUser(ctx context.Context, userID int, f ReviewListFilter) (*PaginatedResult[ReviewDTO], error) {
+func (s *ReviewQueryService) GetReviewsByUser(ctx context.Context, userID int, u *auth.User, f ReviewListFilter) (*PaginatedResult[ReviewDTO], error) {
 	reviewFilter := review.ReviewFilter{
 		UserID:     userID,
 		WithCourse: true,
@@ -80,13 +84,8 @@ func (s *ReviewQueryService) GetReviewsByUser(ctx context.Context, userID int, f
 		return nil, err
 	}
 
-	items := make([]ReviewDTO, len(reviews))
-	for i, r := range reviews {
-		items[i] = newReviewDTO(&r)
-	}
-
 	return &PaginatedResult[ReviewDTO]{
-		Items:    items,
+		Items:    s.buildDTOs(reviews, u),
 		Total:    total,
 		Page:     f.Page,
 		PageSize: f.PageSize,
@@ -120,20 +119,15 @@ func (s *ReviewQueryService) GetLatestReviews(ctx context.Context, user *auth.Us
 		return nil, err
 	}
 
-	items := make([]ReviewDTO, len(reviews))
-	for i, r := range reviews {
-		items[i] = newReviewDTO(&r)
-	}
-
 	return &PaginatedResult[ReviewDTO]{
-		Items:    items,
+		Items:    s.buildDTOs(reviews, user),
 		Total:    total,
 		Page:     f.Page,
 		PageSize: f.PageSize,
 	}, nil
 }
 
-func (s *ReviewQueryService) GetFollowedReviews(ctx context.Context, userID int, f ReviewListFilter) (*PaginatedResult[ReviewDTO], error) {
+func (s *ReviewQueryService) GetFollowedReviews(ctx context.Context, userID int, u *auth.User, f ReviewListFilter) (*PaginatedResult[ReviewDTO], error) {
 	followed, err := s.notificationRepo.GetCoursesByLevel(ctx, userID, course.NotificationLevelFollow)
 	if err != nil {
 		return nil, err
@@ -164,13 +158,8 @@ func (s *ReviewQueryService) GetFollowedReviews(ctx context.Context, userID int,
 		return nil, err
 	}
 
-	items := make([]ReviewDTO, len(reviews))
-	for i, r := range reviews {
-		items[i] = newReviewDTO(&r)
-	}
-
 	return &PaginatedResult[ReviewDTO]{
-		Items:    items,
+		Items:    s.buildDTOs(reviews, u),
 		Total:    total,
 		Page:     f.Page,
 		PageSize: f.PageSize,
@@ -185,7 +174,8 @@ func (s *ReviewQueryService) GetReviewByID(ctx context.Context, u *auth.User, re
 	if reviewView == nil {
 		return nil, review.ErrReviewNotFound
 	}
-	view := newReviewDTO(reviewView)
+	g := review.NewViewGuardian(u, reviewView)
+	view := newReviewDTO(reviewView, g.CanViewPrivate())
 	if u != nil {
 		vote, err := s.voteRepo.FindByReviewAndUser(ctx, reviewID, u.ID)
 		if err == nil && vote != nil {
