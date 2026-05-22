@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { getYesterdayStats, listDailyStats, type SiteDailyStatListFilter } from "@/api/site-stats"
 
 export function useYesterdayStats() {
@@ -13,5 +13,6 @@ export function useDailyStats(filter: SiteDailyStatListFilter = {}) {
   return useQuery({
     queryKey: ["site-stats", "daily", filter],
     queryFn: () => listDailyStats(filter),
+    placeholderData: keepPreviousData,
   })
 }

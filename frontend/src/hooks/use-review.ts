@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 import {
   createReview,
   deleteReview,
@@ -18,6 +23,7 @@ export function useLatestReviews(filter: ReviewListFilter = {}) {
   return useQuery({
     queryKey: ["reviews", "latest", filter],
     queryFn: () => listLatestReviews(filter),
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -25,6 +31,7 @@ export function useFollowedReviews(filter: ReviewListFilter = {}) {
   return useQuery({
     queryKey: ["reviews", "followed", filter],
     queryFn: () => listFollowedReviews(filter),
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -33,6 +40,7 @@ export function useUserReviews(userID: number, filter: ReviewListFilter = {}) {
     queryKey: ["reviews", "user", userID, filter],
     queryFn: () => listUserReviews(userID, filter),
     enabled: !!userID,
+    placeholderData: keepPreviousData,
   })
 }
 

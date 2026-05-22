@@ -1,5 +1,6 @@
 import { http, HttpResponse } from "msw"
 import { mockReviews, findReview } from "../fixtures/reviews"
+import { randomDelay } from "../utils"
 import type { ReviewDTO } from "@/api/review"
 
 function paginate<T>(items: T[], page: number, pageSize: number) {
@@ -39,7 +40,8 @@ function applyReviewFilter(url: URL, list: ReviewDTO[]): ReviewDTO[] {
 }
 
 export const reviewHandlers = [
-  http.get("/api/review/latest", ({ request }) => {
+  http.get("/api/review/latest", async ({ request }) => {
+    await randomDelay()
     const url = new URL(request.url)
     const list = applyReviewFilter(url, mockReviews)
     const page = Number(url.searchParams.get("page") ?? "1")
@@ -47,7 +49,8 @@ export const reviewHandlers = [
     return HttpResponse.json(paginate(list, page, pageSize))
   }),
 
-  http.get("/api/review/followed", ({ request }) => {
+  http.get("/api/review/followed", async ({ request }) => {
+    await randomDelay()
     const url = new URL(request.url)
     const list = applyReviewFilter(url, mockReviews.slice(0, 12))
     const page = Number(url.searchParams.get("page") ?? "1")
@@ -55,7 +58,8 @@ export const reviewHandlers = [
     return HttpResponse.json(paginate(list, page, pageSize))
   }),
 
-  http.get("/api/review/:reviewID", ({ params }) => {
+  http.get("/api/review/:reviewID", async ({ params }) => {
+    await randomDelay()
     const id = Number(params.reviewID)
     const review = findReview(id)
     if (!review) {
@@ -65,20 +69,24 @@ export const reviewHandlers = [
   }),
 
   http.post("/api/review/", async ({ request }) => {
+    await randomDelay()
     await request.json()
     return HttpResponse.json({ message: "ok" }, { status: 201 })
   }),
 
   http.put("/api/review/:reviewID", async ({ request }) => {
+    await randomDelay()
     await request.json()
     return HttpResponse.json({ message: "ok" })
   }),
 
-  http.delete("/api/review/:reviewID", () => {
+  http.delete("/api/review/:reviewID", async () => {
+    await randomDelay()
     return HttpResponse.json({ message: "ok" })
   }),
 
   http.post("/api/review/:reviewID/vote", async ({ request, params }) => {
+    await randomDelay()
     const id = Number(params.reviewID)
     const review = findReview(id)
     const body = (await request.json()) as { vote_type: number }
@@ -88,7 +96,8 @@ export const reviewHandlers = [
     return HttpResponse.json({ message: "ok" })
   }),
 
-  http.get("/api/user/:userID/reviews", ({ params, request }) => {
+  http.get("/api/user/:userID/reviews", async ({ params, request }) => {
+    await randomDelay()
     const userID = Number(params.userID)
     const url = new URL(request.url)
     // mock: first 8 reviews belong to userID 1

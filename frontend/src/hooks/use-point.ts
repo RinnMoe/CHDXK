@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 import {
   createTransfer,
   getUserPoints,
@@ -13,6 +18,7 @@ export function useUserPoints(userID: number, filter: PointRecordListFilter = {}
     queryKey: ["points", userID, filter],
     queryFn: () => getUserPoints(userID, filter),
     enabled: !!userID,
+    placeholderData: keepPreviousData,
   })
 }
 

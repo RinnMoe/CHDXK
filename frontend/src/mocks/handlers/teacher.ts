@@ -4,6 +4,7 @@ import {
   makeTeacherFilters,
 } from "../fixtures/teachers"
 import { mockCourses } from "../fixtures/courses"
+import { randomDelay } from "../utils"
 
 function paginate<T>(items: T[], page: number, pageSize: number) {
   const start = (page - 1) * pageSize
@@ -16,11 +17,13 @@ function paginate<T>(items: T[], page: number, pageSize: number) {
 }
 
 export const teacherHandlers = [
-  http.get("/api/teacher/filters", () => {
+  http.get("/api/teacher/filters", async () => {
+    await randomDelay()
     return HttpResponse.json(makeTeacherFilters())
   }),
 
-  http.get("/api/teacher/", ({ request }) => {
+  http.get("/api/teacher/", async ({ request }) => {
+    await randomDelay()
     const url = new URL(request.url)
     const department = url.searchParams.get("department") ?? ""
     const title = url.searchParams.get("title") ?? ""
@@ -36,7 +39,8 @@ export const teacherHandlers = [
     return HttpResponse.json(paginate(list, page, pageSize))
   }),
 
-  http.get("/api/teacher/:teacherID/courses", ({ params, request }) => {
+  http.get("/api/teacher/:teacherID/courses", async ({ params, request }) => {
+    await randomDelay()
     const teacherID = Number(params.teacherID)
     const url = new URL(request.url)
     const page = Number(url.searchParams.get("page") ?? "1")

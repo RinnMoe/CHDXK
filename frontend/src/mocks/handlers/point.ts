@@ -10,6 +10,7 @@ import {
   getMockPointTotal,
   pushMockPointRecord,
 } from "../fixtures/points"
+import { randomDelay } from "../utils"
 
 const FEE_RATE_BPS = 200
 const MIN_FEE = 1
@@ -43,7 +44,8 @@ function calcPreview(
 }
 
 export const pointHandlers = [
-  http.get("/api/user/:userID/points", ({ params, request }) => {
+  http.get("/api/user/:userID/points", async ({ params, request }) => {
+    await randomDelay()
     if (!mockSession.userID) {
       return HttpResponse.json({ error: "unauthorized" }, { status: 401 })
     }
@@ -73,6 +75,7 @@ export const pointHandlers = [
   }),
 
   http.post("/api/point/transfers/preview", async ({ request }) => {
+    await randomDelay()
     if (!mockSession.userID) {
       return HttpResponse.json({ error: "unauthorized" }, { status: 401 })
     }
@@ -85,6 +88,7 @@ export const pointHandlers = [
   }),
 
   http.post("/api/point/transfers", async ({ request }) => {
+    await randomDelay()
     if (!mockSession.userID) {
       return HttpResponse.json({ error: "unauthorized" }, { status: 401 })
     }

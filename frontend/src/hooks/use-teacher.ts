@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import {
   getTeacherFilters,
   listTeachers,
@@ -17,6 +17,7 @@ export function useTeachers(filter: TeacherListFilter = {}) {
   return useQuery({
     queryKey: ["teachers", filter],
     queryFn: () => listTeachers(filter),
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -28,5 +29,6 @@ export function useTeacherCourses(
     queryKey: ["teacher-courses", teacherID, filter],
     queryFn: () => listTeacherCourses(teacherID, filter),
     enabled: !!teacherID,
+    placeholderData: keepPreviousData,
   })
 }

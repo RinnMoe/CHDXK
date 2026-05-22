@@ -10,9 +10,11 @@ import {
   setMockUserPassword,
   toAuthUserDTO,
 } from "../fixtures/auth"
+import { randomDelay } from "../utils"
 
 export const authHandlers = [
   http.post("/api/auth/register/code", async ({ request }) => {
+    await randomDelay()
     const body = (await request.json()) as { email: string }
     if (!body.email) {
       return HttpResponse.json({ error: "email is required" }, { status: 400 })
@@ -29,6 +31,7 @@ export const authHandlers = [
   }),
 
   http.post("/api/auth/register", async ({ request }) => {
+    await randomDelay()
     const body = (await request.json()) as { email: string; code: string; password: string }
     if (!body.email || !body.code || !body.password) {
       return HttpResponse.json({ error: "missing required fields" }, { status: 400 })
@@ -42,6 +45,7 @@ export const authHandlers = [
   }),
 
   http.post("/api/auth/login", async ({ request }) => {
+    await randomDelay()
     const body = (await request.json()) as { email: string; password: string }
     if (!body.email || !body.password) {
       return HttpResponse.json({ error: "missing required fields" }, { status: 400 })
@@ -54,12 +58,14 @@ export const authHandlers = [
     return HttpResponse.json(toAuthUserDTO(user))
   }),
 
-  http.post("/api/auth/logout", () => {
+  http.post("/api/auth/logout", async () => {
+    await randomDelay()
     setMockSessionUserID(null)
     return HttpResponse.json({ message: "ok" })
   }),
 
-  http.get("/api/auth/me", () => {
+  http.get("/api/auth/me", async () => {
+    await randomDelay()
     if (!mockSession.userID) {
       return HttpResponse.json({ error: "unauthorized" }, { status: 401 })
     }
@@ -72,6 +78,7 @@ export const authHandlers = [
   }),
 
   http.post("/api/auth/password-reset/code", async ({ request }) => {
+    await randomDelay()
     const body = (await request.json()) as { email: string }
     if (!body.email) {
       return HttpResponse.json({ error: "email is required" }, { status: 400 })
@@ -84,6 +91,7 @@ export const authHandlers = [
   }),
 
   http.post("/api/auth/password-reset", async ({ request }) => {
+    await randomDelay()
     const body = (await request.json()) as { email: string; code: string; new_password: string }
     if (!body.email || !body.code || !body.new_password) {
       return HttpResponse.json({ error: "missing required fields" }, { status: 400 })

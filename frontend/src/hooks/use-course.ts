@@ -1,4 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 import {
   listCourses,
   getCourseFilters,
@@ -23,6 +28,7 @@ export function useCourses(filter: CourseListFilter = {}) {
   return useQuery({
     queryKey: ["courses", filter],
     queryFn: () => listCourses(filter),
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -42,6 +48,7 @@ export function useCourseReviews(
     queryKey: ["course-reviews", courseID, filter],
     queryFn: () => listCourseReviews(courseID, filter),
     enabled: !!courseID,
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -68,6 +75,7 @@ export function useFollowedCourses(filter: CourseListFilter = {}) {
   return useQuery({
     queryKey: ["followed-courses", filter],
     queryFn: () => listFollowedCourses(filter),
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -75,5 +83,6 @@ export function useIgnoredCourses(filter: CourseListFilter = {}) {
   return useQuery({
     queryKey: ["ignored-courses", filter],
     queryFn: () => listIgnoredCourses(filter),
+    placeholderData: keepPreviousData,
   })
 }

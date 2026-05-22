@@ -5,6 +5,7 @@ import {
   makeCourseFilters,
 } from "../fixtures/courses"
 import { mockReviews } from "../fixtures/reviews"
+import { randomDelay } from "../utils"
 import type { ReviewDTO } from "@/api/review"
 
 const filters = makeCourseFilters()
@@ -102,9 +103,13 @@ function makeReviewFilters(list: ReviewDTO[]) {
 }
 
 export const courseHandlers = [
-  http.get("/api/course/filters", () => HttpResponse.json(filters)),
+  http.get("/api/course/filters", async () => {
+    await randomDelay()
+    return HttpResponse.json(filters)
+  }),
 
-  http.get("/api/course/", ({ request }) => {
+  http.get("/api/course/", async ({ request }) => {
+    await randomDelay()
     const url = new URL(request.url)
     const list = applyCourseFilter(url)
     const page = Number(url.searchParams.get("page") ?? "1")
@@ -112,7 +117,8 @@ export const courseHandlers = [
     return HttpResponse.json(paginate(list, page, pageSize))
   }),
 
-  http.get("/api/course/followed", ({ request }) => {
+  http.get("/api/course/followed", async ({ request }) => {
+    await randomDelay()
     const url = new URL(request.url)
     const list = mockCourses.slice(0, 5)
     const page = Number(url.searchParams.get("page") ?? "1")
@@ -120,7 +126,8 @@ export const courseHandlers = [
     return HttpResponse.json(paginate(list, page, pageSize))
   }),
 
-  http.get("/api/course/ignored", ({ request }) => {
+  http.get("/api/course/ignored", async ({ request }) => {
+    await randomDelay()
     const url = new URL(request.url)
     const list = mockCourses.slice(5, 8)
     const page = Number(url.searchParams.get("page") ?? "1")
@@ -128,7 +135,8 @@ export const courseHandlers = [
     return HttpResponse.json(paginate(list, page, pageSize))
   }),
 
-  http.get("/api/course/:courseID", ({ params }) => {
+  http.get("/api/course/:courseID", async ({ params }) => {
+    await randomDelay()
     const id = Number(params.courseID)
     const course = mockCourses.find((c) => c.id === id)
     if (!course) {
@@ -137,7 +145,8 @@ export const courseHandlers = [
     return HttpResponse.json(makeCourseDetail(course))
   }),
 
-  http.get("/api/course/:courseID/review", ({ params, request }) => {
+  http.get("/api/course/:courseID/review", async ({ params, request }) => {
+    await randomDelay()
     const id = Number(params.courseID)
     const url = new URL(request.url)
     const page = Number(url.searchParams.get("page") ?? "1")
@@ -149,13 +158,15 @@ export const courseHandlers = [
     return HttpResponse.json(paginate(reviews, page, pageSize))
   }),
 
-  http.get("/api/course/:courseID/review/filters", ({ params }) => {
+  http.get("/api/course/:courseID/review/filters", async ({ params }) => {
+    await randomDelay()
     const id = Number(params.courseID)
     const reviews = mockReviews.filter((r) => r.course_id === id)
     return HttpResponse.json(makeReviewFilters(reviews))
   }),
 
   http.post("/api/course/:courseID/notification", async ({ request }) => {
+    await randomDelay()
     await request.json()
     return HttpResponse.json({ message: "ok" })
   }),

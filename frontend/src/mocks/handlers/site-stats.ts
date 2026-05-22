@@ -1,6 +1,7 @@
 import { http, HttpResponse } from "msw"
 import { findUserByID, mockSession } from "../fixtures/auth"
 import { getMockYesterdayStats, mockDailyStats } from "../fixtures/site-stats"
+import { randomDelay } from "../utils"
 
 function requireAdmin() {
   if (!mockSession.userID) {
@@ -14,13 +15,15 @@ function requireAdmin() {
 }
 
 export const siteStatsHandlers = [
-  http.get("/api/site-stats/daily/yesterday", () => {
+  http.get("/api/site-stats/daily/yesterday", async () => {
+    await randomDelay()
     const guard = requireAdmin()
     if (guard) return guard
     return HttpResponse.json(getMockYesterdayStats())
   }),
 
-  http.get("/api/site-stats/daily", ({ request }) => {
+  http.get("/api/site-stats/daily", async ({ request }) => {
+    await randomDelay()
     const guard = requireAdmin()
     if (guard) return guard
 
