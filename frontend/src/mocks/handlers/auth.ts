@@ -6,6 +6,8 @@ import {
   findUserByID,
   mockSession,
   setMockCode,
+  setMockSessionUserID,
+  setMockUserPassword,
   toAuthUserDTO,
 } from "../fixtures/auth"
 
@@ -35,7 +37,7 @@ export const authHandlers = [
       return HttpResponse.json({ error: "invalid verification code" }, { status: 400 })
     }
     const user = addUser(body.email, body.password)
-    mockSession.userID = user.id
+    setMockSessionUserID(user.id)
     return HttpResponse.json(toAuthUserDTO(user), { status: 201 })
   }),
 
@@ -48,12 +50,12 @@ export const authHandlers = [
     if (!user || user.password !== body.password) {
       return HttpResponse.json({ error: "invalid credentials" }, { status: 401 })
     }
-    mockSession.userID = user.id
+    setMockSessionUserID(user.id)
     return HttpResponse.json(toAuthUserDTO(user))
   }),
 
   http.post("/api/auth/logout", () => {
-    mockSession.userID = null
+    setMockSessionUserID(null)
     return HttpResponse.json({ message: "ok" })
   }),
 
@@ -63,7 +65,7 @@ export const authHandlers = [
     }
     const user = findUserByID(mockSession.userID)
     if (!user) {
-      mockSession.userID = null
+      setMockSessionUserID(null)
       return HttpResponse.json({ error: "unauthorized" }, { status: 401 })
     }
     return HttpResponse.json(toAuthUserDTO(user))
@@ -93,7 +95,7 @@ export const authHandlers = [
     if (!user) {
       return HttpResponse.json({ error: "user not found" }, { status: 404 })
     }
-    user.password = body.new_password
+    setMockUserPassword(user, body.new_password)
     return HttpResponse.json({ message: "ok" })
   }),
 ]

@@ -25,16 +25,84 @@ const initialUsers: MockUser[] = [
   },
 ]
 
-export const mockUsers: MockUser[] = [...initialUsers]
+interface MockAuthState {
+  users: MockUser[]
+  session: { userID: number | null }
+  codes: Map<string, { code: string; sentAt: number }>
+}
 
-export const mockSession: { userID: number | null } = { userID: null }
+interface PersistedMockAuthState {
+  version: 1
+  users: MockUser[]
+  session: { userID: number | null }
+  codes: [string, { code: string; sentAt: number }][]
+}
 
-export const mockCodes = new Map<string, { code: string; sentAt: number }>()
+const MOCK_AUTH_STORAGE_KEY = "jcourse:mock-auth-state"
+
+function createMockAuthState(): MockAuthState {
+  return {
+    users: [...initialUsers],
+    session: { userID: null },
+    codes: new Map<string, { code: string; sentAt: number }>(),
+  }
+}
+
+function readStoredMockAuthState(): MockAuthState | null {
+  if (typeof window === "undefined") return null
+
+  const raw = window.localStorage.getItem(MOCK_AUTH_STORAGE_KEY)
+  if (!raw) return null
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<PersistedMockAuthState>
+    if (parsed.version !== 1 || !Array.isArray(parsed.users) || !parsed.session) {
+      return null
+    }
+
+    return {
+      users: parsed.users,
+      session: { userID: parsed.session.userID ?? null },
+      codes: new Map(parsed.codes ?? []),
+    }
+  } catch {
+    window.localStorage.removeItem(MOCK_AUTH_STORAGE_KEY)
+    return null
+  }
+}
+
+function persistMockAuthState() {
+  if (typeof window === "undefined") return
+
+  const persisted: PersistedMockAuthState = {
+    version: 1,
+    users: mockAuthState.users,
+    session: mockAuthState.session,
+    codes: Array.from(mockAuthState.codes.entries()),
+  }
+  window.localStorage.setItem(MOCK_AUTH_STORAGE_KEY, JSON.stringify(persisted))
+}
+
+const mockAuthState: MockAuthState =
+  import.meta.hot?.data.mockAuthState ?? readStoredMockAuthState() ?? createMockAuthState()
+
+if (import.meta.hot) {
+  import.meta.hot.dispose((data) => {
+    data.mockAuthState = mockAuthState
+  })
+}
+
+export const mockUsers = mockAuthState.users
+
+export const mockSession = mockAuthState.session
+
+export const mockCodes = mockAuthState.codes
 
 const MOCK_CODE = "123456"
 
 export function setMockCode(email: string) {
   mockCodes.set(email, { code: MOCK_CODE, sentAt: Date.now() })
+  persistMockAuthState()
   return MOCK_CODE
 }
 
@@ -43,6 +111,7 @@ export function consumeMockCode(email: string, code: string): boolean {
   if (!entry) return false
   if (entry.code !== code) return false
   mockCodes.delete(email)
+  persistMockAuthState()
   return true
 }
 
@@ -59,7 +128,18 @@ export function addUser(email: string, password: string): MockUser {
   const username = email.split("@")[0]
   const user: MockUser = { id, username, email, password, role: "user" }
   mockUsers.push(user)
+  persistMockAuthState()
   return user
+}
+
+export function setMockSessionUserID(userID: number | null) {
+  mockSession.userID = userID
+  persistMockAuthState()
+}
+
+export function setMockUserPassword(user: MockUser, password: string) {
+  user.password = password
+  persistMockAuthState()
 }
 
 export function toAuthUserDTO(u: MockUser): AuthUserDTO {
