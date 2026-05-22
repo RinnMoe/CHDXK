@@ -13,6 +13,8 @@ function nowISO(): string {
 export function makeMockDailyStats(days: number = 30): SiteDailyStatDTO[] {
   return Array.from({ length: days }, (_, i) => ({
     stat_date: daysAgo(i),
+    total_user_count: 500 + Math.floor(Math.random() * 50),
+    total_review_count: 300 + Math.floor(Math.random() * 30),
     active_user_count: Math.floor(80 + Math.random() * 40),
     new_user_count: Math.floor(3 + Math.random() * 5),
     new_review_count: Math.floor(2 + Math.random() * 8),

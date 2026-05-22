@@ -17,10 +17,11 @@ func NewSiteStatsController(query *application.SiteStatsQueryService) *SiteStats
 	return &SiteStatsController{query: query}
 }
 
-func (ctrl *SiteStatsController) GetYesterday(c *gin.Context) {
-	result, err := ctrl.query.GetYesterday(c.Request.Context())
+func (ctrl *SiteStatsController) GetByDate(c *gin.Context) {
+	dateStr := c.Param("date")
+	result, err := ctrl.query.GetByDateString(c.Request.Context(), dateStr)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	if result == nil {

@@ -27,15 +27,6 @@ func NewSiteStatsCommandService(
 	return &SiteStatsCommandService{daily: stat.NewDailyStatService(collector, repo, mustStatsLocation())}
 }
 
-func (s *SiteStatsCommandService) CollectYesterday(ctx context.Context) (*SiteDailyStatDTO, error) {
-	daily, err := s.daily.CollectYesterday(ctx)
-	if err != nil {
-		return nil, err
-	}
-	dto := newSiteDailyStatDTO(daily)
-	return &dto, nil
-}
-
 func (s *SiteStatsCommandService) CollectDailyByDateString(ctx context.Context, statDate string) (*SiteDailyStatDTO, error) {
 	daily, err := s.daily.CollectDailyByDateString(ctx, statDate)
 	if err != nil {
@@ -63,9 +54,12 @@ func NewSiteStatsQueryService(query stat.DailyStatQuery) *SiteStatsQueryService 
 	return &SiteStatsQueryService{query: query, calendar: stat.NewCalendar(mustStatsLocation())}
 }
 
-func (s *SiteStatsQueryService) GetYesterday(ctx context.Context) (*SiteDailyStatDTO, error) {
-	yesterday := s.calendar.Yesterday()
-	stat, err := s.query.GetByDate(ctx, yesterday)
+func (s *SiteStatsQueryService) GetByDateString(ctx context.Context, dateStr string) (*SiteDailyStatDTO, error) {
+	date, err := s.calendar.ParseDate(dateStr)
+	if err != nil {
+		return nil, err
+	}
+	stat, err := s.query.GetByDate(ctx, date)
 	if err != nil {
 		return nil, err
 	}

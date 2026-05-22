@@ -5,6 +5,8 @@ const BASE = "/api"
 
 export interface SiteDailyStatDTO {
   stat_date: string
+  total_user_count: number
+  total_review_count: number
   active_user_count: number
   new_user_count: number
   new_review_count: number
@@ -34,8 +36,8 @@ function buildQuery(filter: Record<string, unknown>): string {
   return q ? `?${q}` : ""
 }
 
-export function getYesterdayStats(): Promise<SiteDailyStatDTO> {
-  return apiClient(`${BASE}/site-stats/daily/yesterday`)
+export function getDailyStat(date: string): Promise<SiteDailyStatDTO> {
+  return apiClient(`${BASE}/site-stats/daily/${date}`)
 }
 
 export function listDailyStats(

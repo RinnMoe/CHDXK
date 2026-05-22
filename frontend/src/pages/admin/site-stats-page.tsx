@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Navigate } from "react-router-dom"
+import { Navigate, useSearchParams } from "react-router-dom"
 import { PageShell } from "@/components/layout/page-shell"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
@@ -34,11 +34,34 @@ function getDefaultDateRange() {
 
 export function SiteStatsPage() {
   const { user, isLoading: authLoading } = useAuth()
-  const [dateRange, setDateRange] = useState(getDefaultDateRange)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const defaultRange = getDefaultDateRange()
+  const startDate = searchParams.get("start_date") || defaultRange.startDate
+  const endDate = searchParams.get("end_date") || defaultRange.endDate
   const [page, setPage] = useState(1)
   const dateFilter = {
-    start_date: dateRange.startDate || undefined,
-    end_date: dateRange.endDate || undefined,
+    start_date: startDate || undefined,
+    end_date: endDate || undefined,
+  }
+
+  function updateDateRange(params: { start_date?: string; end_date?: string }) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      if (params.start_date !== undefined) next.set("start_date", params.start_date)
+      if (params.end_date !== undefined) next.set("end_date", params.end_date)
+      return next
+    }, { replace: true })
+    setPage(1)
+  }
+
+  function clearDateRange() {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.delete("start_date")
+      next.delete("end_date")
+      return next
+    }, { replace: true })
+    setPage(1)
   }
 
   const { data: yesterday, isLoading: yLoading } = useYesterdayStats()
@@ -91,14 +114,8 @@ export function SiteStatsPage() {
               <Input
                 id="start-date"
                 type="date"
-                value={dateRange.startDate}
-                onChange={(e) => {
-                  setDateRange((range) => ({
-                    ...range,
-                    startDate: e.target.value,
-                  }))
-                  setPage(1)
-                }}
+                value={startDate}
+                onChange={(e) => updateDateRange({ start_date: e.target.value })}
                 className="w-44"
               />
             </div>
@@ -109,27 +126,14 @@ export function SiteStatsPage() {
               <Input
                 id="end-date"
                 type="date"
-                value={dateRange.endDate}
-                onChange={(e) => {
-                  setDateRange((range) => ({
-                    ...range,
-                    endDate: e.target.value,
-                  }))
-                  setPage(1)
-                }}
+                value={endDate}
+                onChange={(e) => updateDateRange({ end_date: e.target.value })}
                 className="w-44"
               />
             </div>
-            {(dateRange.startDate || dateRange.endDate) && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setDateRange({ startDate: "", endDate: "" })
-                  setPage(1)
-                }}
-              >
-                清除
+            {(searchParams.get("start_date") || searchParams.get("end_date")) && (
+              <Button variant="ghost" size="sm" onClick={clearDateRange}>
+                重置
               </Button>
             )}
           </div>

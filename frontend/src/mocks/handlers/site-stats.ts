@@ -15,11 +15,13 @@ function requireAdmin() {
 }
 
 export const siteStatsHandlers = [
-  http.get("/api/site-stats/daily/yesterday", async () => {
+  http.get("/api/site-stats/daily/:date", async ({ params }) => {
     await randomDelay()
     const guard = requireAdmin()
     if (guard) return guard
-    return HttpResponse.json(getMockYesterdayStats())
+    const stat = getMockYesterdayStats()
+    stat.stat_date = params.date as string
+    return HttpResponse.json(stat)
   }),
 
   http.get("/api/site-stats/daily", async ({ request }) => {

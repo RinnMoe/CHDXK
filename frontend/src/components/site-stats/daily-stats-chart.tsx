@@ -21,6 +21,8 @@ interface DailyStatsChartProps {
 }
 
 type MetricKey =
+  | "total_user_count"
+  | "total_review_count"
   | "active_user_count"
   | "new_user_count"
   | "new_review_count"
@@ -34,20 +36,22 @@ const metricConfig: ReadonlyArray<{
   name: string
   color: string
 }> = [
-  { key: "active_user_count", name: "活跃用户", color: "var(--color-chart-1)" },
-  { key: "new_user_count", name: "新增用户", color: "var(--color-chart-2)" },
-  { key: "new_review_count", name: "新增点评", color: "var(--color-chart-3)" },
+  { key: "total_user_count", name: "用户总数", color: "var(--color-chart-1)" },
+  { key: "total_review_count", name: "点评总数", color: "var(--color-chart-2)" },
+  { key: "active_user_count", name: "活跃用户", color: "var(--color-chart-3)" },
+  { key: "new_user_count", name: "新增用户", color: "var(--color-chart-4)" },
+  { key: "new_review_count", name: "新增点评", color: "var(--color-chart-5)" },
   {
     key: "review_author_count",
     name: "点评作者",
-    color: "var(--color-chart-4)",
+    color: "var(--color-primary)",
   },
   {
     key: "reviewed_course_total",
     name: "被点评课程",
-    color: "var(--color-chart-5)",
+    color: "var(--color-chart-1)",
   },
-  { key: "new_like_count", name: "点赞", color: "var(--color-primary)" },
+  { key: "new_like_count", name: "点赞", color: "var(--color-chart-2)" },
   { key: "new_dislike_count", name: "点踩", color: "var(--color-destructive)" },
 ]
 

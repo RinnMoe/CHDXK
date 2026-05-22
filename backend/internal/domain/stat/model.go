@@ -11,6 +11,8 @@ const DateLayout = "2006-01-02"
 var ErrInvalidDateRange = errors.New("invalid date range")
 
 const (
+	MetricTotalUserCount      = "total_user_count"
+	MetricTotalReviewCount    = "total_review_count"
 	MetricActiveUserCount     = "active_user_count"
 	MetricNewUserCount        = "new_user_count"
 	MetricNewReviewCount      = "new_review_count"
@@ -85,13 +87,9 @@ func NewDailyStatService(collector DailyStatCollector, repo DailyStatCommandRepo
 	return &DailyStatService{collector: collector, repo: repo, calendar: NewCalendar(loc)}
 }
 
-func (s *DailyStatService) CollectYesterday(ctx context.Context) (*DailyStat, error) {
-	return s.CollectDaily(ctx, s.calendar.Yesterday())
-}
-
 func (s *DailyStatService) CollectDailyByDateString(ctx context.Context, statDate string) (*DailyStat, error) {
 	if statDate == "" {
-		return s.CollectYesterday(ctx)
+		return s.CollectDaily(ctx, s.calendar.Yesterday())
 	}
 	date, err := s.calendar.ParseDate(statDate)
 	if err != nil {
@@ -124,6 +122,8 @@ func (s *DailyStatService) CollectDaily(ctx context.Context, statDate time.Time)
 
 type DailyStatView struct {
 	StatDate            time.Time
+	TotalUserCount      int64
+	TotalReviewCount    int64
 	ActiveUserCount     int64
 	NewUserCount        int64
 	NewReviewCount      int64

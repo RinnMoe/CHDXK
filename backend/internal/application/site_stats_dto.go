@@ -8,6 +8,8 @@ import (
 
 type SiteDailyStatDTO struct {
 	StatDate            string    `json:"stat_date"`
+	TotalUserCount      int64     `json:"total_user_count"`
+	TotalReviewCount    int64     `json:"total_review_count"`
 	ActiveUserCount     int64     `json:"active_user_count"`
 	NewUserCount        int64     `json:"new_user_count"`
 	NewReviewCount      int64     `json:"new_review_count"`
@@ -22,6 +24,8 @@ type SiteDailyStatDTO struct {
 func newSiteDailyStatDTO(s *stat.DailyStat) SiteDailyStatDTO {
 	view := stat.DailyStatView{
 		StatDate:            s.StatDate,
+		TotalUserCount:      s.Metrics[stat.MetricTotalUserCount],
+		TotalReviewCount:    s.Metrics[stat.MetricTotalReviewCount],
 		ActiveUserCount:     s.Metrics[stat.MetricActiveUserCount],
 		NewUserCount:        s.Metrics[stat.MetricNewUserCount],
 		NewReviewCount:      s.Metrics[stat.MetricNewReviewCount],
@@ -38,6 +42,8 @@ func newSiteDailyStatDTO(s *stat.DailyStat) SiteDailyStatDTO {
 func newSiteDailyStatViewDTO(s *stat.DailyStatView) SiteDailyStatDTO {
 	return SiteDailyStatDTO{
 		StatDate:            s.StatDate.Format(stat.DateLayout),
+		TotalUserCount:      s.TotalUserCount,
+		TotalReviewCount:    s.TotalReviewCount,
 		ActiveUserCount:     s.ActiveUserCount,
 		NewUserCount:        s.NewUserCount,
 		NewReviewCount:      s.NewReviewCount,

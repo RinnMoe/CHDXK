@@ -21,6 +21,8 @@ export function DailyStatsTable({ stats, page, pageSize, total }: DailyStatsTabl
             <TableHeader>
               <TableRow>
                 <TableHead>日期</TableHead>
+                <TableHead>用户总数</TableHead>
+                <TableHead>点评总数</TableHead>
                 <TableHead>活跃用户</TableHead>
                 <TableHead>新增用户</TableHead>
                 <TableHead>新增点评</TableHead>
@@ -34,6 +36,8 @@ export function DailyStatsTable({ stats, page, pageSize, total }: DailyStatsTabl
               {stats.map((s) => (
                 <TableRow key={s.stat_date}>
                   <TableCell className="font-mono text-xs">{s.stat_date}</TableCell>
+                  <TableCell>{s.total_user_count}</TableCell>
+                  <TableCell>{s.total_review_count}</TableCell>
                   <TableCell>{s.active_user_count}</TableCell>
                   <TableCell>{s.new_user_count}</TableCell>
                   <TableCell>{s.new_review_count}</TableCell>

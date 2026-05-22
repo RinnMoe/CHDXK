@@ -8,6 +8,8 @@ interface StatItem {
 
 function items(s: SiteDailyStatDTO): StatItem[] {
   return [
+    { label: "用户总数", value: s.total_user_count },
+    { label: "点评总数", value: s.total_review_count },
     { label: "活跃用户", value: s.active_user_count },
     { label: "新增用户", value: s.new_user_count },
     { label: "新增点评", value: s.new_review_count },

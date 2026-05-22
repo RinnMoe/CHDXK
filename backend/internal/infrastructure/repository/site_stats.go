@@ -58,6 +58,8 @@ func newDailyStatView(e *SiteDailyStatEntity) stat.DailyStatView {
 	metrics := jsonMapToMetrics(e.Metrics)
 	return stat.DailyStatView{
 		StatDate:            e.StatDate,
+		TotalUserCount:      metrics[stat.MetricTotalUserCount],
+		TotalReviewCount:    metrics[stat.MetricTotalReviewCount],
 		ActiveUserCount:     metrics[stat.MetricActiveUserCount],
 		NewUserCount:        metrics[stat.MetricNewUserCount],
 		NewReviewCount:      metrics[stat.MetricNewReviewCount],
@@ -80,6 +82,18 @@ func newDailyStatEntity(s *stat.DailyStat) SiteDailyStatEntity {
 }
 
 func (r *SiteDailyStatRepository) Collect(ctx context.Context, periodStart, periodEnd time.Time) (stat.Metrics, error) {
+	var totalUsers int64
+	if err := r.db.WithContext(ctx).Model(&UserEntity{}).
+		Count(&totalUsers).Error; err != nil {
+		return nil, err
+	}
+
+	var totalReviews int64
+	if err := r.db.WithContext(ctx).Model(&ReviewEntity{}).
+		Count(&totalReviews).Error; err != nil {
+		return nil, err
+	}
+
 	var activeUsers int64
 	if err := r.db.WithContext(ctx).Model(&UserEntity{}).
 		Where("last_seen_at >= ? AND last_seen_at < ?", periodStart, periodEnd).
@@ -130,6 +144,8 @@ func (r *SiteDailyStatRepository) Collect(ctx context.Context, periodStart, peri
 	}
 
 	return stat.Metrics{
+		stat.MetricTotalUserCount:      totalUsers,
+		stat.MetricTotalReviewCount:    totalReviews,
 		stat.MetricActiveUserCount:     activeUsers,
 		stat.MetricNewUserCount:        newUsers,
 		stat.MetricNewReviewCount:      newReviews,

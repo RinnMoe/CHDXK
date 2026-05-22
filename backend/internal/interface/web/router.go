@@ -79,7 +79,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	}
 	siteStatsGroup := apiGroup.Group("/site-stats", middleware.Admin())
 	{
-		siteStatsGroup.GET("/daily/yesterday", siteStatsController.GetYesterday)
+		siteStatsGroup.GET("/daily/:date", siteStatsController.GetByDate)
 		siteStatsGroup.GET("/daily", siteStatsController.ListDaily)
 	}
 	announcementGroup := apiGroup.Group("/announcement")
