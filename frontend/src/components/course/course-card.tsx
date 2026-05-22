@@ -16,13 +16,21 @@ export function CourseCard({ course }: CourseCardProps) {
       <div className="min-w-0 space-y-2">
         <div className="space-y-1">
           <div className="flex min-w-0 items-center justify-between gap-2 text-xs text-muted-foreground">
-            <span className="shrink-0 font-mono">{course.code}</span>
-            <span className="min-w-0 truncate text-right text-sm">
-              {course.main_teacher.name}
-            </span>
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="shrink-0 font-mono">{course.code}</span>
+              <span className="min-w-0 truncate text-sm">
+                {course.main_teacher.name}
+              </span>
+            </div>
+            <div className="shrink-0">
+              <RatingDisplay rating={course.rating} size="sm" />
+            </div>
           </div>
           <div className="whitespace-normal break-words font-semibold leading-tight">
             {course.name}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {course.department}
           </div>
         </div>
 
@@ -49,8 +57,6 @@ export function CourseCard({ course }: CourseCardProps) {
             </Badge>
           ))}
         </div>
-
-        <RatingDisplay rating={course.rating} size="sm" />
       </div>
     </Link>
   )

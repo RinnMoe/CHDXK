@@ -23,6 +23,7 @@ type CourseListItemDTO struct {
 	Code        string        `json:"code"`
 	Name        string        `json:"name"`
 	Credit      float32       `json:"credit"`
+	Department  string        `json:"department"`
 	Language    string        `json:"language"`
 	TargetYears []string      `json:"target_years"`
 	Categories  []string      `json:"categories"`
@@ -36,6 +37,7 @@ func newCourseListItemDTO(c *course.CourseView) CourseListItemDTO {
 		Code:        c.Code,
 		Name:        c.Name,
 		Credit:      c.Credit,
+		Department:  c.Department,
 		Language:    c.Language,
 		TargetYears: c.TargetYears,
 		Categories:  c.Categories,

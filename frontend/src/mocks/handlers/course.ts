@@ -29,7 +29,7 @@ function applyCourseFilter(url: URL) {
 
   let list = [...mockCourses]
   if (code) list = list.filter((c) => c.code.toLowerCase().includes(code.toLowerCase()) || c.name.includes(code))
-  if (department) list = list.filter((c) => c.main_teacher.department === department)
+  if (department) list = list.filter((c) => c.department === department)
   if (language) list = list.filter((c) => c.language === language)
   if (categories.length > 0) list = list.filter((c) => c.categories.some((cat) => categories.includes(cat)))
   if (targetYears.length > 0) list = list.filter((c) => c.target_years.some((y) => targetYears.includes(y)))

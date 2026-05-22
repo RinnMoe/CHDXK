@@ -141,15 +141,17 @@ function avgFromDistribution(dist: [number, number, number, number, number]): nu
 function makeCourse(id: number): CourseListItemDTO {
   const count = randInt(0, 50)
   const distribution = makeDistribution(count)
+  const mainTeacher = makeTeacher()
   return {
     id,
     code: `CS${String(id).padStart(4, "0")}`,
     name: pick(COURSE_NAMES),
     credit: pick(CREDITS),
+    department: mainTeacher.department,
     language: pick(LANGUAGES),
     target_years: pickMany(TARGET_YEARS, randInt(1, 2)),
     categories: pickMany(CATEGORIES, randInt(1, 2)),
-    main_teacher: makeTeacher(),
+    main_teacher: mainTeacher,
     rating: {
       count,
       avg: avgFromDistribution(distribution),
@@ -165,6 +167,7 @@ export const mockCourses: CourseListItemDTO[] = Array.from({ length: 64 }, (_, i
 mockCourses[0] = {
   ...mockCourses[0],
   name: "面向复杂真实世界系统的超大规模分布式数据库架构设计与性能调优实践",
+  department: "电子信息与电气工程学院",
   language: "中文及英文双语研讨",
   categories: ["跨学科综合实践课程", "研究型专业选修模块"],
   main_teacher: makeTeacher("欧阳明远清和"),
@@ -173,6 +176,7 @@ mockCourses[0] = {
 mockCourses[1] = {
   ...mockCourses[1],
   name: "人工智能安全、可信机器学习与大模型治理专题前沿导论",
+  department: "计算机科学与工程系",
   categories: ["通识核心-科技伦理与社会", "专业方向拓展"],
   main_teacher: makeTeacher("司徒嘉言"),
 }
@@ -180,6 +184,7 @@ mockCourses[1] = {
 mockCourses[2] = {
   ...mockCourses[2],
   name: "计算社会科学中的因果推断、网络实验与高维数据分析方法",
+  department: "数学科学学院",
   language: "全英文授课与中文讨论",
   categories: ["方法论强化训练", "通识选修-社会科学"],
   main_teacher: makeTeacher("Alexander Christopher Johnson-Smith"),
@@ -198,7 +203,7 @@ export function makeCourseDetail(course: CourseListItemDTO): CourseDetailDTO {
     code: course.code,
     name: course.name,
     credit: course.credit,
-    department: course.main_teacher.department,
+    department: course.department,
     language: course.language,
     target_years: course.target_years,
     categories: course.categories,
