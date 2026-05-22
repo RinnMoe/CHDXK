@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"strconv"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -140,6 +141,47 @@ func (r2 *ReviewRepository) GetByID(ctx context.Context, reviewID int) (*review.
 	}
 	view := newReviewView(&entity)
 	return &view, nil
+}
+
+func (r2 *ReviewRepository) GetCourseFilters(ctx context.Context, courseID int) (*review.ReviewFilters, error) {
+	var semesters []review.FilterItem
+	if err := r2.db.WithContext(ctx).
+		Model(&ReviewEntity{}).
+		Select("semester AS name, COUNT(*) AS count").
+		Where("course_id = ? AND semester <> ''", courseID).
+		Group("semester").
+		Order("semester DESC").
+		Scan(&semesters).Error; err != nil {
+		return nil, err
+	}
+
+	type ratingCount struct {
+		Rating int
+		Count  int
+	}
+	var rows []ratingCount
+	if err := r2.db.WithContext(ctx).
+		Model(&ReviewEntity{}).
+		Select("rating, COUNT(*) AS count").
+		Where("course_id = ?", courseID).
+		Group("rating").
+		Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+
+	counts := make(map[int]int, len(rows))
+	for _, row := range rows {
+		counts[row.Rating] = row.Count
+	}
+	ratings := make([]review.FilterItem, 0, 5)
+	for rating := 5; rating >= 1; rating-- {
+		ratings = append(ratings, review.FilterItem{
+			Name:  strconv.Itoa(rating),
+			Count: counts[rating],
+		})
+	}
+
+	return &review.ReviewFilters{Semesters: semesters, Ratings: ratings}, nil
 }
 
 func (r2 *ReviewRepository) applyFilter(db *gorm.DB, filter review.ReviewFilter) *gorm.DB {

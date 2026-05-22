@@ -4,6 +4,7 @@ import {
   getCourseFilters,
   getCourseDetail,
   listCourseReviews,
+  getCourseReviewFilters,
   setNotificationLevel,
   listFollowedCourses,
   listIgnoredCourses,
@@ -44,16 +45,19 @@ export function useCourseReviews(
   })
 }
 
+export function useCourseReviewFilters(courseID: number) {
+  return useQuery({
+    queryKey: ["course-review-filters", courseID],
+    queryFn: () => getCourseReviewFilters(courseID),
+    enabled: !!courseID,
+  })
+}
+
 export function useSetNotificationLevel() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({
-      courseID,
-      level,
-    }: {
-      courseID: number
-      level: number
-    }) => setNotificationLevel(courseID, level),
+    mutationFn: ({ courseID, level }: { courseID: number; level: number }) =>
+      setNotificationLevel(courseID, level),
     onSuccess: (_, { courseID }) => {
       queryClient.invalidateQueries({ queryKey: ["course", courseID] })
     },

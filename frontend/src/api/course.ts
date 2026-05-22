@@ -17,6 +17,11 @@ export interface CourseFilters {
   target_years: FilterItem[]
 }
 
+export interface CourseReviewFilters {
+  semesters: FilterItem[]
+  ratings: FilterItem[]
+}
+
 export interface CourseListItemDTO {
   id: number
   code: string
@@ -98,9 +103,7 @@ export function listCourses(
   return apiClient(`${BASE}/course/${buildQuery(filter)}`)
 }
 
-export function getCourseDetail(
-  courseID: number
-): Promise<CourseDetailDTO> {
+export function getCourseDetail(courseID: number): Promise<CourseDetailDTO> {
   return apiClient(`${BASE}/course/${courseID}`)
 }
 
@@ -109,6 +112,12 @@ export function listCourseReviews(
   filter: ReviewListFilter = {}
 ): Promise<PaginatedResult<ReviewDTO>> {
   return apiClient(`${BASE}/course/${courseID}/review${buildQuery(filter)}`)
+}
+
+export function getCourseReviewFilters(
+  courseID: number
+): Promise<CourseReviewFilters> {
+  return apiClient(`${BASE}/course/${courseID}/review/filters`)
 }
 
 export function setNotificationLevel(

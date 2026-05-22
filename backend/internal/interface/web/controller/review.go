@@ -42,8 +42,26 @@ func (r *ReviewController) ListCourseReviews(c *gin.Context) {
 	if f.PageSize <= 0 {
 		f.PageSize = 20
 	}
+	if f.OrderBy == "" {
+		f.OrderBy = "created_at"
+	}
 
 	result, err := r.query.GetReviewsByCourse(c.Request.Context(), courseID, f)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
+func (r *ReviewController) GetCourseReviewFilters(c *gin.Context) {
+	courseID, err := strconv.Atoi(c.Param("courseID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid course id"})
+		return
+	}
+
+	result, err := r.query.GetCourseReviewFilters(c.Request.Context(), courseID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

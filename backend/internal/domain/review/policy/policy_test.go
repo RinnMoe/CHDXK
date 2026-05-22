@@ -27,6 +27,10 @@ func (f *fakeReviewQuery) GetByID(ctx context.Context, reviewID int) (*review.Re
 	return nil, nil
 }
 
+func (f *fakeReviewQuery) GetCourseFilters(ctx context.Context, courseID int) (*review.ReviewFilters, error) {
+	return &review.ReviewFilters{}, nil
+}
+
 func (f *fakeReviewQuery) FindRevisions(ctx context.Context, reviewID int) ([]review.RevisionView, error) {
 	return nil, nil
 }

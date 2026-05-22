@@ -27,6 +27,10 @@ func NewReviewQueryService(repo review.ReviewQuery, voteRepo review.VoteReposito
 	return &ReviewQueryService{repo: repo, voteRepo: voteRepo, notificationRepo: notificationRepo}
 }
 
+func (s *ReviewQueryService) GetCourseReviewFilters(ctx context.Context, courseID int) (*review.ReviewFilters, error) {
+	return s.repo.GetCourseFilters(ctx, courseID)
+}
+
 func (s *ReviewQueryService) GetReviewsByCourse(ctx context.Context, courseID int, f ReviewListFilter) (*PaginatedResult[ReviewDTO], error) {
 	reviewFilter := review.ReviewFilter{
 		CourseID: courseID,

@@ -32,7 +32,7 @@ export interface ReviewDTO {
 export interface ReviewListFilter {
   semester?: string
   rating?: number
-  order_by?: string
+  order_by?: "like_count" | "created_at"
   ascend?: boolean
   page?: number
   page_size?: number

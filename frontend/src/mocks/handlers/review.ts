@@ -26,7 +26,7 @@ function applyReviewFilter(url: URL, list: ReviewDTO[]): ReviewDTO[] {
     if (orderBy === "rating") {
       return ascend ? a.rating - b.rating : b.rating - a.rating
     }
-    if (orderBy === "vote") {
+    if (orderBy === "like_count") {
       return ascend
         ? a.vote.like_count - b.vote.like_count
         : b.vote.like_count - a.vote.like_count
@@ -95,6 +95,8 @@ export const reviewHandlers = [
     const list = userID === 1 ? mockReviews.slice(0, 8) : []
     const page = Number(url.searchParams.get("page") ?? "1")
     const pageSize = Number(url.searchParams.get("page_size") ?? "20")
-    return HttpResponse.json(paginate(applyReviewFilter(url, list), page, pageSize))
+    return HttpResponse.json(
+      paginate(applyReviewFilter(url, list), page, pageSize)
+    )
   }),
 ]

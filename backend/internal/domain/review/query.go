@@ -10,7 +10,18 @@ import (
 type ReviewQuery interface {
 	FindBy(ctx context.Context, filter ReviewFilter) ([]ReviewView, int64, error)
 	GetByID(ctx context.Context, reviewID int) (*ReviewView, error)
+	GetCourseFilters(ctx context.Context, courseID int) (*ReviewFilters, error)
 	FindRevisions(ctx context.Context, reviewID int) ([]RevisionView, error)
+}
+
+type FilterItem struct {
+	Name  string `json:"name"`
+	Count int    `json:"count"`
+}
+
+type ReviewFilters struct {
+	Semesters []FilterItem `json:"semesters"`
+	Ratings   []FilterItem `json:"ratings"`
 }
 
 type ReviewFilter struct {

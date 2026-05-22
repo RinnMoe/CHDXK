@@ -343,6 +343,52 @@ func TestReviewRepository_CourseStatsAggregation(t *testing.T) {
 	}
 }
 
+func TestReviewRepository_GetCourseFilters(t *testing.T) {
+	db := newTestDB(t)
+	repo := repository.NewReviewRepository(db)
+	ctx := context.Background()
+
+	cleanTables(t, db, "reviews", "review_revisions", "courses", "teachers", "users")
+
+	teacher := seedTeacher(t, db)
+	course := seedCourse(t, db, teacher.ID)
+	otherCourse := seedCourseRaw(t, db, "CS102", "算法设计", 3.0, "计算机学院", teacher.ID, "zh", nil, nil)
+	user := seedUser(t, db)
+
+	rows := []repository.ReviewEntity{
+		{CourseID: course.ID, Semester: "2024-2025-2", UserID: user.ID, Rating: 5, Content: "很好", CreatedAt: time.Now(), UpdatedAt: time.Now()},
+		{CourseID: course.ID, Semester: "2024-2025-2", UserID: user.ID, Rating: 4, Content: "不错", CreatedAt: time.Now(), UpdatedAt: time.Now()},
+		{CourseID: course.ID, Semester: "2024-2025-1", UserID: user.ID, Rating: 5, Content: "推荐", CreatedAt: time.Now(), UpdatedAt: time.Now()},
+		{CourseID: otherCourse.ID, Semester: "2024-2025-2", UserID: user.ID, Rating: 1, Content: "其他课程", CreatedAt: time.Now(), UpdatedAt: time.Now()},
+	}
+	for _, row := range rows {
+		if err := db.Create(&row).Error; err != nil {
+			t.Fatalf("seed review: %v", err)
+		}
+	}
+
+	filters, err := repo.GetCourseFilters(ctx, course.ID)
+	if err != nil {
+		t.Fatalf("GetCourseFilters: %v", err)
+	}
+
+	if len(filters.Semesters) != 2 {
+		t.Fatalf("semester filter count: got %d, want 2", len(filters.Semesters))
+	}
+	if filters.Semesters[0].Name != "2024-2025-2" || filters.Semesters[0].Count != 2 {
+		t.Errorf("first semester: got %+v, want 2024-2025-2 count 2", filters.Semesters[0])
+	}
+	if len(filters.Ratings) != 5 {
+		t.Fatalf("rating filter count: got %d, want 5", len(filters.Ratings))
+	}
+	if filters.Ratings[0].Name != "5" || filters.Ratings[0].Count != 2 {
+		t.Errorf("5-star rating: got %+v, want count 2", filters.Ratings[0])
+	}
+	if filters.Ratings[4].Name != "1" || filters.Ratings[4].Count != 0 {
+		t.Errorf("1-star rating: got %+v, want count 0", filters.Ratings[4])
+	}
+}
+
 func TestReviewRepository_FindRevisions(t *testing.T) {
 	db := newTestDB(t)
 	repo := repository.NewReviewRepository(db)

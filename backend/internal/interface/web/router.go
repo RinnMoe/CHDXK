@@ -36,8 +36,8 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		authGroup.POST("/login", authController.Login)
 		authGroup.POST("/logout", authController.Logout)
 		authGroup.GET("/me", authController.Me)
-			authGroup.POST("/password-reset/code", authController.SendResetCode)
-			authGroup.POST("/password-reset", authController.ResetPassword)
+		authGroup.POST("/password-reset/code", authController.SendResetCode)
+		authGroup.POST("/password-reset", authController.ResetPassword)
 	}
 	courseGroup := apiGroup.Group("/course")
 	{
@@ -46,6 +46,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		courseGroup.GET("/followed", courseController.ListFollowedCourses)
 		courseGroup.GET("/ignored", courseController.ListIgnoredCourses)
 		courseGroup.GET("/:courseID", courseController.GetCourse)
+		courseGroup.GET("/:courseID/review/filters", reviewController.GetCourseReviewFilters)
 		courseGroup.GET("/:courseID/review", reviewController.ListCourseReviews)
 		courseGroup.POST("/:courseID/notification", courseController.SetNotificationLevel)
 	}
