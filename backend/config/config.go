@@ -8,15 +8,16 @@ import (
 )
 
 type AppConfig struct {
-	Server   ServerConfig   `mapstructure:"server"`
-	Postgres PostgresConfig `mapstructure:"postgres"`
-	Redis    RedisConfig    `mapstructure:"redis"`
-	Session  SessionConfig  `mapstructure:"session"`
-	Auth     AuthConfig     `mapstructure:"auth"`
-	Point    PointConfig    `mapstructure:"point"`
-	Asynq    AsynqConfig    `mapstructure:"asynq"`
-	Stats    StatsConfig    `mapstructure:"stats"`
-	SMTP     SMTPConfig     `mapstructure:"smtp"`
+	Server    ServerConfig    `mapstructure:"server"`
+	Postgres  PostgresConfig  `mapstructure:"postgres"`
+	Redis     RedisConfig     `mapstructure:"redis"`
+	Session   SessionConfig   `mapstructure:"session"`
+	Auth      AuthConfig      `mapstructure:"auth"`
+	Point     PointConfig     `mapstructure:"point"`
+	CourseHot CourseHotConfig `mapstructure:"course_hot"`
+	Asynq     AsynqConfig     `mapstructure:"asynq"`
+	Stats     StatsConfig     `mapstructure:"stats"`
+	SMTP      SMTPConfig      `mapstructure:"smtp"`
 }
 
 type SMTPConfig struct {
@@ -55,6 +56,12 @@ type PointConfig struct {
 	TransferMinFee     int `mapstructure:"transfer_min_fee"`
 }
 
+type CourseHotConfig struct {
+	ReviewCreateScore int64 `mapstructure:"review_create_score"`
+	ReviewUpdateScore int64 `mapstructure:"review_update_score"`
+	ReviewVoteScore   int64 `mapstructure:"review_vote_score"`
+}
+
 type ServerConfig struct {
 	Addr string `mapstructure:"addr"`
 }
@@ -86,6 +93,9 @@ func Load(configPath string) (AppConfig, error) {
 	v.AutomaticEnv()
 	v.SetDefault("stats.daily_cron", "10 0 * * *")
 	v.SetDefault("stats.scheduler_enabled", true)
+	v.SetDefault("course_hot.review_create_score", 3)
+	v.SetDefault("course_hot.review_update_score", 1)
+	v.SetDefault("course_hot.review_vote_score", 1)
 
 	if err := v.ReadInConfig(); err != nil {
 		return AppConfig{}, fmt.Errorf("read config: %w", err)

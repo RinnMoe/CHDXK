@@ -62,8 +62,18 @@ export interface CourseDetailDTO {
   notification_level: CourseNotificationLevel
 }
 
+export interface HotCourseItemDTO {
+  course: CourseListItemDTO
+  score: number
+}
+
+export interface HotCourseListDTO {
+  period: "week" | "month"
+  items: HotCourseItemDTO[]
+}
+
 export interface CourseListFilter {
-  code?: string
+  q?: string
   department?: string
   language?: string
   categories?: string[]
@@ -142,4 +152,10 @@ export function listIgnoredCourses(
   filter: CourseListFilter = {}
 ): Promise<PaginatedResult<CourseListItemDTO>> {
   return apiClient(`${BASE}/course/ignored${buildQuery(filter)}`)
+}
+
+export function listHotCourses(
+  period: "week" | "month" = "week"
+): Promise<HotCourseListDTO> {
+  return apiClient(`${BASE}/course/hot?period=${period}`)
 }

@@ -15,19 +15,19 @@ import (
 )
 
 type ServiceContainer struct {
-	ReviewQuery      *application.ReviewQueryService
-	ReviewCommand    *application.ReviewCommandService
-	CourseQuery      *application.CourseQueryService
-	CourseCommand    *application.CourseCommandService
-	TeacherQuery     *application.TeacherQueryService
-	PointQuery       *application.PointQueryService
-	PointCommand     *application.PointCommandService
-	SiteStatsQuery   *application.SiteStatsQueryService
-	SiteStatsCommand *application.SiteStatsCommandService
-	AuthCommand      *application.AuthCommandService
-	AuthService      *domainauth.AuthService
+	ReviewQuery       *application.ReviewQueryService
+	ReviewCommand     *application.ReviewCommandService
+	CourseQuery       *application.CourseQueryService
+	CourseCommand     *application.CourseCommandService
+	TeacherQuery      *application.TeacherQueryService
+	PointQuery        *application.PointQueryService
+	PointCommand      *application.PointCommandService
+	SiteStatsQuery    *application.SiteStatsQueryService
+	SiteStatsCommand  *application.SiteStatsCommandService
+	AuthCommand       *application.AuthCommandService
+	AuthService       *domainauth.AuthService
 	AnnouncementQuery *application.AnnouncementQueryService
-	ApiKeySvc        *domainauth.ApiKeyService
+	ApiKeySvc         *domainauth.ApiKeyService
 }
 
 func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
@@ -45,6 +45,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	userRepo := repository.NewUserRepository(db)
 	apiKeyRepo := repository.NewApiKeyRepository(db)
 	statRepo := repository.NewSiteDailyStatRepository(db)
+	courseHotRepo := repository.NewCourseHotRepository(redisClient, mustLoadLocation("Asia/Shanghai"))
 	verificationRepo := repository.NewVerificationCodeRepository(redisClient)
 	resetCodeRepo := repository.NewVerificationCodeRepositoryWithPrefix(redisClient, "reset")
 	loginAttemptRepo := repository.NewLoginAttemptRepository(redisClient, time.Duration(conf.Auth.LoginLockoutDuration)*time.Second)
@@ -55,9 +56,18 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	safetyPolicy := policy.NewSafetyPolicy(nil)
 
 	reviewCommand := application.NewReviewCommandService(
-		courseRepo, reviewRepo, voteRepo, []review.CreatePolicy{freqPolicy, safetyPolicy},
+		courseRepo,
+		reviewRepo,
+		voteRepo,
+		courseHotRepo,
+		application.CourseHotScoreConfig{
+			ReviewCreateScore: conf.CourseHot.ReviewCreateScore,
+			ReviewUpdateScore: conf.CourseHot.ReviewUpdateScore,
+			ReviewVoteScore:   conf.CourseHot.ReviewVoteScore,
+		},
+		[]review.CreatePolicy{freqPolicy, safetyPolicy},
 	)
-	courseQuery := application.NewCourseQueryService(courseRepo, notificationRepo)
+	courseQuery := application.NewCourseQueryService(courseRepo, notificationRepo, courseHotRepo)
 	courseCommand := application.NewCourseCommandService(courseRepo, notificationRepo)
 	teacherQuery := application.NewTeacherQueryService(teacherRepo)
 	announcementQuery := application.NewAnnouncementQueryService(announcementRepo)
@@ -94,18 +104,26 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	apiKeySvc := domainauth.NewApiKeyService(apiKeyRepo)
 
 	return &ServiceContainer{
-		ReviewQuery:      reviewQuery,
-		ReviewCommand:    reviewCommand,
-		CourseQuery:      courseQuery,
-		CourseCommand:    courseCommand,
-		TeacherQuery:     teacherQuery,
-		PointQuery:       pointQuery,
-		PointCommand:     pointCommand,
-		SiteStatsQuery:   siteStatsQuery,
-		SiteStatsCommand: siteStatsCommand,
-		AuthCommand:      authCommand,
-		AuthService:      authService,
+		ReviewQuery:       reviewQuery,
+		ReviewCommand:     reviewCommand,
+		CourseQuery:       courseQuery,
+		CourseCommand:     courseCommand,
+		TeacherQuery:      teacherQuery,
+		PointQuery:        pointQuery,
+		PointCommand:      pointCommand,
+		SiteStatsQuery:    siteStatsQuery,
+		SiteStatsCommand:  siteStatsCommand,
+		AuthCommand:       authCommand,
+		AuthService:       authService,
 		AnnouncementQuery: announcementQuery,
-		ApiKeySvc:        apiKeySvc,
+		ApiKeySvc:         apiKeySvc,
 	}
+}
+
+func mustLoadLocation(name string) *time.Location {
+	loc, err := time.LoadLocation(name)
+	if err != nil {
+		panic(err)
+	}
+	return loc
 }

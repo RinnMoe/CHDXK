@@ -42,6 +42,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	courseGroup := apiGroup.Group("/course")
 	{
 		courseGroup.GET("/filters", courseController.GetCourseFilters)
+		courseGroup.GET("/hot", courseController.ListHotCourses)
 		courseGroup.GET("/", courseController.ListCourses)
 		courseGroup.GET("/followed", courseController.ListFollowedCourses)
 		courseGroup.GET("/ignored", courseController.ListIgnoredCourses)

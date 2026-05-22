@@ -4,6 +4,7 @@ import (
 	"context"
 	"slices"
 	"testing"
+	"time"
 
 	"jcourse/internal/application"
 	"jcourse/internal/domain/auth"
@@ -14,6 +15,21 @@ import (
 type fakeCourseQuery struct {
 	details map[int]*course.CourseDetailView
 	views   map[int]course.CourseView
+}
+
+type fakeHotCourseRepo struct {
+	ranks []course.HotCourseRank
+}
+
+func (r *fakeHotCourseRepo) AddScore(ctx context.Context, courseID int, score int64, at time.Time) error {
+	return nil
+}
+
+func (r *fakeHotCourseRepo) Top(ctx context.Context, period course.HotCoursePeriod, at time.Time, limit int64) ([]course.HotCourseRank, error) {
+	if limit < int64(len(r.ranks)) {
+		return r.ranks[:limit], nil
+	}
+	return r.ranks, nil
 }
 
 func newFakeCourseQuery() *fakeCourseQuery {
@@ -78,7 +94,7 @@ func TestCourseQueryService_GetCourseDetail_WithUser(t *testing.T) {
 	}
 	notifRepo := newFakeNotificationRepo()
 	notifRepo.SetLevel(context.Background(), 100, 1, course.NotificationLevelFollow)
-	svc := application.NewCourseQueryService(query, notifRepo)
+	svc := application.NewCourseQueryService(query, notifRepo, nil)
 	ctx := context.Background()
 
 	user := &auth.User{ID: 100}
@@ -100,7 +116,7 @@ func TestCourseQueryService_GetCourseDetail_WithoutUser(t *testing.T) {
 		MainTeacher: &teacher.TeacherView{ID: 1, Name: "张三"},
 	}
 	notifRepo := newFakeNotificationRepo()
-	svc := application.NewCourseQueryService(query, notifRepo)
+	svc := application.NewCourseQueryService(query, notifRepo, nil)
 	ctx := context.Background()
 
 	dto, err := svc.GetCourseDetail(ctx, nil, 1)
@@ -124,7 +140,7 @@ func TestCourseQueryService_ListCoursesByNotificationLevel(t *testing.T) {
 	notifRepo.SetLevel(ctx, 100, 2, course.NotificationLevelIgnored)
 	notifRepo.SetLevel(ctx, 100, 3, course.NotificationLevelFollow)
 
-	svc := application.NewCourseQueryService(query, notifRepo)
+	svc := application.NewCourseQueryService(query, notifRepo, nil)
 
 	t.Run("list followed", func(t *testing.T) {
 		result, err := svc.ListCoursesByNotificationLevel(ctx, 100, course.NotificationLevelFollow, application.CourseListFilter{})
@@ -158,4 +174,41 @@ func TestCourseQueryService_ListCoursesByNotificationLevel(t *testing.T) {
 			t.Error("Items should not be nil")
 		}
 	})
+}
+
+func TestCourseQueryService_ListHotCourses(t *testing.T) {
+	query := newFakeCourseQuery()
+	query.views[1] = course.CourseView{ID: 1, Code: "CS101", Name: "数据结构"}
+	query.views[2] = course.CourseView{ID: 2, Code: "CS102", Name: "算法"}
+
+	hotRepo := &fakeHotCourseRepo{ranks: []course.HotCourseRank{
+		{CourseID: 2, Score: 10},
+		{CourseID: 1, Score: 8},
+	}}
+	svc := application.NewCourseQueryService(query, newFakeNotificationRepo(), hotRepo)
+
+	result, err := svc.ListHotCourses(context.Background(), "week")
+	if err != nil {
+		t.Fatalf("ListHotCourses: %v", err)
+	}
+	if result.Period != "week" {
+		t.Fatalf("Period: got %s, want week", result.Period)
+	}
+	if len(result.Items) != 2 {
+		t.Fatalf("items length: got %d, want 2", len(result.Items))
+	}
+	if result.Items[0].Course.ID != 2 || result.Items[0].Score != 10 {
+		t.Fatalf("first item: got course=%d score=%d, want course=2 score=10", result.Items[0].Course.ID, result.Items[0].Score)
+	}
+	if result.Items[1].Course.ID != 1 || result.Items[1].Score != 8 {
+		t.Fatalf("second item: got course=%d score=%d, want course=1 score=8", result.Items[1].Course.ID, result.Items[1].Score)
+	}
+}
+
+func TestCourseQueryService_ListHotCourses_InvalidPeriod(t *testing.T) {
+	svc := application.NewCourseQueryService(newFakeCourseQuery(), newFakeNotificationRepo(), &fakeHotCourseRepo{})
+	_, err := svc.ListHotCourses(context.Background(), "daily")
+	if err != course.ErrInvalidHotCoursePeriod {
+		t.Fatalf("err: got %v, want %v", err, course.ErrInvalidHotCoursePeriod)
+	}
 }

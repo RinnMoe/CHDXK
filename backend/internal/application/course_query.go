@@ -2,13 +2,14 @@ package application
 
 import (
 	"context"
+	"time"
 
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 )
 
 type CourseListFilter struct {
-	Code        string   `form:"code"`
+	Q           string   `form:"q"`
 	Department  string   `form:"department"`
 	Language    string   `form:"language"`
 	Categories  []string `form:"categories"`
@@ -24,12 +25,14 @@ type CourseListFilter struct {
 type CourseQueryService struct {
 	courseQuery      course.CourseQuery
 	notificationRepo course.CourseNotificationRepository
+	hotRepo          course.HotCourseRepository
 }
 
-func NewCourseQueryService(courseQuery course.CourseQuery, notificationRepo course.CourseNotificationRepository) *CourseQueryService {
+func NewCourseQueryService(courseQuery course.CourseQuery, notificationRepo course.CourseNotificationRepository, hotRepo course.HotCourseRepository) *CourseQueryService {
 	return &CourseQueryService{
 		courseQuery:      courseQuery,
 		notificationRepo: notificationRepo,
+		hotRepo:          hotRepo,
 	}
 }
 
@@ -39,7 +42,7 @@ func (s *CourseQueryService) GetCourseFilters(ctx context.Context) (*course.Cour
 
 func (s *CourseQueryService) ListCourses(ctx context.Context, f CourseListFilter) (*PaginatedResult[CourseListItemDTO], error) {
 	filter := course.CourseFilter{
-		Code:        f.Code,
+		Q:           f.Q,
 		Department:  f.Department,
 		Language:    f.Language,
 		Categories:  f.Categories,
@@ -68,6 +71,54 @@ func (s *CourseQueryService) ListCourses(ctx context.Context, f CourseListFilter
 		Page:     f.Page,
 		PageSize: f.PageSize,
 	}, nil
+}
+
+func (s *CourseQueryService) ListHotCourses(ctx context.Context, period string) (*HotCourseListDTO, error) {
+	if period == "" {
+		period = string(course.HotCoursePeriodWeek)
+	}
+	hotPeriod := course.HotCoursePeriod(period)
+	if hotPeriod != course.HotCoursePeriodWeek && hotPeriod != course.HotCoursePeriodMonth {
+		return nil, course.ErrInvalidHotCoursePeriod
+	}
+	if s.hotRepo == nil {
+		return &HotCourseListDTO{Period: string(hotPeriod), Items: []HotCourseItemDTO{}}, nil
+	}
+
+	ranks, err := s.hotRepo.Top(ctx, hotPeriod, time.Now(), 5)
+	if err != nil {
+		return nil, err
+	}
+	if len(ranks) == 0 {
+		return &HotCourseListDTO{Period: string(hotPeriod), Items: []HotCourseItemDTO{}}, nil
+	}
+
+	ids := make([]int, 0, len(ranks))
+	for _, rank := range ranks {
+		ids = append(ids, rank.CourseID)
+	}
+	courses, _, err := s.courseQuery.FindBy(ctx, course.CourseFilter{CourseIDs: ids})
+	if err != nil {
+		return nil, err
+	}
+	courseMap := make(map[int]course.CourseView, len(courses))
+	for _, c := range courses {
+		courseMap[c.ID] = c
+	}
+
+	items := make([]HotCourseItemDTO, 0, len(ranks))
+	for _, rank := range ranks {
+		c, ok := courseMap[rank.CourseID]
+		if !ok {
+			continue
+		}
+		items = append(items, HotCourseItemDTO{
+			Course: newCourseListItemDTO(&c),
+			Score:  rank.Score,
+		})
+	}
+
+	return &HotCourseListDTO{Period: string(hotPeriod), Items: items}, nil
 }
 
 func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.User, courseID int) (*CourseDetailDTO, error) {
@@ -151,7 +202,7 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 func (s *CourseQueryService) ListTeacherCourses(ctx context.Context, teacherID int, f CourseListFilter) (*PaginatedResult[CourseListItemDTO], error) {
 	filter := course.CourseFilter{
 		TeacherID:   teacherID,
-		Code:        f.Code,
+		Q:           f.Q,
 		Department:  f.Department,
 		Language:    f.Language,
 		Categories:  f.Categories,

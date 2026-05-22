@@ -32,6 +32,11 @@ point:
   transfer_fee_rate_bps: 250
   transfer_min_fee: 1
 
+course_hot:
+  review_create_score: 3
+  review_update_score: 1
+  review_vote_score: 1
+
 asynq:
   concurrency: 10
 

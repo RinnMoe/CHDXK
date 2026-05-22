@@ -21,6 +21,11 @@ type Vote struct {
 	UpdatedAt time.Time
 }
 
+type VoteResult struct {
+	CourseID int
+	Changed  bool
+}
+
 var ErrDailyVoteLimitReached = errors.New("daily vote limit reached")
 
 var ErrInvalidVoteType = errors.New("invalid vote type")
@@ -34,38 +39,41 @@ func NewVoteService(reviewRepo ReviewRepository, voteRepo VoteRepository) *VoteS
 	return &VoteService{reviewRepo: reviewRepo, voteRepo: voteRepo}
 }
 
-func (s *VoteService) Vote(ctx context.Context, userID, reviewID, voteType int, now time.Time) error {
+func (s *VoteService) Vote(ctx context.Context, userID, reviewID, voteType int, now time.Time) (*VoteResult, error) {
 	if voteType != 0 && voteType != VoteLike && voteType != VoteDislike {
-		return ErrInvalidVoteType
+		return nil, ErrInvalidVoteType
 	}
 	reviewView, err := s.reviewRepo.Get(ctx, reviewID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if reviewView == nil {
-		return ErrReviewNotFound
+		return nil, ErrReviewNotFound
 	}
 
 	todayCount, err := s.voteRepo.CountTodayByUser(ctx, userID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if todayCount >= MaxDailyVotes {
-		return ErrDailyVoteLimitReached
+		return nil, ErrDailyVoteLimitReached
 	}
 
 	existing, err := s.voteRepo.FindByReviewAndUser(ctx, reviewID, userID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if existing != nil && existing.VoteType == voteType {
-		return nil
+		return &VoteResult{CourseID: reviewView.CourseID, Changed: false}, nil
 	}
 	if voteType == 0 {
 		if existing == nil {
-			return nil
+			return &VoteResult{CourseID: reviewView.CourseID, Changed: false}, nil
 		}
-		return s.voteRepo.Delete(ctx, reviewID, userID)
+		if err := s.voteRepo.Delete(ctx, reviewID, userID); err != nil {
+			return nil, err
+		}
+		return &VoteResult{CourseID: reviewView.CourseID, Changed: true}, nil
 	}
 	v := &Vote{
 		ReviewID:  reviewID,
@@ -77,7 +85,10 @@ func (s *VoteService) Vote(ctx context.Context, userID, reviewID, voteType int, 
 	if existing != nil {
 		v.CreatedAt = existing.CreatedAt
 	}
-	return s.voteRepo.Save(ctx, v)
+	if err := s.voteRepo.Save(ctx, v); err != nil {
+		return nil, err
+	}
+	return &VoteResult{CourseID: reviewView.CourseID, Changed: true}, nil
 }
 
 type VoteRepository interface {

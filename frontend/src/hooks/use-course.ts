@@ -13,6 +13,7 @@ import {
   setNotificationLevel,
   listFollowedCourses,
   listIgnoredCourses,
+  listHotCourses,
   type CourseDetailDTO,
   type CourseListFilter,
   type CourseNotificationLevel,
@@ -114,5 +115,12 @@ export function useIgnoredCourses(filter: CourseListFilter = {}, enabled = true)
     queryFn: () => listIgnoredCourses(filter),
     enabled,
     placeholderData: keepPreviousData,
+  })
+}
+
+export function useHotCourses(period: "week" | "month" = "week") {
+  return useQuery({
+    queryKey: ["hot-courses", period],
+    queryFn: () => listHotCourses(period),
   })
 }

@@ -76,6 +76,16 @@ type CourseDetailDTO struct {
 	NotificationLevel  int                 `json:"notification_level"`
 }
 
+type HotCourseItemDTO struct {
+	Course CourseListItemDTO `json:"course"`
+	Score  int64             `json:"score"`
+}
+
+type HotCourseListDTO struct {
+	Period string             `json:"period"`
+	Items  []HotCourseItemDTO `json:"items"`
+}
+
 type PaginatedResult[T any] struct {
 	Items    []T   `json:"items"`
 	Total    int64 `json:"total"`

@@ -51,6 +51,20 @@ func (ctrl *CourseController) ListCourses(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+func (ctrl *CourseController) ListHotCourses(c *gin.Context) {
+	period := c.DefaultQuery("period", "week")
+	result, err := ctrl.query.ListHotCourses(c.Request.Context(), period)
+	if err != nil {
+		if errors.Is(err, course.ErrInvalidHotCoursePeriod) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
 func (ctrl *CourseController) GetCourse(c *gin.Context) {
 	courseID, err := strconv.Atoi(c.Param("courseID"))
 	if err != nil {
