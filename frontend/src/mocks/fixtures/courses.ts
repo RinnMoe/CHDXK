@@ -206,6 +206,47 @@ mockCourses[2] = {
   main_teacher: makeTeacher("Alexander Christopher Johnson-Smith"),
 }
 
+// Courses with no reviews for testing zero-state UI
+const noRatingDistribution: [number, number, number, number, number] = [0, 0, 0, 0, 0]
+mockCourses.push(
+  {
+    id: 101,
+    code: "CS0101",
+    name: "量子计算导论",
+    credit: 3,
+    department: "计算机科学与工程系",
+    language: "中文",
+    target_years: ["大三", "大四"],
+    categories: ["专业选修"],
+    main_teacher: makeTeacher("钱学"),
+    rating: { count: 0, avg: 0, distribution: noRatingDistribution },
+  },
+  {
+    id: 102,
+    code: "MA0087",
+    name: "拓扑学基础",
+    credit: 2,
+    department: "数学科学学院",
+    language: "中文",
+    target_years: ["研究生"],
+    categories: ["专业必修"],
+    main_teacher: makeTeacher("孙理"),
+    rating: { count: 0, avg: 0, distribution: noRatingDistribution },
+  },
+  {
+    id: 103,
+    code: "PH0042",
+    name: "天体物理",
+    credit: 3,
+    department: "物理与天文学院",
+    language: "英文",
+    target_years: ["大三", "研究生"],
+    categories: ["专业选修", "通识选修"],
+    main_teacher: makeTeacher("李星"),
+    rating: { count: 0, avg: 0, distribution: noRatingDistribution },
+  },
+)
+
 export function makeCourseDetail(course: CourseListItemDTO): CourseDetailDTO {
   const sameCode = mockCourses
     .filter((c) => c.id !== course.id)

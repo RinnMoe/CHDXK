@@ -10,8 +10,8 @@ export function RatingDistribution({ rating }: RatingDistributionProps) {
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-8">
-      <div className="flex flex-col items-center gap-1 sm:items-start">
-        <div className="text-3xl font-bold">
+      <div className="flex flex-col items-center gap-1 sm:items-center">
+        <div className="text-3xl font-bold tabular-nums">
           {rating.avg > 0 ? rating.avg.toFixed(1) : "—"}
         </div>
         <RatingDisplay rating={rating} />
