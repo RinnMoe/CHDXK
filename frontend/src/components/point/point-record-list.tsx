@@ -29,14 +29,14 @@ export function PointRecordList({ records }: { records: PointRecordDTO[] }) {
         <div key={i} className="flex items-start justify-between gap-4 px-4 py-3">
           <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">
+              <span className="text-sm font-semibold text-foreground">
                 {REASON_LABELS[r.reason] ?? r.reason}
               </span>
               <span className="text-xs text-muted-foreground">
                 {formatDate(r.created_at)}
               </span>
             </div>
-            <p className="text-sm truncate">{r.description}</p>
+            <p className="text-sm font-normal text-muted-foreground truncate">{r.description}</p>
           </div>
           <span
             className={
