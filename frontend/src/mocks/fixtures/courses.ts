@@ -9,15 +9,31 @@ const DEPARTMENTS = [
   "数学科学学院",
   "物理与天文学院",
   "电子信息与电气工程学院",
+  "跨学科复杂系统智能工程与可持续社会创新联合研究中心课程建设办公室",
   "外国语学院",
   "化学化工学院",
   "生命科学技术学院",
   "机械与动力工程学院",
 ]
 
-const CATEGORIES = ["专业必修", "专业选修", "通识核心", "通识选修", "公共基础"]
+const CATEGORIES = [
+  "专业必修",
+  "专业选修",
+  "通识核心",
+  "通识选修",
+  "公共基础",
+  "超长筛选项-面向真实产业场景的跨学院跨年级跨语种综合实践课程模块",
+  "VeryLongCourseFilterCategoryWithoutSpacesForOverflowTestingAndLayoutValidation",
+]
 
-const TARGET_YEARS = ["大一", "大二", "大三", "大四", "研究生"]
+const TARGET_YEARS = [
+  "大一",
+  "大二",
+  "大三",
+  "大四",
+  "研究生",
+  "本硕博贯通培养项目高年级及跨专业联合选课学生",
+]
 
 const LANGUAGES = ["中文", "英文", "双语"]
 

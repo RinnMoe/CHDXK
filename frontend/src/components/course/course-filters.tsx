@@ -163,8 +163,8 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
 
   return (
     <>
-      <aside className="hidden lg:block w-56 shrink-0">
-        <div className="sticky top-20">{content}</div>
+      <aside className="scrollbar-none hidden w-56 shrink-0 overflow-y-auto overscroll-contain pr-2 pb-4 lg:block">
+        {content}
       </aside>
       <div className="lg:hidden">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -211,19 +211,20 @@ function FilterCheckGroup({
           const id = `${paramKey}-${item.name}`
           const checked = selected.includes(item.name)
           return (
-            <div key={item.name} className="flex items-center gap-2">
+            <div key={item.name} className="flex items-start gap-2">
               <Checkbox
                 id={id}
                 checked={checked}
+                className="mt-0.5"
                 onCheckedChange={() => onToggle(paramKey, item.name)}
               />
               <Label
                 htmlFor={id}
-                className="text-sm font-normal cursor-pointer flex-1 truncate"
+                className="block min-w-0 flex-1 cursor-pointer text-sm leading-snug font-normal whitespace-normal break-all"
               >
                 {item.name}
               </Label>
-              <span className="text-xs text-muted-foreground shrink-0">
+              <span className="mt-0.5 shrink-0 text-xs text-muted-foreground">
                 {item.count}
               </span>
             </div>
