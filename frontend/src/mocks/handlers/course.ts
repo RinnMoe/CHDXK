@@ -3,8 +3,8 @@ import {
   mockCourses,
   makeCourseDetail,
   makeCourseFilters,
-  makeReviews,
 } from "../fixtures/courses"
+import { mockReviews } from "../fixtures/reviews"
 
 const filters = makeCourseFilters()
 
@@ -83,7 +83,7 @@ export const courseHandlers = [
     const url = new URL(request.url)
     const page = Number(url.searchParams.get("page") ?? "1")
     const pageSize = Number(url.searchParams.get("page_size") ?? "20")
-    const reviews = makeReviews(id, 12)
+    const reviews = mockReviews.filter((r) => r.course_id === id)
     return HttpResponse.json(paginate(reviews, page, pageSize))
   }),
 

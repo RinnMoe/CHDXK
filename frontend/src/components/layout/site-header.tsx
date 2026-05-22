@@ -14,6 +14,12 @@ export function SiteHeader() {
           >
             课程
           </Link>
+          <Link
+            to="/reviews/latest"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            最新评价
+          </Link>
         </nav>
       </div>
     </header>

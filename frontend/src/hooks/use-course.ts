@@ -8,8 +8,8 @@ import {
   listFollowedCourses,
   listIgnoredCourses,
   type CourseListFilter,
-  type ReviewListFilter,
 } from "@/api/course"
+import type { ReviewListFilter } from "@/api/review"
 
 export function useCourseFilters() {
   return useQuery({

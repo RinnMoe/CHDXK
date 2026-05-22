@@ -4,6 +4,7 @@ import type {
   RatingInfoDTO,
   TeacherDTO,
 } from "./types"
+import type { ReviewDTO, ReviewListFilter } from "./review"
 import { apiClient } from "./client"
 
 const BASE = "/api"
@@ -52,22 +53,6 @@ export interface CourseDetailDTO {
   notification_level: number
 }
 
-export interface ReviewDTO {
-  id: number
-  course?: CourseListItemDTO
-  course_id: number
-  score: string
-  rating: number
-  content: string
-  vote: {
-    like_count: number
-    dislike_count: number
-    my_vote?: number
-  }
-  created_at: string
-  updated_at: string
-}
-
 export interface CourseListFilter {
   code?: string
   department?: string
@@ -80,13 +65,6 @@ export interface CourseListFilter {
   ascend?: boolean
   page?: number
   page_size?: number
-}
-
-export interface ReviewListFilter {
-  page?: number
-  page_size?: number
-  order_by?: string
-  ascend?: boolean
 }
 
 function buildQuery(filter: Record<string, unknown>): string {

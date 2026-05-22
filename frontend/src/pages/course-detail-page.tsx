@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom"
-import { RiArrowLeftLine } from "@remixicon/react"
+import { RiArrowLeftLine, RiAddLine } from "@remixicon/react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,7 +9,7 @@ import { CourseCard } from "@/components/course/course-card"
 import { RatingDistribution } from "@/components/course/rating-distribution"
 import { PageShell } from "@/components/layout/page-shell"
 import { useCourseDetail, useCourseReviews } from "@/hooks/use-course"
-import { ReviewItem } from "@/components/course/review-item"
+import { ReviewList } from "@/components/review/review-list"
 
 export function CourseDetailPage() {
   const { courseID } = useParams<{ courseID: string }>()
@@ -126,22 +126,25 @@ export function CourseDetailPage() {
         <section>
           <div className="flex items-baseline justify-between mb-3">
             <h2 className="text-lg font-semibold">课程评价</h2>
-            {reviews && (
-              <span className="text-sm text-muted-foreground">
-                共 {reviews.total} 条
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {reviews && (
+                <span className="text-sm text-muted-foreground">
+                  共 {reviews.total} 条
+                </span>
+              )}
+              <Button asChild size="sm" variant="outline">
+                <Link to={`/courses/${course.id}/review/new`}>
+                  <RiAddLine data-icon="inline-start" />
+                  写评价
+                </Link>
+              </Button>
+            </div>
           </div>
-          <div className="space-y-3">
-            {reviews?.items.map((review) => (
-              <ReviewItem key={review.id} review={review} />
-            ))}
-            {reviews && reviews.items.length === 0 && (
-              <p className="text-sm text-muted-foreground py-8 text-center">
-                还没有评价，来抢沙发？
-              </p>
-            )}
-          </div>
+          <ReviewList
+            reviews={reviews?.items ?? []}
+            isLoading={!reviews}
+            emptyText="还没有评价，来抢沙发？"
+          />
         </section>
 
         {course.same_code_courses.length > 0 && (

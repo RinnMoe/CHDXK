@@ -1,0 +1,70 @@
+import { useState } from "react"
+import { RiThumbUpFill, RiThumbUpLine, RiThumbDownFill, RiThumbDownLine } from "@remixicon/react"
+import { Button } from "@/components/ui/button"
+import { useVoteReview } from "@/hooks/use-review"
+import { VoteLike, VoteDislike, VoteNeutral, type VoteType } from "@/api/review"
+import { cn } from "@/lib/utils"
+
+interface VoteButtonsProps {
+  reviewID: number
+  likeCount: number
+  dislikeCount: number
+  myVote?: number
+}
+
+export function VoteButtons({
+  reviewID,
+  likeCount,
+  dislikeCount,
+  myVote,
+}: VoteButtonsProps) {
+  const [optimisticVote, setOptimisticVote] = useState<number | undefined>(myVote)
+  const { mutate, isPending } = useVoteReview()
+
+  const cast = (next: VoteType) => {
+    const final = optimisticVote === next ? VoteNeutral : next
+    setOptimisticVote(final)
+    mutate({ reviewID, voteType: final })
+  }
+
+  const liked = optimisticVote === VoteLike
+  const disliked = optimisticVote === VoteDislike
+
+  const adjustedLike =
+    likeCount + (liked && myVote !== VoteLike ? 1 : 0) - (myVote === VoteLike && !liked ? 1 : 0)
+  const adjustedDislike =
+    dislikeCount + (disliked && myVote !== VoteDislike ? 1 : 0) - (myVote === VoteDislike && !disliked ? 1 : 0)
+
+  return (
+    <div className="inline-flex items-center gap-1">
+      <Button
+        variant="ghost"
+        size="sm"
+        disabled={isPending}
+        onClick={() => cast(VoteLike)}
+        className={cn("gap-1", liked && "text-primary")}
+      >
+        {liked ? (
+          <RiThumbUpFill data-icon="inline-start" />
+        ) : (
+          <RiThumbUpLine data-icon="inline-start" />
+        )}
+        <span className="tabular-nums text-xs">{adjustedLike}</span>
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        disabled={isPending}
+        onClick={() => cast(VoteDislike)}
+        className={cn("gap-1", disliked && "text-destructive")}
+      >
+        {disliked ? (
+          <RiThumbDownFill data-icon="inline-start" />
+        ) : (
+          <RiThumbDownLine data-icon="inline-start" />
+        )}
+        <span className="tabular-nums text-xs">{adjustedDislike}</span>
+      </Button>
+    </div>
+  )
+}

@@ -2,7 +2,6 @@ import type {
   CourseListItemDTO,
   CourseDetailDTO,
   CourseFilters,
-  ReviewDTO,
 } from "@/api/course"
 
 const DEPARTMENTS = [
@@ -219,24 +218,4 @@ export function makeCourseFilters(): CourseFilters {
     categories: counts(CATEGORIES),
     target_years: counts(TARGET_YEARS),
   }
-}
-
-export function makeReviews(courseID: number, n = 8): ReviewDTO[] {
-  const now = new Date()
-  return Array.from({ length: n }, (_, i) => {
-    const created = new Date(now.getTime() - randInt(1, 365) * 86400000)
-    return {
-      id: courseID * 1000 + i,
-      course_id: courseID,
-      score: pick(["A+", "A", "A-", "B+", "B", "B-", "C+", "未公布"]),
-      rating: randInt(1, 5),
-      content: `这是对课程 ${courseID} 的第 ${i + 1} 条评价。内容涉及上课体验、作业难度、考试方式等。这门课总体感觉${pick(["不错", "一般", "推荐", "硬核", "水"])}，老师讲得${pick(["很好", "比较清楚", "节奏快", "认真负责"])}。`,
-      vote: {
-        like_count: randInt(0, 30),
-        dislike_count: randInt(0, 5),
-      },
-      created_at: created.toISOString(),
-      updated_at: created.toISOString(),
-    }
-  })
 }
