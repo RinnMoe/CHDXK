@@ -6,6 +6,7 @@ import (
 	"jcourse/config"
 	"jcourse/internal/application"
 	domainauth "jcourse/internal/domain/auth"
+	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/review/policy"
 	"jcourse/internal/infrastructure/email"
@@ -60,11 +61,14 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	courseCommand := application.NewCourseCommandService(courseRepo, notificationRepo)
 	teacherQuery := application.NewTeacherQueryService(teacherRepo)
 	announcementQuery := application.NewAnnouncementQueryService(announcementRepo)
-	pointQuery := application.NewPointQueryService(pointRepo, userRepo)
-	pointCommand := application.NewPointCommandService(userRepo, pointRepo, application.PointTransferFeeConfig{
+	pointQuery := application.NewPointQueryService(pointRepo, userRepo, point.NewTransferService(point.TransferFeeConfig{
 		RateBps: conf.Point.TransferFeeRateBps,
 		MinFee:  conf.Point.TransferMinFee,
-	})
+	}))
+	pointCommand := application.NewPointCommandService(userRepo, pointRepo, point.NewTransferService(point.TransferFeeConfig{
+		RateBps: conf.Point.TransferFeeRateBps,
+		MinFee:  conf.Point.TransferMinFee,
+	}))
 	siteStatsQuery := application.NewSiteStatsQueryService(statRepo)
 	siteStatsCommand := application.NewSiteStatsCommandService(statRepo, statRepo)
 	authCommand := application.NewAuthCommandService(

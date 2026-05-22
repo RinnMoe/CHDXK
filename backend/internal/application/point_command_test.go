@@ -64,20 +64,8 @@ func TestPointCommandService_CreateTransferRejectsInvalidCases(t *testing.T) {
 	}
 }
 
-func TestPointCommandService_PreviewTransfer(t *testing.T) {
-	svc := newPointCommandService(newFakeUserRepo(), &fakePointTransferRepo{})
-
-	got, err := svc.PreviewTransfer(application.CreatePointTransferCommand{Amount: 100, FeePayer: point.FeePayerRecipient})
-	if err != nil {
-		t.Fatalf("PreviewTransfer: %v", err)
-	}
-	if got.Fee != 2 || got.SenderDebit != 100 || got.RecipientCredit != 98 {
-		t.Fatalf("preview = %+v", got)
-	}
-}
-
 func newPointCommandService(userRepo *fakeUserRepo, transferRepo point.TransferRepository) *application.PointCommandService {
-	return application.NewPointCommandService(userRepo, transferRepo, application.PointTransferFeeConfig{RateBps: 250, MinFee: 1})
+	return application.NewPointCommandService(userRepo, transferRepo, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}))
 }
 
 func seedFakePointUser(repo *fakeUserRepo, id int, email string) *auth.User {

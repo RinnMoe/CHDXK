@@ -40,10 +40,17 @@ export interface PointTransferPreviewDTO {
   fee_payer: FeePayer
   sender_debit: number
   recipient_credit: number
+  sender_balance: number
+  sender_remaining: number
 }
 
 export interface CreatePointTransferCommand {
   recipient_username: string
+  amount: number
+  fee_payer: FeePayer
+}
+
+export interface PreviewTransferParams {
   amount: number
   fee_payer: FeePayer
 }
@@ -72,11 +79,11 @@ export function getUserPoints(
 }
 
 export function previewTransfer(
-  cmd: CreatePointTransferCommand
+  params: PreviewTransferParams
 ): Promise<PointTransferPreviewDTO> {
   return apiClient(`${BASE}/point/transfers/preview`, {
     method: "POST",
-    body: JSON.stringify(cmd),
+    body: JSON.stringify(params),
   })
 }
 

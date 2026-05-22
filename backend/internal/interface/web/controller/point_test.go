@@ -36,7 +36,7 @@ func TestPointController_GetUserPointsAuth(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := &pointControllerFakeQuery{}
 			cmd := newPointControllerCommand()
-			ctrl := controller.NewPointController(application.NewPointQueryService(repo, &pointControllerFakeUserRepo{}), cmd)
+			ctrl := controller.NewPointController(application.NewPointQueryService(repo, &pointControllerFakeUserRepo{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1})), cmd)
 			r := gin.New()
 			r.GET("/api/user/:userID/points", func(c *gin.Context) {
 				if tt.current != nil {
@@ -59,7 +59,7 @@ func TestPointController_GetUserPointsAuth(t *testing.T) {
 func TestPointController_PreviewAndCreateTransfer(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	command := newPointControllerCommand()
-	ctrl := controller.NewPointController(application.NewPointQueryService(&pointControllerFakeQuery{}, &pointControllerFakeUserRepo{}), command)
+	ctrl := controller.NewPointController(application.NewPointQueryService(&pointControllerFakeQuery{}, &pointControllerFakeUserRepo{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1})), command)
 	r := gin.New()
 	r.POST("/api/point/transfers/preview", func(c *gin.Context) {
 		c.Request = c.Request.WithContext(auth.WithUser(c.Request.Context(), &auth.User{ID: 1, Role: auth.RoleUser}))
@@ -104,7 +104,7 @@ func newPointControllerCommand() *application.PointCommandService {
 			"bob@example.edu": &auth.User{ID: 2, Username: "bob@example.edu", Email: "bob@example.edu", Role: auth.RoleUser},
 		}},
 		&pointControllerFakeTransferRepo{},
-		application.PointTransferFeeConfig{RateBps: 250, MinFee: 1},
+		point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}),
 	)
 }
 
@@ -148,7 +148,7 @@ func TestPointController_GetPointsByEmail(t *testing.T) {
 		},
 	}
 	ctrl := controller.NewPointController(
-		application.NewPointQueryService(fakeQuery, fakeUserRepo),
+		application.NewPointQueryService(fakeQuery, fakeUserRepo, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1})),
 		newPointControllerCommand(),
 	)
 

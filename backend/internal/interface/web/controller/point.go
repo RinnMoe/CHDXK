@@ -98,13 +98,13 @@ func (ctrl *PointController) PreviewTransfer(c *gin.Context) {
 		return
 	}
 
-	var cmd application.CreatePointTransferCommand
-	if err := c.ShouldBindJSON(&cmd); err != nil {
+	var params application.PreviewTransferParams
+	if err := c.ShouldBindJSON(&params); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	preview, err := ctrl.command.PreviewTransfer(cmd)
+	preview, err := ctrl.query.PreviewTransfer(c.Request.Context(), u.ID, params)
 	if err != nil {
 		switch {
 		case errors.Is(err, application.ErrPointTransferInvalidAmount),

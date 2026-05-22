@@ -18,8 +18,6 @@ var (
 	ErrPointTransferRecipientAmountSmall = point.ErrTransferRecipientAmountSmall
 )
 
-type PointTransferFeeConfig = point.TransferFeeConfig
-
 type CreatePointTransferCommand struct {
 	RecipientUsername string         `json:"recipient_username"`
 	Amount            int            `json:"amount"`
@@ -32,11 +30,11 @@ type PointCommandService struct {
 	transferService *point.TransferService
 }
 
-func NewPointCommandService(userRepo auth.UserRepository, transferRepo point.TransferRepository, feeConfig PointTransferFeeConfig) *PointCommandService {
+func NewPointCommandService(userRepo auth.UserRepository, transferRepo point.TransferRepository, transferService *point.TransferService) *PointCommandService {
 	return &PointCommandService{
 		userRepo:        userRepo,
 		transferRepo:    transferRepo,
-		transferService: point.NewTransferService(feeConfig),
+		transferService: transferService,
 	}
 }
 
@@ -65,14 +63,5 @@ func (s *PointCommandService) CreateTransfer(ctx context.Context, sender *auth.U
 		return nil, err
 	}
 	dto := newPointTransferDTO(transfer)
-	return &dto, nil
-}
-
-func (s *PointCommandService) PreviewTransfer(cmd CreatePointTransferCommand) (*PointTransferPreviewDTO, error) {
-	preview, err := s.transferService.Preview(cmd.Amount, cmd.FeePayer)
-	if err != nil {
-		return nil, err
-	}
-	dto := newPointTransferPreviewDTO(preview)
 	return &dto, nil
 }

@@ -24,6 +24,8 @@ type PointTransferPreviewDTO struct {
 	FeePayer        point.FeePayer `json:"fee_payer"`
 	SenderDebit     int            `json:"sender_debit"`
 	RecipientCredit int            `json:"recipient_credit"`
+	SenderBalance   int            `json:"sender_balance"`
+	SenderRemaining int            `json:"sender_remaining"`
 }
 
 func newPointTransferDTO(t *point.Transfer) PointTransferDTO {
@@ -40,12 +42,14 @@ func newPointTransferDTO(t *point.Transfer) PointTransferDTO {
 	}
 }
 
-func newPointTransferPreviewDTO(p *point.TransferPreview) PointTransferPreviewDTO {
+func newPointTransferPreviewDTO(p *point.TransferPreview, senderBalance int) PointTransferPreviewDTO {
 	return PointTransferPreviewDTO{
 		Amount:          p.Amount,
 		Fee:             p.Fee,
 		FeePayer:        p.FeePayer,
 		SenderDebit:     p.SenderDebit,
 		RecipientCredit: p.RecipientCredit,
+		SenderBalance:   senderBalance,
+		SenderRemaining: senderBalance - p.SenderDebit,
 	}
 }

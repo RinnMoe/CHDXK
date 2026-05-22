@@ -42,6 +42,7 @@ type TransferPreview struct {
 	FeePayer        FeePayer
 	SenderDebit     int
 	RecipientCredit int
+	SenderRemaining int
 }
 
 type TransferService struct {

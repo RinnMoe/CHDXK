@@ -5,6 +5,7 @@ import {
   previewTransfer,
   type CreatePointTransferCommand,
   type PointRecordListFilter,
+  type PreviewTransferParams,
 } from "@/api/point"
 
 export function useUserPoints(userID: number, filter: PointRecordListFilter = {}) {
@@ -17,7 +18,7 @@ export function useUserPoints(userID: number, filter: PointRecordListFilter = {}
 
 export function usePreviewTransfer() {
   return useMutation({
-    mutationFn: (cmd: CreatePointTransferCommand) => previewTransfer(cmd),
+    mutationFn: (params: PreviewTransferParams) => previewTransfer(params),
   })
 }
 
