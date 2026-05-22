@@ -1,5 +1,2 @@
 allowBuilds:
-  esbuild: true
   msw: true
-minimumReleaseAgeExclude:
-  - shadcn@4.8.0
