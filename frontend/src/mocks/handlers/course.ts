@@ -124,6 +124,21 @@ export const courseHandlers = [
     return HttpResponse.json(filters)
   }),
 
+  http.get("/api/course/hot", async ({ request }) => {
+    await randomDelay()
+    const url = new URL(request.url)
+    const period = (url.searchParams.get("period") ?? "week") as "week" | "month"
+    const limit = Math.min(
+      Number(url.searchParams.get("limit") ?? "5"),
+      mockCourses.length,
+    )
+    const items = mockCourses.slice(0, limit).map((course, i) => ({
+      course,
+      score: (limit - i) * 10 + Math.floor(Math.random() * 6),
+    }))
+    return HttpResponse.json({ period, items })
+  }),
+
   http.get("/api/course/", async ({ request }) => {
     await randomDelay()
     const url = new URL(request.url)

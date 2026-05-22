@@ -55,7 +55,7 @@ export function ReviewForm({
       return
     }
     if (content.trim().length < 10) {
-      setError("评价内容至少需要 10 个字符")
+      setError("点评内容至少需要 10 个字符")
       return
     }
     try {
@@ -118,10 +118,10 @@ export function ReviewForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="content">评价内容</Label>
+        <Label htmlFor="content">点评内容</Label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">编辑</p>
+            <p className="text-sm text-muted-foreground">编辑</p>
             <Textarea
               id="content"
               placeholder="分享你对这门课程的看法...（支持 Markdown）"
@@ -132,7 +132,7 @@ export function ReviewForm({
             />
           </div>
           <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">预览</p>
+            <p className="text-sm text-muted-foreground">预览</p>
             <div className="min-h-[10rem] text-sm prose prose-sm max-w-none dark:prose-invert">
               {content.trim() ? (
                 <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
@@ -142,7 +142,7 @@ export function ReviewForm({
             </div>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">{content.length} / 至少 10 字</p>
+        <p className="text-sm text-muted-foreground">{content.length} / 至少 10 字</p>
       </div>
 
       {error && (
@@ -158,7 +158,7 @@ export function ReviewForm({
           </Button>
         )}
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "提交中..." : isEdit ? "更新评价" : "发布评价"}
+          {isSubmitting ? "提交中..." : isEdit ? "更新点评" : "发布点评"}
         </Button>
       </div>
     </form>

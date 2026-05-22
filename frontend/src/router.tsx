@@ -1,6 +1,8 @@
-import { createBrowserRouter, Navigate } from "react-router-dom"
+import { createBrowserRouter } from "react-router-dom"
 import { Layout } from "@/components/layout/layout"
+import { HomePage } from "@/pages/home-page"
 import { CoursesPage } from "@/pages/courses-page"
+import { HotCoursesPage } from "@/pages/hot-courses-page"
 import { CourseDetailPage } from "@/pages/course-detail-page"
 import { LatestReviewsPage } from "@/pages/latest-reviews-page"
 import { FollowedReviewsPage } from "@/pages/followed-reviews-page"
@@ -21,8 +23,9 @@ export const router = createBrowserRouter([
   {
     element: <Layout />,
     children: [
-      { path: "/", element: <Navigate to="/courses" replace /> },
+      { path: "/", element: <HomePage /> },
       { path: "/courses", element: <CoursesPage /> },
+      { path: "/courses/hot", element: <HotCoursesPage /> },
       { path: "/courses/:courseID", element: <CourseDetailPage /> },
       { path: "/courses/:courseID/review/new", element: <NewReviewPage /> },
       { path: "/reviews/latest", element: <LatestReviewsPage /> },

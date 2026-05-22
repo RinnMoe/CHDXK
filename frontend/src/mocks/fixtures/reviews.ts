@@ -134,7 +134,7 @@ export function generateReviewsForCourse(courseID: number, n = 8): ReviewDTO[] {
 }
 
 export const mockReviews: ReviewDTO[] = mockCourses.flatMap((c) =>
-  generateReviewsForCourse(c.id, randInt(0, 6))
+  generateReviewsForCourse(c.id, randInt(18, 28))
 )
 
 export function findReview(id: number): ReviewDTO | undefined {

@@ -31,13 +31,13 @@ export function StatsCard({
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <p className="text-xs text-muted-foreground">{stat.stat_date}</p>
+        <p className="text-sm text-muted-foreground">{stat.stat_date}</p>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {items(stat).map((it) => (
             <div key={it.label} className="space-y-1">
-              <p className="text-xs text-muted-foreground">{it.label}</p>
+              <p className="text-sm text-muted-foreground">{it.label}</p>
               <p className="text-xl font-semibold">{it.value}</p>
             </div>
           ))}

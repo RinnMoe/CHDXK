@@ -26,7 +26,7 @@ export function EditReviewPage() {
   if (isLoading || !review) {
     return (
       <>
-        <title>编辑评价 - JCourse</title>
+        <title>编辑点评 - JCourse</title>
         <PageShell>
         <div className="space-y-4">
           <Skeleton className="h-8 w-1/2" />
@@ -39,18 +39,18 @@ export function EditReviewPage() {
 
   return (
     <>
-      <title>编辑评价 - JCourse</title>
+      <title>编辑点评 - JCourse</title>
       <PageShell>
       <Button asChild variant="ghost" size="sm" className="mb-4">
         <Link to={`/reviews/${id}`}>
           <RiArrowLeftLine data-icon="inline-start" />
-          返回评价
+          返回点评
         </Link>
       </Button>
 
       <Card>
         <CardHeader>
-          <CardTitle>编辑评价</CardTitle>
+          <CardTitle>编辑点评</CardTitle>
           {review.course && (
             <div className="text-sm text-muted-foreground space-y-0.5">
               <div>

@@ -108,7 +108,7 @@ export function SiteStatsPage() {
 
           <div className="flex flex-wrap items-end gap-2">
             <div className="space-y-1">
-              <Label htmlFor="start-date" className="text-xs">
+              <Label htmlFor="start-date" className="text-sm">
                 开始日期
               </Label>
               <Input
@@ -120,7 +120,7 @@ export function SiteStatsPage() {
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="end-date" className="text-xs">
+              <Label htmlFor="end-date" className="text-sm">
                 结束日期
               </Label>
               <Input

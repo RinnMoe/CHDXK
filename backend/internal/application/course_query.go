@@ -73,7 +73,7 @@ func (s *CourseQueryService) ListCourses(ctx context.Context, f CourseListFilter
 	}, nil
 }
 
-func (s *CourseQueryService) ListHotCourses(ctx context.Context, period string) (*HotCourseListDTO, error) {
+func (s *CourseQueryService) ListHotCourses(ctx context.Context, period string, limit int) (*HotCourseListDTO, error) {
 	if period == "" {
 		period = string(course.HotCoursePeriodWeek)
 	}
@@ -85,7 +85,7 @@ func (s *CourseQueryService) ListHotCourses(ctx context.Context, period string) 
 		return &HotCourseListDTO{Period: string(hotPeriod), Items: []HotCourseItemDTO{}}, nil
 	}
 
-	ranks, err := s.hotRepo.Top(ctx, hotPeriod, time.Now(), 5)
+	ranks, err := s.hotRepo.Top(ctx, hotPeriod, time.Now(), int64(limit))
 	if err != nil {
 		return nil, err
 	}

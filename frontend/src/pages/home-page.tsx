@@ -1,0 +1,51 @@
+import { Link } from "react-router-dom"
+import { PageShell } from "@/components/layout/page-shell"
+import { ReviewList } from "@/components/review/review-list"
+import { HotCourseList } from "@/components/course/hot-course-list"
+import { useLatestReviews } from "@/hooks/use-review"
+
+export function HomePage() {
+  const { data: reviewsData, isLoading: reviewsLoading } = useLatestReviews({
+    page: 1,
+    page_size: 20,
+  })
+
+  return (
+    <>
+      <title>JCourse</title>
+      <PageShell>
+        <div className="space-y-6 lg:flex lg:gap-8 lg:space-y-0">
+          <div className="min-w-0 flex-1 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">最新点评</h2>
+              <Link
+                to="/reviews/latest"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                查看更多
+              </Link>
+            </div>
+            <ReviewList
+              reviews={reviewsData?.items ?? []}
+              isLoading={reviewsLoading}
+              showCourse
+            />
+          </div>
+
+          <div className="w-full lg:w-1/3 shrink-0 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">热门课程</h2>
+              <Link
+                to="/courses/hot"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                查看更多
+              </Link>
+            </div>
+            <HotCourseList period="week" limit={5} />
+          </div>
+        </div>
+      </PageShell>
+    </>
+  )
+}

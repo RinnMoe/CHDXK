@@ -187,7 +187,7 @@ func TestCourseQueryService_ListHotCourses(t *testing.T) {
 	}}
 	svc := application.NewCourseQueryService(query, newFakeNotificationRepo(), hotRepo)
 
-	result, err := svc.ListHotCourses(context.Background(), "week")
+	result, err := svc.ListHotCourses(context.Background(), "week", 5)
 	if err != nil {
 		t.Fatalf("ListHotCourses: %v", err)
 	}
@@ -205,9 +205,34 @@ func TestCourseQueryService_ListHotCourses(t *testing.T) {
 	}
 }
 
+func TestCourseQueryService_ListHotCourses_WithLimit(t *testing.T) {
+	query := newFakeCourseQuery()
+	query.views[1] = course.CourseView{ID: 1, Code: "CS101", Name: "数据结构"}
+	query.views[2] = course.CourseView{ID: 2, Code: "CS102", Name: "算法"}
+
+	hotRepo := &fakeHotCourseRepo{ranks: []course.HotCourseRank{
+		{CourseID: 2, Score: 10},
+		{CourseID: 1, Score: 8},
+	}}
+	svc := application.NewCourseQueryService(query, newFakeNotificationRepo(), hotRepo)
+
+	t.Run("limit 1 returns only top course", func(t *testing.T) {
+		result, err := svc.ListHotCourses(context.Background(), "week", 1)
+		if err != nil {
+			t.Fatalf("ListHotCourses: %v", err)
+		}
+		if len(result.Items) != 1 {
+			t.Fatalf("items length: got %d, want 1", len(result.Items))
+		}
+		if result.Items[0].Course.ID != 2 {
+			t.Fatalf("first item: got course=%d, want course=2", result.Items[0].Course.ID)
+		}
+	})
+}
+
 func TestCourseQueryService_ListHotCourses_InvalidPeriod(t *testing.T) {
 	svc := application.NewCourseQueryService(newFakeCourseQuery(), newFakeNotificationRepo(), &fakeHotCourseRepo{})
-	_, err := svc.ListHotCourses(context.Background(), "daily")
+	_, err := svc.ListHotCourses(context.Background(), "daily", 5)
 	if err != course.ErrInvalidHotCoursePeriod {
 		t.Fatalf("err: got %v, want %v", err, course.ErrInvalidHotCoursePeriod)
 	}

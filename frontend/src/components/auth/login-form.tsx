@@ -52,7 +52,7 @@ export function LoginForm() {
               <Label htmlFor="password">密码</Label>
               <Link
                 to="/password-reset"
-                className="text-xs text-muted-foreground hover:text-foreground"
+                className="text-sm text-muted-foreground hover:text-foreground"
               >
                 忘记密码？
               </Link>

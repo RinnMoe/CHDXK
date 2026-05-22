@@ -23,13 +23,13 @@ export function FollowedReviewsPage() {
         <div>
           <h1 className="text-2xl font-bold">关注动态</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            你关注的课程的最新评价
+            你关注的课程的最新点评
           </p>
         </div>
 
         {data && (
           <p className="text-sm text-muted-foreground">
-            共 {data.total} 条评价
+            共 {data.total} 条点评
           </p>
         )}
 

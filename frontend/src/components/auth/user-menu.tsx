@@ -45,7 +45,7 @@ export function UserMenu() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm" className="gap-2">
-            <span className="flex size-6 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground font-medium">
+            <span className="flex size-6 items-center justify-center rounded-full bg-primary text-sm text-primary-foreground font-medium">
               {initials}
             </span>
             <span className="hidden sm:inline">{user.username}</span>
@@ -53,7 +53,7 @@ export function UserMenu() {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem asChild>
-            <Link to={`/reviews/mine`}>我的评价</Link>
+            <Link to={`/reviews/mine`}>我的点评</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link to="/courses/mine">我的课程</Link>

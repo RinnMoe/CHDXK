@@ -39,49 +39,6 @@ const LANGUAGES = ["中文", "英文", "双语"]
 
 const CREDITS = [1, 2, 3, 4]
 
-const COURSE_NAMES = [
-  "数据结构",
-  "操作系统",
-  "计算机网络",
-  "编译原理",
-  "高等数学",
-  "线性代数",
-  "概率论与数理统计",
-  "离散数学",
-  "大学物理",
-  "理论力学",
-  "电磁学",
-  "量子力学",
-  "大学英语",
-  "学术英语写作",
-  "有机化学",
-  "无机化学",
-  "细胞生物学",
-  "分子生物学",
-  "机械设计基础",
-  "热力学",
-  "人工智能导论",
-  "机器学习",
-  "深度学习",
-  "数据库系统",
-  "软件工程",
-  "算法分析与设计",
-  "计算机组成原理",
-  "信号与系统",
-  "数字电路",
-  "模拟电路",
-  "自然语言处理",
-  "计算机图形学",
-  "并行计算",
-  "分布式系统",
-  "网络安全",
-  "区块链技术",
-  "云计算",
-  "嵌入式系统",
-  "数据挖掘",
-  "信息检索",
-]
-
 const TEACHER_NAMES = [
   "张伟",
   "王芳",
@@ -154,15 +111,52 @@ function avgFromDistribution(dist: [number, number, number, number, number]): nu
   return Math.round((sum / total) * 100) / 100
 }
 
-function makeCourse(id: number): CourseListItemDTO {
+let courseIDSeed = 1
+
+// Define code groups: most courses share a code with 1-3 other courses
+const CODE_GROUPS: { code: string; name: string; credit: number }[] = [
+  { code: "CS1001", name: "数据结构", credit: 4 },
+  { code: "CS1002", name: "操作系统", credit: 4 },
+  { code: "CS1003", name: "计算机网络", credit: 3 },
+  { code: "CS1004", name: "编译原理", credit: 3 },
+  { code: "MA1001", name: "高等数学", credit: 4 },
+  { code: "MA1002", name: "线性代数", credit: 3 },
+  { code: "MA2001", name: "概率论与数理统计", credit: 3 },
+  { code: "MA2002", name: "离散数学", credit: 3 },
+  { code: "PH1001", name: "大学物理", credit: 4 },
+  { code: "PH2001", name: "理论力学", credit: 3 },
+  { code: "PH2002", name: "电磁学", credit: 3 },
+  { code: "PH2003", name: "量子力学", credit: 3 },
+  { code: "EN1001", name: "大学英语", credit: 3 },
+  { code: "EN2001", name: "学术英语写作", credit: 2 },
+  { code: "CH1001", name: "有机化学", credit: 3 },
+  { code: "CH1002", name: "无机化学", credit: 3 },
+  { code: "BI1001", name: "细胞生物学", credit: 3 },
+  { code: "BI2001", name: "分子生物学", credit: 3 },
+  { code: "ME1001", name: "机械设计基础", credit: 3 },
+  { code: "ME2001", name: "热力学", credit: 3 },
+  { code: "AI1001", name: "人工智能导论", credit: 3 },
+  { code: "AI2001", name: "机器学习", credit: 3 },
+  { code: "AI2002", name: "深度学习", credit: 3 },
+  { code: "CS2001", name: "数据库系统", credit: 3 },
+  { code: "CS2002", name: "软件工程", credit: 3 },
+  { code: "CS2003", name: "算法分析与设计", credit: 3 },
+  { code: "CS2004", name: "计算机组成原理", credit: 3 },
+  { code: "EE1001", name: "信号与系统", credit: 3 },
+  { code: "EE1002", name: "数字电路", credit: 3 },
+  { code: "EE1003", name: "模拟电路", credit: 3 },
+]
+
+function makeCourse(): CourseListItemDTO {
+  const group = pick(CODE_GROUPS)
   const count = randInt(0, 50)
   const distribution = makeDistribution(count)
   const mainTeacher = makeTeacher()
   return {
-    id,
-    code: `CS${String(id).padStart(4, "0")}`,
-    name: pick(COURSE_NAMES),
-    credit: pick(CREDITS),
+    id: courseIDSeed++,
+    code: group.code,
+    name: group.name,
+    credit: group.credit,
     department: mainTeacher.department,
     language: pick(LANGUAGES),
     target_years: pickMany(TARGET_YEARS, randInt(1, 2)),
@@ -176,8 +170,8 @@ function makeCourse(id: number): CourseListItemDTO {
   }
 }
 
-export const mockCourses: CourseListItemDTO[] = Array.from({ length: 64 }, (_, i) =>
-  makeCourse(i + 1)
+export const mockCourses: CourseListItemDTO[] = Array.from({ length: 64 }, () =>
+  makeCourse()
 )
 
 mockCourses[0] = {
@@ -210,7 +204,7 @@ mockCourses[2] = {
 const noRatingDistribution: [number, number, number, number, number] = [0, 0, 0, 0, 0]
 mockCourses.push(
   {
-    id: 101,
+    id: courseIDSeed++,
     code: "CS0101",
     name: "量子计算导论",
     credit: 3,
@@ -222,7 +216,7 @@ mockCourses.push(
     rating: { count: 0, avg: 0, distribution: noRatingDistribution },
   },
   {
-    id: 102,
+    id: courseIDSeed++,
     code: "MA0087",
     name: "拓扑学基础",
     credit: 2,
@@ -234,7 +228,7 @@ mockCourses.push(
     rating: { count: 0, avg: 0, distribution: noRatingDistribution },
   },
   {
-    id: 103,
+    id: courseIDSeed++,
     code: "PH0042",
     name: "天体物理",
     credit: 3,
@@ -249,11 +243,9 @@ mockCourses.push(
 
 export function makeCourseDetail(course: CourseListItemDTO): CourseDetailDTO {
   const sameCode = mockCourses
-    .filter((c) => c.id !== course.id)
-    .slice(0, 3)
+    .filter((c) => c.code === course.code && c.id !== course.id)
   const sameTeacher = mockCourses
     .filter((c) => c.main_teacher.id === course.main_teacher.id && c.id !== course.id)
-    .slice(0, 3)
 
   return {
     id: course.id,

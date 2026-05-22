@@ -118,9 +118,9 @@ export function useIgnoredCourses(filter: CourseListFilter = {}, enabled = true)
   })
 }
 
-export function useHotCourses(period: "week" | "month" = "week") {
+export function useHotCourses(period: "week" | "month" = "week", limit?: number) {
   return useQuery({
-    queryKey: ["hot-courses", period],
-    queryFn: () => listHotCourses(period),
+    queryKey: ["hot-courses", period, limit],
+    queryFn: () => listHotCourses(period, limit),
   })
 }

@@ -19,19 +19,19 @@ export function UserReviewsPage() {
 
   return (
     <>
-      <title>我的评价 - JCourse</title>
+      <title>我的点评 - JCourse</title>
       <PageShell>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">我的评价</h1>
+          <h1 className="text-2xl font-bold">我的点评</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            管理你发布的所有课程评价
+            管理你发布的所有课程点评
           </p>
         </div>
 
         {data && (
           <p className="text-sm text-muted-foreground">
-            共 {data.total} 条评价
+            共 {data.total} 条点评
           </p>
         )}
 

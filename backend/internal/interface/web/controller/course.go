@@ -53,7 +53,13 @@ func (ctrl *CourseController) ListCourses(c *gin.Context) {
 
 func (ctrl *CourseController) ListHotCourses(c *gin.Context) {
 	period := c.DefaultQuery("period", "week")
-	result, err := ctrl.query.ListHotCourses(c.Request.Context(), period)
+	limitStr := c.DefaultQuery("limit", "5")
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid limit"})
+		return
+	}
+	result, err := ctrl.query.ListHotCourses(c.Request.Context(), period, limit)
 	if err != nil {
 		if errors.Is(err, course.ErrInvalidHotCoursePeriod) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

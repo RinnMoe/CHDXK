@@ -17,19 +17,19 @@ export function LatestReviewsPage() {
 
   return (
     <>
-      <title>最新评价 - JCourse</title>
+      <title>最新点评 - JCourse</title>
       <PageShell>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">最新评价</h1>
+          <h1 className="text-2xl font-bold">最新点评</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            查看所有最新课程评价
+            查看所有最新课程点评
           </p>
         </div>
 
         {data && (
           <p className="text-sm text-muted-foreground">
-            共 {data.total} 条评价
+            共 {data.total} 条点评
           </p>
         )}
 

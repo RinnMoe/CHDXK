@@ -23,7 +23,7 @@ export function NewReviewPage() {
 
   return (
     <>
-      <title>写评价 - JCourse</title>
+      <title>写点评 - JCourse</title>
       <PageShell>
       <Button asChild variant="ghost" size="sm" className="mb-4">
         <Link to={`/courses/${id}`}>
@@ -34,7 +34,7 @@ export function NewReviewPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>写评价</CardTitle>
+          <CardTitle>写点评</CardTitle>
           {course && (
             <div className="text-sm text-muted-foreground space-y-0.5">
               <div>

@@ -35,7 +35,7 @@ export function DailyStatsTable({ stats, page, pageSize, total }: DailyStatsTabl
             <TableBody>
               {stats.map((s) => (
                 <TableRow key={s.stat_date}>
-                  <TableCell className="font-mono text-xs">{s.stat_date}</TableCell>
+                  <TableCell className="font-mono text-sm">{s.stat_date}</TableCell>
                   <TableCell>{s.total_user_count}</TableCell>
                   <TableCell>{s.total_review_count}</TableCell>
                   <TableCell>{s.active_user_count}</TableCell>
@@ -50,7 +50,7 @@ export function DailyStatsTable({ stats, page, pageSize, total }: DailyStatsTabl
             </TableBody>
           </Table>
         </div>
-        <p className="text-xs text-muted-foreground px-6 py-3">
+        <p className="text-sm text-muted-foreground px-6 py-3">
           第 {page} 页，共 {Math.ceil(total / pageSize)} 页，总计 {total} 条
         </p>
       </CardContent>

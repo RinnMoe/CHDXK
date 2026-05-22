@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
-import { CourseCard } from "@/components/course/course-card"
+import { TitleBadge } from "@/components/ui/title-badge"
+import { CourseCompactCard, SameCodeCourseCard } from "@/components/course/course-compact-card"
 import { CourseBadge, CourseBadges } from "@/components/course/course-badges"
 import { CourseNotificationControl } from "@/components/course/course-notification-control"
 import { RatingDistribution } from "@/components/course/rating-distribution"
@@ -19,6 +20,10 @@ import { CourseReviewFilters } from "@/components/course/course-review-filters"
 import { PaginationComponent } from "@/components/common/pagination"
 
 const REVIEW_PAGE_SIZE = 10
+
+function byRatingDesc(a: { rating: { avg: number } }, b: { rating: { avg: number } }) {
+  return b.rating.avg - a.rating.avg
+}
 
 export function CourseDetailPage() {
   const { courseID } = useParams<{ courseID: string }>()
@@ -107,8 +112,9 @@ export function CourseDetailPage() {
           </Link>
         </Button>
 
-        <div className="space-y-6">
-          <header className="space-y-3">
+        <div className="space-y-6 lg:grid lg:grid-cols-3 lg:gap-6 lg:space-y-0">
+          <div className="space-y-6 lg:col-span-2">
+            <header className="space-y-3">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span className="font-mono">{course.code}</span>
               <span>·</span>
@@ -125,9 +131,7 @@ export function CourseDetailPage() {
                   {course.main_teacher.name}
                 </Link>
                 {course.main_teacher.title && (
-                  <span className="ml-1 text-muted-foreground">
-                    ({course.main_teacher.title})
-                  </span>
+                  <TitleBadge className="ml-1">{course.main_teacher.title}</TitleBadge>
                 )}
               </div>
             </div>
@@ -176,10 +180,7 @@ export function CourseDetailPage() {
           )}
 
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">评分</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="py-6">
               <RatingDistribution rating={course.rating} />
             </CardContent>
           </Card>
@@ -187,17 +188,17 @@ export function CourseDetailPage() {
           <section>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <div className="space-y-1">
-                <h2 className="text-lg font-semibold">课程评价</h2>
+                <h2 className="text-lg font-semibold">课程点评</h2>
                 {reviews && (
                   <p className="text-sm text-muted-foreground">
-                    共 {reviews.total} 条评价
+                    共 {reviews.total} 条点评
                   </p>
                 )}
               </div>
               <Button asChild size="sm" variant="outline">
                 <Link to={`/courses/${course.id}/review/new`}>
                   <RiAddLine data-icon="inline-start" />
-                  写评价
+                  写点评
                 </Link>
               </Button>
             </div>
@@ -229,7 +230,7 @@ export function CourseDetailPage() {
             <ReviewList
               reviews={reviews?.items ?? []}
               isLoading={reviewsLoading}
-              emptyText="还没有评价，来抢沙发？"
+              emptyText="还没有点评，来抢沙发？"
             />
 
             {reviews && reviews.total > 0 && (
@@ -243,30 +244,33 @@ export function CourseDetailPage() {
               </div>
             )}
           </section>
+          </div>
 
-          {course.same_code_courses.length > 0 && (
-            <section>
-              <h2 className="mb-3 text-lg font-semibold">同代码课程</h2>
-              <div className="border-t">
-                {course.same_code_courses.map((c) => (
-                  <CourseCard key={c.id} course={c} />
-                ))}
-              </div>
-            </section>
+          {(course.same_code_courses.length > 0 || course.same_teacher_courses.length > 0) && (
+            <aside className="space-y-6">
+              {course.same_code_courses.length > 0 && (
+                <section>
+                  <h2 className="mb-3 text-lg font-semibold">其他老师的{course.name}课</h2>
+                  <div className="border-t">
+                    {[...course.same_code_courses].sort(byRatingDesc).map((c) => (
+                      <SameCodeCourseCard key={c.id} course={c} />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {course.same_teacher_courses.length > 0 && (
+                <section>
+                  <h2 className="mb-3 text-lg font-semibold">{course.main_teacher.name}老师的其他课</h2>
+                  <div className="border-t">
+                    {[...course.same_teacher_courses].sort(byRatingDesc).map((c) => (
+                      <CourseCompactCard key={c.id} course={c} />
+                    ))}
+                  </div>
+                </section>
+              )}
+            </aside>
           )}
-
-          {course.same_teacher_courses.length > 0 && (
-            <section>
-              <h2 className="mb-3 text-lg font-semibold">同教师其他课程</h2>
-              <div className="border-t">
-                {course.same_teacher_courses.map((c) => (
-                  <CourseCard key={c.id} course={c} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          <Separator />
         </div>
       </PageShell>
     </>

@@ -156,7 +156,10 @@ export function listIgnoredCourses(
 }
 
 export function listHotCourses(
-  period: "week" | "month" = "week"
+  period: "week" | "month" = "week",
+  limit?: number
 ): Promise<HotCourseListDTO> {
-  return apiClient(`${BASE}/course/hot?period=${period}`)
+  const params = new URLSearchParams({ period })
+  if (limit !== undefined) params.set("limit", String(limit))
+  return apiClient(`${BASE}/course/hot?${params}`)
 }

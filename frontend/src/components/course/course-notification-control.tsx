@@ -25,7 +25,7 @@ const notificationLabels: Record<CourseNotificationLevel, string> = {
 const notificationDescriptions: Record<CourseNotificationLevel, string> = {
   0: "不特别关注，也不屏蔽动态",
   1: "关注后可在关注动态中查看更新",
-  2: "屏蔽后最新评价会过滤这门课",
+  2: "屏蔽后最新点评会过滤这门课",
 }
 
 const notificationOptions = [
@@ -87,7 +87,7 @@ export function CourseNotificationControl({
               <Icon className="mt-0.5" data-icon="inline-start" />
               <span className="flex min-w-0 flex-col gap-0.5">
                 <span>{notificationLabels[optionLevel]}</span>
-                <span className="text-xs leading-4 text-muted-foreground">
+                <span className="text-sm leading-4 text-muted-foreground">
                   {notificationDescriptions[optionLevel]}
                 </span>
               </span>

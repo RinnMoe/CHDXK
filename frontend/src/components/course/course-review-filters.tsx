@@ -32,7 +32,7 @@ function OptionLabel({ label, count }: { label: string; count: number }) {
   return (
     <span className="flex min-w-0 items-center gap-1">
       <span className="truncate">{label}</span>
-      <span className="shrink-0 text-xs text-muted-foreground">
+      <span className="shrink-0 text-sm text-muted-foreground">
         （{count}条点评）
       </span>
     </span>
@@ -59,7 +59,7 @@ export function CourseReviewFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={ALL}>
-            <OptionLabel label="全部学期" count={total} />
+            全部学期
           </SelectItem>
           {semesters.map((semester) => (
             <SelectItem key={semester.name} value={semester.name}>
@@ -80,7 +80,7 @@ export function CourseReviewFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={ALL}>
-            <OptionLabel label="全部评分" count={total} />
+            全部评分
           </SelectItem>
           {ratings.map((rating) => (
             <SelectItem key={rating.name} value={rating.name}>

@@ -14,7 +14,7 @@ export function ReviewDetailPage() {
   if (isLoading) {
     return (
       <>
-        <title>评价 - JCourse</title>
+        <title>点评 - JCourse</title>
         <PageShell>
         <Button asChild variant="ghost" size="sm" className="mb-4">
           <Link to="/reviews/latest">
@@ -34,12 +34,12 @@ export function ReviewDetailPage() {
   if (!review) {
     return (
       <>
-        <title>评价 - JCourse</title>
+        <title>点评 - JCourse</title>
         <PageShell>
         <div className="py-16 text-center">
-          <p className="text-muted-foreground">评价不存在</p>
+          <p className="text-muted-foreground">点评不存在</p>
           <Button asChild variant="link" className="mt-4">
-            <Link to="/reviews/latest">返回评价列表</Link>
+            <Link to="/reviews/latest">返回点评列表</Link>
           </Button>
         </div>
       </PageShell>
@@ -49,12 +49,12 @@ export function ReviewDetailPage() {
 
   return (
     <>
-      <title>评价 - JCourse</title>
+      <title>点评 - JCourse</title>
       <PageShell>
       <Button asChild variant="ghost" size="sm" className="mb-4">
         <Link to="/reviews/latest">
           <RiArrowLeftLine data-icon="inline-start" />
-          返回评价列表
+          返回点评列表
         </Link>
       </Button>
 

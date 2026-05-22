@@ -13,18 +13,13 @@ export function CourseCard({ course }: CourseCardProps) {
       to={`/courses/${course.id}`}
       className="block border-b px-4 py-3 transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
     >
-      <div className="min-w-0 space-y-2">
-        <div className="space-y-1">
-          <div className="flex min-w-0 items-center justify-between gap-2 text-xs text-muted-foreground">
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="shrink-0 font-mono">{course.code}</span>
-              <span className="min-w-0 truncate text-sm">
-                {course.main_teacher.name}
-              </span>
-            </div>
-            <div className="shrink-0">
-              <RatingDisplay rating={course.rating} size="sm" />
-            </div>
+      <div className="min-w-0 flex items-center gap-2">
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+            <span className="shrink-0 font-mono">{course.code}</span>
+            <span className="min-w-0 text-sm break-words">
+              {course.main_teacher.name}
+            </span>
           </div>
           <div className="leading-tight font-semibold break-words whitespace-normal">
             {course.name}
@@ -32,15 +27,18 @@ export function CourseCard({ course }: CourseCardProps) {
           <div className="text-sm text-muted-foreground">
             {course.department}
           </div>
-        </div>
 
-        <CourseBadges
-          credit={course.credit}
-          language={course.language}
-          categories={course.categories}
-          categoryLimit={2}
-          className="gap-1"
-        />
+          <CourseBadges
+            credit={course.credit}
+            language={course.language}
+            categories={course.categories}
+            categoryLimit={2}
+            className="gap-1"
+          />
+        </div>
+        <div className="shrink-0">
+          <RatingDisplay rating={course.rating} size="sm" />
+        </div>
       </div>
     </Link>
   )

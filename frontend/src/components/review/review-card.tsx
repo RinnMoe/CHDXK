@@ -121,15 +121,15 @@ export function ReviewCard({
         {showCourse && review.course && (
           <Link
             to={`/courses/${review.course.id}`}
-            className="flex items-center gap-2 hover:bg-muted/50 -m-2 px-2 py-1.5 rounded-md transition-colors text-sm mb-2"
+            className="flex items-center gap-2 hover:bg-muted/50 -m-2 px-2 py-1.5 rounded-md transition-colors mb-2"
           >
-            <span className="font-mono text-xs text-muted-foreground">
+            <span className="font-mono text-sm text-muted-foreground">
               {review.course.code}
             </span>
-            <span className="font-medium truncate max-w-[200px]">
+            <span className="font-semibold truncate max-w-[200px]">
               {review.course.name}
             </span>
-            <span className="text-xs text-muted-foreground truncate max-w-[120px]">
+            <span className="text-sm text-muted-foreground truncate max-w-[120px]">
               {review.course.main_teacher.name}
             </span>
           </Link>
@@ -138,12 +138,12 @@ export function ReviewCard({
         <div className="flex items-center gap-2">
           <Link
             to={`/reviews/${review.id}`}
-            className="text-xs text-muted-foreground font-mono hover:text-foreground"
+            className="text-sm text-muted-foreground font-mono hover:text-foreground"
           >
             #{review.id}
           </Link>
           <span
-            className="ml-auto text-xs text-muted-foreground tabular-nums"
+            className="ml-auto text-sm text-muted-foreground tabular-nums"
             title={tooltip}
           >
             {formatDateTime(displayTime)}
@@ -188,11 +188,11 @@ export function ReviewCard({
               size="sm"
               onClick={handleShare}
               className="gap-1 text-muted-foreground"
-              aria-label="复制评价链接"
-              title="复制评价链接"
+              aria-label="复制点评链接"
+              title="复制点评链接"
             >
               <RiShareForwardLine data-icon="inline-start" />
-              {copied && <span className="text-xs">已复制</span>}
+              {copied && <span className="text-sm">已复制</span>}
             </Button>
             {canManage && (
               <DropdownMenu>

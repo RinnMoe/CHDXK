@@ -153,7 +153,7 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
               {activePreview.sender_remaining}
             </span>
           </div>
-          <p className="text-xs text-muted-foreground pt-1">* 实际结果以转账后为准</p>
+          <p className="text-sm text-muted-foreground pt-1">* 实际结果以转账后为准</p>
         </div>
       )}
 

@@ -27,7 +27,7 @@ export function ReviewList({
   reviews,
   isLoading,
   showCourse,
-  emptyText = "暂无评价",
+  emptyText = "暂无点评",
 }: ReviewListProps) {
   if (isLoading) {
     return (

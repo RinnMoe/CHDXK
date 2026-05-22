@@ -55,7 +55,7 @@ export function CoursesPage() {
         <CourseSearchBar />
 
         <div className="flex flex-col gap-6 lg:flex-row">
-          {filters && <CourseFilters filters={filters} />}
+          {filters && <div className="w-full lg:w-1/4 shrink-0"><CourseFilters filters={filters} /></div>}
 
           <div className="min-w-0 flex-1 space-y-4">
             {data && (

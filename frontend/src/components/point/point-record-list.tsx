@@ -32,7 +32,7 @@ export function PointRecordList({ records }: { records: PointRecordDTO[] }) {
               <span className="text-sm font-semibold text-foreground">
                 {REASON_LABELS[r.reason] ?? r.reason}
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-sm text-muted-foreground">
                 {formatDate(r.created_at)}
               </span>
             </div>

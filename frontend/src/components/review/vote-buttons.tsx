@@ -49,7 +49,7 @@ export function VoteButtons({
         ) : (
           <RiThumbUpLine data-icon="inline-start" />
         )}
-        <span className="tabular-nums text-xs">{adjustedLike}</span>
+        <span className="tabular-nums text-sm">{adjustedLike}</span>
       </Button>
       <Button
         variant="ghost"
@@ -63,7 +63,7 @@ export function VoteButtons({
         ) : (
           <RiThumbDownLine data-icon="inline-start" />
         )}
-        <span className="tabular-nums text-xs">{adjustedDislike}</span>
+        <span className="tabular-nums text-sm">{adjustedDislike}</span>
       </Button>
     </div>
   )

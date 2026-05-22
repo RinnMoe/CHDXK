@@ -63,7 +63,7 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
         >
           <TabsList>
             <TabsTrigger value={ALL}>默认</TabsTrigger>
-            <TabsTrigger value="rating_count">评价数量</TabsTrigger>
+            <TabsTrigger value="rating_count">点评数量</TabsTrigger>
             <TabsTrigger value="rating_avg">平均评分</TabsTrigger>
           </TabsList>
         </Tabs>
@@ -134,7 +134,7 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
 
   return (
     <>
-      <aside className="hidden w-56 shrink-0 lg:block">
+      <aside className="hidden lg:block">
         {content}
       </aside>
       <div className="lg:hidden">
@@ -195,7 +195,7 @@ function FilterCheckGroup({
               >
                 {item.name}
               </Label>
-              <span className="mt-0.5 shrink-0 text-xs text-muted-foreground">
+              <span className="mt-0.5 shrink-0 text-sm text-muted-foreground">
                 {item.count}
               </span>
             </div>

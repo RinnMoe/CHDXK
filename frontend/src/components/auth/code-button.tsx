@@ -57,7 +57,7 @@ export function CodeButton({ email, onSend, disabled }: CodeButtonProps) {
             ? "发送中..."
             : "发送验证码"}
       </Button>
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   )
 }
