@@ -17,7 +17,7 @@ go test ./internal/infrastructure/repository/... -run TestFoo  # run a single te
 docker compose up -d postgres redis                # start local Postgres (5432) and Redis (6379)
 ```
 
-No Makefile or CI config exists yet. Config template: `config/config.example.yaml` — copy to `config/config.yaml` for local runs. Any config value can be overridden by env vars with `JCOURSE_` prefix (e.g. `JCOURSE_SERVER_ADDR=:9090`). SQL schema lives in `script/schema_pgsql.sql` (and `script/schema_sqlite.sql`).
+No Makefile or CI config exists yet. Config template: `config/config.example.yaml` — copy to `config/config.yaml` for local runs. Any config value can be overridden by env vars with `JCOURSE_` prefix (e.g. `JCOURSE_SERVER_ADDR=:9090`). SQL schema lives in `script/schema_pgsql.sql`.
 
 ## Architecture
 
