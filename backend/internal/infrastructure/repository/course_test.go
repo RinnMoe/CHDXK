@@ -398,9 +398,6 @@ func TestCourseRepository_GetDetail(t *testing.T) {
 	if detail.OfferedCourses[0].Semester != "2024-2025-1" {
 		t.Errorf("OfferedCourses[0].Semester: got %q, want 2024-2025-1", detail.OfferedCourses[0].Semester)
 	}
-	if len(detail.OfferedCourses[0].TeacherGroup) != 1 {
-		t.Errorf("TeacherGroup count: got %d, want 1", len(detail.OfferedCourses[0].TeacherGroup))
-	}
 }
 
 func TestCourseRepository_FindOfferedCourses(t *testing.T) {
@@ -433,8 +430,8 @@ func TestCourseRepository_FindOfferedCourses(t *testing.T) {
 	if len(ocs) != 2 {
 		t.Fatalf("count: got %d, want 2", len(ocs))
 	}
-	if len(ocs[0].TeacherGroup) != 1 {
-		t.Errorf("first offered course teacher group count: got %d, want 1", len(ocs[0].TeacherGroup))
+	if ocs[0].Semester != "2024-2025-1" {
+		t.Errorf("first offered course semester: got %q, want 2024-2025-1", ocs[0].Semester)
 	}
 }
 

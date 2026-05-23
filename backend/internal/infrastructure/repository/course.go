@@ -9,7 +9,6 @@ import (
 	"gorm.io/gorm/clause"
 
 	"jcourse/internal/domain/course"
-	"jcourse/internal/domain/teacher"
 )
 
 func newCourseDomain(e *CourseEntity) course.Course {
@@ -133,29 +132,6 @@ func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int)
 		return nil, err
 	}
 
-	teacherIDSet := make(map[int64]struct{})
-	for _, e := range entities {
-		for _, id := range e.TeacherIDs {
-			teacherIDSet[id] = struct{}{}
-		}
-	}
-
-	teacherMap := make(map[int]teacher.TeacherView)
-	if len(teacherIDSet) > 0 {
-		ids := make([]int64, 0, len(teacherIDSet))
-		for id := range teacherIDSet {
-			ids = append(ids, id)
-		}
-		teachers, err := gorm.G[TeacherEntity](r.db).Where("id IN ?", ids).Find(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for i := range teachers {
-			t := &teachers[i]
-			teacherMap[t.ID] = *newTeacherView(t)
-		}
-	}
-
 	result := make([]course.OfferedCourseView, 0, len(entities))
 	for _, e := range entities {
 		oc := course.OfferedCourseView{
@@ -164,11 +140,6 @@ func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int)
 			Language:    e.Language,
 			TargetYears: e.TargetYears,
 			Categories:  e.Categories,
-		}
-		for _, id := range e.TeacherIDs {
-			if tv, ok := teacherMap[int(id)]; ok {
-				oc.TeacherGroup = append(oc.TeacherGroup, tv)
-			}
 		}
 		result = append(result, oc)
 	}

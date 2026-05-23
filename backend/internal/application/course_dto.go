@@ -49,13 +49,12 @@ func newCourseListItemDTO(c *course.CourseView) CourseListItemDTO {
 	return item
 }
 
-// Read model: offered course with teacher group
+// Read model: offered course
 type OfferedCourseDTO struct {
-	Semester     string       `json:"semester"`
-	Language     string       `json:"language"`
-	TargetYears  []string     `json:"target_years"`
-	Categories   []string     `json:"categories"`
-	TeacherGroup []TeacherDTO `json:"teacher_group"`
+	Semester    string   `json:"semester"`
+	Language    string   `json:"language"`
+	TargetYears []string `json:"target_years"`
+	Categories  []string `json:"categories"`
 }
 
 // Read model: course detail with offered courses, related courses, and rating distribution

@@ -191,14 +191,10 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 	dto.OfferedCourses = make([]OfferedCourseDTO, 0, len(detail.OfferedCourses))
 	for _, oc := range detail.OfferedCourses {
 		ocView := OfferedCourseDTO{
-			Semester:     oc.Semester,
-			Language:     oc.Language,
-			TargetYears:  oc.TargetYears,
-			Categories:   oc.Categories,
-			TeacherGroup: make([]TeacherDTO, 0, len(oc.TeacherGroup)),
-		}
-		for i := range oc.TeacherGroup {
-			ocView.TeacherGroup = append(ocView.TeacherGroup, newTeacherDTO(&oc.TeacherGroup[i]))
+			Semester:    oc.Semester,
+			Language:    oc.Language,
+			TargetYears: oc.TargetYears,
+			Categories:  oc.Categories,
 		}
 		dto.OfferedCourses = append(dto.OfferedCourses, ocView)
 	}

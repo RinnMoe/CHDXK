@@ -1,7 +1,5 @@
 package course
 
-import "jcourse/internal/domain/teacher"
-
 // Write model: offered course aggregate
 type OfferedCourse struct {
 	ID          int
@@ -12,12 +10,11 @@ type OfferedCourse struct {
 	Categories  []string
 }
 
-// Read model: offered course query result with teacher group
+// Read model: offered course query result
 type OfferedCourseView struct {
-	ID           int
-	Semester     string
-	Language     string
-	TargetYears  []string
-	Categories   []string
-	TeacherGroup []teacher.TeacherView
+	ID          int
+	Semester    string
+	Language    string
+	TargetYears []string
+	Categories  []string
 }

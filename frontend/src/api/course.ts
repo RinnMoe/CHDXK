@@ -49,7 +49,6 @@ export interface OfferedCourseDTO {
   language: string
   target_years: string[]
   categories: string[]
-  teacher_group: TeacherDTO[]
 }
 
 export interface CourseDetailDTO {

@@ -152,7 +152,8 @@ export function CourseDetailPage() {
   const teacherGroup = course.teacher_group ?? []
   const feedbackMailto = buildFeedbackMailto(course)
   const hasRelatedCourses =
-    course.same_code_courses.length > 0 || course.same_teacher_courses.length > 0
+    course.same_code_courses.length > 0 ||
+    course.same_teacher_courses.length > 0
 
   return (
     <>
@@ -171,118 +172,112 @@ export function CourseDetailPage() {
             hasRelatedCourses && "lg:grid lg:grid-cols-3 lg:gap-6 lg:space-y-0"
           )}
         >
-          <div className={cn("space-y-6", hasRelatedCourses && "lg:col-span-2")}>
-            <div className="space-y-6 md:grid md:grid-cols-[minmax(0,1fr)_minmax(18rem,min(24rem,50%))] md:items-start md:gap-6 md:space-y-0">
-              <div className="space-y-6">
-                <header className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span className="font-mono">{course.code}</span>
-                    <span>·</span>
+          <div
+            className={cn("space-y-6", hasRelatedCourses && "lg:col-span-2")}
+          >
+            <div className="space-y-6">
+              <header className="space-y-2">
+                <h1 className="text-3xl font-bold">
+                  <span>{course.name}</span>{" "}
+                  <span className="font-mono text-sm font-normal whitespace-nowrap text-muted-foreground">
+                    {course.code}
+                  </span>
+                </h1>
+                <div className="inline-flex items-baseline gap-1.5">
+                  <Link
+                    to={`/teachers/${course.main_teacher.id}`}
+                    className="text-lg font-semibold text-primary hover:underline"
+                  >
+                    {course.main_teacher.name}
+                  </Link>
+                  {course.main_teacher.title && (
+                    <TitleBadge>{course.main_teacher.title}</TitleBadge>
+                  )}
+                </div>
+              </header>
+
+              <div className="space-y-6 md:grid md:grid-cols-[minmax(0,1fr)_minmax(18rem,min(24rem,50%))] md:items-start md:gap-6 md:space-y-0">
+                <div className="ml-2 space-y-6 sm:ml-3 md:ml-4">
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                    <span className="font-medium">开课单位</span>
                     <span>{course.department}</span>
                   </div>
-                  <div className="space-y-2">
-                    <h1 className="text-3xl font-bold">{course.name}</h1>
-                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                      <span className="text-sm font-medium text-muted-foreground">
-                        主讲教师：
-                      </span>
-                      <span className="inline-flex items-baseline gap-1.5">
-                        <Link
-                          to={`/teachers/${course.main_teacher.id}`}
-                          className="text-lg font-semibold text-primary hover:underline"
+
+                  {teacherGroup.length > 1 && (
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm text-muted-foreground">
+                      <span className="font-medium">合上教师</span>
+                      {teacherGroup.map((teacher, index) => (
+                        <span
+                          key={teacher.id}
+                          className="inline-flex items-baseline"
                         >
-                          {course.main_teacher.name}
-                        </Link>
-                        {course.main_teacher.title && (
-                          <TitleBadge>{course.main_teacher.title}</TitleBadge>
-                        )}
-                      </span>
-                      {teacherGroup.length > 1 && (
-                        <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm font-normal text-muted-foreground">
-                          <span className="font-medium">合上教师：</span>
-                          {teacherGroup.map((teacher, index) => (
-                            <span
-                              key={teacher.id}
-                              className="inline-flex items-baseline"
-                            >
-                              {index > 0 && <span className="mr-2">/</span>}
-                              <Link
-                                to={`/teachers/${teacher.id}`}
-                                className="hover:text-primary hover:underline"
-                              >
-                                {teacher.name}
-                              </Link>
-                            </span>
-                          ))}
+                          {index > 0 && <span className="mr-2">/</span>}
+                          <Link
+                            to={`/teachers/${teacher.id}`}
+                            className="hover:text-primary hover:underline"
+                          >
+                            {teacher.name}
+                          </Link>
                         </span>
-                      )}
+                      ))}
                     </div>
-                  </div>
+                  )}
+
                   <CourseBadges
                     credit={course.credit}
                     language={course.language}
                     categories={course.categories}
                     targetYears={course.target_years}
                   />
-                </header>
 
-                {historicalOfferedCourses.length > 0 && (
-                  <section className="space-y-3">
-                    <h2 className="text-sm font-medium text-muted-foreground">
-                      历史开课
-                    </h2>
-                    <div className="space-y-3">
-                      {historicalOfferedCourses.map((oc) => (
-                        <div
-                          key={oc.semester}
-                          className="flex items-center gap-3 text-sm"
-                        >
-                          <CourseBadge kind="targetYear" className="font-mono">
-                            {oc.semester}
-                          </CourseBadge>
-                          <span className="text-muted-foreground">
-                            {oc.teacher_group.map((t, index) => (
-                              <span key={t.id}>
-                                {index > 0 && <span className="mx-1">/</span>}
-                                <Link
-                                  to={`/teachers/${t.id}`}
-                                  className="hover:text-primary hover:underline"
-                                >
-                                  {t.name}
-                                </Link>
-                              </span>
-                            ))}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
+                  {historicalOfferedCourses.length > 0 && (
+                    <section className="space-y-3">
+                      <h2 className="text-sm font-medium text-muted-foreground">
+                        历史开课
+                      </h2>
+                      <div className="space-y-3">
+                        {historicalOfferedCourses.map((oc) => (
+                          <div
+                            key={oc.semester}
+                            className="flex items-center text-sm"
+                          >
+                            <CourseBadge
+                              kind="targetYear"
+                              className="font-mono"
+                            >
+                              {oc.semester}
+                            </CourseBadge>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <CourseNotificationControl
-                    courseID={course.id}
-                    level={course.notification_level}
-                  />
-                  <Button
-                    asChild
-                    size="sm"
-                    variant="outline"
-                    className="h-7 px-2 text-muted-foreground hover:text-foreground"
-                  >
-                    <a href={feedbackMailto}>
-                      <RiMailLine data-icon="inline-start" />
-                      信息有误？
-                    </a>
-                  </Button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CourseNotificationControl
+                      courseID={course.id}
+                      level={course.notification_level}
+                    />
+                    <Button
+                      asChild
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2 text-muted-foreground hover:text-foreground"
+                    >
+                      <a href={feedbackMailto}>
+                        <RiMailLine data-icon="inline-start" />
+                        信息有误？
+                      </a>
+                    </Button>
+                  </div>
                 </div>
-              </div>
 
-              <Card className="md:self-start">
-                <CardContent className="py-6">
-                  <RatingDistribution rating={course.rating} />
-                </CardContent>
-              </Card>
+                <Card className="md:self-start">
+                  <CardContent className="py-0">
+                    <RatingDistribution rating={course.rating} />
+                  </CardContent>
+                </Card>
+              </div>
             </div>
 
             <section>
