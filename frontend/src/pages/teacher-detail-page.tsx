@@ -2,6 +2,7 @@ import { useParams, Link } from "react-router-dom"
 import { RiArrowLeftLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { TitleBadge } from "@/components/ui/title-badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CourseCard } from "@/components/course/course-card"
 import { PaginationComponent } from "@/components/common/pagination"
@@ -46,9 +47,7 @@ export function TeacherDetailPage() {
               {mockTeacher?.name ?? "教师"}
             </h1>
             <div className="flex flex-wrap gap-2">
-              {mockTeacher?.title && (
-                <Badge variant="secondary">{mockTeacher.title}</Badge>
-              )}
+              {mockTeacher?.title && <TitleBadge>{mockTeacher.title}</TitleBadge>}
               {mockTeacher?.department && (
                 <Badge variant="outline">{mockTeacher.department}</Badge>
               )}

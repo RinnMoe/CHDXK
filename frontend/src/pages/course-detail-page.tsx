@@ -130,11 +130,11 @@ export function CourseDetailPage() {
                   </div>
                   <div className="space-y-2">
                     <h1 className="text-3xl font-bold">{course.name}</h1>
-                    <div className="text-base">
+                    <div className="text-lg font-medium">
                       主讲教师：
                       <Link
                         to={`/teachers/${course.main_teacher.id}`}
-                        className="font-medium text-primary hover:underline"
+                        className="font-semibold text-primary hover:underline"
                       >
                         {course.main_teacher.name}
                       </Link>
@@ -153,14 +153,11 @@ export function CourseDetailPage() {
                   />
                 </header>
 
-                <CourseNotificationControl
-                  courseID={course.id}
-                  level={course.notification_level}
-                />
-
                 {course.offered_courses.length > 0 && (
                   <section className="space-y-3">
-                    <h2 className="text-lg font-semibold">历史开课</h2>
+                    <h2 className="text-sm font-medium text-muted-foreground">
+                      历史开课
+                    </h2>
                     <div className="space-y-3">
                       {course.offered_courses.map((oc) => (
                         <div
@@ -188,6 +185,11 @@ export function CourseDetailPage() {
                     </div>
                   </section>
                 )}
+
+                <CourseNotificationControl
+                  courseID={course.id}
+                  level={course.notification_level}
+                />
               </div>
 
               <Card className="md:self-start">
