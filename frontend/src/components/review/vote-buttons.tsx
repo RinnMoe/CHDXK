@@ -53,7 +53,10 @@ export function VoteButtons({
         size="sm"
         disabled={isPending}
         onClick={() => cast(VoteLike)}
-        className={cn("gap-1", liked && "text-primary")}
+        className={cn(
+          "gap-1 hover:text-inherit",
+          liked && "text-primary hover:text-primary"
+        )}
       >
         {liked ? (
           <RiThumbUpFill data-icon="inline-start" />
@@ -67,7 +70,10 @@ export function VoteButtons({
         size="sm"
         disabled={isPending}
         onClick={() => cast(VoteDislike)}
-        className={cn("gap-1", disliked && "text-destructive")}
+        className={cn(
+          "gap-1 hover:text-inherit",
+          disliked && "text-destructive hover:text-destructive"
+        )}
       >
         {disliked ? (
           <RiThumbDownFill data-icon="inline-start" />
