@@ -141,6 +141,26 @@ export const mockReviews: ReviewDTO[] = mockCourses.flatMap((c) =>
   generateReviewsForCourse(c.id, randInt(18, 28))
 )
 
+mockReviews[0] = {
+  ...mockReviews[0],
+  rating: 5,
+  content: `这条 mock 用来检查点评引用链接渲染效果：#2 和 #3 应该会变成可点击的点评链接。
+
+普通 Markdown 链接仍保持原样：[课程详情](/courses/${mockReviews[0].course_id})。
+
+代码里的引用不应该被改写：
+
+\`#4\`
+
+\`\`\`txt
+#5
+\`\`\`
+
+相邻文字里的格式也能识别，比如“参考 #6 的补充”。`,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+}
+
 export function findReview(id: number): ReviewDTO | undefined {
   return mockReviews.find((r) => r.id === id)
 }

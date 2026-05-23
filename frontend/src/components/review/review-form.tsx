@@ -1,6 +1,4 @@
 import { useState } from "react"
-import Markdown from "react-markdown"
-import remarkGfm from "remark-gfm"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,6 +11,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { RatingStars } from "./rating-stars"
+import { SafeMarkdown } from "./safe-markdown"
 import type {
   CreateReviewCommand,
   UpdateReviewCommand,
@@ -137,7 +136,7 @@ export function ReviewForm({
             <p className="text-sm text-muted-foreground">预览</p>
             <div className="prose prose-sm min-h-[10rem] max-w-none text-sm dark:prose-invert">
               {content.trim() ? (
-                <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
+                <SafeMarkdown content={content} />
               ) : (
                 <span className="text-muted-foreground italic">预览区域</span>
               )}

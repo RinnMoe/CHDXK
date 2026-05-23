@@ -1,7 +1,6 @@
-import Markdown from "react-markdown"
-import remarkGfm from "remark-gfm"
 import { Badge } from "@/components/ui/badge"
 import { RatingStars } from "./rating-stars"
+import { SafeMarkdown } from "./safe-markdown"
 
 interface ReviewContentProps {
   rating: number
@@ -29,7 +28,7 @@ export function ReviewContent({
       </div>
 
       <div className="prose prose-sm max-w-none text-sm leading-relaxed dark:prose-invert">
-        <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
+        <SafeMarkdown content={content} />
       </div>
     </div>
   )
