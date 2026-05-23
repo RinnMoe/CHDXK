@@ -9,21 +9,21 @@ import (
 	"jcourse/internal/domain/task"
 )
 
-func TestAuthService_GetUserRejectsSuspendedUser(t *testing.T) {
-	repo := newAuthServiceFakeRepo()
+func TestCurrentUserService_GetUserRejectsSuspendedUser(t *testing.T) {
+	repo := newCurrentUserServiceFakeRepo()
 	nowTime := time.Now()
 	suspendedAt := nowTime.Add(-time.Hour)
 	suspendTill := nowTime.Add(time.Hour)
 	repo.users[1] = &User{ID: 1, Email: "alice@example.edu", SuspendedAt: &suspendedAt, SuspendTill: &suspendTill}
 
-	_, err := NewAuthService(repo).GetUser(context.Background(), 1)
+	_, err := NewCurrentUserService(repo).GetUser(context.Background(), 1)
 	if !errors.Is(err, ErrUserSuspended) {
 		t.Fatalf("GetUser error = %v, want ErrUserSuspended", err)
 	}
 }
 
-func TestAuthService_GetUserEnqueuesCleanupForExpiredSuspension(t *testing.T) {
-	repo := newAuthServiceFakeRepo()
+func TestCurrentUserService_GetUserEnqueuesCleanupForExpiredSuspension(t *testing.T) {
+	repo := newCurrentUserServiceFakeRepo()
 	nowTime := time.Now()
 	taskEnqueuer = &fakeEnqueuer{}
 	oldEnqueuer := task.SetEnqueuerForTest(taskEnqueuer)
@@ -32,7 +32,7 @@ func TestAuthService_GetUserEnqueuesCleanupForExpiredSuspension(t *testing.T) {
 	suspendTill := nowTime.Add(-time.Hour)
 	repo.users[1] = &User{ID: 1, Email: "alice@example.edu", SuspendedAt: &suspendedAt, SuspendTill: &suspendTill}
 
-	u, err := NewAuthService(repo).GetUser(context.Background(), 1)
+	u, err := NewCurrentUserService(repo).GetUser(context.Background(), 1)
 	if err != nil {
 		t.Fatalf("GetUser: %v", err)
 	}
@@ -44,23 +44,26 @@ func TestAuthService_GetUserEnqueuesCleanupForExpiredSuspension(t *testing.T) {
 	}
 }
 
-type authServiceFakeRepo struct {
+type currentUserServiceFakeRepo struct {
 	users map[int]*User
 }
 
-func newAuthServiceFakeRepo() *authServiceFakeRepo {
-	return &authServiceFakeRepo{users: map[int]*User{}}
+func newCurrentUserServiceFakeRepo() *currentUserServiceFakeRepo {
+	return &currentUserServiceFakeRepo{users: map[int]*User{}}
 }
 
-func (r *authServiceFakeRepo) Create(_ context.Context, u *User) error { r.users[u.ID] = u; return nil }
+func (r *currentUserServiceFakeRepo) Create(_ context.Context, u *User) error {
+	r.users[u.ID] = u
+	return nil
+}
 
-func (r *authServiceFakeRepo) Update(_ context.Context, u *User) error {
+func (r *currentUserServiceFakeRepo) Update(_ context.Context, u *User) error {
 	copy := *u
 	r.users[u.ID] = &copy
 	return nil
 }
 
-func (r *authServiceFakeRepo) TouchLastSeen(_ context.Context, userID int, at time.Time) error {
+func (r *currentUserServiceFakeRepo) TouchLastSeen(_ context.Context, userID int, at time.Time) error {
 	u, ok := r.users[userID]
 	if !ok {
 		return errors.New("user not found")
@@ -69,7 +72,7 @@ func (r *authServiceFakeRepo) TouchLastSeen(_ context.Context, userID int, at ti
 	return nil
 }
 
-func (r *authServiceFakeRepo) FindByID(_ context.Context, id int) (*User, error) {
+func (r *currentUserServiceFakeRepo) FindByID(_ context.Context, id int) (*User, error) {
 	u, ok := r.users[id]
 	if !ok {
 		return nil, nil
@@ -87,7 +90,7 @@ func (f *fakeEnqueuer) Enqueue(context.Context, task.Task, ...task.EnqueueOption
 
 var taskEnqueuer *fakeEnqueuer
 
-func (r *authServiceFakeRepo) FindByUsername(_ context.Context, username string) (*User, error) {
+func (r *currentUserServiceFakeRepo) FindByUsername(_ context.Context, username string) (*User, error) {
 	for _, u := range r.users {
 		if u.Username == username {
 			copy := *u
@@ -97,7 +100,7 @@ func (r *authServiceFakeRepo) FindByUsername(_ context.Context, username string)
 	return nil, nil
 }
 
-func (r *authServiceFakeRepo) FindByEmail(_ context.Context, email string) (*User, error) {
+func (r *currentUserServiceFakeRepo) FindByEmail(_ context.Context, email string) (*User, error) {
 	for _, u := range r.users {
 		if u.Email == email {
 			copy := *u

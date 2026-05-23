@@ -35,7 +35,7 @@ func SystemAPIKeyAuth(apiKeySvc *auth.ApiKeyService) gin.HandlerFunc {
 	}
 }
 
-func UserAPIKeyAuth(apiKeySvc *auth.ApiKeyService, authSvc *auth.AuthService) gin.HandlerFunc {
+func UserAPIKeyAuth(apiKeySvc *auth.ApiKeyService, currentUserSvc *auth.CurrentUserService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		apiKey, ok := authenticateAPIKey(c, apiKeySvc)
 		if !ok {
@@ -46,7 +46,7 @@ func UserAPIKeyAuth(apiKeySvc *auth.ApiKeyService, authSvc *auth.AuthService) gi
 			return
 		}
 
-		user, err := authSvc.GetUser(c.Request.Context(), apiKey.UserID)
+		user, err := currentUserSvc.GetUser(c.Request.Context(), apiKey.UserID)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 			return

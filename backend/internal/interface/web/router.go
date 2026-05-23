@@ -18,7 +18,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		panic(err)
 	}
 	g.Use(sessions.Sessions("jcourse_session", store))
-	g.Use(middleware.OptionalAuth(container.AuthService))
+	g.Use(middleware.OptionalAuth(container.CurrentUserService))
 
 	reviewController := controller.NewReviewController(container.ReviewQuery, container.ReviewCommand)
 	courseController := controller.NewCourseController(container.CourseQuery, container.CourseCommand)
@@ -76,7 +76,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		userGroup.GET("/:userID/points", pointController.GetUserPoints)
 		userGroup.GET("/:userID/reviews", reviewController.ListUserReviews)
 	}
-	apiKeyGroup := apiGroup.Group("/api-keys", middleware.Auth(container.AuthService))
+	apiKeyGroup := apiGroup.Group("/api-keys", middleware.Auth(container.CurrentUserService))
 	{
 		apiKeyGroup.GET("/", apiKeyController.ListMyApiKeys)
 		apiKeyGroup.POST("/", apiKeyController.CreateMyApiKey)

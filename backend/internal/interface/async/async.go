@@ -10,7 +10,7 @@ import (
 
 func NewMux(container *app.ServiceContainer) *asynq.ServeMux {
 	mux := asynq.NewServeMux()
-	mux.Handle(domainauth.TaskTypeClearExpiredSuspension, newClearExpiredSuspensionHandler(container.AuthService))
+	mux.Handle(domainauth.TaskTypeClearExpiredSuspension, newClearExpiredSuspensionHandler(container.CurrentUserService))
 	mux.Handle(stat.TaskTypeCollectDailySiteStats, newCollectDailySiteStatsHandler(container.SiteStatsCommand))
 	return mux
 }

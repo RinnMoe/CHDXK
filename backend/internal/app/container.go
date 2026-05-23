@@ -15,21 +15,21 @@ import (
 )
 
 type ServiceContainer struct {
-	ReviewQuery       *application.ReviewQueryService
-	ReviewCommand     *application.ReviewCommandService
-	CourseQuery       *application.CourseQueryService
-	CourseCommand     *application.CourseCommandService
-	TeacherQuery      *application.TeacherQueryService
-	PointQuery        *application.PointQueryService
-	PointCommand      *application.PointCommandService
-	SiteStatsQuery    *application.SiteStatsQueryService
-	SiteStatsCommand  *application.SiteStatsCommandService
-	AuthCommand       *application.AuthCommandService
-	AuthService       *domainauth.AuthService
-	AnnouncementQuery *application.AnnouncementQueryService
-	ApiKeySvc         *domainauth.ApiKeyService
-	ApiKeyQuery       *application.ApiKeyQueryService
-	ApiKeyCommand     *application.ApiKeyCommandService
+	ReviewQuery        *application.ReviewQueryService
+	ReviewCommand      *application.ReviewCommandService
+	CourseQuery        *application.CourseQueryService
+	CourseCommand      *application.CourseCommandService
+	TeacherQuery       *application.TeacherQueryService
+	PointQuery         *application.PointQueryService
+	PointCommand       *application.PointCommandService
+	SiteStatsQuery     *application.SiteStatsQueryService
+	SiteStatsCommand   *application.SiteStatsCommandService
+	AuthCommand        *application.AuthCommandService
+	CurrentUserService *domainauth.CurrentUserService
+	AnnouncementQuery  *application.AnnouncementQueryService
+	ApiKeySvc          *domainauth.ApiKeyService
+	ApiKeyQuery        *application.ApiKeyQueryService
+	ApiKeyCommand      *application.ApiKeyCommandService
 }
 
 func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
@@ -102,26 +102,26 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		conf.Auth.MaxLoginAttempts,
 		time.Duration(conf.Auth.LoginLockoutDuration)*time.Second,
 	)
-	authService := domainauth.NewAuthService(userRepo)
+	currentUserService := domainauth.NewCurrentUserService(userRepo)
 	apiKeySvc := domainauth.NewApiKeyService(apiKeyRepo)
 	apiKeyQuery := application.NewApiKeyQueryService(apiKeySvc)
 	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc)
 
 	return &ServiceContainer{
-		ReviewQuery:       reviewQuery,
-		ReviewCommand:     reviewCommand,
-		CourseQuery:       courseQuery,
-		CourseCommand:     courseCommand,
-		TeacherQuery:      teacherQuery,
-		PointQuery:        pointQuery,
-		PointCommand:      pointCommand,
-		SiteStatsQuery:    siteStatsQuery,
-		SiteStatsCommand:  siteStatsCommand,
-		AuthCommand:       authCommand,
-		AuthService:       authService,
-		AnnouncementQuery: announcementQuery,
-		ApiKeySvc:         apiKeySvc,
-		ApiKeyQuery:       apiKeyQuery,
-		ApiKeyCommand:     apiKeyCommand,
+		ReviewQuery:        reviewQuery,
+		ReviewCommand:      reviewCommand,
+		CourseQuery:        courseQuery,
+		CourseCommand:      courseCommand,
+		TeacherQuery:       teacherQuery,
+		PointQuery:         pointQuery,
+		PointCommand:       pointCommand,
+		SiteStatsQuery:     siteStatsQuery,
+		SiteStatsCommand:   siteStatsCommand,
+		AuthCommand:        authCommand,
+		CurrentUserService: currentUserService,
+		AnnouncementQuery:  announcementQuery,
+		ApiKeySvc:          apiKeySvc,
+		ApiKeyQuery:        apiKeyQuery,
+		ApiKeyCommand:      apiKeyCommand,
 	}
 }

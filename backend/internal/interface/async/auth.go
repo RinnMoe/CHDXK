@@ -10,11 +10,11 @@ import (
 )
 
 type clearExpiredSuspensionHandler struct {
-	authService *domainauth.AuthService
+	currentUserService *domainauth.CurrentUserService
 }
 
-func newClearExpiredSuspensionHandler(authService *domainauth.AuthService) asynq.Handler {
-	return &clearExpiredSuspensionHandler{authService: authService}
+func newClearExpiredSuspensionHandler(currentUserService *domainauth.CurrentUserService) asynq.Handler {
+	return &clearExpiredSuspensionHandler{currentUserService: currentUserService}
 }
 
 func (h *clearExpiredSuspensionHandler) ProcessTask(ctx context.Context, t *asynq.Task) error {
@@ -22,7 +22,7 @@ func (h *clearExpiredSuspensionHandler) ProcessTask(ctx context.Context, t *asyn
 	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
 		return err
 	}
-	if err := h.authService.ClearExpiredSuspension(ctx, payload.UserID); err != nil {
+	if err := h.currentUserService.ClearExpiredSuspension(ctx, payload.UserID); err != nil {
 		return err
 	}
 	return nil

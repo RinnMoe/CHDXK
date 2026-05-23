@@ -34,7 +34,7 @@ func NewSessionStore(redisConf config.RedisConfig, sessionConf config.SessionCon
 	return store, nil
 }
 
-func Auth(authSvc *auth.AuthService) gin.HandlerFunc {
+func Auth(currentUserSvc *auth.CurrentUserService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		s := sessions.Default(c)
 		userID, ok := sessionInt(s, sessionKeyUserID)
@@ -43,7 +43,7 @@ func Auth(authSvc *auth.AuthService) gin.HandlerFunc {
 			return
 		}
 
-		user, err := authSvc.GetUser(c.Request.Context(), userID)
+		user, err := currentUserSvc.GetUser(c.Request.Context(), userID)
 		if err != nil || user == nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 			return
@@ -55,7 +55,7 @@ func Auth(authSvc *auth.AuthService) gin.HandlerFunc {
 	}
 }
 
-func OptionalAuth(authSvc *auth.AuthService) gin.HandlerFunc {
+func OptionalAuth(currentUserSvc *auth.CurrentUserService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		s := sessions.Default(c)
 		userID, ok := sessionInt(s, sessionKeyUserID)
@@ -64,7 +64,7 @@ func OptionalAuth(authSvc *auth.AuthService) gin.HandlerFunc {
 			return
 		}
 
-		user, err := authSvc.GetUser(c.Request.Context(), userID)
+		user, err := currentUserSvc.GetUser(c.Request.Context(), userID)
 		if err != nil || user == nil {
 			c.Next()
 			return
