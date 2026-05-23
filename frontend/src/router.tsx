@@ -1,8 +1,8 @@
 import { lazy, type ComponentType } from "react"
-import { Navigate, Outlet, createBrowserRouter } from "react-router-dom"
+import { createBrowserRouter } from "react-router-dom"
+import { RequireAuth } from "@/components/auth/require-auth"
 import { Layout } from "@/components/layout/layout"
 import { PublicLayout } from "@/components/layout/public-layout"
-import { useAuth } from "@/contexts/auth-context"
 
 function lazyNamedPage<TModule extends Record<string, ComponentType>>(
   loader: () => Promise<TModule>,
@@ -13,20 +13,6 @@ function lazyNamedPage<TModule extends Record<string, ComponentType>>(
       default: module[exportName],
     }))
   )
-}
-
-function RequireAuth() {
-  const { user, isLoading } = useAuth()
-
-  if (isLoading) {
-    return null
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />
-  }
-
-  return <Outlet />
 }
 
 const HomePage = lazyNamedPage(() => import("@/pages/home-page"), "HomePage")
