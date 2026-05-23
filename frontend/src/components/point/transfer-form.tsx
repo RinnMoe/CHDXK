@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/contexts/auth-context"
 import {
   useCreateTransfer,
@@ -131,24 +131,16 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
       </div>
       <div className="space-y-2">
         <Label>手续费承担</Label>
-        <RadioGroup
+        <Tabs
           value={feePayer}
           onValueChange={(v) => setFeePayer(v as FeePayer)}
-          className="flex gap-6"
+          className="gap-0"
         >
-          <div className="flex items-center gap-2">
-            <RadioGroupItem value="sender" id="fee-sender" />
-            <Label htmlFor="fee-sender" className="font-normal">
-              我承担
-            </Label>
-          </div>
-          <div className="flex items-center gap-2">
-            <RadioGroupItem value="recipient" id="fee-recipient" />
-            <Label htmlFor="fee-recipient" className="font-normal">
-              对方承担
-            </Label>
-          </div>
-        </RadioGroup>
+          <TabsList aria-label="手续费承担" className="grid w-full grid-cols-2">
+            <TabsTrigger value="sender">我承担</TabsTrigger>
+            <TabsTrigger value="recipient">对方承担</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
       {activePreview && (

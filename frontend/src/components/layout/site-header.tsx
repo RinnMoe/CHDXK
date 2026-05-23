@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import { useState } from "react"
+import { useLayoutEffect, useRef, useState } from "react"
 import { RiMenuLine, RiSearchLine } from "@remixicon/react"
 import { UserMenu } from "@/components/auth/user-menu"
 import { Button } from "@/components/ui/button"
@@ -119,6 +119,36 @@ function HeaderSearch() {
 export function SiteHeader() {
   const { pathname } = useLocation()
   const [open, setOpen] = useState(false)
+  const navRef = useRef<HTMLElement>(null)
+  const activeIndex = navItems.findIndex((item) => item.match(pathname))
+  const [navIndicator, setNavIndicator] = useState({
+    left: 0,
+    width: 0,
+    opacity: 0,
+  })
+
+  useLayoutEffect(() => {
+    function updateIndicator() {
+      const nav = navRef.current
+      const activeLink =
+        nav?.querySelectorAll<HTMLAnchorElement>("a")[activeIndex]
+
+      if (!activeLink) {
+        setNavIndicator((current) => ({ ...current, opacity: 0 }))
+        return
+      }
+
+      setNavIndicator({
+        left: activeLink.offsetLeft,
+        width: activeLink.offsetWidth,
+        opacity: 1,
+      })
+    }
+
+    updateIndicator()
+    window.addEventListener("resize", updateIndicator)
+    return () => window.removeEventListener("resize", updateIndicator)
+  }, [activeIndex])
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -128,7 +158,15 @@ export function SiteHeader() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="ml-8 hidden h-full gap-4 text-sm md:flex">
+        <nav
+          ref={navRef}
+          className="relative ml-8 hidden h-full gap-4 text-sm md:flex"
+        >
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute bottom-0 h-0.5 rounded-full bg-primary transition-[left,width,opacity] duration-200 ease-out"
+            style={navIndicator}
+          />
           {navItems.map((item) => {
             const active = item.match(pathname)
             return (
@@ -137,7 +175,7 @@ export function SiteHeader() {
                 to={item.to}
                 className={
                   active
-                    ? "flex items-center border-b-2 border-primary font-medium text-primary"
+                    ? "flex items-center font-medium text-primary transition-colors"
                     : "flex items-center text-muted-foreground transition-colors hover:text-foreground"
                 }
               >

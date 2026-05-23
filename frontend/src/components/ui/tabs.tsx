@@ -24,11 +24,13 @@ function TabsList({
     <TabsPrimitive.List
       data-slot="tabs-list"
       className={cn(
-        "inline-flex h-9 w-fit items-center rounded-lg bg-muted p-1 text-muted-foreground",
+        "relative inline-flex h-9 w-fit items-center overflow-hidden rounded-lg bg-muted p-1 text-muted-foreground transition-colors duration-150 ease-out",
         className
       )}
       {...props}
-    />
+    >
+      {props.children}
+    </TabsPrimitive.List>
   )
 }
 
@@ -40,7 +42,8 @@ function TabsTrigger({
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "inline-flex h-7 items-center justify-center rounded-md px-3 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs",
+        "data-[state=active]:animate-tab-pop relative z-10 inline-flex h-7 items-center justify-center rounded-md border border-transparent bg-transparent px-3 text-sm font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow,transform] duration-150 ease-out outline-none hover:bg-white hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-primary data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:hover:bg-white data-[state=active]:hover:text-primary",
+        "data-[state=active]:animate-tab-pop relative z-10 inline-flex h-7 items-center justify-center rounded-md border border-transparent bg-transparent px-3 text-sm font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow,transform] duration-150 ease-out outline-none hover:bg-background hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:hover:bg-background data-[state=active]:hover:text-primary",
         className
       )}
       {...props}
