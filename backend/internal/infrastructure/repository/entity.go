@@ -7,27 +7,6 @@ import (
 	"gorm.io/datatypes"
 )
 
-type DepartmentEntity struct {
-	ID        int       `gorm:"column:id"`
-	Name      string    `gorm:"column:name"`
-	CreatedAt time.Time `gorm:"column:created_at"`
-}
-
-func (DepartmentEntity) TableName() string {
-	return "departments"
-}
-
-type SemesterEntity struct {
-	ID        int       `gorm:"column:id"`
-	Name      string    `gorm:"column:name"`
-	CanReview bool      `gorm:"column:can_review"`
-	CreatedAt time.Time `gorm:"column:created_at"`
-}
-
-func (SemesterEntity) TableName() string {
-	return "semesters"
-}
-
 type TeacherEntity struct {
 	ID         int    `gorm:"column:id"`
 	Code       string `gorm:"column:code;uniqueIndex"`
@@ -89,9 +68,9 @@ func (CourseEntity) TableName() string {
 
 type ReviewEntity struct {
 	ID              int           `gorm:"column:id"`
-	CourseID        int           `gorm:"column:course_id;index"`
+	CourseID        int           `gorm:"column:course_id;index;uniqueIndex:uniq_reviews_user_course"`
 	Semester        string        `gorm:"column:semester"`
-	UserID          int           `gorm:"column:user_id;index"`
+	UserID          int           `gorm:"column:user_id;index;uniqueIndex:uniq_reviews_user_course"`
 	Rating          int           `gorm:"column:rating"`
 	Content         string        `gorm:"column:content"`
 	Score           string        `gorm:"column:score"`
@@ -220,22 +199,12 @@ func (SiteDailyStatEntity) TableName() string {
 	return "site_daily_stats"
 }
 
-type CategoryEntity struct {
-	ID        int       `gorm:"column:id"`
-	Name      string    `gorm:"column:name;uniqueIndex"`
-	CreatedAt time.Time `gorm:"column:created_at"`
-}
-
-func (CategoryEntity) TableName() string {
-	return "categories"
-}
-
 type ApiKeyEntity struct {
 	ID         int        `gorm:"column:id"`
 	Name       string     `gorm:"column:name"`
 	Key        string     `gorm:"column:key;uniqueIndex"`
 	Role       string     `gorm:"column:role"`
-	UserID     int        `gorm:"column:user_id;index"`
+	UserID     *int       `gorm:"column:user_id;index"`
 	LastUsedAt *time.Time `gorm:"column:last_used_at"`
 	CreatedAt  time.Time  `gorm:"column:created_at"`
 }

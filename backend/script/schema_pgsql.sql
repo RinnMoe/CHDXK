@@ -3,28 +3,6 @@
 
 BEGIN;
 
-CREATE TABLE IF NOT EXISTS departments
-(
-    id         SERIAL PRIMARY KEY,
-    name       TEXT        NOT NULL UNIQUE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS categories
-(
-    id         SERIAL PRIMARY KEY,
-    name       TEXT        NOT NULL UNIQUE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS semesters
-(
-    id         SERIAL PRIMARY KEY,
-    name       TEXT        NOT NULL,
-    can_review BOOLEAN     NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
 CREATE TABLE IF NOT EXISTS teachers
 (
     id            SERIAL PRIMARY KEY,
@@ -60,15 +38,26 @@ CREATE TABLE IF NOT EXISTS courses
 
     CONSTRAINT fk_courses_main_teacher
         FOREIGN KEY (main_teacher_id) REFERENCES teachers (id)
-            ON DELETE SET NULL
+            ON DELETE CASCADE
 );
 
-CREATE INDEX idx_courses_department ON courses (department);
-CREATE INDEX idx_courses_main_teacher ON courses (main_teacher_id);
+CREATE INDEX idx_courses_department_id ON courses (department, id DESC);
+CREATE INDEX idx_courses_language_id ON courses (language, id DESC);
+CREATE INDEX idx_courses_credit_id ON courses (credit, id DESC);
+CREATE INDEX idx_courses_main_teacher_id_desc ON courses (main_teacher_id, id DESC);
+CREATE INDEX idx_courses_main_teacher_rating_avg ON courses (main_teacher_id, rating_avg DESC, id DESC);
 CREATE INDEX idx_courses_teacher_ids ON courses USING GIN (teacher_ids);
+CREATE INDEX idx_courses_categories ON courses USING GIN (categories);
+CREATE INDEX idx_courses_target_years ON courses USING GIN (target_years);
 CREATE INDEX idx_courses_search_vector ON courses USING GIN (search_vector);
+CREATE INDEX idx_courses_rating_count_id ON courses (rating_count DESC, id DESC);
+CREATE INDEX idx_courses_rating_avg_id ON courses (rating_avg DESC, id DESC);
+CREATE INDEX idx_courses_lower_code_rating_avg ON courses (LOWER(code), rating_avg DESC, id DESC);
 CREATE UNIQUE INDEX uniq_courses_code_teacher ON courses (code, main_teacher_id);
 
+CREATE INDEX idx_teachers_department_id ON teachers (department, id DESC);
+CREATE INDEX idx_teachers_title_id ON teachers (title, id DESC);
+CREATE INDEX idx_teachers_department_title_id ON teachers (department, title, id DESC);
 CREATE INDEX idx_teachers_search_vector ON teachers USING GIN (search_vector);
 
 CREATE TABLE IF NOT EXISTS offered_courses
@@ -87,7 +76,7 @@ CREATE TABLE IF NOT EXISTS offered_courses
             ON DELETE CASCADE
 );
 
-CREATE INDEX idx_offered_courses_course ON offered_courses (course_id);
+CREATE INDEX idx_offered_courses_course_semester ON offered_courses (course_id, semester DESC, id DESC);
 CREATE INDEX idx_offered_courses_teacher_ids ON offered_courses USING GIN (teacher_ids);
 
 CREATE TABLE IF NOT EXISTS users
@@ -109,12 +98,15 @@ CREATE TABLE IF NOT EXISTS api_keys
     name         TEXT        NOT NULL,
     key          TEXT        NOT NULL UNIQUE,
     role         TEXT        NOT NULL CHECK (role IN ('system', 'user')),
-    user_id      INTEGER     NOT NULL DEFAULT 0,
+    user_id      INTEGER,
     last_used_at TIMESTAMPTZ,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT chk_api_keys_role_user
-        CHECK ((role = 'system' AND user_id = 0) OR (role = 'user' AND user_id > 0))
+        CHECK ((role = 'system' AND user_id IS NULL) OR (role = 'user' AND user_id IS NOT NULL)),
+    CONSTRAINT fk_api_keys_user
+        FOREIGN KEY (user_id) REFERENCES users (id)
+            ON DELETE CASCADE
 );
 
 CREATE INDEX idx_api_keys_user ON api_keys (user_id, created_at DESC, id DESC);
@@ -185,9 +177,16 @@ CREATE TABLE IF NOT EXISTS reviews
             ON DELETE CASCADE
 );
 
-CREATE INDEX idx_reviews_course ON reviews (course_id);
-CREATE INDEX idx_reviews_user ON reviews (user_id);
+CREATE INDEX idx_reviews_course_created ON reviews (course_id, created_at DESC, id DESC);
+CREATE INDEX idx_reviews_course_like ON reviews (course_id, like_count DESC, id DESC);
+CREATE INDEX idx_reviews_course_semester_created ON reviews (course_id, semester, created_at DESC, id DESC);
+CREATE INDEX idx_reviews_course_semester_like ON reviews (course_id, semester, like_count DESC, id DESC);
+CREATE INDEX idx_reviews_course_rating_created ON reviews (course_id, rating, created_at DESC, id DESC);
+CREATE INDEX idx_reviews_course_rating_like ON reviews (course_id, rating, like_count DESC, id DESC);
+CREATE INDEX idx_reviews_user_id_desc ON reviews (user_id, id DESC);
+CREATE INDEX idx_reviews_created_id ON reviews (created_at DESC, id DESC);
 CREATE INDEX idx_reviews_search_vector ON reviews USING GIN (search_vector);
+CREATE UNIQUE INDEX uniq_reviews_user_course ON reviews (user_id, course_id);
 
 CREATE TABLE IF NOT EXISTS review_revisions
 (
@@ -203,10 +202,16 @@ CREATE TABLE IF NOT EXISTS review_revisions
 
     CONSTRAINT fk_review_revisions_review
         FOREIGN KEY (review_id) REFERENCES reviews (id)
+            ON DELETE CASCADE,
+    CONSTRAINT fk_review_revisions_course
+        FOREIGN KEY (course_id) REFERENCES courses (id)
+            ON DELETE CASCADE,
+    CONSTRAINT fk_review_revisions_user
+        FOREIGN KEY (user_id) REFERENCES users (id)
             ON DELETE CASCADE
 );
 
-CREATE INDEX idx_review_revisions_review ON review_revisions (review_id);
+CREATE INDEX idx_review_revisions_review_created ON review_revisions (review_id, created_at DESC, id DESC);
 CREATE INDEX idx_review_revisions_course ON review_revisions (course_id);
 
 CREATE TABLE IF NOT EXISTS review_votes
@@ -227,6 +232,10 @@ CREATE TABLE IF NOT EXISTS review_votes
             ON DELETE CASCADE
 );
 
+CREATE INDEX idx_review_votes_user_updated ON review_votes (user_id, updated_at DESC);
+CREATE INDEX idx_review_votes_type_updated ON review_votes (vote_type, updated_at DESC);
+CREATE INDEX idx_review_votes_review_type ON review_votes (review_id, vote_type);
+
 CREATE TABLE IF NOT EXISTS course_notifications
 (
     user_id    INTEGER     NOT NULL,
@@ -244,6 +253,9 @@ CREATE TABLE IF NOT EXISTS course_notifications
         FOREIGN KEY (user_id) REFERENCES users (id)
             ON DELETE CASCADE
 );
+
+CREATE INDEX idx_course_notifications_user_level_course
+    ON course_notifications (user_id, level, course_id);
 
 CREATE TABLE IF NOT EXISTS course_hot_scores
 (
@@ -284,7 +296,7 @@ CREATE TABLE IF NOT EXISTS announcements
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_announcements_active ON announcements (priority DESC, created_at DESC)
-    WHERE show_start <= NOW() AND show_end >= NOW();
+CREATE INDEX idx_announcements_active_order
+    ON announcements (priority DESC, created_at DESC, show_start, show_end);
 
 COMMIT;

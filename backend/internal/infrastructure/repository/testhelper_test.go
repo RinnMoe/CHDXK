@@ -88,8 +88,6 @@ func newTestDB(t *testing.T) *gorm.DB {
 func migrateTestDB(t *testing.T, db *gorm.DB) {
 	t.Helper()
 	err := db.AutoMigrate(
-		&repository.DepartmentEntity{},
-		&repository.SemesterEntity{},
 		&repository.TeacherEntity{},
 		&repository.CourseEntity{},
 		&repository.OfferedCourseEntity{},

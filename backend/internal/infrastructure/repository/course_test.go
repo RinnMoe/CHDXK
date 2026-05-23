@@ -336,11 +336,12 @@ func TestCourseRepository_GetDetail(t *testing.T) {
 	reviewRepo := repository.NewReviewRepository(db)
 	ctx := context.Background()
 
-	cleanTables(t, db, "offered_courses", "reviews", "courses", "teachers", "semesters")
+	cleanTables(t, db, "offered_courses", "reviews", "courses", "teachers")
 
 	teacher := seedTeacher(t, db)
 	courseEntity := seedCourse(t, db, teacher.ID)
 	user := seedUser(t, db)
+	otherUser := seedUserRaw(t, db, "detailuser2", "detailuser2@example.com")
 
 	oc := seedOfferedCourseRaw(t, db, courseEntity.ID, "2024-2025-1", "zh", []string{"核心课"}, []string{"2022"})
 	db.Model(&repository.OfferedCourseEntity{}).Where("id = ?", oc.ID).
@@ -363,7 +364,7 @@ func TestCourseRepository_GetDetail(t *testing.T) {
 	r2 := review.Review{
 		CourseID:  courseEntity.ID,
 		Semester:  "2024-2025-1",
-		UserID:    user.ID,
+		UserID:    otherUser.ID,
 		Rating:    3,
 		Content:   "一般般。",
 		Score:     "B",

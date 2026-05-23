@@ -203,6 +203,8 @@ func TestReviewRepository_FindBy(t *testing.T) {
 	teacher := seedTeacher(t, db)
 	course := seedCourse(t, db, teacher.ID)
 	user := seedUser(t, db)
+	otherUser := seedUserRaw(t, db, "findbyuser2", "findbyuser2@example.com")
+	otherCourse := seedCourseRaw(t, db, "CS102", "算法设计", 3.0, "计算机学院", teacher.ID, "zh", nil, nil)
 
 	r1 := repository.ReviewEntity{
 		CourseID: course.ID, Semester: "2024-2025-1", UserID: user.ID,
@@ -210,11 +212,16 @@ func TestReviewRepository_FindBy(t *testing.T) {
 		CreatedAt: time.Now(), UpdatedAt: time.Now(),
 	}
 	r2 := repository.ReviewEntity{
-		CourseID: course.ID, Semester: "2024-2025-2", UserID: user.ID,
+		CourseID: course.ID, Semester: "2024-2025-2", UserID: otherUser.ID,
 		Rating: 3, Content: "一般", Score: "C",
 		CreatedAt: time.Now().Add(time.Hour), UpdatedAt: time.Now().Add(time.Hour),
 	}
-	for _, r := range []repository.ReviewEntity{r1, r2} {
+	r3 := repository.ReviewEntity{
+		CourseID: otherCourse.ID, Semester: "2024-2025-2", UserID: user.ID,
+		Rating: 4, Content: "一般", Score: "B",
+		CreatedAt: time.Now().Add(2 * time.Hour), UpdatedAt: time.Now().Add(2 * time.Hour),
+	}
+	for _, r := range []repository.ReviewEntity{r1, r2, r3} {
 		if err := db.Create(&r).Error; err != nil {
 			t.Fatalf("seed review: %v", err)
 		}
@@ -288,8 +295,8 @@ func TestReviewRepository_FindBy(t *testing.T) {
 		if err != nil {
 			t.Fatalf("FindBy: %v", err)
 		}
-		if len(results) != 0 {
-			t.Errorf("count: got %d, want 0", len(results))
+		if len(results) != 1 {
+			t.Errorf("count: got %d, want 1", len(results))
 		}
 	})
 
@@ -345,15 +352,21 @@ func TestReviewRepository_GetCourseTrend(t *testing.T) {
 	teacher := seedTeacher(t, db)
 	course := seedCourse(t, db, teacher.ID)
 	otherCourse := seedCourseRaw(t, db, "CS102", "算法设计", 3, "计算机学院", teacher.ID, "zh", []string{"核心课"}, []string{"2022"})
-	user := seedUser(t, db)
+	users := []repository.UserEntity{
+		seedUser(t, db),
+		seedUserRaw(t, db, "trenduser2", "trenduser2@example.com"),
+		seedUserRaw(t, db, "trenduser3", "trenduser3@example.com"),
+		seedUserRaw(t, db, "trenduser4", "trenduser4@example.com"),
+		seedUserRaw(t, db, "trenduser5", "trenduser5@example.com"),
+	}
 	now := time.Now()
 
 	rows := []repository.ReviewEntity{
-		{CourseID: course.ID, Semester: "2024-2025-1", UserID: user.ID, Rating: 4, Content: "好", CreatedAt: now, UpdatedAt: now},
-		{CourseID: course.ID, Semester: "2024-2025-1", UserID: user.ID, Rating: 2, Content: "一般", CreatedAt: now, UpdatedAt: now},
-		{CourseID: course.ID, Semester: "2024-2025-2", UserID: user.ID, Rating: 5, Content: "很好", CreatedAt: now, UpdatedAt: now},
-		{CourseID: course.ID, Semester: "", UserID: user.ID, Rating: 1, Content: "无学期", CreatedAt: now, UpdatedAt: now},
-		{CourseID: otherCourse.ID, Semester: "2024-2025-1", UserID: user.ID, Rating: 1, Content: "其他课程", CreatedAt: now, UpdatedAt: now},
+		{CourseID: course.ID, Semester: "2024-2025-1", UserID: users[0].ID, Rating: 4, Content: "好", CreatedAt: now, UpdatedAt: now},
+		{CourseID: course.ID, Semester: "2024-2025-1", UserID: users[1].ID, Rating: 2, Content: "一般", CreatedAt: now, UpdatedAt: now},
+		{CourseID: course.ID, Semester: "2024-2025-2", UserID: users[2].ID, Rating: 5, Content: "很好", CreatedAt: now, UpdatedAt: now},
+		{CourseID: course.ID, Semester: "", UserID: users[3].ID, Rating: 1, Content: "无学期", CreatedAt: now, UpdatedAt: now},
+		{CourseID: otherCourse.ID, Semester: "2024-2025-1", UserID: users[4].ID, Rating: 1, Content: "其他课程", CreatedAt: now, UpdatedAt: now},
 	}
 	for _, row := range rows {
 		if err := db.Create(&row).Error; err != nil {
@@ -385,12 +398,18 @@ func TestReviewRepository_SearchVector(t *testing.T) {
 
 	teacher := seedTeacher(t, db)
 	course := seedCourse(t, db, teacher.ID)
-	user := seedUser(t, db)
+	users := []repository.UserEntity{
+		seedUser(t, db),
+		seedUserRaw(t, db, "searchuser2", "searchuser2@example.com"),
+		seedUserRaw(t, db, "searchuser3", "searchuser3@example.com"),
+		seedUserRaw(t, db, "searchuser4", "searchuser4@example.com"),
+		seedUserRaw(t, db, "searchuser5", "searchuser5@example.com"),
+	}
 
 	rows := []repository.ReviewEntity{
-		{CourseID: course.ID, Semester: "2024-2025-1", UserID: user.ID, Rating: 5, Content: "这门数据结构课非常好，讲解清晰", Score: "A", CreatedAt: time.Now(), UpdatedAt: time.Now()},
-		{CourseID: course.ID, Semester: "2024-2025-1", UserID: user.ID, Rating: 4, Content: "算法设计的内容很有深度", Score: "B+", CreatedAt: time.Now().Add(time.Hour), UpdatedAt: time.Now().Add(time.Hour)},
-		{CourseID: course.ID, Semester: "2024-2025-2", UserID: user.ID, Rating: 3, Content: "课程作业太多了", Score: "C", CreatedAt: time.Now().Add(2 * time.Hour), UpdatedAt: time.Now().Add(2 * time.Hour)},
+		{CourseID: course.ID, Semester: "2024-2025-1", UserID: users[0].ID, Rating: 5, Content: "这门数据结构课非常好，讲解清晰", Score: "A", CreatedAt: time.Now(), UpdatedAt: time.Now()},
+		{CourseID: course.ID, Semester: "2024-2025-1", UserID: users[1].ID, Rating: 4, Content: "算法设计的内容很有深度", Score: "B+", CreatedAt: time.Now().Add(time.Hour), UpdatedAt: time.Now().Add(time.Hour)},
+		{CourseID: course.ID, Semester: "2024-2025-2", UserID: users[2].ID, Rating: 3, Content: "课程作业太多了", Score: "C", CreatedAt: time.Now().Add(2 * time.Hour), UpdatedAt: time.Now().Add(2 * time.Hour)},
 	}
 	for _, r := range rows {
 		if err := db.Create(&r).Error; err != nil {
@@ -451,7 +470,7 @@ func TestReviewRepository_SearchVector(t *testing.T) {
 		r := &review.Review{
 			CourseID:  course.ID,
 			Semester:  "2024-2025-1",
-			UserID:    user.ID,
+			UserID:    users[3].ID,
 			Rating:    5,
 			Content:   "高等数学的进阶内容",
 			Score:     "A+",
@@ -475,7 +494,7 @@ func TestReviewRepository_SearchVector(t *testing.T) {
 	})
 
 	t.Run("search vector refreshed on update", func(t *testing.T) {
-		entity := seedReview(t, db, course.ID, user.ID)
+		entity := seedReview(t, db, course.ID, users[4].ID)
 		if err := repository.RefreshReviewSearchVectors(db); err != nil {
 			t.Fatalf("RefreshReviewSearchVectors: %v", err)
 		}
@@ -521,14 +540,18 @@ func TestReviewRepository_CourseStatsAggregation(t *testing.T) {
 
 	teacher := seedTeacher(t, db)
 	course := seedCourse(t, db, teacher.ID)
-	user := seedUser(t, db)
+	users := []repository.UserEntity{
+		seedUser(t, db),
+		seedUserRaw(t, db, "statsuser2", "statsuser2@example.com"),
+		seedUserRaw(t, db, "statsuser3", "statsuser3@example.com"),
+	}
 
 	ratings := []int{5, 4, 3}
 	for i, rating := range ratings {
 		r := &review.Review{
 			CourseID:  course.ID,
 			Semester:  "2024-2025-1",
-			UserID:    user.ID,
+			UserID:    users[i].ID,
 			Rating:    rating,
 			Content:   "评价内容",
 			Score:     "B",
@@ -564,11 +587,13 @@ func TestReviewRepository_GetCourseFilters(t *testing.T) {
 	course := seedCourse(t, db, teacher.ID)
 	otherCourse := seedCourseRaw(t, db, "CS102", "算法设计", 3.0, "计算机学院", teacher.ID, "zh", nil, nil)
 	user := seedUser(t, db)
+	user2 := seedUserRaw(t, db, "filteruser2", "filteruser2@example.com")
+	user3 := seedUserRaw(t, db, "filteruser3", "filteruser3@example.com")
 
 	rows := []repository.ReviewEntity{
 		{CourseID: course.ID, Semester: "2024-2025-2", UserID: user.ID, Rating: 5, Content: "很好", CreatedAt: time.Now(), UpdatedAt: time.Now()},
-		{CourseID: course.ID, Semester: "2024-2025-2", UserID: user.ID, Rating: 4, Content: "不错", CreatedAt: time.Now(), UpdatedAt: time.Now()},
-		{CourseID: course.ID, Semester: "2024-2025-1", UserID: user.ID, Rating: 5, Content: "推荐", CreatedAt: time.Now(), UpdatedAt: time.Now()},
+		{CourseID: course.ID, Semester: "2024-2025-2", UserID: user2.ID, Rating: 4, Content: "不错", CreatedAt: time.Now(), UpdatedAt: time.Now()},
+		{CourseID: course.ID, Semester: "2024-2025-1", UserID: user3.ID, Rating: 5, Content: "推荐", CreatedAt: time.Now(), UpdatedAt: time.Now()},
 		{CourseID: otherCourse.ID, Semester: "2024-2025-2", UserID: user.ID, Rating: 1, Content: "其他课程", CreatedAt: time.Now(), UpdatedAt: time.Now()},
 	}
 	for _, row := range rows {

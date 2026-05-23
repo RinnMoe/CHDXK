@@ -26,19 +26,7 @@ func NewImporter(db *gorm.DB, semester string) *Importer {
 
 func (imp *Importer) Run(rows []CSVRow) error {
 	log.Println("Collecting unique entities from CSV data...")
-	departments, categories, teachers, courses := collectUnique(rows)
-
-	log.Printf("  Departments: %d, Categories: %d, Teachers: %d, Courses: %d",
-		len(departments), len(categories), len(teachers), len(courses))
-
-	log.Println("Upserting departments...")
-	imp.upsertDepartments(departments)
-
-	log.Println("Upserting categories...")
-	imp.upsertCategories(categories)
-
-	log.Println("Upserting semester...")
-	imp.upsertSemester()
+	teachers, courses := collectUnique(rows)
 
 	log.Println("Upserting teachers...")
 	imp.upsertTeachers(teachers)
@@ -85,29 +73,16 @@ func courseKey(code, teacherCode string) string {
 }
 
 func collectUnique(rows []CSVRow) (
-	departments map[string]bool,
-	categories map[string]bool,
 	teachers map[string]TeacherInfo,
 	courses map[string]CSVRow,
 ) {
-	departments = make(map[string]bool)
-	categories = make(map[string]bool)
 	teachers = make(map[string]TeacherInfo)
 	courses = make(map[string]CSVRow)
 
 	for _, r := range rows {
-		if r.Department != "" {
-			departments[r.Department] = true
-		}
-		for _, c := range r.Categories {
-			categories[c] = true
-		}
 		for _, t := range r.AllTeachers {
 			if t.Code != "" {
 				teachers[t.Code] = t
-				if t.Department != "" {
-					departments[t.Department] = true
-				}
 			}
 		}
 		if r.CourseCode != "" && r.MainTeacher.Code != "" {
@@ -115,42 +90,6 @@ func collectUnique(rows []CSVRow) (
 		}
 	}
 	return
-}
-
-func (imp *Importer) upsertDepartments(departments map[string]bool) {
-	var batch []repository.DepartmentEntity
-	for name := range departments {
-		batch = append(batch, repository.DepartmentEntity{Name: name, CreatedAt: time.Now()})
-		if len(batch) >= batchSize {
-			imp.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&batch)
-			batch = batch[:0]
-		}
-	}
-	if len(batch) > 0 {
-		imp.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&batch)
-	}
-}
-
-func (imp *Importer) upsertCategories(categories map[string]bool) {
-	var batch []repository.CategoryEntity
-	for name := range categories {
-		batch = append(batch, repository.CategoryEntity{Name: name})
-		if len(batch) >= batchSize {
-			imp.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&batch)
-			batch = batch[:0]
-		}
-	}
-	if len(batch) > 0 {
-		imp.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&batch)
-	}
-}
-
-func (imp *Importer) upsertSemester() {
-	imp.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&repository.SemesterEntity{
-		Name:      imp.semester,
-		CanReview: true,
-		CreatedAt: time.Now(),
-	})
 }
 
 func generatePinyin(name string) (string, string) {

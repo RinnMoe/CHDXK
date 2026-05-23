@@ -19,24 +19,32 @@ func NewApiKeyRepository(db *gorm.DB) *ApiKeyRepository {
 }
 
 func newApiKeyDomain(e *ApiKeyEntity) auth.ApiKey {
+	userID := 0
+	if e.UserID != nil {
+		userID = *e.UserID
+	}
 	return auth.ApiKey{
 		ID:         e.ID,
 		Name:       e.Name,
 		Key:        e.Key,
 		Role:       e.Role,
-		UserID:     e.UserID,
+		UserID:     userID,
 		CreatedAt:  e.CreatedAt,
 		LastUsedAt: e.LastUsedAt,
 	}
 }
 
 func newApiKeyEntity(d *auth.ApiKey) ApiKeyEntity {
+	var userID *int
+	if d.UserID > 0 {
+		userID = &d.UserID
+	}
 	return ApiKeyEntity{
 		ID:         d.ID,
 		Name:       d.Name,
 		Key:        d.Key,
 		Role:       d.Role,
-		UserID:     d.UserID,
+		UserID:     userID,
 		CreatedAt:  d.CreatedAt,
 		LastUsedAt: d.LastUsedAt,
 	}
@@ -44,7 +52,10 @@ func newApiKeyEntity(d *auth.ApiKey) ApiKeyEntity {
 
 func (r *ApiKeyRepository) FindByKey(ctx context.Context, key string) (*auth.ApiKey, error) {
 	var e ApiKeyEntity
-	if err := r.db.WithContext(ctx).Where("`key` = ?", key).Take(&e).Error; err != nil {
+	if err := r.db.WithContext(ctx).
+		Select("id, name, key, role, user_id, last_used_at, created_at").
+		Where("key = ?", key).
+		Take(&e).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
