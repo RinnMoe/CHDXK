@@ -9,38 +9,57 @@ import { useReviews } from "@/hooks/use-review"
 
 const REVIEW_PAGE_SIZE = 20
 
+type ReviewSearchInputProps = {
+  initialValue: string
+  onSearchChange: (value: string) => void
+}
+
+function ReviewSearchInput({
+  initialValue,
+  onSearchChange,
+}: ReviewSearchInputProps) {
+  const [searchValue, setSearchValue] = useState(initialValue)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      onSearchChange(searchValue)
+    }, 500)
+
+    return () => clearTimeout(handler)
+  }, [onSearchChange, searchValue])
+
+  return (
+    <Input
+      placeholder="搜索点评内容..."
+      value={searchValue}
+      onChange={(e) => setSearchValue(e.target.value)}
+      className="max-w-md"
+    />
+  )
+}
+
 export function ReviewsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1)
   const q = searchParams.get("q") ?? ""
-  const [searchValue, setSearchValue] = useState(q)
   const { data, isLoading } = useReviews({
     q: q || undefined,
     page,
     page_size: REVIEW_PAGE_SIZE,
   })
 
-  useEffect(() => {
-    setSearchValue(q)
-  }, [q])
+  function handleSearchChange(value: string) {
+    if (value === q) return
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      const current = searchParams.get("q") ?? ""
-      if (searchValue === current) return
-
-      const next = new URLSearchParams(searchParams)
-      if (searchValue) {
-        next.set("q", searchValue)
-      } else {
-        next.delete("q")
-      }
-      next.delete("page")
-      setSearchParams(next)
-    }, 500)
-
-    return () => clearTimeout(handler)
-  }, [searchParams, searchValue, setSearchParams])
+    const next = new URLSearchParams(searchParams)
+    if (value) {
+      next.set("q", value)
+    } else {
+      next.delete("q")
+    }
+    next.delete("page")
+    setSearchParams(next)
+  }
 
   function handlePageChange(page: number) {
     const next = new URLSearchParams(searchParams)
@@ -60,11 +79,10 @@ export function ReviewsPage() {
             </p>
           </div>
 
-          <Input
-            placeholder="搜索点评内容..."
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            className="max-w-md"
+          <ReviewSearchInput
+            key={q}
+            initialValue={q}
+            onSearchChange={handleSearchChange}
           />
 
           {data && (
