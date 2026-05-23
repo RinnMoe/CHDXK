@@ -153,8 +153,15 @@ export const reviewHandlers = [
     }
   ),
 
-  http.delete("/api/review/:reviewID", async () => {
+  http.delete("/api/review/:reviewID", async ({ params }) => {
     await randomDelay()
+    if (!isCurrentUserAdmin()) {
+      return HttpResponse.json({ error: "forbidden" }, { status: 403 })
+    }
+    const id = Number(params.reviewID)
+    if (!findReview(id)) {
+      return HttpResponse.json({ error: "review not found" }, { status: 404 })
+    }
     return HttpResponse.json({ message: "ok" })
   }),
 

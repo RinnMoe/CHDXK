@@ -190,6 +190,14 @@ func (r *ReviewController) DeleteReview(c *gin.Context) {
 	}
 
 	if err := r.command.DeleteReview(c.Request.Context(), u, reviewID); err != nil {
+		if errors.Is(err, review.ErrReviewNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "review not found"})
+			return
+		}
+		if errors.Is(err, review.ErrUserCannotDelete) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

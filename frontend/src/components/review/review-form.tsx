@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -43,6 +43,14 @@ export function ReviewForm({
   const [semester, setSemester] = useState(initialReview?.semester ?? "")
   const [score, setScore] = useState(initialReview?.score ?? "")
   const [error, setError] = useState<string | null>(null)
+  const availableSemesters = useMemo(() => {
+    const values = semesters ? [...semesters] : []
+    const initialSemester = initialReview?.semester
+    if (initialSemester && !values.includes(initialSemester)) {
+      values.unshift(initialSemester)
+    }
+    return values
+  }, [initialReview?.semester, semesters])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -99,7 +107,7 @@ export function ReviewForm({
               <SelectValue placeholder="选择学期" />
             </SelectTrigger>
             <SelectContent>
-              {semesters?.map((s) => (
+              {availableSemesters.map((s) => (
                 <SelectItem key={s} value={s}>
                   {s}
                 </SelectItem>

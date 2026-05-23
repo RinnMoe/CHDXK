@@ -28,7 +28,7 @@ func NewGuardian(u *auth.User, r *Review) Guardian {
 	return Guardian{u: u, r: r}
 }
 func (g Guardian) CanDelete(ctx context.Context) bool {
-	return g.u.ID == g.r.UserID || g.u.IsAdmin()
+	return g.u != nil && g.u.IsAdmin()
 }
 func (g Guardian) CanUpdate(ctx context.Context) bool {
 	return g.u.ID == g.r.UserID || g.u.IsAdmin()
