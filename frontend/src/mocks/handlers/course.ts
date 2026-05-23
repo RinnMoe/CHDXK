@@ -4,6 +4,7 @@ import {
   makeCourseDetail,
   makeCourseFilters,
 } from "../fixtures/courses"
+import { findUserByID, mockSession } from "../fixtures/auth"
 import { mockReviews } from "../fixtures/reviews"
 import { randomDelay } from "../utils"
 import type {
@@ -26,6 +27,24 @@ const notificationLevels = new Map<number, CourseNotificationLevel>([
 
 function getNotificationLevel(courseID: number): CourseNotificationLevel {
   return notificationLevels.get(courseID) ?? 0
+}
+
+function shouldShowMockMyReview(
+  courseID: number,
+  user: { id: number; username: string }
+) {
+  if (user.username === "demo") return true
+  return (courseID + user.id) % 2 === 0
+}
+
+function makeMockMyReview(
+  courseID: number,
+  user: { id: number; username: string }
+) {
+  if (!shouldShowMockMyReview(courseID, user)) return undefined
+  const review = mockReviews.find((r) => r.course_id === courseID)
+  if (!review) return undefined
+  return { ...review, user_id: user.id }
 }
 
 function paginate<T>(items: T[], page: number, pageSize: number) {
@@ -201,9 +220,14 @@ export const courseHandlers = [
     if (!course) {
       return HttpResponse.json({ error: "course not found" }, { status: 404 })
     }
+    const user = mockSession.userID
+      ? findUserByID(mockSession.userID)
+      : undefined
+    const myReview = user ? makeMockMyReview(id, user) : undefined
     return HttpResponse.json({
       ...makeCourseDetail(course),
       notification_level: getNotificationLevel(id),
+      my_review: myReview,
     })
   }),
 

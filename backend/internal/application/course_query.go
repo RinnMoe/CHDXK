@@ -6,6 +6,7 @@ import (
 
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
+	"jcourse/internal/domain/review"
 )
 
 type CourseListFilter struct {
@@ -24,13 +25,15 @@ type CourseListFilter struct {
 
 type CourseQueryService struct {
 	courseQuery      course.CourseQuery
+	reviewQuery      review.ReviewQuery
 	notificationRepo course.CourseNotificationRepository
 	hotRepo          course.HotCourseRepository
 }
 
-func NewCourseQueryService(courseQuery course.CourseQuery, notificationRepo course.CourseNotificationRepository, hotRepo course.HotCourseRepository) *CourseQueryService {
+func NewCourseQueryService(courseQuery course.CourseQuery, reviewQuery review.ReviewQuery, notificationRepo course.CourseNotificationRepository, hotRepo course.HotCourseRepository) *CourseQueryService {
 	return &CourseQueryService{
 		courseQuery:      courseQuery,
+		reviewQuery:      reviewQuery,
 		notificationRepo: notificationRepo,
 		hotRepo:          hotRepo,
 	}
@@ -194,6 +197,23 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 	dto.SameTeacherCourses = make([]CourseListItemDTO, len(sameTeacherCourses))
 	for i, c := range sameTeacherCourses {
 		dto.SameTeacherCourses[i] = newCourseListItemDTO(&c)
+	}
+
+	if user != nil {
+		myReviews, _, err := s.reviewQuery.FindBy(ctx, review.ReviewFilter{
+			CourseID: courseID,
+			UserID:   user.ID,
+			OrderBy:  "created_at",
+			Page:     1,
+			PageSize: 1,
+		})
+		if err != nil {
+			return nil, err
+		}
+		if len(myReviews) > 0 {
+			myReview := newReviewDTO(&myReviews[0], true)
+			dto.MyReview = &myReview
+		}
 	}
 
 	return dto, nil

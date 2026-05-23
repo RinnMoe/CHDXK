@@ -25,6 +25,9 @@ func (q *fakeReviewQuery) FindBy(ctx context.Context, filter review.ReviewFilter
 		if filter.CourseID != 0 && filter.CourseID != r.CourseID {
 			continue
 		}
+		if filter.UserID != 0 && filter.UserID != r.UserID {
+			continue
+		}
 		if len(filter.CourseIDs) > 0 {
 			match := slices.Contains(filter.CourseIDs, r.CourseID)
 			if !match {

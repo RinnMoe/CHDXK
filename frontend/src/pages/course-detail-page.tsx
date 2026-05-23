@@ -19,6 +19,7 @@ import {
   useCourseReviews,
 } from "@/hooks/use-course"
 import { ReviewList } from "@/components/review/review-list"
+import { ReviewCard } from "@/components/review/review-card"
 import { CourseReviewFilters } from "@/components/course/course-review-filters"
 import { PaginationComponent } from "@/components/common/pagination"
 
@@ -102,6 +103,9 @@ export function CourseDetailPage() {
       </>
     )
   }
+
+  const listedReviews =
+    reviews?.items.filter((review) => review.id !== course.my_review?.id) ?? []
 
   return (
     <>
@@ -190,6 +194,18 @@ export function CourseDetailPage() {
             </Card>
 
             <section>
+              {course.my_review && (
+                <div className="mb-6">
+                  <h2 className="mb-3 text-lg font-semibold">我的点评</h2>
+                  <div className="border-t">
+                    <ReviewCard
+                      review={course.my_review}
+                      showVoteButtons={false}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                 <div className="space-y-1">
                   <h2 className="text-lg font-semibold">课程点评</h2>
@@ -204,12 +220,14 @@ export function CourseDetailPage() {
                     courseID={course.id}
                     courseName={course.name}
                   />
-                  <Button asChild size="sm">
-                    <Link to={`/courses/${course.id}/review/new`}>
-                      <RiAddLine data-icon="inline-start" />
-                      写点评
-                    </Link>
-                  </Button>
+                  {!course.my_review && (
+                    <Button asChild size="sm">
+                      <Link to={`/courses/${course.id}/review/new`}>
+                        <RiAddLine data-icon="inline-start" />
+                        写点评
+                      </Link>
+                    </Button>
+                  )}
                 </div>
               </div>
 
@@ -237,9 +255,11 @@ export function CourseDetailPage() {
                 />
               </div>
               <ReviewList
-                reviews={reviews?.items ?? []}
+                reviews={listedReviews}
                 isLoading={reviewsLoading}
-                emptyText="还没有点评，来抢沙发？"
+                emptyText={
+                  course.my_review ? "还没有其他点评" : "还没有点评，来抢沙发？"
+                }
               />
 
               {reviews && reviews.total > 0 && (

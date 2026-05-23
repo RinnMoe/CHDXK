@@ -67,6 +67,7 @@ export interface CourseDetailDTO {
   same_code_courses: CourseListItemDTO[]
   same_teacher_courses: CourseListItemDTO[]
   notification_level: CourseNotificationLevel
+  my_review?: ReviewDTO
 }
 
 export interface HotCourseItemDTO {

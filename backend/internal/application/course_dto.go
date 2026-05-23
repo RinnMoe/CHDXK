@@ -74,6 +74,7 @@ type CourseDetailDTO struct {
 	SameCodeCourses    []CourseListItemDTO `json:"same_code_courses"`
 	SameTeacherCourses []CourseListItemDTO `json:"same_teacher_courses"`
 	NotificationLevel  int                 `json:"notification_level"`
+	MyReview           *ReviewDTO          `json:"my_review,omitempty"`
 }
 
 type HotCourseItemDTO struct {
