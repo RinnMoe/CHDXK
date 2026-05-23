@@ -36,6 +36,11 @@ func NewSessionStore(redisConf config.RedisConfig, sessionConf config.SessionCon
 
 func Auth(currentUserSvc *auth.CurrentUserService) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if auth.GetUserFromCtx(c.Request.Context()) != nil {
+			c.Next()
+			return
+		}
+
 		s := sessions.Default(c)
 		userID, ok := sessionInt(s, sessionKeyUserID)
 		if !ok || userID == 0 {
@@ -57,6 +62,11 @@ func Auth(currentUserSvc *auth.CurrentUserService) gin.HandlerFunc {
 
 func OptionalAuth(currentUserSvc *auth.CurrentUserService) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if auth.GetUserFromCtx(c.Request.Context()) != nil {
+			c.Next()
+			return
+		}
+
 		s := sessions.Default(c)
 		userID, ok := sessionInt(s, sessionKeyUserID)
 		if !ok || userID == 0 {
