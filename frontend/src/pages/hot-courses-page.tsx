@@ -8,11 +8,11 @@ export function HotCoursesPage() {
 
   return (
     <>
-      <title>热门榜 - JCourse</title>
+      <title>热门 - JCourse</title>
       <PageShell>
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-bold">热门榜</h1>
+            <h1 className="text-2xl font-bold">热门</h1>
             <p className="mt-1 text-sm text-muted-foreground">课程热度排行</p>
           </div>
 

@@ -17,7 +17,7 @@ const navItems = [
   {
     to: "/courses",
     label: "课程",
-    match: (p: string) => p.startsWith("/courses"),
+    match: (p: string) => p === "/courses" || /^\/courses\/\d+(?:\/|$)/.test(p),
   },
   {
     to: "/teachers",
@@ -31,7 +31,7 @@ const navItems = [
   },
   {
     to: "/courses/hot",
-    label: "热门榜",
+    label: "热门",
     match: (p: string) => p === "/courses/hot",
   },
 ]
