@@ -52,10 +52,10 @@ export function AnnouncementBanner() {
           >
             <RiInformationLine className="size-4 shrink-0 text-muted-foreground" />
             <div className="min-w-0 flex-1">
-              {title && <p className="font-medium">{title}</p>}
+              {title && <p className="font-medium text-primary">{title}</p>}
               {body && (
                 <p
-                  className={`whitespace-pre-line text-sm text-muted-foreground ${title ? "mt-1" : ""}`}
+                  className={`whitespace-pre-line text-sm ${title ? "mt-1" : ""}`}
                 >
                   {body}
                 </p>

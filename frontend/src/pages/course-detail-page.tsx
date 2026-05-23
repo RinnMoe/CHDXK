@@ -199,13 +199,13 @@ export function CourseDetailPage() {
               <div className="space-y-6 md:grid md:grid-cols-[minmax(0,1fr)_minmax(18rem,min(24rem,50%))] md:items-start md:gap-6 md:space-y-0">
                 <div className="ml-2 space-y-6 sm:ml-3 md:ml-4">
                   <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                    <span className="font-medium">开课单位</span>
-                    <span>{course.department}</span>
+                    <span>开课单位</span>
+                    <span className="font-medium">{course.department}</span>
                   </div>
 
                   {teacherGroup.length > 1 && (
                     <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm text-muted-foreground">
-                      <span className="font-medium">合上教师</span>
+                      <span>合上教师</span>
                       {teacherGroup.map((teacher, index) => (
                         <span
                           key={teacher.id}
@@ -214,7 +214,7 @@ export function CourseDetailPage() {
                           {index > 0 && <span className="mr-2">/</span>}
                           <Link
                             to={`/teachers/${teacher.id}`}
-                            className="hover:text-primary hover:underline"
+                            className="font-medium hover:text-primary hover:underline"
                           >
                             {teacher.name}
                           </Link>
@@ -231,25 +231,17 @@ export function CourseDetailPage() {
                   />
 
                   {historicalOfferedCourses.length > 0 && (
-                    <section className="space-y-3">
-                      <h2 className="text-sm font-medium text-muted-foreground">
-                        历史开课
-                      </h2>
-                      <div className="space-y-3">
-                        {historicalOfferedCourses.map((oc) => (
-                          <div
-                            key={oc.semester}
-                            className="flex items-center text-sm"
-                          >
-                            <CourseBadge
-                              kind="targetYear"
-                              className="font-mono"
-                            >
-                              {oc.semester}
-                            </CourseBadge>
-                          </div>
-                        ))}
-                      </div>
+                    <section className="flex flex-wrap items-center gap-2 text-sm">
+                      <h2 className="text-sm text-muted-foreground">历史开课</h2>
+                      {historicalOfferedCourses.map((oc) => (
+                        <CourseBadge
+                          key={oc.semester}
+                          kind="targetYear"
+                          className="font-mono font-medium"
+                        >
+                          {oc.semester}
+                        </CourseBadge>
+                      ))}
                     </section>
                   )}
 
@@ -262,7 +254,7 @@ export function CourseDetailPage() {
                       asChild
                       size="sm"
                       variant="outline"
-                      className="h-7 px-2 text-muted-foreground hover:text-foreground"
+                      className="h-8 px-2 text-muted-foreground hover:text-foreground"
                     >
                       <a href={feedbackMailto}>
                         <RiMailLine data-icon="inline-start" />
