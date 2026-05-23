@@ -5,8 +5,8 @@ import (
 
 	"jcourse/config"
 	"jcourse/internal/application"
-	domainaccount "jcourse/internal/domain/account"
-	domainauth "jcourse/internal/domain/auth"
+	"jcourse/internal/domain/account"
+	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/review/policy"
@@ -16,22 +16,22 @@ import (
 )
 
 type ServiceContainer struct {
-	ReviewQuery        *application.ReviewQueryService
-	ReviewCommand      *application.ReviewCommandService
-	CourseQuery        *application.CourseQueryService
-	CourseCommand      *application.CourseCommandService
-	TeacherQuery       *application.TeacherQueryService
-	PointQuery         *application.PointQueryService
-	PointCommand       *application.PointCommandService
-	SiteStatsQuery     *application.SiteStatsQueryService
-	SiteStatsCommand   *application.SiteStatsCommandService
-	AccountQuery       *application.AccountQueryService
-	AccountCommand     *application.AccountCommandService
-	CurrentUserService *domainauth.AuthUserService
-	AnnouncementQuery  *application.AnnouncementQueryService
-	ApiKeySvc          *domainauth.ApiKeyService
-	ApiKeyQuery        *application.ApiKeyQueryService
-	ApiKeyCommand      *application.ApiKeyCommandService
+	ReviewQuery       *application.ReviewQueryService
+	ReviewCommand     *application.ReviewCommandService
+	CourseQuery       *application.CourseQueryService
+	CourseCommand     *application.CourseCommandService
+	TeacherQuery      *application.TeacherQueryService
+	PointQuery        *application.PointQueryService
+	PointCommand      *application.PointCommandService
+	SiteStatsQuery    *application.SiteStatsQueryService
+	SiteStatsCommand  *application.SiteStatsCommandService
+	AccountQuery      *application.AccountQueryService
+	AccountCommand    *application.AccountCommandService
+	AuthUserService   *auth.AuthUserService
+	AnnouncementQuery *application.AnnouncementQueryService
+	ApiKeySvc         *auth.ApiKeyService
+	ApiKeyQuery       *application.ApiKeyQueryService
+	ApiKeyCommand     *application.ApiKeyCommandService
 }
 
 func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
@@ -86,7 +86,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	}))
 	siteStatsQuery := application.NewSiteStatsQueryService(statRepo)
 	siteStatsCommand := application.NewSiteStatsCommandService(statRepo, statRepo)
-	currentUserService := domainauth.NewCurrentUserService(userRepo)
+	currentUserService := auth.NewCurrentUserService(userRepo)
 	accountQuery := application.NewAccountQueryService(accountRepo)
 	accountCommand := application.NewAccountCommandService(
 		accountRepo,
@@ -94,13 +94,13 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		verificationRepo,
 		resetCodeRepo,
 		email.NewSMTPVerificationCodeSender(conf.SMTP),
-		domainaccount.NewDjangoPBKDF2SHA256PasswordHasher(0),
+		account.NewDjangoPBKDF2SHA256PasswordHasher(0),
 		application.AccountCommandConfig{
 			EmailWhitelist: conf.Auth.EmailWhitelist,
 			CodeInterval:   time.Duration(conf.Auth.VerificationCodeInterval) * time.Second,
 			CodeTTL:        time.Duration(conf.Auth.VerificationCodeTTL) * time.Second,
 		},
-		domainaccount.PasswordResetConfig{
+		account.PasswordResetConfig{
 			CodeInterval: time.Duration(conf.Auth.VerificationCodeInterval) * time.Second,
 			CodeTTL:      time.Duration(conf.Auth.VerificationCodeTTL) * time.Second,
 		},
@@ -108,26 +108,26 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		conf.Auth.MaxLoginAttempts,
 		time.Duration(conf.Auth.LoginLockoutDuration)*time.Second,
 	)
-	apiKeySvc := domainauth.NewApiKeyService(apiKeyRepo)
+	apiKeySvc := auth.NewApiKeyService(apiKeyRepo)
 	apiKeyQuery := application.NewApiKeyQueryService(apiKeySvc)
 	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc)
 
 	return &ServiceContainer{
-		ReviewQuery:        reviewQuery,
-		ReviewCommand:      reviewCommand,
-		CourseQuery:        courseQuery,
-		CourseCommand:      courseCommand,
-		TeacherQuery:       teacherQuery,
-		PointQuery:         pointQuery,
-		PointCommand:       pointCommand,
-		SiteStatsQuery:     siteStatsQuery,
-		SiteStatsCommand:   siteStatsCommand,
-		AccountQuery:       accountQuery,
-		AccountCommand:     accountCommand,
-		CurrentUserService: currentUserService,
-		AnnouncementQuery:  announcementQuery,
-		ApiKeySvc:          apiKeySvc,
-		ApiKeyQuery:        apiKeyQuery,
-		ApiKeyCommand:      apiKeyCommand,
+		ReviewQuery:       reviewQuery,
+		ReviewCommand:     reviewCommand,
+		CourseQuery:       courseQuery,
+		CourseCommand:     courseCommand,
+		TeacherQuery:      teacherQuery,
+		PointQuery:        pointQuery,
+		PointCommand:      pointCommand,
+		SiteStatsQuery:    siteStatsQuery,
+		SiteStatsCommand:  siteStatsCommand,
+		AccountQuery:      accountQuery,
+		AccountCommand:    accountCommand,
+		AuthUserService:   currentUserService,
+		AnnouncementQuery: announcementQuery,
+		ApiKeySvc:         apiKeySvc,
+		ApiKeyQuery:       apiKeyQuery,
+		ApiKeyCommand:     apiKeyCommand,
 	}
 }
