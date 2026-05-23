@@ -33,7 +33,6 @@ function ReviewSearchInput({
       placeholder="搜索点评内容..."
       value={searchValue}
       onChange={(e) => setSearchValue(e.target.value)}
-      className="max-w-md"
     />
   )
 }

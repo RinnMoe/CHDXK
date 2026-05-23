@@ -27,7 +27,6 @@ export function CourseSearchBar() {
       placeholder="搜索课程、代码或教师..."
       value={value}
       onChange={(e) => setValue(e.target.value)}
-      className="max-w-md"
     />
   )
 }

@@ -1,19 +1,11 @@
 import { useSearchParams } from "react-router-dom"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
+import { TeacherFilters } from "@/components/teacher/teacher-filters"
 import { TeacherList } from "@/components/teacher/teacher-list"
 import { PaginationComponent } from "@/components/common/pagination"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { useTeacherFilters, useTeachers } from "@/hooks/use-teacher"
-
-const ALL = "__all__"
 
 export function TeachersPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -34,7 +26,7 @@ export function TeachersPage() {
 
   function update(key: string, value: string | null) {
     const next = new URLSearchParams(searchParams)
-    if (!value || value === ALL) next.delete(key)
+    if (!value) next.delete(key)
     else next.set(key, value)
     next.delete("page")
     setSearchParams(next)
@@ -50,7 +42,7 @@ export function TeachersPage() {
     <>
       <PageTitle>教师</PageTitle>
       <PageShell>
-        <div className="space-y-6">
+        <div className="space-y-6 lg:flex lg:flex-col lg:gap-6 lg:space-y-0">
           <div>
             <h1 className="text-2xl font-bold">教师</h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -58,73 +50,43 @@ export function TeachersPage() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <div className="flex-1">
-              <Input
-                placeholder="搜索教师、工号或拼音..."
-                value={q}
-                onChange={(e) => update("q", e.target.value)}
-              />
-            </div>
-            <div className="w-full sm:w-48">
-              <Select
-                value={department || ALL}
-                onValueChange={(v) => update("department", v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="全部学院" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL}>全部学院</SelectItem>
-                  {filters?.departments.map((d) => (
-                    <SelectItem key={d.name} value={d.name}>
-                      {d.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="w-full sm:w-40">
-              <Select
-                value={title || ALL}
-                onValueChange={(v) => update("title", v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="全部职称" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL}>全部职称</SelectItem>
-                  {filters?.titles.map((t) => (
-                    <SelectItem key={t.name} value={t.name}>
-                      {t.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {data && (
-            <p className="text-sm text-muted-foreground">
-              共 {data.total} 位教师
-            </p>
-          )}
-
-          <TeacherList
-            teachers={data?.items ?? []}
-            isLoading={isLoading || filtersLoading}
+          <Input
+            placeholder="搜索教师、工号或拼音..."
+            value={q}
+            onChange={(e) => update("q", e.target.value)}
           />
 
-          {data && data.total > 0 && (
-            <div className="flex justify-center pt-4">
-              <PaginationComponent
-                page={data.page}
-                pageSize={data.page_size}
-                total={data.total}
-                onPageChange={handlePageChange}
+          <div className="flex flex-col gap-6 lg:flex-row">
+            {filters && (
+              <div className="w-full shrink-0 lg:w-1/4">
+                <TeacherFilters filters={filters} />
+              </div>
+            )}
+
+            <div className="min-w-0 flex-1 space-y-4">
+              {data && (
+                <p className="text-sm text-muted-foreground">
+                  共 {data.total} 位教师
+                </p>
+              )}
+
+              <TeacherList
+                teachers={data?.items ?? []}
+                isLoading={isLoading || filtersLoading}
               />
+
+              {data && data.total > 0 && (
+                <div className="flex justify-center pt-4">
+                  <PaginationComponent
+                    page={data.page}
+                    pageSize={data.page_size}
+                    total={data.total}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </PageShell>
     </>
