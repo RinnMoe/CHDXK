@@ -31,6 +31,10 @@ func (f *fakeReviewQuery) GetCourseFilters(ctx context.Context, courseID int) (*
 	return &review.ReviewFilters{}, nil
 }
 
+func (f *fakeReviewQuery) GetCourseTrend(ctx context.Context, courseID int) ([]review.ReviewTrendItem, error) {
+	return []review.ReviewTrendItem{}, nil
+}
+
 func (f *fakeReviewQuery) FindRevisions(ctx context.Context, reviewID int) ([]review.RevisionView, error) {
 	return nil, nil
 }

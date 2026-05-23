@@ -10,6 +10,7 @@ import {
 } from "@/components/course/course-compact-card"
 import { CourseBadge, CourseBadges } from "@/components/course/course-badges"
 import { CourseNotificationControl } from "@/components/course/course-notification-control"
+import { CourseReviewTrendDialog } from "@/components/course/course-review-trend-dialog"
 import { RatingDistribution } from "@/components/course/rating-distribution"
 import { PageShell } from "@/components/layout/page-shell"
 import {
@@ -198,12 +199,18 @@ export function CourseDetailPage() {
                     </p>
                   )}
                 </div>
-                <Button asChild size="sm" variant="outline">
-                  <Link to={`/courses/${course.id}/review/new`}>
-                    <RiAddLine data-icon="inline-start" />
-                    写点评
-                  </Link>
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <CourseReviewTrendDialog
+                    courseID={course.id}
+                    courseName={course.name}
+                  />
+                  <Button asChild size="sm">
+                    <Link to={`/courses/${course.id}/review/new`}>
+                      <RiAddLine data-icon="inline-start" />
+                      写点评
+                    </Link>
+                  </Button>
+                </div>
               </div>
 
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

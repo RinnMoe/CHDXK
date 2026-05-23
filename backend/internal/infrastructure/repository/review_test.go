@@ -302,6 +302,47 @@ func TestReviewRepository_FindBy(t *testing.T) {
 	})
 }
 
+func TestReviewRepository_GetCourseTrend(t *testing.T) {
+	db := newTestDB(t)
+	repo := repository.NewReviewRepository(db)
+	ctx := context.Background()
+
+	cleanTables(t, db, "reviews", "review_revisions", "courses", "teachers", "users")
+
+	teacher := seedTeacher(t, db)
+	course := seedCourse(t, db, teacher.ID)
+	otherCourse := seedCourseRaw(t, db, "CS102", "算法设计", 3, "计算机学院", teacher.ID, "zh", []string{"核心课"}, []string{"2022"})
+	user := seedUser(t, db)
+	now := time.Now()
+
+	rows := []repository.ReviewEntity{
+		{CourseID: course.ID, Semester: "2024-2025-1", UserID: user.ID, Rating: 4, Content: "好", CreatedAt: now, UpdatedAt: now},
+		{CourseID: course.ID, Semester: "2024-2025-1", UserID: user.ID, Rating: 2, Content: "一般", CreatedAt: now, UpdatedAt: now},
+		{CourseID: course.ID, Semester: "2024-2025-2", UserID: user.ID, Rating: 5, Content: "很好", CreatedAt: now, UpdatedAt: now},
+		{CourseID: course.ID, Semester: "", UserID: user.ID, Rating: 1, Content: "无学期", CreatedAt: now, UpdatedAt: now},
+		{CourseID: otherCourse.ID, Semester: "2024-2025-1", UserID: user.ID, Rating: 1, Content: "其他课程", CreatedAt: now, UpdatedAt: now},
+	}
+	for _, row := range rows {
+		if err := db.Create(&row).Error; err != nil {
+			t.Fatalf("seed review: %v", err)
+		}
+	}
+
+	trend, err := repo.GetCourseTrend(ctx, course.ID)
+	if err != nil {
+		t.Fatalf("GetCourseTrend: %v", err)
+	}
+	if len(trend) != 2 {
+		t.Fatalf("trend count: got %d, want 2", len(trend))
+	}
+	if trend[0].Semester != "2024-2025-1" || trend[0].Count != 2 || trend[0].Avg != 3 {
+		t.Errorf("first trend item = %+v, want semester 2024-2025-1 count 2 avg 3", trend[0])
+	}
+	if trend[1].Semester != "2024-2025-2" || trend[1].Count != 1 || trend[1].Avg != 5 {
+		t.Errorf("second trend item = %+v, want semester 2024-2025-2 count 1 avg 5", trend[1])
+	}
+}
+
 func TestReviewRepository_SearchVector(t *testing.T) {
 	db := newTestDB(t)
 	repo := repository.NewReviewRepository(db)

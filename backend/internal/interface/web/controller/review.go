@@ -69,6 +69,21 @@ func (r *ReviewController) GetCourseReviewFilters(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+func (r *ReviewController) GetCourseReviewTrend(c *gin.Context) {
+	courseID, err := strconv.Atoi(c.Param("courseID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid course id"})
+		return
+	}
+
+	result, err := r.query.GetCourseReviewTrend(c.Request.Context(), courseID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
 func (r *ReviewController) CreateReview(c *gin.Context) {
 	u := auth.GetUserFromCtx(c.Request.Context())
 	if u == nil {

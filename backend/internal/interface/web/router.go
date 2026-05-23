@@ -49,6 +49,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		courseGroup.GET("/ignored", courseController.ListIgnoredCourses)
 		courseGroup.GET("/:courseID", courseController.GetCourse)
 		courseGroup.GET("/:courseID/review/filters", reviewController.GetCourseReviewFilters)
+		courseGroup.GET("/:courseID/review/trend", reviewController.GetCourseReviewTrend)
 		courseGroup.GET("/:courseID/review", reviewController.ListCourseReviews)
 		courseGroup.POST("/:courseID/notification", courseController.SetNotificationLevel)
 	}

@@ -32,6 +32,10 @@ func (s *ReviewQueryService) GetCourseReviewFilters(ctx context.Context, courseI
 	return s.repo.GetCourseFilters(ctx, courseID)
 }
 
+func (s *ReviewQueryService) GetCourseReviewTrend(ctx context.Context, courseID int) ([]review.ReviewTrendItem, error) {
+	return s.repo.GetCourseTrend(ctx, courseID)
+}
+
 func (s *ReviewQueryService) buildDTOs(reviews []review.ReviewView, u *auth.User) []ReviewDTO {
 	items := make([]ReviewDTO, len(reviews))
 	for i, r := range reviews {

@@ -6,7 +6,10 @@ import {
 } from "../fixtures/courses"
 import { mockReviews } from "../fixtures/reviews"
 import { randomDelay } from "../utils"
-import type { CourseNotificationLevel } from "@/api/course"
+import type {
+  CourseNotificationLevel,
+  CourseReviewTrendItemDTO,
+} from "@/api/course"
 import type { ReviewDTO } from "@/api/review"
 
 const filters = makeCourseFilters()
@@ -118,6 +121,25 @@ function makeReviewFilters(list: ReviewDTO[]) {
   return { semesters, ratings }
 }
 
+function makeReviewTrend(list: ReviewDTO[]): CourseReviewTrendItemDTO[] {
+  const groups = list.reduce((map, review) => {
+    if (!review.semester) return map
+    const item = map.get(review.semester) ?? { total: 0, count: 0 }
+    item.total += review.rating
+    item.count += 1
+    map.set(review.semester, item)
+    return map
+  }, new Map<string, { total: number; count: number }>())
+
+  return Array.from(groups)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([semester, item]) => ({
+      semester,
+      avg: item.count > 0 ? item.total / item.count : 0,
+      count: item.count,
+    }))
+}
+
 export const courseHandlers = [
   http.get("/api/course/filters", async () => {
     await randomDelay()
@@ -203,6 +225,13 @@ export const courseHandlers = [
     const id = Number(params.courseID)
     const reviews = mockReviews.filter((r) => r.course_id === id)
     return HttpResponse.json(makeReviewFilters(reviews))
+  }),
+
+  http.get("/api/course/:courseID/review/trend", async ({ params }) => {
+    await randomDelay()
+    const id = Number(params.courseID)
+    const reviews = mockReviews.filter((r) => r.course_id === id)
+    return HttpResponse.json(makeReviewTrend(reviews))
   }),
 
   http.post(

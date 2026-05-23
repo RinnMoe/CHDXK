@@ -184,6 +184,20 @@ func (r2 *ReviewRepository) GetCourseFilters(ctx context.Context, courseID int) 
 	return &review.ReviewFilters{Semesters: semesters, Ratings: ratings}, nil
 }
 
+func (r2 *ReviewRepository) GetCourseTrend(ctx context.Context, courseID int) ([]review.ReviewTrendItem, error) {
+	var items []review.ReviewTrendItem
+	if err := r2.db.WithContext(ctx).
+		Model(&ReviewEntity{}).
+		Select("semester, AVG(rating) AS avg, COUNT(*) AS count").
+		Where("course_id = ? AND semester <> ''", courseID).
+		Group("semester").
+		Order("semester ASC").
+		Scan(&items).Error; err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 func (r2 *ReviewRepository) applyFilter(db *gorm.DB, filter review.ReviewFilter) *gorm.DB {
 	if filter.ReviewID != 0 {
 		db = db.Where("reviews.id = ?", filter.ReviewID)

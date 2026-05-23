@@ -23,6 +23,12 @@ export interface CourseReviewFilters {
   ratings: FilterItem[]
 }
 
+export interface CourseReviewTrendItemDTO {
+  semester: string
+  avg: number
+  count: number
+}
+
 export type CourseNotificationLevel = 0 | 1 | 2
 
 export interface CourseListItemDTO {
@@ -131,6 +137,12 @@ export function getCourseReviewFilters(
   courseID: number
 ): Promise<CourseReviewFilters> {
   return apiClient(`${BASE}/course/${courseID}/review/filters`)
+}
+
+export function getCourseReviewTrend(
+  courseID: number
+): Promise<CourseReviewTrendItemDTO[]> {
+  return apiClient(`${BASE}/course/${courseID}/review/trend`)
 }
 
 export function setNotificationLevel(

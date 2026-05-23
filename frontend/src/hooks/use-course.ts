@@ -10,6 +10,7 @@ import {
   getCourseDetail,
   listCourseReviews,
   getCourseReviewFilters,
+  getCourseReviewTrend,
   setNotificationLevel,
   listFollowedCourses,
   listIgnoredCourses,
@@ -60,6 +61,14 @@ export function useCourseReviewFilters(courseID: number) {
     queryKey: ["course-review-filters", courseID],
     queryFn: () => getCourseReviewFilters(courseID),
     enabled: !!courseID,
+  })
+}
+
+export function useCourseReviewTrend(courseID: number, enabled = true) {
+  return useQuery({
+    queryKey: ["course-review-trend", courseID],
+    queryFn: () => getCourseReviewTrend(courseID),
+    enabled: enabled && !!courseID,
   })
 }
 
