@@ -226,10 +226,10 @@ export function ReviewCard({
             <span className="font-mono text-sm text-muted-foreground">
               {review.course.code}
             </span>
-            <span className="max-w-[200px] truncate font-semibold">
+            <span className="font-semibold">
               {review.course.name}
             </span>
-            <span className="max-w-[120px] truncate text-sm text-muted-foreground">
+            <span className="text-sm text-muted-foreground">
               {review.course.main_teacher.name}
             </span>
           </Link>
