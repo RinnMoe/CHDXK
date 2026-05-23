@@ -13,12 +13,13 @@ export function HotCoursesPage() {
         <div className="space-y-6">
           <div>
             <h1 className="text-2xl font-bold">热门榜</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              课程热度排行
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground">课程热度排行</p>
           </div>
 
-          <Tabs value={period} onValueChange={(v) => setPeriod(v as "week" | "month")}>
+          <Tabs
+            value={period}
+            onValueChange={(v) => setPeriod(v as "week" | "month")}
+          >
             <TabsList>
               <TabsTrigger value="week">本周</TabsTrigger>
               <TabsTrigger value="month">本月</TabsTrigger>

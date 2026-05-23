@@ -84,7 +84,7 @@ export function CodeInputWithButton({
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
-      <div className="grid grid-cols-[1fr_auto] gap-2 items-start">
+      <div className="grid grid-cols-[1fr_auto] items-start gap-2">
         <Input
           id={id}
           placeholder="6 位验证码"

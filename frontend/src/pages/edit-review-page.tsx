@@ -28,11 +28,11 @@ export function EditReviewPage() {
       <>
         <title>编辑点评 - JCourse</title>
         <PageShell>
-        <div className="space-y-4">
-          <Skeleton className="h-8 w-1/2" />
-          <Skeleton className="h-64 w-full" />
-        </div>
-      </PageShell>
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-1/2" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </PageShell>
       </>
     )
   }
@@ -41,47 +41,47 @@ export function EditReviewPage() {
     <>
       <title>编辑点评 - JCourse</title>
       <PageShell>
-      <Button asChild variant="ghost" size="sm" className="mb-4">
-        <Link to={`/reviews/${id}`}>
-          <RiArrowLeftLine data-icon="inline-start" />
-          返回点评
-        </Link>
-      </Button>
+        <Button asChild variant="ghost" size="sm" className="mb-4">
+          <Link to={`/reviews/${id}`}>
+            <RiArrowLeftLine data-icon="inline-start" />
+            返回点评
+          </Link>
+        </Button>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>编辑点评</CardTitle>
-          {review.course && (
-            <div className="text-sm text-muted-foreground space-y-0.5">
-              <div>
-                <span className="font-mono">{review.course.code}</span>
-                <span className="mx-1">·</span>
-                <span className="font-medium text-foreground">
-                  {review.course.name}
-                </span>
-              </div>
-              <div>
-                主讲教师：{review.course.main_teacher.name}
-                {review.course.main_teacher.title && (
-                  <span className="ml-1">
-                    ({review.course.main_teacher.title})
+        <Card>
+          <CardHeader>
+            <CardTitle>编辑点评</CardTitle>
+            {review.course && (
+              <div className="space-y-0.5 text-sm text-muted-foreground">
+                <div>
+                  <span className="font-mono">{review.course.code}</span>
+                  <span className="mx-1">·</span>
+                  <span className="font-medium text-foreground">
+                    {review.course.name}
                   </span>
-                )}
+                </div>
+                <div>
+                  主讲教师：{review.course.main_teacher.name}
+                  {review.course.main_teacher.title && (
+                    <span className="ml-1">
+                      ({review.course.main_teacher.title})
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </CardHeader>
-        <CardContent>
-          <ReviewForm
-            initialReview={review}
-            semesters={semesters}
-            onSubmit={handleSubmit}
-            onCancel={() => navigate(`/reviews/${id}`)}
-            isSubmitting={isPending}
-          />
-        </CardContent>
-      </Card>
-    </PageShell>
+            )}
+          </CardHeader>
+          <CardContent>
+            <ReviewForm
+              initialReview={review}
+              semesters={semesters}
+              onSubmit={handleSubmit}
+              onCancel={() => navigate(`/reviews/${id}`)}
+              isSubmitting={isPending}
+            />
+          </CardContent>
+        </Card>
+      </PageShell>
     </>
   )
 }

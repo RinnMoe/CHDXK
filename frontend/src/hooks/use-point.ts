@@ -13,7 +13,10 @@ import {
   type PreviewTransferParams,
 } from "@/api/point"
 
-export function useUserPoints(userID: number, filter: PointRecordListFilter = {}) {
+export function useUserPoints(
+  userID: number,
+  filter: PointRecordListFilter = {}
+) {
   return useQuery({
     queryKey: ["points", userID, filter],
     queryFn: () => getUserPoints(userID, filter),

@@ -106,7 +106,9 @@ export function useVoteReview() {
       const prev = queryClient.getQueryData(["review", reviewID])
       queryClient.setQueryData(["review", reviewID], (old: unknown) => {
         if (!old || typeof old !== "object") return old
-        const o = old as { vote?: { like_count: number; dislike_count: number; my_vote?: number } }
+        const o = old as {
+          vote?: { like_count: number; dislike_count: number; my_vote?: number }
+        }
         return {
           ...o,
           vote: {

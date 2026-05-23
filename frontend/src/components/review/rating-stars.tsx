@@ -14,7 +14,8 @@ export function RatingStars({
   size = "md",
   readOnly,
 }: RatingStarsProps) {
-  const sizeClass = size === "sm" ? "size-4" : size === "lg" ? "size-6" : "size-5"
+  const sizeClass =
+    size === "sm" ? "size-4" : size === "lg" ? "size-6" : "size-5"
   const interactive = !readOnly && onChange
 
   return (

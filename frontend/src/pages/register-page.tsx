@@ -20,9 +20,9 @@ export function RegisterPage() {
     <>
       <title>注册 - JCourse</title>
       <PageShell>
-      <div className="flex justify-center">
-        <RegisterForm />
-      </div>
+        <div className="flex justify-center">
+          <RegisterForm />
+        </div>
       </PageShell>
     </>
   )

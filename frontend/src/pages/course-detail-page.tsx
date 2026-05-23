@@ -1,11 +1,13 @@
 import { Link, useParams, useSearchParams } from "react-router-dom"
 import { RiArrowLeftLine, RiAddLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
+import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TitleBadge } from "@/components/ui/title-badge"
-import { CourseCompactCard, SameCodeCourseCard } from "@/components/course/course-compact-card"
+import {
+  CourseCompactCard,
+  SameCodeCourseCard,
+} from "@/components/course/course-compact-card"
 import { CourseBadge, CourseBadges } from "@/components/course/course-badges"
 import { CourseNotificationControl } from "@/components/course/course-notification-control"
 import { RatingDistribution } from "@/components/course/rating-distribution"
@@ -21,7 +23,10 @@ import { PaginationComponent } from "@/components/common/pagination"
 
 const REVIEW_PAGE_SIZE = 10
 
-function byRatingDesc(a: { rating: { avg: number } }, b: { rating: { avg: number } }) {
+function byRatingDesc(
+  a: { rating: { avg: number } },
+  b: { rating: { avg: number } }
+) {
   return b.rating.avg - a.rating.avg
 }
 
@@ -42,10 +47,6 @@ export function CourseDetailPage() {
 
   const { data: course, isLoading } = useCourseDetail(id)
   const { data: reviewFilters } = useCourseReviewFilters(id)
-  const reviewFilterTotal =
-    reviewFilters?.ratings.reduce((sum, item) => sum + item.count, 0) ??
-    course?.rating.count ??
-    0
   const { data: reviews, isLoading: reviewsLoading } = useCourseReviews(id, {
     semester,
     rating,
@@ -115,157 +116,167 @@ export function CourseDetailPage() {
         <div className="space-y-6 lg:grid lg:grid-cols-3 lg:gap-6 lg:space-y-0">
           <div className="space-y-6 lg:col-span-2">
             <header className="space-y-3">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="font-mono">{course.code}</span>
-              <span>·</span>
-              <span>{course.department}</span>
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold">{course.name}</h1>
-              <div className="text-base">
-                主讲教师：
-                <Link
-                  to={`/teachers/${course.main_teacher.id}`}
-                  className="font-medium text-primary hover:underline"
-                >
-                  {course.main_teacher.name}
-                </Link>
-                {course.main_teacher.title && (
-                  <TitleBadge className="ml-1">{course.main_teacher.title}</TitleBadge>
-                )}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="font-mono">{course.code}</span>
+                <span>·</span>
+                <span>{course.department}</span>
               </div>
-            </div>
-            <CourseBadges
-              credit={course.credit}
-              language={course.language}
-              categories={course.categories}
-              targetYears={course.target_years}
-            />
-          </header>
-
-          <CourseNotificationControl
-            courseID={course.id}
-            level={course.notification_level}
-          />
-
-          {course.offered_courses.length > 0 && (
-            <section className="space-y-3">
-              <h2 className="text-lg font-semibold">历史开课</h2>
-              <div className="space-y-3">
-                {course.offered_courses.map((oc) => (
-                  <div
-                    key={oc.semester}
-                    className="flex items-center gap-3 text-sm"
+              <div className="space-y-2">
+                <h1 className="text-3xl font-bold">{course.name}</h1>
+                <div className="text-base">
+                  主讲教师：
+                  <Link
+                    to={`/teachers/${course.main_teacher.id}`}
+                    className="font-medium text-primary hover:underline"
                   >
-                    <CourseBadge kind="targetYear" className="font-mono">
-                      {oc.semester}
-                    </CourseBadge>
-                    <span className="text-muted-foreground">
-                      {oc.teacher_group.map((t, index) => (
-                        <span key={t.id}>
-                          {index > 0 && <span className="mx-1">/</span>}
-                          <Link
-                            to={`/teachers/${t.id}`}
-                            className="hover:text-primary hover:underline"
-                          >
-                            {t.name}
-                          </Link>
-                        </span>
-                      ))}
-                    </span>
-                  </div>
-                ))}
+                    {course.main_teacher.name}
+                  </Link>
+                  {course.main_teacher.title && (
+                    <TitleBadge className="ml-1">
+                      {course.main_teacher.title}
+                    </TitleBadge>
+                  )}
+                </div>
               </div>
-            </section>
-          )}
-
-          <Card>
-            <CardContent className="py-6">
-              <RatingDistribution rating={course.rating} />
-            </CardContent>
-          </Card>
-
-          <section>
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <div className="space-y-1">
-                <h2 className="text-lg font-semibold">课程点评</h2>
-                {reviews && (
-                  <p className="text-sm text-muted-foreground">
-                    共 {reviews.total} 条点评
-                  </p>
-                )}
-              </div>
-              <Button asChild size="sm" variant="outline">
-                <Link to={`/courses/${course.id}/review/new`}>
-                  <RiAddLine data-icon="inline-start" />
-                  写点评
-                </Link>
-              </Button>
-            </div>
-
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <CourseReviewFilters
-                semesters={reviewFilters?.semesters ?? []}
-                ratings={reviewFilters?.ratings ?? []}
-                total={reviewFilterTotal}
-                value={{
-                  semester,
-                  rating,
-                  orderBy,
-                }}
-                onChange={(next) => {
-                  const params: Record<string, string | undefined> = {}
-                  if ("semester" in next) params.semester = next.semester
-                  if ("rating" in next) {
-                    params.rating =
-                      next.rating === undefined
-                        ? undefined
-                        : String(next.rating)
-                  }
-                  if ("orderBy" in next) params.order_by = next.orderBy
-                  updateReviewParams(params)
-                }}
+              <CourseBadges
+                credit={course.credit}
+                language={course.language}
+                categories={course.categories}
+                targetYears={course.target_years}
               />
-            </div>
-            <ReviewList
-              reviews={reviews?.items ?? []}
-              isLoading={reviewsLoading}
-              emptyText="还没有点评，来抢沙发？"
+            </header>
+
+            <CourseNotificationControl
+              courseID={course.id}
+              level={course.notification_level}
             />
 
-            {reviews && reviews.total > 0 && (
-              <div className="flex justify-center pt-4">
-                <PaginationComponent
-                  page={reviews.page}
-                  pageSize={reviews.page_size}
-                  total={reviews.total}
-                  onPageChange={handlePageChange}
+            {course.offered_courses.length > 0 && (
+              <section className="space-y-3">
+                <h2 className="text-lg font-semibold">历史开课</h2>
+                <div className="space-y-3">
+                  {course.offered_courses.map((oc) => (
+                    <div
+                      key={oc.semester}
+                      className="flex items-center gap-3 text-sm"
+                    >
+                      <CourseBadge kind="targetYear" className="font-mono">
+                        {oc.semester}
+                      </CourseBadge>
+                      <span className="text-muted-foreground">
+                        {oc.teacher_group.map((t, index) => (
+                          <span key={t.id}>
+                            {index > 0 && <span className="mx-1">/</span>}
+                            <Link
+                              to={`/teachers/${t.id}`}
+                              className="hover:text-primary hover:underline"
+                            >
+                              {t.name}
+                            </Link>
+                          </span>
+                        ))}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            <Card>
+              <CardContent className="py-6">
+                <RatingDistribution rating={course.rating} />
+              </CardContent>
+            </Card>
+
+            <section>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <h2 className="text-lg font-semibold">课程点评</h2>
+                  {reviews && (
+                    <p className="text-sm text-muted-foreground">
+                      共 {reviews.total} 条点评
+                    </p>
+                  )}
+                </div>
+                <Button asChild size="sm" variant="outline">
+                  <Link to={`/courses/${course.id}/review/new`}>
+                    <RiAddLine data-icon="inline-start" />
+                    写点评
+                  </Link>
+                </Button>
+              </div>
+
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <CourseReviewFilters
+                  semesters={reviewFilters?.semesters ?? []}
+                  ratings={reviewFilters?.ratings ?? []}
+                  value={{
+                    semester,
+                    rating,
+                    orderBy,
+                  }}
+                  onChange={(next) => {
+                    const params: Record<string, string | undefined> = {}
+                    if ("semester" in next) params.semester = next.semester
+                    if ("rating" in next) {
+                      params.rating =
+                        next.rating === undefined
+                          ? undefined
+                          : String(next.rating)
+                    }
+                    if ("orderBy" in next) params.order_by = next.orderBy
+                    updateReviewParams(params)
+                  }}
                 />
               </div>
-            )}
-          </section>
+              <ReviewList
+                reviews={reviews?.items ?? []}
+                isLoading={reviewsLoading}
+                emptyText="还没有点评，来抢沙发？"
+              />
+
+              {reviews && reviews.total > 0 && (
+                <div className="flex justify-center pt-4">
+                  <PaginationComponent
+                    page={reviews.page}
+                    pageSize={reviews.page_size}
+                    total={reviews.total}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
+              )}
+            </section>
           </div>
 
-          {(course.same_code_courses.length > 0 || course.same_teacher_courses.length > 0) && (
+          {(course.same_code_courses.length > 0 ||
+            course.same_teacher_courses.length > 0) && (
             <aside className="space-y-6">
               {course.same_code_courses.length > 0 && (
                 <section>
-                  <h2 className="mb-3 text-lg font-semibold">其他老师的{course.name}课</h2>
+                  <h2 className="mb-3 text-lg font-semibold">
+                    其他老师的{course.name}课
+                  </h2>
                   <div className="border-t">
-                    {[...course.same_code_courses].sort(byRatingDesc).map((c) => (
-                      <SameCodeCourseCard key={c.id} course={c} />
-                    ))}
+                    {[...course.same_code_courses]
+                      .sort(byRatingDesc)
+                      .map((c) => (
+                        <SameCodeCourseCard key={c.id} course={c} />
+                      ))}
                   </div>
                 </section>
               )}
 
               {course.same_teacher_courses.length > 0 && (
                 <section>
-                  <h2 className="mb-3 text-lg font-semibold">{course.main_teacher.name}老师的其他课</h2>
+                  <h2 className="mb-3 text-lg font-semibold">
+                    {course.main_teacher.name}老师的其他课
+                  </h2>
                   <div className="border-t">
-                    {[...course.same_teacher_courses].sort(byRatingDesc).map((c) => (
-                      <CourseCompactCard key={c.id} course={c} />
-                    ))}
+                    {[...course.same_teacher_courses]
+                      .sort(byRatingDesc)
+                      .map((c) => (
+                        <CourseCompactCard key={c.id} course={c} />
+                      ))}
                   </div>
                 </section>
               )}

@@ -37,7 +37,11 @@ const metricConfig: ReadonlyArray<{
   color: string
 }> = [
   { key: "total_user_count", name: "用户总数", color: "var(--color-chart-1)" },
-  { key: "total_review_count", name: "点评总数", color: "var(--color-chart-2)" },
+  {
+    key: "total_review_count",
+    name: "点评总数",
+    color: "var(--color-chart-2)",
+  },
   { key: "active_user_count", name: "活跃用户", color: "var(--color-chart-3)" },
   { key: "new_user_count", name: "新增用户", color: "var(--color-chart-4)" },
   { key: "new_review_count", name: "新增点评", color: "var(--color-chart-5)" },

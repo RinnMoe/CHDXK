@@ -1,5 +1,9 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
-import { getDailyStat, listDailyStats, type SiteDailyStatListFilter } from "@/api/site-stats"
+import {
+  getDailyStat,
+  listDailyStats,
+  type SiteDailyStatListFilter,
+} from "@/api/site-stats"
 
 function yesterdayDateStr(): string {
   const d = new Date()

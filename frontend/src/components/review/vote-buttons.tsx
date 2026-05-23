@@ -1,5 +1,10 @@
 import { useState } from "react"
-import { RiThumbUpFill, RiThumbUpLine, RiThumbDownFill, RiThumbDownLine } from "@remixicon/react"
+import {
+  RiThumbUpFill,
+  RiThumbUpLine,
+  RiThumbDownFill,
+  RiThumbDownLine,
+} from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { useVoteReview } from "@/hooks/use-review"
 import { VoteLike, VoteDislike, VoteNeutral, type VoteType } from "@/api/review"
@@ -18,7 +23,9 @@ export function VoteButtons({
   dislikeCount,
   myVote,
 }: VoteButtonsProps) {
-  const [optimisticVote, setOptimisticVote] = useState<number | undefined>(myVote)
+  const [optimisticVote, setOptimisticVote] = useState<number | undefined>(
+    myVote
+  )
   const { mutate, isPending } = useVoteReview()
 
   const cast = (next: VoteType) => {
@@ -31,9 +38,13 @@ export function VoteButtons({
   const disliked = optimisticVote === VoteDislike
 
   const adjustedLike =
-    likeCount + (liked && myVote !== VoteLike ? 1 : 0) - (myVote === VoteLike && !liked ? 1 : 0)
+    likeCount +
+    (liked && myVote !== VoteLike ? 1 : 0) -
+    (myVote === VoteLike && !liked ? 1 : 0)
   const adjustedDislike =
-    dislikeCount + (disliked && myVote !== VoteDislike ? 1 : 0) - (myVote === VoteDislike && !disliked ? 1 : 0)
+    dislikeCount +
+    (disliked && myVote !== VoteDislike ? 1 : 0) -
+    (myVote === VoteDislike && !disliked ? 1 : 0)
 
   return (
     <div className="inline-flex items-center gap-1">
@@ -49,7 +60,7 @@ export function VoteButtons({
         ) : (
           <RiThumbUpLine data-icon="inline-start" />
         )}
-        <span className="tabular-nums text-sm">{adjustedLike}</span>
+        <span className="text-sm tabular-nums">{adjustedLike}</span>
       </Button>
       <Button
         variant="ghost"
@@ -63,7 +74,7 @@ export function VoteButtons({
         ) : (
           <RiThumbDownLine data-icon="inline-start" />
         )}
-        <span className="tabular-nums text-sm">{adjustedDislike}</span>
+        <span className="text-sm tabular-nums">{adjustedDislike}</span>
       </Button>
     </div>
   )

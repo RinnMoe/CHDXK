@@ -43,10 +43,10 @@ export function CourseList({ courses, isLoading }: CourseListProps) {
   if (courses.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="text-4xl mb-4">
+        <div className="mb-4 text-4xl">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-12 w-12 text-muted-foreground/50 mx-auto"
+            className="mx-auto h-12 w-12 text-muted-foreground/50"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -60,7 +60,7 @@ export function CourseList({ courses, isLoading }: CourseListProps) {
           </svg>
         </div>
         <p className="text-muted-foreground">暂无课程</p>
-        <p className="text-sm text-muted-foreground/70 mt-1">
+        <p className="mt-1 text-sm text-muted-foreground/70">
           尝试调整筛选条件
         </p>
       </div>

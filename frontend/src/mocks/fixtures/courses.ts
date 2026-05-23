@@ -78,7 +78,10 @@ function pickMany<T>(arr: T[], n: number): T[] {
 }
 
 let teacherIDSeed = 1
-const teacherCache = new Map<string, { id: number; code: string; name: string; department: string; title?: string }>()
+const teacherCache = new Map<
+  string,
+  { id: number; code: string; name: string; department: string; title?: string }
+>()
 
 function makeTeacher(name?: string) {
   const finalName = name ?? pick(TEACHER_NAMES)
@@ -95,7 +98,9 @@ function makeTeacher(name?: string) {
   return teacher
 }
 
-function makeDistribution(count: number): [number, number, number, number, number] {
+function makeDistribution(
+  count: number
+): [number, number, number, number, number] {
   if (count === 0) return [0, 0, 0, 0, 0]
   const dist: [number, number, number, number, number] = [0, 0, 0, 0, 0]
   for (let i = 0; i < count; i++) {
@@ -104,7 +109,9 @@ function makeDistribution(count: number): [number, number, number, number, numbe
   return dist
 }
 
-function avgFromDistribution(dist: [number, number, number, number, number]): number {
+function avgFromDistribution(
+  dist: [number, number, number, number, number]
+): number {
   const total = dist.reduce((a, b) => a + b, 0)
   if (total === 0) return 0
   const sum = dist.reduce((s, c, i) => s + c * (i + 1), 0)
@@ -201,7 +208,9 @@ mockCourses[2] = {
 }
 
 // Courses with no reviews for testing zero-state UI
-const noRatingDistribution: [number, number, number, number, number] = [0, 0, 0, 0, 0]
+const noRatingDistribution: [number, number, number, number, number] = [
+  0, 0, 0, 0, 0,
+]
 mockCourses.push(
   {
     id: courseIDSeed++,
@@ -238,14 +247,16 @@ mockCourses.push(
     categories: ["专业选修", "通识选修"],
     main_teacher: makeTeacher("李星"),
     rating: { count: 0, avg: 0, distribution: noRatingDistribution },
-  },
+  }
 )
 
 export function makeCourseDetail(course: CourseListItemDTO): CourseDetailDTO {
-  const sameCode = mockCourses
-    .filter((c) => c.code === course.code && c.id !== course.id)
-  const sameTeacher = mockCourses
-    .filter((c) => c.main_teacher.id === course.main_teacher.id && c.id !== course.id)
+  const sameCode = mockCourses.filter(
+    (c) => c.code === course.code && c.id !== course.id
+  )
+  const sameTeacher = mockCourses.filter(
+    (c) => c.main_teacher.id === course.main_teacher.id && c.id !== course.id
+  )
 
   return {
     id: course.id,
@@ -265,10 +276,7 @@ export function makeCourseDetail(course: CourseListItemDTO): CourseDetailDTO {
         language: course.language,
         target_years: course.target_years,
         categories: course.categories,
-        teacher_group: [
-          course.main_teacher,
-          makeTeacher(pick(TEACHER_NAMES)),
-        ],
+        teacher_group: [course.main_teacher, makeTeacher(pick(TEACHER_NAMES))],
       },
       {
         semester: "2024-2025-2",

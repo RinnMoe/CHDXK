@@ -6,9 +6,12 @@ interface PageShellProps {
   showAnnouncements?: boolean
 }
 
-export function PageShell({ children, showAnnouncements = true }: PageShellProps) {
+export function PageShell({
+  children,
+  showAnnouncements = true,
+}: PageShellProps) {
   return (
-    <main className="max-w-[1440px] mx-auto px-4 py-6">
+    <main className="mx-auto max-w-[1440px] px-4 py-6">
       {showAnnouncements && <AnnouncementBanner />}
       {children}
     </main>

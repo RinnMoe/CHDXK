@@ -15,14 +15,17 @@ export function UserPointsPage() {
   const [view, setView] = useState<View>("records")
   const [page] = useState(1)
   const [pageSize] = useState(20)
-  const { data, isLoading } = useUserPoints(user?.id ?? 0, { page, page_size: pageSize })
+  const { data, isLoading } = useUserPoints(user?.id ?? 0, {
+    page,
+    page_size: pageSize,
+  })
 
   if (!user) {
     return (
       <>
         <title>我的积分 - JCourse</title>
         <PageShell>
-          <p className="text-center text-muted-foreground py-12">请先登录</p>
+          <p className="py-12 text-center text-muted-foreground">请先登录</p>
         </PageShell>
       </>
     )

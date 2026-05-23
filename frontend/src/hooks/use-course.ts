@@ -79,8 +79,9 @@ export function useSetNotificationLevel() {
         "course",
         courseID,
       ])
-      queryClient.setQueryData<CourseDetailDTO>(["course", courseID], (course) =>
-        course ? { ...course, notification_level: level } : course
+      queryClient.setQueryData<CourseDetailDTO>(
+        ["course", courseID],
+        (course) => (course ? { ...course, notification_level: level } : course)
       )
       return { previous, courseID }
     },
@@ -109,7 +110,10 @@ export function useFollowedCourses(
   })
 }
 
-export function useIgnoredCourses(filter: CourseListFilter = {}, enabled = true) {
+export function useIgnoredCourses(
+  filter: CourseListFilter = {},
+  enabled = true
+) {
   return useQuery({
     queryKey: ["ignored-courses", filter],
     queryFn: () => listIgnoredCourses(filter),
@@ -118,7 +122,10 @@ export function useIgnoredCourses(filter: CourseListFilter = {}, enabled = true)
   })
 }
 
-export function useHotCourses(period: "week" | "month" = "week", limit?: number) {
+export function useHotCourses(
+  period: "week" | "month" = "week",
+  limit?: number
+) {
   return useQuery({
     queryKey: ["hot-courses", period, limit],
     queryFn: () => listHotCourses(period, limit),

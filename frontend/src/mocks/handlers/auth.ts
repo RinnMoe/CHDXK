@@ -21,10 +21,16 @@ export const authHandlers = [
     }
     const email = body.email.toLowerCase()
     if (!email.endsWith("@sjtu.edu.cn")) {
-      return HttpResponse.json({ error: "email domain not allowed" }, { status: 403 })
+      return HttpResponse.json(
+        { error: "email domain not allowed" },
+        { status: 403 }
+      )
     }
     if (findUserByEmail(email)) {
-      return HttpResponse.json({ error: "user already exists" }, { status: 409 })
+      return HttpResponse.json(
+        { error: "user already exists" },
+        { status: 409 }
+      )
     }
     setMockCode(email)
     return HttpResponse.json({ message: "ok" })
@@ -32,12 +38,22 @@ export const authHandlers = [
 
   http.post("/api/auth/register", async ({ request }) => {
     await randomDelay()
-    const body = (await request.json()) as { email: string; code: string; password: string }
+    const body = (await request.json()) as {
+      email: string
+      code: string
+      password: string
+    }
     if (!body.email || !body.code || !body.password) {
-      return HttpResponse.json({ error: "missing required fields" }, { status: 400 })
+      return HttpResponse.json(
+        { error: "missing required fields" },
+        { status: 400 }
+      )
     }
     if (!consumeMockCode(body.email, body.code)) {
-      return HttpResponse.json({ error: "invalid verification code" }, { status: 400 })
+      return HttpResponse.json(
+        { error: "invalid verification code" },
+        { status: 400 }
+      )
     }
     const user = addUser(body.email, body.password)
     setMockSessionUserID(user.id)
@@ -48,11 +64,17 @@ export const authHandlers = [
     await randomDelay()
     const body = (await request.json()) as { email: string; password: string }
     if (!body.email || !body.password) {
-      return HttpResponse.json({ error: "missing required fields" }, { status: 400 })
+      return HttpResponse.json(
+        { error: "missing required fields" },
+        { status: 400 }
+      )
     }
     const user = findUserByEmail(body.email)
     if (!user || user.password !== body.password) {
-      return HttpResponse.json({ error: "invalid credentials" }, { status: 401 })
+      return HttpResponse.json(
+        { error: "invalid credentials" },
+        { status: 401 }
+      )
     }
     setMockSessionUserID(user.id)
     return HttpResponse.json(toAuthUserDTO(user))
@@ -92,12 +114,22 @@ export const authHandlers = [
 
   http.post("/api/auth/password-reset", async ({ request }) => {
     await randomDelay()
-    const body = (await request.json()) as { email: string; code: string; new_password: string }
+    const body = (await request.json()) as {
+      email: string
+      code: string
+      new_password: string
+    }
     if (!body.email || !body.code || !body.new_password) {
-      return HttpResponse.json({ error: "missing required fields" }, { status: 400 })
+      return HttpResponse.json(
+        { error: "missing required fields" },
+        { status: 400 }
+      )
     }
     if (!consumeMockCode(body.email, body.code)) {
-      return HttpResponse.json({ error: "invalid verification code" }, { status: 400 })
+      return HttpResponse.json(
+        { error: "invalid verification code" },
+        { status: 400 }
+      )
     }
     const user = findUserByEmail(body.email)
     if (!user) {

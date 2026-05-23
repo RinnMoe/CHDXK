@@ -6,13 +6,25 @@ interface MockUserBalance {
   records: PointRecordDTO[]
 }
 
-const REASONS: { reason: PointRecordDTO["reason"]; description: string; amount: number }[] = [
+const REASONS: {
+  reason: PointRecordDTO["reason"]
+  description: string
+  amount: number
+}[] = [
   { reason: "review_create", description: "发表点评奖励", amount: 5 },
   { reason: "review_create", description: "发表点评奖励", amount: 5 },
   { reason: "review_vote", description: "点评获得点赞", amount: 1 },
   { reason: "daily_login", description: "每日登录奖励", amount: 1 },
-  { reason: "transfer_in", description: "收到 demo@sjtu.edu.cn 的转账", amount: 20 },
-  { reason: "transfer_out", description: "转账给 admin@sjtu.edu.cn", amount: -10 },
+  {
+    reason: "transfer_in",
+    description: "收到 demo@sjtu.edu.cn 的转账",
+    amount: 20,
+  },
+  {
+    reason: "transfer_out",
+    description: "转账给 admin@sjtu.edu.cn",
+    amount: -10,
+  },
 ]
 
 const balances = new Map<number, MockUserBalance>()

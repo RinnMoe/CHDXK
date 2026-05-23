@@ -76,9 +76,9 @@ export function RegisterForm() {
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "注册中..." : "注册"}
           </Button>
-          <p className="text-sm text-muted-foreground text-center">
+          <p className="text-center text-sm text-muted-foreground">
             已有账号？
-            <Link to="/login" className="text-foreground hover:underline ml-1">
+            <Link to="/login" className="ml-1 text-foreground hover:underline">
               登录
             </Link>
           </p>

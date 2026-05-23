@@ -45,22 +45,29 @@ export function SiteStatsPage() {
   }
 
   function updateDateRange(params: { start_date?: string; end_date?: string }) {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev)
-      if (params.start_date !== undefined) next.set("start_date", params.start_date)
-      if (params.end_date !== undefined) next.set("end_date", params.end_date)
-      return next
-    }, { replace: true })
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (params.start_date !== undefined)
+          next.set("start_date", params.start_date)
+        if (params.end_date !== undefined) next.set("end_date", params.end_date)
+        return next
+      },
+      { replace: true }
+    )
     setPage(1)
   }
 
   function clearDateRange() {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev)
-      next.delete("start_date")
-      next.delete("end_date")
-      return next
-    }, { replace: true })
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete("start_date")
+        next.delete("end_date")
+        return next
+      },
+      { replace: true }
+    )
     setPage(1)
   }
 
@@ -115,7 +122,9 @@ export function SiteStatsPage() {
                 id="start-date"
                 type="date"
                 value={startDate}
-                onChange={(e) => updateDateRange({ start_date: e.target.value })}
+                onChange={(e) =>
+                  updateDateRange({ start_date: e.target.value })
+                }
                 className="w-44"
               />
             </div>
@@ -131,7 +140,8 @@ export function SiteStatsPage() {
                 className="w-44"
               />
             </div>
-            {(searchParams.get("start_date") || searchParams.get("end_date")) && (
+            {(searchParams.get("start_date") ||
+              searchParams.get("end_date")) && (
               <Button variant="ghost" size="sm" onClick={clearDateRange}>
                 重置
               </Button>

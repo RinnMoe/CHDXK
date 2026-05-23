@@ -1,10 +1,9 @@
 import { http, HttpResponse } from "msw"
-import type { CreatePointTransferCommand, PointTransferPreviewDTO } from "@/api/point"
-import {
-  findUserByID,
-  mockSession,
-  mockUsers,
-} from "../fixtures/auth"
+import type {
+  CreatePointTransferCommand,
+  PointTransferPreviewDTO,
+} from "@/api/point"
+import { findUserByID, mockSession, mockUsers } from "../fixtures/auth"
 import {
   getMockPointRecords,
   getMockPointTotal,
@@ -39,7 +38,8 @@ function calcPreview(
     sender_debit: feePayer === "sender" ? amount + fee : amount,
     recipient_credit: feePayer === "recipient" ? amount - fee : amount,
     sender_balance: senderBalance,
-    sender_remaining: senderBalance - (feePayer === "sender" ? amount + fee : amount),
+    sender_remaining:
+      senderBalance - (feePayer === "sender" ? amount + fee : amount),
   }
 }
 
@@ -82,7 +82,10 @@ export const pointHandlers = [
     const cmd = (await request.json()) as CreatePointTransferCommand
     const preview = calcPreview(cmd, getMockPointTotal(mockSession.userID))
     if ("status" in preview) {
-      return HttpResponse.json({ error: preview.error }, { status: preview.status })
+      return HttpResponse.json(
+        { error: preview.error },
+        { status: preview.status }
+      )
     }
     return HttpResponse.json(preview)
   }),
@@ -97,20 +100,34 @@ export const pointHandlers = [
       return HttpResponse.json({ error: "unauthorized" }, { status: 401 })
     }
     const cmd = (await request.json()) as CreatePointTransferCommand
-    const recipient = mockUsers.find((u) => u.username === cmd.recipient_username)
+    const recipient = mockUsers.find(
+      (u) => u.username === cmd.recipient_username
+    )
     if (!recipient) {
-      return HttpResponse.json({ error: "recipient not found" }, { status: 404 })
+      return HttpResponse.json(
+        { error: "recipient not found" },
+        { status: 404 }
+      )
     }
     if (recipient.id === sender.id) {
-      return HttpResponse.json({ error: "cannot transfer to self" }, { status: 400 })
+      return HttpResponse.json(
+        { error: "cannot transfer to self" },
+        { status: 400 }
+      )
     }
     const senderBalance = getMockPointTotal(sender.id)
     const preview = calcPreview(cmd, senderBalance)
     if ("status" in preview) {
-      return HttpResponse.json({ error: preview.error }, { status: preview.status })
+      return HttpResponse.json(
+        { error: preview.error },
+        { status: preview.status }
+      )
     }
     if (senderBalance < preview.sender_debit) {
-      return HttpResponse.json({ error: "insufficient balance" }, { status: 409 })
+      return HttpResponse.json(
+        { error: "insufficient balance" },
+        { status: 409 }
+      )
     }
 
     const now = new Date().toISOString()

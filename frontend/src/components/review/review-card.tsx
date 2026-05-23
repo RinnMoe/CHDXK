@@ -98,7 +98,10 @@ export function ReviewCard({
   const tooltip = edited
     ? `创建于 ${formatDateTime(review.created_at)}`
     : undefined
-  const canManage = review.user_id != null && user != null && (user.id === review.user_id || user.role === "admin")
+  const canManage =
+    review.user_id != null &&
+    user != null &&
+    (user.id === review.user_id || user.role === "admin")
 
   useEffect(() => {
     return () => window.clearTimeout(resetCopiedTimer.current)
@@ -121,15 +124,15 @@ export function ReviewCard({
         {showCourse && review.course && (
           <Link
             to={`/courses/${review.course.id}`}
-            className="flex items-center gap-2 hover:bg-muted/50 -m-2 px-2 py-1.5 rounded-md transition-colors mb-2"
+            className="-m-2 mb-2 flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-muted/50"
           >
             <span className="font-mono text-sm text-muted-foreground">
               {review.course.code}
             </span>
-            <span className="font-semibold truncate max-w-[200px]">
+            <span className="max-w-[200px] truncate font-semibold">
               {review.course.name}
             </span>
-            <span className="text-sm text-muted-foreground truncate max-w-[120px]">
+            <span className="max-w-[120px] truncate text-sm text-muted-foreground">
               {review.course.main_teacher.name}
             </span>
           </Link>
@@ -138,7 +141,7 @@ export function ReviewCard({
         <div className="flex items-center gap-2">
           <Link
             to={`/reviews/${review.id}`}
-            className="text-sm text-muted-foreground font-mono hover:text-foreground"
+            className="font-mono text-sm text-muted-foreground hover:text-foreground"
           >
             #{review.id}
           </Link>
@@ -153,19 +156,17 @@ export function ReviewCard({
           </span>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-wrap items-center gap-2">
           <RatingStars value={review.rating} readOnly size="sm" />
           {review.semester && (
             <Badge variant="outline" className="font-mono">
               {review.semester}
             </Badge>
           )}
-          {review.score && (
-            <Badge variant="secondary">{review.score}</Badge>
-          )}
+          {review.score && <Badge variant="secondary">{review.score}</Badge>}
         </div>
 
-        <div className="text-sm leading-relaxed prose prose-sm max-w-none dark:prose-invert">
+        <div className="prose prose-sm max-w-none text-sm leading-relaxed dark:prose-invert">
           <Markdown remarkPlugins={[remarkGfm]}>{review.content}</Markdown>
         </div>
 
@@ -197,12 +198,18 @@ export function ReviewCard({
             {canManage && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="size-8 text-muted-foreground">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 text-muted-foreground"
+                  >
                     <RiWrenchLine className="size-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => navigate(`/reviews/${review.id}/edit`)}>
+                  <DropdownMenuItem
+                    onClick={() => navigate(`/reviews/${review.id}/edit`)}
+                  >
                     修改点评
                   </DropdownMenuItem>
                   <AlertDialog>
@@ -224,7 +231,7 @@ export function ReviewCard({
                       <AlertDialogFooter>
                         <AlertDialogCancel>取消</AlertDialogCancel>
                         <AlertDialogAction
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
                           onClick={handleDelete}
                         >
                           删除

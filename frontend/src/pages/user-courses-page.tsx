@@ -14,12 +14,16 @@ type View = "followed" | "ignored"
 
 export function UserCoursesPage() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const view: View = searchParams.get("type") === "ignored" ? "ignored" : "followed"
+  const view: View =
+    searchParams.get("type") === "ignored" ? "ignored" : "followed"
   const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1)
   const filter = { page, page_size: PAGE_SIZE }
   const { user, isLoading: authLoading } = useAuth()
 
-  const followedCourses = useFollowedCourses(filter, !!user && view === "followed")
+  const followedCourses = useFollowedCourses(
+    filter,
+    !!user && view === "followed"
+  )
   const ignoredCourses = useIgnoredCourses(filter, !!user && view === "ignored")
   const activeQuery = view === "followed" ? followedCourses : ignoredCourses
   const title = view === "followed" ? "已关注课程" : "已屏蔽课程"

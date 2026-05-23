@@ -70,9 +70,12 @@ export function LoginForm() {
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "登录中..." : "登录"}
           </Button>
-          <p className="text-sm text-muted-foreground text-center">
+          <p className="text-center text-sm text-muted-foreground">
             还没有账号？
-            <Link to="/register" className="text-foreground hover:underline ml-1">
+            <Link
+              to="/register"
+              className="ml-1 text-foreground hover:underline"
+            >
               注册
             </Link>
           </p>

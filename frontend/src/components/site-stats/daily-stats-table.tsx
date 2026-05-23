@@ -1,6 +1,13 @@
 import type { SiteDailyStatDTO } from "@/api/site-stats"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
 interface DailyStatsTableProps {
   stats: SiteDailyStatDTO[]
@@ -9,7 +16,12 @@ interface DailyStatsTableProps {
   total: number
 }
 
-export function DailyStatsTable({ stats, page, pageSize, total }: DailyStatsTableProps) {
+export function DailyStatsTable({
+  stats,
+  page,
+  pageSize,
+  total,
+}: DailyStatsTableProps) {
   return (
     <Card>
       <CardHeader>
@@ -35,7 +47,9 @@ export function DailyStatsTable({ stats, page, pageSize, total }: DailyStatsTabl
             <TableBody>
               {stats.map((s) => (
                 <TableRow key={s.stat_date}>
-                  <TableCell className="font-mono text-sm">{s.stat_date}</TableCell>
+                  <TableCell className="font-mono text-sm">
+                    {s.stat_date}
+                  </TableCell>
                   <TableCell>{s.total_user_count}</TableCell>
                   <TableCell>{s.total_review_count}</TableCell>
                   <TableCell>{s.active_user_count}</TableCell>
@@ -50,7 +64,7 @@ export function DailyStatsTable({ stats, page, pageSize, total }: DailyStatsTabl
             </TableBody>
           </Table>
         </div>
-        <p className="text-sm text-muted-foreground px-6 py-3">
+        <p className="px-6 py-3 text-sm text-muted-foreground">
           第 {page} 页，共 {Math.ceil(total / pageSize)} 页，总计 {total} 条
         </p>
       </CardContent>

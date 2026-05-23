@@ -23,7 +23,9 @@ export function RatingDistribution({ rating }: RatingDistributionProps) {
           const pct = (count / total) * 100
           return (
             <div key={star} className="flex items-center gap-2 text-sm">
-              <span className="w-8 shrink-0 text-muted-foreground">{star} 星</span>
+              <span className="w-8 shrink-0 text-muted-foreground">
+                {star} 星
+              </span>
               <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                 <div
                   className="h-full bg-yellow-400"

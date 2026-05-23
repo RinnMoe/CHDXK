@@ -34,7 +34,7 @@ export function StatsCard({
         <p className="text-sm text-muted-foreground">{stat.stat_date}</p>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {items(stat).map((it) => (
             <div key={it.label} className="space-y-1">
               <p className="text-sm text-muted-foreground">{it.label}</p>

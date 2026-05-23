@@ -3,4 +3,4 @@ minimumReleaseAge: 1440
 allowBuilds:
   msw: true
 
-nodeVersion: 24
+nodeVersion: "24.0.0"

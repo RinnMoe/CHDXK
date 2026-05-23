@@ -19,37 +19,37 @@ export function LatestReviewsPage() {
     <>
       <title>最新点评 - JCourse</title>
       <PageShell>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">最新点评</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            查看所有最新课程点评
-          </p>
-        </div>
-
-        {data && (
-          <p className="text-sm text-muted-foreground">
-            共 {data.total} 条点评
-          </p>
-        )}
-
-        <ReviewList
-          reviews={data?.items ?? []}
-          isLoading={isLoading}
-          showCourse
-        />
-
-        {data && data.total > 0 && (
-          <div className="flex justify-center pt-4">
-            <PaginationComponent
-              page={data.page}
-              pageSize={data.page_size}
-              total={data.total}
-              onPageChange={handlePageChange}
-            />
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-2xl font-bold">最新点评</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              查看所有最新课程点评
+            </p>
           </div>
-        )}
-      </div>
+
+          {data && (
+            <p className="text-sm text-muted-foreground">
+              共 {data.total} 条点评
+            </p>
+          )}
+
+          <ReviewList
+            reviews={data?.items ?? []}
+            isLoading={isLoading}
+            showCourse
+          />
+
+          {data && data.total > 0 && (
+            <div className="flex justify-center pt-4">
+              <PaginationComponent
+                page={data.page}
+                pageSize={data.page_size}
+                total={data.total}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          )}
+        </div>
       </PageShell>
     </>
   )

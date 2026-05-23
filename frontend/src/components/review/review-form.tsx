@@ -23,7 +23,9 @@ interface ReviewFormProps {
   courseID?: number
   initialReview?: ReviewDTO
   semesters?: string[]
-  onSubmit: (cmd: CreateReviewCommand | UpdateReviewCommand) => Promise<void> | void
+  onSubmit: (
+    cmd: CreateReviewCommand | UpdateReviewCommand
+  ) => Promise<void> | void
   onCancel?: () => void
   isSubmitting?: boolean
 }
@@ -90,7 +92,7 @@ export function ReviewForm({
         </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-4">
+      <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>学期</Label>
           <Select value={semester} onValueChange={setSemester}>
@@ -119,7 +121,7 @@ export function ReviewForm({
 
       <div className="space-y-2">
         <Label htmlFor="content">点评内容</Label>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">编辑</p>
             <Textarea
@@ -133,7 +135,7 @@ export function ReviewForm({
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">预览</p>
-            <div className="min-h-[10rem] text-sm prose prose-sm max-w-none dark:prose-invert">
+            <div className="prose prose-sm min-h-[10rem] max-w-none text-sm dark:prose-invert">
               {content.trim() ? (
                 <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
               ) : (
@@ -142,7 +144,9 @@ export function ReviewForm({
             </div>
           </div>
         </div>
-        <p className="text-sm text-muted-foreground">{content.length} / 至少 10 字</p>
+        <p className="text-sm text-muted-foreground">
+          {content.length} / 至少 10 字
+        </p>
       </div>
 
       {error && (
@@ -151,7 +155,7 @@ export function ReviewForm({
         </p>
       )}
 
-      <div className="flex gap-2 justify-end">
+      <div className="flex justify-end gap-2">
         {onCancel && (
           <Button type="button" variant="ghost" onClick={onCancel}>
             取消

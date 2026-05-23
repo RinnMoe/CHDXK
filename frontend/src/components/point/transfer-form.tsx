@@ -4,7 +4,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useAuth } from "@/contexts/auth-context"
-import { useCreateTransfer, usePreviewTransfer, useUserPoints } from "@/hooks/use-point"
+import {
+  useCreateTransfer,
+  usePreviewTransfer,
+  useUserPoints,
+} from "@/hooks/use-point"
 import type { FeePayer, PointTransferPreviewDTO } from "@/api/point"
 
 interface TransferFormProps {
@@ -15,7 +19,10 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
   const { user } = useAuth()
   const previewMutation = usePreviewTransfer()
   const transferMutation = useCreateTransfer()
-  const { data: pointsData } = useUserPoints(user?.id ?? 0, { page: 1, page_size: 1 })
+  const { data: pointsData } = useUserPoints(user?.id ?? 0, {
+    page: 1,
+    page_size: 1,
+  })
 
   const [recipient, setRecipient] = useState("")
   const [amount, setAmount] = useState("")
@@ -78,12 +85,21 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
   const isLoading = previewMutation.isPending || transferMutation.isPending
   const currentBalance = pointsData?.total ?? 0
   const amountNumber = Number(amount)
-  const hasValidAmount = amount !== "" && Number.isFinite(amountNumber) && amountNumber > 0
+  const hasValidAmount =
+    amount !== "" && Number.isFinite(amountNumber) && amountNumber > 0
   const activePreview =
-    hasValidAmount && preview?.amount === amountNumber && preview.fee_payer === feePayer ? preview : null
-  const insufficientBalance = activePreview != null && activePreview.sender_remaining < 0
+    hasValidAmount &&
+    preview?.amount === amountNumber &&
+    preview.fee_payer === feePayer
+      ? preview
+      : null
+  const insufficientBalance =
+    activePreview != null && activePreview.sender_remaining < 0
   const amountExceedsBalance =
-    pointsData != null && amount !== "" && Number.isFinite(amountNumber) && amountNumber > currentBalance
+    pointsData != null &&
+    amount !== "" &&
+    Number.isFinite(amountNumber) &&
+    amountNumber > currentBalance
 
   return (
     <div className="space-y-4">
@@ -99,7 +115,9 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="amount">转账金额</Label>
-          <span className="text-sm text-muted-foreground">剩余 {currentBalance} 积分</span>
+          <span className="text-sm text-muted-foreground">
+            剩余 {currentBalance} 积分
+          </span>
         </div>
         <Input
           id="amount"
@@ -120,17 +138,21 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
         >
           <div className="flex items-center gap-2">
             <RadioGroupItem value="sender" id="fee-sender" />
-            <Label htmlFor="fee-sender" className="font-normal">我承担</Label>
+            <Label htmlFor="fee-sender" className="font-normal">
+              我承担
+            </Label>
           </div>
           <div className="flex items-center gap-2">
             <RadioGroupItem value="recipient" id="fee-recipient" />
-            <Label htmlFor="fee-recipient" className="font-normal">对方承担</Label>
+            <Label htmlFor="fee-recipient" className="font-normal">
+              对方承担
+            </Label>
           </div>
         </RadioGroup>
       </div>
 
       {activePreview && (
-        <div className="rounded-md border p-3 space-y-1 text-sm">
+        <div className="space-y-1 rounded-md border p-3 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">当前积分</span>
             <span>{currentBalance}</span>
@@ -145,7 +167,9 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">对方收入</span>
-            <span className="text-green-600">+{activePreview.recipient_credit}</span>
+            <span className="text-green-600">
+              +{activePreview.recipient_credit}
+            </span>
           </div>
           <div className="flex justify-between font-medium">
             <span>转账后剩余</span>
@@ -153,12 +177,16 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
               {activePreview.sender_remaining}
             </span>
           </div>
-          <p className="text-sm text-muted-foreground pt-1">* 实际结果以转账后为准</p>
+          <p className="pt-1 text-sm text-muted-foreground">
+            * 实际结果以转账后为准
+          </p>
         </div>
       )}
 
       {insufficientBalance && (
-        <p className="text-sm text-destructive">积分不足，转账后剩余 {activePreview!.sender_remaining}</p>
+        <p className="text-sm text-destructive">
+          积分不足，转账后剩余 {activePreview!.sender_remaining}
+        </p>
       )}
 
       {error && <p className="text-sm text-destructive">{error}</p>}
@@ -167,7 +195,13 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
         type="button"
         className="w-full"
         onClick={handleSubmit}
-        disabled={isLoading || !activePreview || !recipient || insufficientBalance || amountExceedsBalance}
+        disabled={
+          isLoading ||
+          !activePreview ||
+          !recipient ||
+          insufficientBalance ||
+          amountExceedsBalance
+        }
       >
         {transferMutation.isPending ? "转账中..." : "确认转账"}
       </Button>

@@ -48,12 +48,9 @@ export function HotCourseList({
   return (
     <div className="border-t">
       {items.map((item, i) => (
-        <div
-          key={item.course.id}
-          className="flex items-center gap-4 border-b"
-        >
+        <div key={item.course.id} className="flex items-center gap-4 border-b">
           <span
-            className={`shrink-0 w-6 text-center font-bold text-sm ${
+            className={`w-6 shrink-0 text-center text-sm font-bold ${
               i < 3 ? "text-amber-500" : "text-muted-foreground"
             }`}
           >
@@ -62,7 +59,7 @@ export function HotCourseList({
           <div className="min-w-0 flex-1">
             <CourseCompactCard course={item.course} />
           </div>
-          <div className="shrink-0 text-sm font-medium text-muted-foreground pr-4">
+          <div className="shrink-0 pr-4 text-sm font-medium text-muted-foreground">
             {item.score}
           </div>
         </div>

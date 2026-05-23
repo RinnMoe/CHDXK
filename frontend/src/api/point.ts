@@ -5,10 +5,7 @@ const BASE = "/api"
 
 export type FeePayer = "sender" | "recipient"
 
-export type RecordReason =
-  | "transfer_out"
-  | "transfer_in"
-  | string
+export type RecordReason = "transfer_out" | "transfer_in" | string
 
 export interface PointRecordDTO {
   reason: RecordReason

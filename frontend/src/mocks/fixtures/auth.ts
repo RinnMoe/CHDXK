@@ -56,7 +56,11 @@ function readStoredMockAuthState(): MockAuthState | null {
 
   try {
     const parsed = JSON.parse(raw) as Partial<PersistedMockAuthState>
-    if (parsed.version !== 1 || !Array.isArray(parsed.users) || !parsed.session) {
+    if (
+      parsed.version !== 1 ||
+      !Array.isArray(parsed.users) ||
+      !parsed.session
+    ) {
       return null
     }
 
@@ -84,7 +88,9 @@ function persistMockAuthState() {
 }
 
 const mockAuthState: MockAuthState =
-  import.meta.hot?.data.mockAuthState ?? readStoredMockAuthState() ?? createMockAuthState()
+  import.meta.hot?.data.mockAuthState ??
+  readStoredMockAuthState() ??
+  createMockAuthState()
 
 if (import.meta.hot) {
   import.meta.hot.dispose((data) => {

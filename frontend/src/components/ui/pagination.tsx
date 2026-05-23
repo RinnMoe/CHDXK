@@ -2,7 +2,11 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { RiArrowLeftSLine, RiArrowRightSLine, RiMoreLine } from "@remixicon/react"
+import {
+  RiArrowLeftSLine,
+  RiArrowRightSLine,
+  RiMoreLine,
+} from "@remixicon/react"
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
   return (
@@ -111,8 +115,7 @@ function PaginationEllipsis({
       )}
       {...props}
     >
-      <RiMoreLine
-      />
+      <RiMoreLine />
       <span className="sr-only">More pages</span>
     </span>
   )

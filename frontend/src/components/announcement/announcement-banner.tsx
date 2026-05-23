@@ -38,22 +38,24 @@ export function AnnouncementBanner() {
   }
 
   return (
-    <div className="space-y-2 mt-4">
+    <div className="mt-4 space-y-2">
       {visible.map((a) => (
         <div
           key={a.id}
           className="flex items-start gap-3 rounded-md border bg-muted/50 px-4 py-3 text-sm"
         >
-          <RiInformationLine className="size-4 mt-0.5 text-muted-foreground shrink-0" />
+          <RiInformationLine className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
           <div className="min-w-0 flex-1">
             <p className="font-medium">{a.title}</p>
-            <p className="text-muted-foreground mt-1 whitespace-pre-line">{a.body}</p>
+            <p className="mt-1 whitespace-pre-line text-muted-foreground">
+              {a.body}
+            </p>
           </div>
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="size-7 -mr-2 -mt-1 shrink-0"
+            className="-mt-1 -mr-2 size-7 shrink-0"
             onClick={() => dismiss(a.id)}
             aria-label="dismiss"
           >

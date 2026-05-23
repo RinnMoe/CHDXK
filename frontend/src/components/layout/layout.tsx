@@ -3,7 +3,7 @@ import { SiteHeader } from "@/components/layout/site-header"
 
 export function Layout() {
   return (
-    <div className="min-h-svh flex flex-col">
+    <div className="flex min-h-svh flex-col">
       <SiteHeader />
       <div className="flex-1">
         <Outlet />

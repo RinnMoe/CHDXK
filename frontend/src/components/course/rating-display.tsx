@@ -30,7 +30,7 @@ export function RatingDisplay({ rating, size = "md" }: RatingDisplayProps) {
           <span className="text-sm font-medium">{rating.avg.toFixed(1)}</span>
         )}
       </div>
-      <span className="text-sm text-muted-foreground text-center">
+      <span className="text-center text-sm text-muted-foreground">
         ({rating.count}条点评)
       </span>
     </div>

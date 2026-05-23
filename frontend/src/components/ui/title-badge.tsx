@@ -10,7 +10,7 @@ export function TitleBadge({ children, className }: TitleBadgeProps) {
     <span
       className={cn(
         "inline-flex h-5 shrink-0 items-center rounded px-1.5 text-xs font-medium text-muted-foreground",
-        className,
+        className
       )}
     >
       {children}

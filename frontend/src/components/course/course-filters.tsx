@@ -134,9 +134,7 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
 
   return (
     <>
-      <aside className="hidden lg:block">
-        {content}
-      </aside>
+      <aside className="hidden lg:block">{content}</aside>
       <div className="lg:hidden">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
@@ -191,7 +189,7 @@ function FilterCheckGroup({
               />
               <Label
                 htmlFor={id}
-                className="block min-w-0 flex-1 cursor-pointer text-sm leading-snug font-normal whitespace-normal break-all"
+                className="block min-w-0 flex-1 cursor-pointer text-sm leading-snug font-normal break-all whitespace-normal"
               >
                 {item.name}
               </Label>

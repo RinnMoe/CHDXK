@@ -23,7 +23,6 @@ interface CourseReviewFilterValue {
 interface CourseReviewFiltersProps {
   semesters: FilterItem[]
   ratings: FilterItem[]
-  total: number
   value: CourseReviewFilterValue
   onChange: (next: Partial<CourseReviewFilterValue>) => void
 }
@@ -42,7 +41,6 @@ function OptionLabel({ label, count }: { label: string; count: number }) {
 export function CourseReviewFilters({
   semesters,
   ratings,
-  total,
   value,
   onChange,
 }: CourseReviewFiltersProps) {
@@ -58,9 +56,7 @@ export function CourseReviewFilters({
           <SelectValue placeholder="学期" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value={ALL}>
-            全部学期
-          </SelectItem>
+          <SelectItem value={ALL}>全部学期</SelectItem>
           {semesters.map((semester) => (
             <SelectItem key={semester.name} value={semester.name}>
               <OptionLabel label={semester.name} count={semester.count} />
@@ -79,9 +75,7 @@ export function CourseReviewFilters({
           <SelectValue placeholder="评分" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value={ALL}>
-            全部评分
-          </SelectItem>
+          <SelectItem value={ALL}>全部评分</SelectItem>
           {ratings.map((rating) => (
             <SelectItem key={rating.name} value={rating.name}>
               <OptionLabel label={`${rating.name} 分`} count={rating.count} />
@@ -94,7 +88,9 @@ export function CourseReviewFilters({
         <span className="px-1 text-sm text-muted-foreground">排序</span>
         <Tabs
           value={value.orderBy}
-          onValueChange={(orderBy) => onChange({ orderBy: orderBy as ReviewSort })}
+          onValueChange={(orderBy) =>
+            onChange({ orderBy: orderBy as ReviewSort })
+          }
           className="gap-0"
         >
           <TabsList>

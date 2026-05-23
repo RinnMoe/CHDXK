@@ -45,7 +45,13 @@ export function makeTeacherFilters() {
     if (t.title) titleMap.set(t.title, (titleMap.get(t.title) ?? 0) + 1)
   }
   return {
-    departments: Array.from(deptMap.entries()).map(([name, count]) => ({ name, count })),
-    titles: Array.from(titleMap.entries()).map(([name, count]) => ({ name, count })),
+    departments: Array.from(deptMap.entries()).map(([name, count]) => ({
+      name,
+      count,
+    })),
+    titles: Array.from(titleMap.entries()).map(([name, count]) => ({
+      name,
+      count,
+    })),
   }
 }

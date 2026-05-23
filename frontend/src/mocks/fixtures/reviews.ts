@@ -111,7 +111,9 @@ export function generateReviewsForCourse(courseID: number, n = 8): ReviewDTO[] {
     const updated =
       randInt(0, 9) < 3
         ? new Date(
-            created.getTime() + randInt(1, 30) * 86400000 + randInt(0, 86400) * 1000
+            created.getTime() +
+              randInt(1, 30) * 86400000 +
+              randInt(0, 86400) * 1000
           )
         : created
     return {

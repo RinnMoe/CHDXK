@@ -36,14 +36,21 @@ export interface ResetPasswordCommand {
 
 export function getCurrentUser(): Promise<AuthUserDTO | null> {
   return apiClient<AuthUserDTO | null>(`${BASE}/auth/me`).catch((err) => {
-    if (err && typeof err === "object" && "status" in err && err.status === 401) {
+    if (
+      err &&
+      typeof err === "object" &&
+      "status" in err &&
+      err.status === 401
+    ) {
       return null
     }
     throw err
   })
 }
 
-export function sendRegisterCode(cmd: SendRegisterCodeCommand): Promise<{ message: string }> {
+export function sendRegisterCode(
+  cmd: SendRegisterCodeCommand
+): Promise<{ message: string }> {
   return apiClient(`${BASE}/auth/register/code`, {
     method: "POST",
     body: JSON.stringify(cmd),
@@ -70,14 +77,18 @@ export function logout(): Promise<{ message: string }> {
   })
 }
 
-export function sendResetCode(cmd: SendResetCodeCommand): Promise<{ message: string }> {
+export function sendResetCode(
+  cmd: SendResetCodeCommand
+): Promise<{ message: string }> {
   return apiClient(`${BASE}/auth/password-reset/code`, {
     method: "POST",
     body: JSON.stringify(cmd),
   })
 }
 
-export function resetPassword(cmd: ResetPasswordCommand): Promise<{ message: string }> {
+export function resetPassword(
+  cmd: ResetPasswordCommand
+): Promise<{ message: string }> {
   return apiClient(`${BASE}/auth/password-reset`, {
     method: "POST",
     body: JSON.stringify(cmd),

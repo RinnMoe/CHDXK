@@ -25,45 +25,45 @@ export function NewReviewPage() {
     <>
       <title>写点评 - JCourse</title>
       <PageShell>
-      <Button asChild variant="ghost" size="sm" className="mb-4">
-        <Link to={`/courses/${id}`}>
-          <RiArrowLeftLine data-icon="inline-start" />
-          返回课程
-        </Link>
-      </Button>
+        <Button asChild variant="ghost" size="sm" className="mb-4">
+          <Link to={`/courses/${id}`}>
+            <RiArrowLeftLine data-icon="inline-start" />
+            返回课程
+          </Link>
+        </Button>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>写点评</CardTitle>
-          {course && (
-            <div className="text-sm text-muted-foreground space-y-0.5">
-              <div>
-                <span className="font-mono">{course.code}</span>
-                <span className="mx-1">·</span>
-                <span className="font-medium text-foreground">
-                  {course.name}
-                </span>
+        <Card>
+          <CardHeader>
+            <CardTitle>写点评</CardTitle>
+            {course && (
+              <div className="space-y-0.5 text-sm text-muted-foreground">
+                <div>
+                  <span className="font-mono">{course.code}</span>
+                  <span className="mx-1">·</span>
+                  <span className="font-medium text-foreground">
+                    {course.name}
+                  </span>
+                </div>
+                <div>
+                  主讲教师：{course.main_teacher.name}
+                  {course.main_teacher.title && (
+                    <span className="ml-1">({course.main_teacher.title})</span>
+                  )}
+                </div>
               </div>
-              <div>
-                主讲教师：{course.main_teacher.name}
-                {course.main_teacher.title && (
-                  <span className="ml-1">({course.main_teacher.title})</span>
-                )}
-              </div>
-            </div>
-          )}
-        </CardHeader>
-        <CardContent>
-          <ReviewForm
-            courseID={id}
-            semesters={semesters}
-            onSubmit={handleSubmit}
-            onCancel={() => navigate(`/courses/${id}`)}
-            isSubmitting={isPending}
-          />
-        </CardContent>
-      </Card>
-    </PageShell>
+            )}
+          </CardHeader>
+          <CardContent>
+            <ReviewForm
+              courseID={id}
+              semesters={semesters}
+              onSubmit={handleSubmit}
+              onCancel={() => navigate(`/courses/${id}`)}
+              isSubmitting={isPending}
+            />
+          </CardContent>
+        </Card>
+      </PageShell>
     </>
   )
 }

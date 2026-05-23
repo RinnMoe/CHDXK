@@ -75,9 +75,7 @@ export function PasswordResetForm() {
               autoComplete="new-password"
             />
           </div>
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "重置中..." : "重置密码"}
           </Button>

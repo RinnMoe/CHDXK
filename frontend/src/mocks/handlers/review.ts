@@ -60,7 +60,9 @@ export const reviewHandlers = [
   http.get("/api/review/followed", async ({ request }) => {
     await randomDelay()
     const url = new URL(request.url)
-    const list = applyReviewFilter(url, mockReviews.slice(0, 12)).map(withPrivateFields)
+    const list = applyReviewFilter(url, mockReviews.slice(0, 12)).map(
+      withPrivateFields
+    )
     const page = Number(url.searchParams.get("page") ?? "1")
     const pageSize = Number(url.searchParams.get("page_size") ?? "20")
     return HttpResponse.json(paginate(list, page, pageSize))
@@ -109,7 +111,8 @@ export const reviewHandlers = [
     const userID = Number(params.userID)
     const url = new URL(request.url)
     // mock: first 8 reviews belong to userID 1
-    const list = userID === 1 ? mockReviews.slice(0, 8).map(withPrivateFields) : []
+    const list =
+      userID === 1 ? mockReviews.slice(0, 8).map(withPrivateFields) : []
     const page = Number(url.searchParams.get("page") ?? "1")
     const pageSize = Number(url.searchParams.get("page_size") ?? "20")
     return HttpResponse.json(

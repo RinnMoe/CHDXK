@@ -13,7 +13,7 @@ export function CourseCard({ course }: CourseCardProps) {
       to={`/courses/${course.id}`}
       className="block border-b px-4 py-3 transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
     >
-      <div className="min-w-0 flex items-center gap-2">
+      <div className="flex min-w-0 items-center gap-2">
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
             <span className="shrink-0 font-mono">{course.code}</span>

@@ -127,10 +127,12 @@ export const courseHandlers = [
   http.get("/api/course/hot", async ({ request }) => {
     await randomDelay()
     const url = new URL(request.url)
-    const period = (url.searchParams.get("period") ?? "week") as "week" | "month"
+    const period = (url.searchParams.get("period") ?? "week") as
+      | "week"
+      | "month"
     const limit = Math.min(
       Number(url.searchParams.get("limit") ?? "5"),
-      mockCourses.length,
+      mockCourses.length
     )
     const items = mockCourses.slice(0, limit).map((course, i) => ({
       course,
@@ -151,7 +153,9 @@ export const courseHandlers = [
   http.get("/api/course/followed", async ({ request }) => {
     await randomDelay()
     const url = new URL(request.url)
-    const list = mockCourses.filter((course) => getNotificationLevel(course.id) === 1)
+    const list = mockCourses.filter(
+      (course) => getNotificationLevel(course.id) === 1
+    )
     const page = Number(url.searchParams.get("page") ?? "1")
     const pageSize = Number(url.searchParams.get("page_size") ?? "20")
     return HttpResponse.json(paginate(list, page, pageSize))
@@ -160,7 +164,9 @@ export const courseHandlers = [
   http.get("/api/course/ignored", async ({ request }) => {
     await randomDelay()
     const url = new URL(request.url)
-    const list = mockCourses.filter((course) => getNotificationLevel(course.id) === 2)
+    const list = mockCourses.filter(
+      (course) => getNotificationLevel(course.id) === 2
+    )
     const page = Number(url.searchParams.get("page") ?? "1")
     const pageSize = Number(url.searchParams.get("page_size") ?? "20")
     return HttpResponse.json(paginate(list, page, pageSize))
@@ -199,15 +205,21 @@ export const courseHandlers = [
     return HttpResponse.json(makeReviewFilters(reviews))
   }),
 
-  http.post("/api/course/:courseID/notification", async ({ params, request }) => {
-    await randomDelay()
-    const id = Number(params.courseID)
-    const body = (await request.json()) as { level: CourseNotificationLevel }
-    if (![0, 1, 2].includes(body.level)) {
-      return HttpResponse.json({ error: "level must be 0, 1, or 2" }, { status: 400 })
+  http.post(
+    "/api/course/:courseID/notification",
+    async ({ params, request }) => {
+      await randomDelay()
+      const id = Number(params.courseID)
+      const body = (await request.json()) as { level: CourseNotificationLevel }
+      if (![0, 1, 2].includes(body.level)) {
+        return HttpResponse.json(
+          { error: "level must be 0, 1, or 2" },
+          { status: 400 }
+        )
+      }
+      if (body.level === 0) notificationLevels.delete(id)
+      else notificationLevels.set(id, body.level)
+      return HttpResponse.json({ message: "ok" })
     }
-    if (body.level === 0) notificationLevels.delete(id)
-    else notificationLevels.set(id, body.level)
-    return HttpResponse.json({ message: "ok" })
-  }),
+  ),
 ]

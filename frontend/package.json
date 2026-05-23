@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "format": "prettier --write \"**/*.{ts,tsx}\"",
+    "format": "prettier --write \"**/*.{ts,tsx,js,css}\"",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "preview": "vite preview"

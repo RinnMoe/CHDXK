@@ -10,7 +10,7 @@ export function TeacherCard({ teacher }: TeacherCardProps) {
   return (
     <Link
       to={`/teachers/${teacher.id}`}
-      className="block border-b px-4 py-3 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="block border-b px-4 py-3 transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
     >
       <div className="space-y-1">
         <div className="flex items-center gap-1.5">
@@ -19,8 +19,10 @@ export function TeacherCard({ teacher }: TeacherCardProps) {
           </span>
           {teacher.title && <TitleBadge>{teacher.title}</TitleBadge>}
         </div>
-        <div className="font-semibold leading-tight">{teacher.name}</div>
-        <div className="text-sm text-muted-foreground">{teacher.department}</div>
+        <div className="leading-tight font-semibold">{teacher.name}</div>
+        <div className="text-sm text-muted-foreground">
+          {teacher.department}
+        </div>
       </div>
     </Link>
   )

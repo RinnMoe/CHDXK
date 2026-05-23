@@ -20,9 +20,9 @@ export function LoginPage() {
     <>
       <title>登录 - JCourse</title>
       <PageShell>
-      <div className="flex justify-center">
-        <LoginForm />
-      </div>
+        <div className="flex justify-center">
+          <LoginForm />
+        </div>
       </PageShell>
     </>
   )

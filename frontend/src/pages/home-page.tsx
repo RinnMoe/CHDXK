@@ -20,7 +20,7 @@ export function HomePage() {
               <h2 className="text-lg font-semibold">最新点评</h2>
               <Link
                 to="/reviews/latest"
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
                 查看更多
               </Link>
@@ -32,12 +32,12 @@ export function HomePage() {
             />
           </div>
 
-          <div className="w-full lg:w-1/3 shrink-0 space-y-4">
+          <div className="w-full shrink-0 space-y-4 lg:w-1/3">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">热门课程</h2>
               <Link
                 to="/courses/hot"
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
                 查看更多
               </Link>

@@ -20,9 +20,9 @@ export function PasswordResetPage() {
     <>
       <title>重置密码 - JCourse</title>
       <PageShell>
-      <div className="flex justify-center">
-        <PasswordResetForm />
-      </div>
+        <div className="flex justify-center">
+          <PasswordResetForm />
+        </div>
       </PageShell>
     </>
   )

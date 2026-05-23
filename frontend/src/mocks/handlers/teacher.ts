@@ -1,8 +1,5 @@
 import { http, HttpResponse } from "msw"
-import {
-  getMockTeachers,
-  makeTeacherFilters,
-} from "../fixtures/teachers"
+import { getMockTeachers, makeTeacherFilters } from "../fixtures/teachers"
 import { mockCourses } from "../fixtures/courses"
 import { randomDelay } from "../utils"
 
@@ -37,8 +34,7 @@ export const teacherHandlers = [
     if (q)
       list = list.filter(
         (t) =>
-          t.code.toLowerCase().includes(q) ||
-          t.name.toLowerCase().includes(q)
+          t.code.toLowerCase().includes(q) || t.name.toLowerCase().includes(q)
       )
 
     return HttpResponse.json(paginate(list, page, pageSize))
