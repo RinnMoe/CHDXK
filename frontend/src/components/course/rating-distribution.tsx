@@ -9,8 +9,8 @@ export function RatingDistribution({ rating }: RatingDistributionProps) {
   const total = Math.max(rating.count, 1)
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-8">
-      <div className="flex flex-col items-center gap-1 sm:items-center">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-8 md:flex-col md:items-stretch md:gap-3 2xl:flex-row 2xl:items-center 2xl:gap-8">
+      <div className="flex flex-col items-center gap-1">
         <div className="text-3xl font-bold tabular-nums">
           {rating.avg > 0 ? rating.avg.toFixed(1) : "—"}
         </div>
