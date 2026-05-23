@@ -1,5 +1,5 @@
 import { Link, useParams, useSearchParams } from "react-router-dom"
-import { RiArrowLeftLine, RiAddLine } from "@remixicon/react"
+import { RiArrowLeftLine, RiAddLine, RiMailLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -14,6 +14,7 @@ import { CourseReviewTrendDialog } from "@/components/course/course-review-trend
 import { RatingDistribution } from "@/components/course/rating-distribution"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
+import type { CourseDetailDTO } from "@/api/course"
 import {
   useCourseDetail,
   useCourseReviewFilters,
@@ -23,6 +24,7 @@ import { ReviewList } from "@/components/review/review-list"
 import { ReviewCard } from "@/components/review/review-card"
 import { CourseReviewFilters } from "@/components/course/course-review-filters"
 import { PaginationComponent } from "@/components/common/pagination"
+import { brand } from "@/config/brand"
 
 const REVIEW_PAGE_SIZE = 10
 
@@ -31,6 +33,42 @@ function byRatingDesc(
   b: { rating: { avg: number } }
 ) {
   return b.rating.avg - a.rating.avg
+}
+
+function buildFeedbackMailto(course: CourseDetailDTO) {
+  const subject = `[JCourse课程信息反馈] ${course.code} ${course.name}`
+  const courseURL =
+    typeof window === "undefined"
+      ? ""
+      : `${window.location.origin}/courses/${course.id}`
+  const teacherNames =
+    course.teacher_group && course.teacher_group.length > 0
+      ? course.teacher_group.map((teacher) => teacher.name).join(" / ")
+      : course.main_teacher.name
+  const body = [
+    "请在这里描述需要反馈的问题：",
+    "",
+    "课程基本信息",
+    `课程ID：${course.id}`,
+    `课程代码：${course.code}`,
+    `课程名称：${course.name}`,
+    `院系：${course.department}`,
+    `学分：${course.credit}`,
+    `授课语言：${course.language}`,
+    `面向对象：${course.target_years.join("、") || "未提供"}`,
+    `课程分类：${course.categories.join("、") || "未提供"}`,
+    `最近学期：${course.last_semester}`,
+    `主讲教师：${course.main_teacher.name}`,
+    `合上教师：${teacherNames}`,
+    courseURL ? `课程链接：${courseURL}` : undefined,
+  ]
+    .filter((line): line is string => Boolean(line))
+    .join("\n")
+
+  return `mailto:${brand.feedbackEmail}?${new URLSearchParams({
+    subject,
+    body,
+  }).toString()}`
 }
 
 export function CourseDetailPage() {
@@ -111,6 +149,7 @@ export function CourseDetailPage() {
     (oc) => oc.semester !== course.last_semester
   )
   const teacherGroup = course.teacher_group ?? []
+  const feedbackMailto = buildFeedbackMailto(course)
 
   return (
     <>
@@ -212,10 +251,23 @@ export function CourseDetailPage() {
                   </section>
                 )}
 
-                <CourseNotificationControl
-                  courseID={course.id}
-                  level={course.notification_level}
-                />
+                <div className="flex flex-wrap items-center gap-2">
+                  <CourseNotificationControl
+                    courseID={course.id}
+                    level={course.notification_level}
+                  />
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2 text-muted-foreground hover:text-foreground"
+                  >
+                    <a href={feedbackMailto}>
+                      <RiMailLine data-icon="inline-start" />
+                      信息有误？
+                    </a>
+                  </Button>
+                </div>
               </div>
 
               <Card className="md:self-start">

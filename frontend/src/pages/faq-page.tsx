@@ -1,5 +1,6 @@
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
+import { brand } from "@/config/brand"
 
 const faqs = [
   {
@@ -21,6 +22,21 @@ const faqs = [
     question: "为什么部分课程信息不完整？",
     answer:
       "课程数据可能来自不同批次的导入与用户补充。如果发现信息缺失或不准确，可以通过点评补充上下文。",
+  },
+  {
+    question: "如何反馈课程信息问题？",
+    answer: (
+      <>
+        如果发现课程名称、教师、学分或其他基础信息有误，请发送邮件至{" "}
+        <a
+          href={`mailto:${brand.feedbackEmail}`}
+          className="font-medium text-primary hover:underline"
+        >
+          {brand.feedbackEmail}
+        </a>{" "}
+        反馈。
+      </>
+    ),
   },
 ]
 
