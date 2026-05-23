@@ -281,7 +281,7 @@ export function CourseDetailPage() {
               {course.same_code_courses.length > 0 && (
                 <section>
                   <h2 className="mb-3 text-lg font-semibold">
-                    其他老师的{course.name}课
+                    其他老师的{course.name}
                   </h2>
                   <div className="border-t">
                     {[...course.same_code_courses]
@@ -296,7 +296,7 @@ export function CourseDetailPage() {
               {course.same_teacher_courses.length > 0 && (
                 <section>
                   <h2 className="mb-3 text-lg font-semibold">
-                    {course.main_teacher.name}老师的其他课
+                    {course.main_teacher.name}的其他课
                   </h2>
                   <div className="border-t">
                     {[...course.same_teacher_courses]
