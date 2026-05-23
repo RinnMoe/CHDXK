@@ -8,6 +8,7 @@ import {
   createReview,
   deleteReview,
   getReview,
+  listReviewRevisions,
   listFollowedReviews,
   listLatestReviews,
   listUserReviews,
@@ -49,6 +50,14 @@ export function useReview(reviewID: number) {
     queryKey: ["review", reviewID],
     queryFn: () => getReview(reviewID),
     enabled: !!reviewID,
+  })
+}
+
+export function useReviewRevisions(reviewID: number, enabled = true) {
+  return useQuery({
+    queryKey: ["review", reviewID, "revisions"],
+    queryFn: () => listReviewRevisions(reviewID),
+    enabled: !!reviewID && enabled,
   })
 }
 

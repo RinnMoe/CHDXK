@@ -249,6 +249,25 @@ func (r *ReviewController) GetReview(c *gin.Context) {
 	c.JSON(http.StatusOK, detail)
 }
 
+func (r *ReviewController) ListReviewRevisions(c *gin.Context) {
+	reviewID, err := strconv.Atoi(c.Param("reviewID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid review id"})
+		return
+	}
+
+	items, err := r.query.GetReviewRevisions(c.Request.Context(), reviewID)
+	if err != nil {
+		if errors.Is(err, review.ErrReviewNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "review not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, items)
+}
+
 func (r *ReviewController) VoteReview(c *gin.Context) {
 	reviewID, err := strconv.Atoi(c.Param("reviewID"))
 	if err != nil {

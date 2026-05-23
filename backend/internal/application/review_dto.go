@@ -26,6 +26,18 @@ type ReviewDTO struct {
 	UpdatedAt time.Time          `json:"updated_at"`
 }
 
+type ReviewRevisionDTO struct {
+	ID        int       `json:"id"`
+	ReviewID  int       `json:"review_id"`
+	CourseID  int       `json:"course_id"`
+	UserID    int       `json:"user_id"`
+	Semester  string    `json:"semester"`
+	Score     string    `json:"score"`
+	Rating    int       `json:"rating"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 func newReviewDTO(r *review.ReviewView, showUserID bool) ReviewDTO {
 	dto := ReviewDTO{
 		ID:       r.ID,
@@ -49,4 +61,18 @@ func newReviewDTO(r *review.ReviewView, showUserID bool) ReviewDTO {
 		dto.Course = &item
 	}
 	return dto
+}
+
+func newReviewRevisionDTO(r *review.RevisionView) ReviewRevisionDTO {
+	return ReviewRevisionDTO{
+		ID:        r.ID,
+		ReviewID:  r.ReviewID,
+		CourseID:  r.CourseID,
+		UserID:    r.UserID,
+		Semester:  r.Semester,
+		Score:     r.Score,
+		Rating:    r.Rating,
+		Content:   r.Content,
+		CreatedAt: r.CreatedAt,
+	}
 }

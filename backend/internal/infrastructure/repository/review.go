@@ -41,6 +41,7 @@ func newReviewDomain(e *ReviewEntity) review.Review {
 
 func newReviewRevisionEntity(r review.Revision) ReviewRevisionEntity {
 	return ReviewRevisionEntity{
+		ID:        r.ID,
 		ReviewID:  r.ReviewID,
 		CourseID:  r.CourseID,
 		Semester:  r.Semester,
@@ -54,6 +55,7 @@ func newReviewRevisionEntity(r review.Revision) ReviewRevisionEntity {
 
 func newReviewRevisionQuery(e *ReviewRevisionEntity) review.RevisionView {
 	return review.RevisionView{
+		ID:        e.ID,
 		ReviewID:  e.ReviewID,
 		CourseID:  e.CourseID,
 		Semester:  e.Semester,
@@ -258,7 +260,7 @@ func (r2 *ReviewRepository) applyPagination(db *gorm.DB, filter review.ReviewFil
 }
 
 func (r2 *ReviewRepository) FindRevisions(ctx context.Context, reviewID int) ([]review.RevisionView, error) {
-	es, err := gorm.G[ReviewRevisionEntity](r2.db).Where("review_id = ?", reviewID).Find(ctx)
+	es, err := gorm.G[ReviewRevisionEntity](r2.db).Where("review_id = ?", reviewID).Order("created_at DESC, id DESC").Find(ctx)
 	if err != nil {
 		return nil, err
 	}

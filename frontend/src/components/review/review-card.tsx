@@ -12,7 +12,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -20,37 +19,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import Markdown from "react-markdown"
-import remarkGfm from "remark-gfm"
 import { useAuth } from "@/contexts/auth-context"
 import { useDeleteReview } from "@/hooks/use-review"
 import { VoteButtons } from "./vote-buttons"
-import { RatingStars } from "./rating-stars"
+import { ReviewContent } from "./review-content"
+import { ReviewRevisionsDialog } from "./review-revisions-dialog"
 import type { ReviewDTO } from "@/api/review"
 
 interface ReviewCardProps {
   review: ReviewDTO
   showCourse?: boolean
   showVoteButtons?: boolean
-}
-
-function formatDateTime(iso: string) {
-  const d = new Date(iso)
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, "0")
-  const day = String(d.getDate()).padStart(2, "0")
-  const hh = String(d.getHours()).padStart(2, "0")
-  const mm = String(d.getMinutes()).padStart(2, "0")
-  return `${y}-${m}-${day} ${hh}:${mm}`
-}
-
-function isEdited(review: ReviewDTO) {
-  if (!review.updated_at || !review.created_at) return false
-  return (
-    new Date(review.updated_at).getTime() -
-      new Date(review.created_at).getTime() >
-    1000
-  )
 }
 
 function getReviewUrl(reviewID: number) {
@@ -93,11 +72,6 @@ export function ReviewCard({
   const { mutateAsync: deleteReview } = useDeleteReview()
   const [copied, setCopied] = useState(false)
   const resetCopiedTimer = useRef<number | undefined>(undefined)
-  const edited = isEdited(review)
-  const displayTime = edited ? review.updated_at : review.created_at
-  const tooltip = edited
-    ? `创建于 ${formatDateTime(review.created_at)}`
-    : undefined
   const canManage =
     review.user_id != null &&
     user != null &&
@@ -145,30 +119,15 @@ export function ReviewCard({
           >
             #{review.id}
           </Link>
-          <span
-            className="ml-auto text-sm text-muted-foreground tabular-nums"
-            title={tooltip}
-          >
-            {formatDateTime(displayTime)}
-            {edited && (
-              <span className="ml-1 text-muted-foreground/70">(已修改)</span>
-            )}
-          </span>
+          <ReviewRevisionsDialog review={review} />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <RatingStars value={review.rating} readOnly size="sm" />
-          {review.semester && (
-            <Badge variant="outline" className="font-mono">
-              {review.semester}
-            </Badge>
-          )}
-          {review.score && <Badge variant="secondary">{review.score}</Badge>}
-        </div>
-
-        <div className="prose prose-sm max-w-none text-sm leading-relaxed dark:prose-invert">
-          <Markdown remarkPlugins={[remarkGfm]}>{review.content}</Markdown>
-        </div>
+        <ReviewContent
+          rating={review.rating}
+          semester={review.semester}
+          score={review.score}
+          content={review.content}
+        />
 
         <div className="flex items-center justify-between gap-2">
           {showVoteButtons ? (

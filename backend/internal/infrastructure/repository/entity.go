@@ -108,6 +108,7 @@ func (ReviewEntity) TableName() string {
 }
 
 type ReviewRevisionEntity struct {
+	ID        int       `gorm:"column:id"`
 	ReviewID  int       `gorm:"column:review_id;index"`
 	CourseID  int       `gorm:"column:course_id;index"`
 	Semester  string    `gorm:"column:semester"`

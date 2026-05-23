@@ -189,3 +189,23 @@ func (s *ReviewQueryService) GetReviewByID(ctx context.Context, u *auth.User, re
 	}
 	return &view, nil
 }
+
+func (s *ReviewQueryService) GetReviewRevisions(ctx context.Context, reviewID int) ([]ReviewRevisionDTO, error) {
+	reviewView, err := s.repo.GetByID(ctx, reviewID)
+	if err != nil {
+		return nil, err
+	}
+	if reviewView == nil {
+		return nil, review.ErrReviewNotFound
+	}
+
+	revisions, err := s.repo.FindRevisions(ctx, reviewID)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]ReviewRevisionDTO, len(revisions))
+	for i := range revisions {
+		items[i] = newReviewRevisionDTO(&revisions[i])
+	}
+	return items, nil
+}

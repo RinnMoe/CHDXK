@@ -30,6 +30,18 @@ export interface ReviewDTO {
   updated_at: string
 }
 
+export interface ReviewRevisionDTO {
+  id: number
+  review_id: number
+  course_id: number
+  user_id: number
+  semester: string
+  score: string
+  rating: number
+  content: string
+  created_at: string
+}
+
 export interface ReviewListFilter {
   semester?: string
   rating?: number
@@ -85,6 +97,12 @@ export function listFollowedReviews(
 
 export function getReview(reviewID: number): Promise<ReviewDTO> {
   return apiClient(`${BASE}/review/${reviewID}`)
+}
+
+export function listReviewRevisions(
+  reviewID: number
+): Promise<ReviewRevisionDTO[]> {
+  return apiClient(`${BASE}/review/${reviewID}/revisions`)
 }
 
 export function createReview(

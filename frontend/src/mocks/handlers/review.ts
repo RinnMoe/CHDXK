@@ -2,7 +2,7 @@ import { http, HttpResponse } from "msw"
 import { mockReviews, findReview } from "../fixtures/reviews"
 import { findUserByID, mockSession } from "../fixtures/auth"
 import { randomDelay } from "../utils"
-import type { ReviewDTO } from "@/api/review"
+import type { ReviewDTO, ReviewRevisionDTO } from "@/api/review"
 
 function paginate<T>(items: T[], page: number, pageSize: number) {
   const start = (page - 1) * pageSize
@@ -19,6 +19,36 @@ function withPrivateFields(review: ReviewDTO): ReviewDTO {
   if (!user) return { ...review, user_id: undefined }
   if (review.user_id === user.id || user.role === "admin") return { ...review }
   return { ...review, user_id: undefined }
+}
+
+function buildRevisions(review: ReviewDTO): ReviewRevisionDTO[] {
+  const createdAt = new Date(review.created_at).getTime()
+  const updatedAt = new Date(review.updated_at).getTime()
+  if (updatedAt <= createdAt + 1000) {
+    return []
+  }
+  const revisionCount = 2 + (review.id % 3)
+  const step = Math.max(60 * 60 * 1000, Math.floor((updatedAt - createdAt) / 4))
+
+  return Array.from({ length: revisionCount }, (_, i) => {
+    const revisionTime = Math.max(createdAt + 1000, updatedAt - i * step)
+    return {
+      id: review.id * 100 + i,
+      review_id: review.id,
+      course_id: review.course_id,
+      user_id: review.user_id ?? 0,
+      semester: review.semester ?? "",
+      score: review.score,
+      rating: Math.max(1, review.rating - i),
+      content: review.content,
+      created_at: new Date(revisionTime).toISOString(),
+    }
+  })
+}
+
+function isCurrentUserAdmin() {
+  const user = mockSession.userID ? findUserByID(mockSession.userID) : undefined
+  return user?.role === "admin"
 }
 
 function applyReviewFilter(url: URL, list: ReviewDTO[]): ReviewDTO[] {
@@ -66,6 +96,19 @@ export const reviewHandlers = [
     const page = Number(url.searchParams.get("page") ?? "1")
     const pageSize = Number(url.searchParams.get("page_size") ?? "20")
     return HttpResponse.json(paginate(list, page, pageSize))
+  }),
+
+  http.get("/api/review/:reviewID/revisions", async ({ params }) => {
+    await randomDelay()
+    if (!isCurrentUserAdmin()) {
+      return HttpResponse.json({ error: "forbidden" }, { status: 403 })
+    }
+    const id = Number(params.reviewID)
+    const review = findReview(id)
+    if (!review) {
+      return HttpResponse.json({ error: "review not found" }, { status: 404 })
+    }
+    return HttpResponse.json(buildRevisions(review))
   }),
 
   http.get("/api/review/:reviewID", async ({ params }) => {
