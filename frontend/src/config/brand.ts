@@ -1,6 +1,6 @@
 export const brand = {
-  name: "JCourse",
-  feedbackEmail: "jcourse@sjtu.edu.cn",
+  name: "SJTU选课社区",
+  feedbackEmail: "course@sjtu.plus",
 } as const
 
 export function formatPageTitle(pageTitle?: string) {
