@@ -245,6 +245,25 @@ CREATE TABLE IF NOT EXISTS course_notifications
             ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS course_hot_scores
+(
+    period     TEXT        NOT NULL CHECK (period IN ('week', 'month')),
+    period_key TEXT        NOT NULL,
+    course_id  INTEGER     NOT NULL,
+    score      BIGINT      NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    PRIMARY KEY (period, period_key, course_id),
+
+    CONSTRAINT fk_course_hot_scores_course
+        FOREIGN KEY (course_id) REFERENCES courses (id)
+            ON DELETE CASCADE
+);
+
+CREATE INDEX idx_course_hot_scores_rank
+    ON course_hot_scores (period, period_key, score DESC, course_id ASC);
+
 CREATE TABLE IF NOT EXISTS site_daily_stats
 (
     stat_date    DATE PRIMARY KEY,

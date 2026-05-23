@@ -47,7 +47,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	userRepo := repository.NewUserRepository(db)
 	apiKeyRepo := repository.NewApiKeyRepository(db)
 	statRepo := repository.NewSiteDailyStatRepository(db)
-	courseHotRepo := repository.NewCourseHotRepository(redisClient, mustLoadLocation("Asia/Shanghai"))
+	courseHotRepo := repository.NewGormCourseHotRepository(db)
 	verificationRepo := repository.NewVerificationCodeRepository(redisClient)
 	resetCodeRepo := repository.NewVerificationCodeRepositoryWithPrefix(redisClient, "reset")
 	loginAttemptRepo := repository.NewLoginAttemptRepository(redisClient, time.Duration(conf.Auth.LoginLockoutDuration)*time.Second)
@@ -124,12 +124,4 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		ApiKeyQuery:       apiKeyQuery,
 		ApiKeyCommand:     apiKeyCommand,
 	}
-}
-
-func mustLoadLocation(name string) *time.Location {
-	loc, err := time.LoadLocation(name)
-	if err != nil {
-		panic(err)
-	}
-	return loc
 }

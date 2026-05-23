@@ -195,6 +195,19 @@ func (CourseNotificationEntity) TableName() string {
 	return "course_notifications"
 }
 
+type CourseHotScoreEntity struct {
+	Period    string    `gorm:"column:period;primaryKey"`
+	PeriodKey string    `gorm:"column:period_key;primaryKey"`
+	CourseID  int       `gorm:"column:course_id;primaryKey"`
+	Score     int64     `gorm:"column:score"`
+	CreatedAt time.Time `gorm:"column:created_at"`
+	UpdatedAt time.Time `gorm:"column:updated_at"`
+}
+
+func (CourseHotScoreEntity) TableName() string {
+	return "course_hot_scores"
+}
+
 type SiteDailyStatEntity struct {
 	StatDate    time.Time         `gorm:"column:stat_date;primaryKey;type:date"`
 	Metrics     datatypes.JSONMap `gorm:"column:metrics;type:jsonb"`
