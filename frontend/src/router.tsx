@@ -4,7 +4,7 @@ import { HomePage } from "@/pages/home-page"
 import { CoursesPage } from "@/pages/courses-page"
 import { HotCoursesPage } from "@/pages/hot-courses-page"
 import { CourseDetailPage } from "@/pages/course-detail-page"
-import { LatestReviewsPage } from "@/pages/latest-reviews-page"
+import { ReviewsPage } from "@/pages/reviews-page"
 import { FollowedReviewsPage } from "@/pages/followed-reviews-page"
 import { UserReviewsPage } from "@/pages/user-reviews-page"
 import { ReviewDetailPage } from "@/pages/review-detail-page"
@@ -29,7 +29,7 @@ export const router = createBrowserRouter([
       { path: "/courses/hot", element: <HotCoursesPage /> },
       { path: "/courses/:courseID", element: <CourseDetailPage /> },
       { path: "/courses/:courseID/review/new", element: <NewReviewPage /> },
-      { path: "/reviews/latest", element: <LatestReviewsPage /> },
+      { path: "/reviews", element: <ReviewsPage /> },
       { path: "/reviews/followed", element: <FollowedReviewsPage /> },
       { path: "/reviews/mine", element: <UserReviewsPage /> },
       { path: "/courses/mine", element: <UserCoursesPage /> },

@@ -101,7 +101,7 @@ internal/
 - `GET /api/teacher/:teacherID/courses` — teacher's courses
 
 #### Review (`/api/review`)
-- `GET /api/review/latest` — latest reviews (excludes ignored courses for logged-in users)
+- `GET /api/review` — list reviews (defaults to newest first; excludes ignored courses for logged-in users)
 - `GET /api/review/followed` — reviews from followed courses (auth)
 - `GET /api/review/:reviewID` — review detail
 - `POST /api/review/` — create review

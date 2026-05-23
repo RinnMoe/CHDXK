@@ -67,7 +67,7 @@ func (q *fakeReviewQuery) FindRevisions(ctx context.Context, reviewID int) ([]re
 	return nil, nil
 }
 
-func TestReviewQueryService_GetLatestReviews_WithIgnoredCourses(t *testing.T) {
+func TestReviewQueryService_GetReviews_WithIgnoredCourses(t *testing.T) {
 	reviewRepo := newFakeReviewQuery()
 	reviewRepo.reviews = []review.ReviewView{
 		{ID: 1, CourseID: 1, Rating: 5},
@@ -84,9 +84,9 @@ func TestReviewQueryService_GetLatestReviews_WithIgnoredCourses(t *testing.T) {
 
 	t.Run("excludes ignored courses for logged-in user", func(t *testing.T) {
 		user := &auth.User{ID: 100}
-		result, err := svc.GetLatestReviews(ctx, user, application.ReviewListFilter{})
+		result, err := svc.GetReviews(ctx, user, application.ReviewListFilter{})
 		if err != nil {
-			t.Fatalf("GetLatestReviews: %v", err)
+			t.Fatalf("GetReviews: %v", err)
 		}
 		if result.Total != 2 {
 			t.Errorf("total: got %d, want 2 (course 2 is ignored)", result.Total)
@@ -94,9 +94,9 @@ func TestReviewQueryService_GetLatestReviews_WithIgnoredCourses(t *testing.T) {
 	})
 
 	t.Run("returns all reviews for anonymous user", func(t *testing.T) {
-		result, err := svc.GetLatestReviews(ctx, nil, application.ReviewListFilter{})
+		result, err := svc.GetReviews(ctx, nil, application.ReviewListFilter{})
 		if err != nil {
-			t.Fatalf("GetLatestReviews: %v", err)
+			t.Fatalf("GetReviews: %v", err)
 		}
 		if result.Total != 3 {
 			t.Errorf("total: got %d, want 3", result.Total)

@@ -381,19 +381,6 @@ func TestReviewRepository_SearchVector(t *testing.T) {
 		}
 	})
 
-	t.Run("search by q score", func(t *testing.T) {
-		results, total, err := repo.FindBy(ctx, review.ReviewFilter{Q: "B+"})
-		if err != nil {
-			t.Fatalf("FindBy: %v", err)
-		}
-		if total != 1 {
-			t.Errorf("total: got %d, want 1", total)
-		}
-		if len(results) == 0 || results[0].Score != "B+" {
-			t.Errorf("Score: got %v", results)
-		}
-	})
-
 	t.Run("search by q combined with filter", func(t *testing.T) {
 		results, total, err := repo.FindBy(ctx, review.ReviewFilter{Q: "课程", Semester: "2024-2025-2"})
 		if err != nil {
@@ -404,6 +391,16 @@ func TestReviewRepository_SearchVector(t *testing.T) {
 		}
 		if len(results) == 0 || results[0].Semester != "2024-2025-2" {
 			t.Errorf("Semester: got %v", results)
+		}
+	})
+
+	t.Run("search by q ignores score", func(t *testing.T) {
+		_, total, err := repo.FindBy(ctx, review.ReviewFilter{Q: "B+"})
+		if err != nil {
+			t.Fatalf("FindBy: %v", err)
+		}
+		if total != 0 {
+			t.Errorf("total: got %d, want 0", total)
 		}
 	})
 

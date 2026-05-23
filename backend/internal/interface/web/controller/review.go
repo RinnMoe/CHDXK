@@ -24,17 +24,10 @@ func NewReviewController(
 	return &ReviewController{query: query, command: command}
 }
 
-func (r *ReviewController) ListCourseReviews(c *gin.Context) {
-	courseID, err := strconv.Atoi(c.Param("courseID"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid course id"})
-		return
-	}
-
+func bindReviewListFilter(c *gin.Context) (application.ReviewListFilter, error) {
 	var f application.ReviewListFilter
 	if err := c.ShouldBindQuery(&f); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+		return f, err
 	}
 	if f.Page <= 0 {
 		f.Page = 1
@@ -42,8 +35,26 @@ func (r *ReviewController) ListCourseReviews(c *gin.Context) {
 	if f.PageSize <= 0 {
 		f.PageSize = 20
 	}
+	if f.OrderBy == "" && f.Order != "" {
+		f.OrderBy = f.Order
+	}
 	if f.OrderBy == "" {
 		f.OrderBy = "created_at"
+	}
+	return f, nil
+}
+
+func (r *ReviewController) ListCourseReviews(c *gin.Context) {
+	courseID, err := strconv.Atoi(c.Param("courseID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid course id"})
+		return
+	}
+
+	f, err := bindReviewListFilter(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	result, err := r.query.GetReviewsByCourse(c.Request.Context(), courseID, auth.GetUserFromCtx(c.Request.Context()), f)
@@ -158,16 +169,10 @@ func (r *ReviewController) ListUserReviews(c *gin.Context) {
 		return
 	}
 
-	var f application.ReviewListFilter
-	if err := c.ShouldBindQuery(&f); err != nil {
+	f, err := bindReviewListFilter(c)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
-	}
-	if f.Page <= 0 {
-		f.Page = 1
-	}
-	if f.PageSize <= 0 {
-		f.PageSize = 20
 	}
 
 	result, err := r.query.GetReviewsByUser(c.Request.Context(), userID, auth.GetUserFromCtx(c.Request.Context()), f)
@@ -178,24 +183,15 @@ func (r *ReviewController) ListUserReviews(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-func (r *ReviewController) ListLatestReviews(c *gin.Context) {
-	var f application.ReviewListFilter
-	if err := c.ShouldBindQuery(&f); err != nil {
+func (r *ReviewController) ListReviews(c *gin.Context) {
+	f, err := bindReviewListFilter(c)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if f.Page <= 0 {
-		f.Page = 1
-	}
-	if f.PageSize <= 0 {
-		f.PageSize = 20
-	}
-	if f.OrderBy == "" {
-		f.OrderBy = "created_at"
-	}
 
 	u := auth.GetUserFromCtx(c.Request.Context())
-	result, err := r.query.GetLatestReviews(c.Request.Context(), u, f)
+	result, err := r.query.GetReviews(c.Request.Context(), u, f)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -210,19 +206,10 @@ func (r *ReviewController) ListFollowedReviews(c *gin.Context) {
 		return
 	}
 
-	var f application.ReviewListFilter
-	if err := c.ShouldBindQuery(&f); err != nil {
+	f, err := bindReviewListFilter(c)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
-	}
-	if f.Page <= 0 {
-		f.Page = 1
-	}
-	if f.PageSize <= 0 {
-		f.PageSize = 20
-	}
-	if f.OrderBy == "" {
-		f.OrderBy = "created_at"
 	}
 
 	result, err := r.query.GetFollowedReviews(c.Request.Context(), u.ID, u, f)

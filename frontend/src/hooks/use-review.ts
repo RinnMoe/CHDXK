@@ -10,7 +10,7 @@ import {
   getReview,
   listReviewRevisions,
   listFollowedReviews,
-  listLatestReviews,
+  listReviews,
   listUserReviews,
   updateReview,
   voteReview,
@@ -20,10 +20,10 @@ import {
   type VoteType,
 } from "@/api/review"
 
-export function useLatestReviews(filter: ReviewListFilter = {}) {
+export function useReviews(filter: ReviewListFilter = {}) {
   return useQuery({
-    queryKey: ["reviews", "latest", filter],
-    queryFn: () => listLatestReviews(filter),
+    queryKey: ["reviews", "list", filter],
+    queryFn: () => listReviews(filter),
     placeholderData: keepPreviousData,
   })
 }

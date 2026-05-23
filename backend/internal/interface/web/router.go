@@ -61,7 +61,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	}
 	reviewGroup := apiGroup.Group("/review")
 	{
-		reviewGroup.GET("/latest", reviewController.ListLatestReviews)
+		reviewGroup.GET("", reviewController.ListReviews)
 		reviewGroup.GET("/followed", reviewController.ListFollowedReviews)
 		reviewGroup.GET("/:reviewID/revisions", middleware.Admin(), reviewController.ListReviewRevisions)
 		reviewGroup.GET("/:reviewID", reviewController.GetReview)

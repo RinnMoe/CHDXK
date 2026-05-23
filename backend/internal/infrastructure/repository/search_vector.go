@@ -68,9 +68,8 @@ func RefreshReviewSearchVectors(db *gorm.DB) error {
 	return db.Exec(`
 		UPDATE reviews
 		SET search_vector =
-			setweight(to_tsvector(?::regconfig, coalesce(content, '')), 'A') ||
-			setweight(to_tsvector(?::regconfig, coalesce(score, '')), 'B')
-	`, config, config).Error
+			setweight(to_tsvector(?::regconfig, coalesce(content, '')), 'A')
+	`, config).Error
 }
 
 func refreshReviewSearchVector(tx *gorm.DB, reviewID int) error {
@@ -78,8 +77,7 @@ func refreshReviewSearchVector(tx *gorm.DB, reviewID int) error {
 	return tx.Exec(`
 		UPDATE reviews
 		SET search_vector =
-			setweight(to_tsvector(?::regconfig, coalesce(content, '')), 'A') ||
-			setweight(to_tsvector(?::regconfig, coalesce(score, '')), 'B')
+			setweight(to_tsvector(?::regconfig, coalesce(content, '')), 'A')
 		WHERE id = ?
-	`, config, config, reviewID).Error
+	`, config, reviewID).Error
 }

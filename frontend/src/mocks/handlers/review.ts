@@ -52,12 +52,14 @@ function isCurrentUserAdmin() {
 }
 
 function applyReviewFilter(url: URL, list: ReviewDTO[]): ReviewDTO[] {
+  const q = (url.searchParams.get("q") ?? "").trim().toLowerCase()
   const semester = url.searchParams.get("semester") ?? ""
   const rating = Number(url.searchParams.get("rating") ?? "0")
   const orderBy = url.searchParams.get("order_by") ?? "created_at"
   const ascend = url.searchParams.get("ascend") === "1"
 
   let filtered = [...list]
+  if (q) filtered = filtered.filter((r) => r.content.toLowerCase().includes(q))
   if (semester) filtered = filtered.filter((r) => r.semester === semester)
   if (rating > 0) filtered = filtered.filter((r) => r.rating === rating)
 
@@ -78,7 +80,7 @@ function applyReviewFilter(url: URL, list: ReviewDTO[]): ReviewDTO[] {
 }
 
 export const reviewHandlers = [
-  http.get("/api/review/latest", async ({ request }) => {
+  http.get("/api/review", async ({ request }) => {
     await randomDelay()
     const url = new URL(request.url)
     const list = applyReviewFilter(url, mockReviews).map(withPrivateFields)

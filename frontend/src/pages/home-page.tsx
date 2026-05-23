@@ -2,10 +2,10 @@ import { Link } from "react-router-dom"
 import { PageShell } from "@/components/layout/page-shell"
 import { ReviewList } from "@/components/review/review-list"
 import { HotCourseList } from "@/components/course/hot-course-list"
-import { useLatestReviews } from "@/hooks/use-review"
+import { useReviews } from "@/hooks/use-review"
 
 export function HomePage() {
-  const { data: reviewsData, isLoading: reviewsLoading } = useLatestReviews({
+  const { data: reviewsData, isLoading: reviewsLoading } = useReviews({
     page: 1,
     page_size: 20,
   })
@@ -17,9 +17,9 @@ export function HomePage() {
         <div className="space-y-6 lg:flex lg:gap-8 lg:space-y-0">
           <div className="min-w-0 flex-1 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">最新点评</h2>
+              <h2 className="text-lg font-semibold">点评</h2>
               <Link
-                to="/reviews/latest"
+                to="/reviews"
                 className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
                 查看更多

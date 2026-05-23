@@ -25,7 +25,7 @@ const navItems = [
     match: (p: string) => p.startsWith("/teachers"),
   },
   {
-    to: "/reviews/latest",
+    to: "/reviews",
     label: "点评",
     match: (p: string) => p.startsWith("/reviews"),
   },

@@ -12,6 +12,7 @@ type ReviewListFilter struct {
 	Q        string `form:"q"`
 	Semester string `form:"semester"`
 	Rating   int    `form:"rating"`
+	Order    string `form:"order"`
 	OrderBy  string `form:"order_by"`
 	Ascend   bool   `form:"ascend"`
 	Page     int    `form:"page"`
@@ -46,12 +47,16 @@ func (s *ReviewQueryService) buildDTOs(reviews []review.ReviewView, u *auth.User
 }
 
 func (s *ReviewQueryService) GetReviewsByCourse(ctx context.Context, courseID int, u *auth.User, f ReviewListFilter) (*PaginatedResult[ReviewDTO], error) {
+	orderBy := f.OrderBy
+	if orderBy == "" {
+		orderBy = f.Order
+	}
 	reviewFilter := review.ReviewFilter{
 		CourseID: courseID,
 		Q:        f.Q,
 		Semester: f.Semester,
 		Rating:   f.Rating,
-		OrderBy:  f.OrderBy,
+		OrderBy:  orderBy,
 		Ascend:   f.Ascend,
 		Page:     f.Page,
 		PageSize: f.PageSize,
@@ -71,13 +76,17 @@ func (s *ReviewQueryService) GetReviewsByCourse(ctx context.Context, courseID in
 }
 
 func (s *ReviewQueryService) GetReviewsByUser(ctx context.Context, userID int, u *auth.User, f ReviewListFilter) (*PaginatedResult[ReviewDTO], error) {
+	orderBy := f.OrderBy
+	if orderBy == "" {
+		orderBy = f.Order
+	}
 	reviewFilter := review.ReviewFilter{
 		UserID:     userID,
 		WithCourse: true,
 		Q:          f.Q,
 		Semester:   f.Semester,
 		Rating:     f.Rating,
-		OrderBy:    f.OrderBy,
+		OrderBy:    orderBy,
 		Ascend:     f.Ascend,
 		Page:       f.Page,
 		PageSize:   f.PageSize,
@@ -96,12 +105,17 @@ func (s *ReviewQueryService) GetReviewsByUser(ctx context.Context, userID int, u
 	}, nil
 }
 
-func (s *ReviewQueryService) GetLatestReviews(ctx context.Context, user *auth.User, f ReviewListFilter) (*PaginatedResult[ReviewDTO], error) {
+func (s *ReviewQueryService) GetReviews(ctx context.Context, user *auth.User, f ReviewListFilter) (*PaginatedResult[ReviewDTO], error) {
+	orderBy := f.OrderBy
+	if orderBy == "" {
+		orderBy = f.Order
+	}
+
 	reviewFilter := review.ReviewFilter{
 		Q:          f.Q,
 		Semester:   f.Semester,
 		Rating:     f.Rating,
-		OrderBy:    f.OrderBy,
+		OrderBy:    orderBy,
 		Ascend:     f.Ascend,
 		Page:       f.Page,
 		PageSize:   f.PageSize,
@@ -145,12 +159,16 @@ func (s *ReviewQueryService) GetFollowedReviews(ctx context.Context, userID int,
 		}, nil
 	}
 
+	orderBy := f.OrderBy
+	if orderBy == "" {
+		orderBy = f.Order
+	}
 	reviewFilter := review.ReviewFilter{
 		CourseIDs:  followed,
 		Q:          f.Q,
 		Semester:   f.Semester,
 		Rating:     f.Rating,
-		OrderBy:    f.OrderBy,
+		OrderBy:    orderBy,
 		Ascend:     f.Ascend,
 		Page:       f.Page,
 		PageSize:   f.PageSize,

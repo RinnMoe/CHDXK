@@ -43,8 +43,10 @@ export interface ReviewRevisionDTO {
 }
 
 export interface ReviewListFilter {
+  q?: string
   semester?: string
   rating?: number
+  order?: "like_count" | "created_at"
   order_by?: "like_count" | "created_at"
   ascend?: boolean
   page?: number
@@ -83,10 +85,10 @@ function buildQuery(filter: Record<string, unknown>): string {
   return q ? `?${q}` : ""
 }
 
-export function listLatestReviews(
+export function listReviews(
   filter: ReviewListFilter = {}
 ): Promise<PaginatedResult<ReviewDTO>> {
-  return apiClient(`${BASE}/review/latest${buildQuery(filter)}`)
+  return apiClient(`${BASE}/review${buildQuery(filter)}`)
 }
 
 export function listFollowedReviews(

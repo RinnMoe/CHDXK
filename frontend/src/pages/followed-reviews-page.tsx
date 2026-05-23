@@ -23,7 +23,7 @@ export function FollowedReviewsPage() {
           <div>
             <h1 className="text-2xl font-bold">关注动态</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              你关注的课程的最新点评
+              你关注的课程的点评
             </p>
           </div>
 
