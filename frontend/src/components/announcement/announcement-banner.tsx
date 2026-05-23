@@ -38,31 +38,42 @@ export function AnnouncementBanner() {
   }
 
   return (
-    <div className="mt-4 space-y-2">
-      {visible.map((a) => (
-        <div
-          key={a.id}
-          className="flex items-start gap-3 rounded-md border bg-muted/50 px-4 py-3 text-sm"
-        >
-          <RiInformationLine className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-          <div className="min-w-0 flex-1">
-            <p className="font-medium">{a.title}</p>
-            <p className="mt-1 whitespace-pre-line text-muted-foreground">
-              {a.body}
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="-mt-1 -mr-2 size-7 shrink-0"
-            onClick={() => dismiss(a.id)}
-            aria-label="dismiss"
+    <div className="mb-6 space-y-2">
+      {visible.map((a) => {
+        const title = a.title.trim()
+        const body = a.body.trim()
+
+        if (!title && !body) return null
+
+        return (
+          <div
+            key={a.id}
+            className="flex items-center gap-3 rounded-md border border-primary/20 bg-primary/5 px-4 py-3 text-sm"
           >
-            <RiCloseLine className="size-4" />
-          </Button>
-        </div>
-      ))}
+            <RiInformationLine className="size-4 shrink-0 text-muted-foreground" />
+            <div className="min-w-0 flex-1">
+              {title && <p className="font-medium">{title}</p>}
+              {body && (
+                <p
+                  className={`whitespace-pre-line text-sm text-muted-foreground ${title ? "mt-1" : ""}`}
+                >
+                  {body}
+                </p>
+              )}
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-7 shrink-0"
+              onClick={() => dismiss(a.id)}
+              aria-label="dismiss"
+            >
+              <RiCloseLine className="size-4" />
+            </Button>
+          </div>
+        )
+      })}
     </div>
   )
 }

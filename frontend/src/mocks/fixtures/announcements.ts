@@ -24,4 +24,18 @@ export const mockAnnouncements: AnnouncementDTO[] = [
     priority: 1,
     created_at: new Date(now - 1000 * 60 * 60 * 24 * 30).toISOString(),
   },
+  {
+    id: 4,
+    title: "",
+    body: "晚间会进行一次短暂维护，期间公告功能可能刷新缓慢。",
+    priority: 12,
+    created_at: new Date(now - 1000 * 60 * 30).toISOString(),
+  },
+  {
+    id: 5,
+    title: "只有标题的公告",
+    body: "",
+    priority: 11,
+    created_at: new Date(now - 1000 * 60 * 45).toISOString(),
+  },
 ]
