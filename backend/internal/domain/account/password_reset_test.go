@@ -1,4 +1,4 @@
-package auth
+package account
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 )
 
 func TestPasswordResetService_SendResetCodeSuccess(t *testing.T) {
-	repo := newResetFakeUserRepo(map[string]*User{
+	repo := newResetFakeUserRepo(map[string]*Account{
 		"alice@example.edu": {ID: 1, Email: "alice@example.edu"},
 	})
 	codes := newResetFakeCodeRepo()
@@ -41,7 +41,7 @@ func TestPasswordResetService_SendResetCodeRejectsUnknownUser(t *testing.T) {
 }
 
 func TestPasswordResetService_SendResetCodeRateLimit(t *testing.T) {
-	repo := newResetFakeUserRepo(map[string]*User{
+	repo := newResetFakeUserRepo(map[string]*Account{
 		"alice@example.edu": {ID: 1, Email: "alice@example.edu"},
 	})
 	svc := NewPasswordResetService(repo, newResetFakeCodeRepo(), &resetFakeSender{}, nil, PasswordResetConfig{
@@ -65,7 +65,7 @@ func TestPasswordResetService_ResetPasswordSuccess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Hash: %v", err)
 	}
-	repo := newResetFakeUserRepo(map[string]*User{
+	repo := newResetFakeUserRepo(map[string]*Account{
 		"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: oldHash},
 	})
 	codes := newResetFakeCodeRepo()
@@ -86,7 +86,7 @@ func TestPasswordResetService_ResetPasswordSuccess(t *testing.T) {
 }
 
 func TestPasswordResetService_ResetPasswordRejectsInvalidCode(t *testing.T) {
-	repo := newResetFakeUserRepo(map[string]*User{
+	repo := newResetFakeUserRepo(map[string]*Account{
 		"alice@example.edu": {ID: 1, Email: "alice@example.edu"},
 	})
 	codes := newResetFakeCodeRepo()
@@ -102,7 +102,7 @@ func TestPasswordResetService_ResetPasswordRejectsInvalidCode(t *testing.T) {
 }
 
 func TestPasswordResetService_ResetPasswordRejectsEmptyPassword(t *testing.T) {
-	repo := newResetFakeUserRepo(map[string]*User{
+	repo := newResetFakeUserRepo(map[string]*Account{
 		"alice@example.edu": {ID: 1, Email: "alice@example.edu"},
 	})
 	svc := NewPasswordResetService(repo, newResetFakeCodeRepo(), &resetFakeSender{}, nil, PasswordResetConfig{})
@@ -129,35 +129,35 @@ func TestPasswordResetService_ResetPasswordRejectsUnknownUser(t *testing.T) {
 // --- fakes for password_reset tests ---
 
 type resetFakeUserRepo struct {
-	users map[string]*User
+	users map[string]*Account
 }
 
-func newResetFakeUserRepo(users map[string]*User) *resetFakeUserRepo {
+func newResetFakeUserRepo(users map[string]*Account) *resetFakeUserRepo {
 	if users == nil {
-		users = map[string]*User{}
+		users = map[string]*Account{}
 	}
 	return &resetFakeUserRepo{users: users}
 }
 
-func (r *resetFakeUserRepo) Create(_ context.Context, u *User) error {
+func (r *resetFakeUserRepo) Create(_ context.Context, u *Account) error {
 	r.users[u.Email] = u
 	return nil
 }
 
-func (r *resetFakeUserRepo) Update(_ context.Context, u *User) error {
+func (r *resetFakeUserRepo) Update(_ context.Context, u *Account) error {
 	r.users[u.Email] = u
 	return nil
 }
 
 func (r *resetFakeUserRepo) TouchLastSeen(_ context.Context, _ int, _ time.Time) error { return nil }
 
-func (r *resetFakeUserRepo) FindByID(_ context.Context, _ int) (*User, error) { return nil, nil }
+func (r *resetFakeUserRepo) FindByID(_ context.Context, _ int) (*Account, error) { return nil, nil }
 
-func (r *resetFakeUserRepo) FindByUsername(_ context.Context, _ string) (*User, error) {
+func (r *resetFakeUserRepo) FindByUsername(_ context.Context, _ string) (*Account, error) {
 	return nil, nil
 }
 
-func (r *resetFakeUserRepo) FindByEmail(_ context.Context, email string) (*User, error) {
+func (r *resetFakeUserRepo) FindByEmail(_ context.Context, email string) (*Account, error) {
 	u, ok := r.users[email]
 	if !ok {
 		return nil, nil

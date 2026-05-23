@@ -15,7 +15,7 @@ type LoginCommand struct {
 	Password string `json:"password"`
 }
 
-type AuthUserDTO struct {
+type AccountDTO struct {
 	ID       int    `json:"id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`

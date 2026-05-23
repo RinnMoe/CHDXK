@@ -1,4 +1,4 @@
-package auth
+package account
 
 import (
 	"context"
@@ -6,23 +6,23 @@ import (
 	"time"
 )
 
-type AuthenticationService struct {
-	userRepo    UserRepository
+type LoginService struct {
+	accountRepo AccountRepository
 	hasher      PasswordHasher
 	attempts    LoginAttemptRepository
 	maxAttempts int
 	lockout     time.Duration
 }
 
-func NewAuthenticationService(
-	userRepo UserRepository,
+func NewLoginService(
+	userRepo AccountRepository,
 	hasher PasswordHasher,
 	attempts LoginAttemptRepository,
 	maxAttempts int,
 	lockout time.Duration,
-) *AuthenticationService {
-	return &AuthenticationService{
-		userRepo:    userRepo,
+) *LoginService {
+	return &LoginService{
+		accountRepo: userRepo,
 		hasher:      hasher,
 		attempts:    attempts,
 		maxAttempts: maxAttempts,
@@ -30,7 +30,7 @@ func NewAuthenticationService(
 	}
 }
 
-func (s *AuthenticationService) Login(ctx context.Context, email, password string) (*User, error) {
+func (s *LoginService) Login(ctx context.Context, email, password string) (*Account, error) {
 	normalized, err := NormalizeEmail(email)
 	if err != nil {
 		return nil, ErrInvalidCredentials
@@ -40,7 +40,7 @@ func (s *AuthenticationService) Login(ctx context.Context, email, password strin
 		return nil, ErrLoginLocked
 	}
 
-	u, err := s.userRepo.FindByEmail(ctx, normalized)
+	u, err := s.accountRepo.FindByEmail(ctx, normalized)
 	if err != nil {
 		return nil, err
 	}
@@ -48,20 +48,15 @@ func (s *AuthenticationService) Login(ctx context.Context, email, password strin
 		_ = s.recordFailure(ctx, normalized)
 		return nil, ErrInvalidCredentials
 	}
-	if err := EnsureUserActive(ctx, u); err != nil {
-		return nil, err
-	}
 	_ = s.attempts.Reset(ctx, normalized)
-
-	now := time.Now()
-	u.LastSeenAt = now
-	if err := s.userRepo.TouchLastSeen(ctx, u.ID, now); err != nil {
-		return nil, err
-	}
 	return u, nil
 }
 
-func (s *AuthenticationService) isLocked(ctx context.Context, email string) bool {
+func (s *LoginService) MarkLogin(ctx context.Context, accountID int) error {
+	return s.accountRepo.TouchLastSeen(ctx, accountID, time.Now())
+}
+
+func (s *LoginService) isLocked(ctx context.Context, email string) bool {
 	if s.maxAttempts <= 0 {
 		return false
 	}
@@ -72,7 +67,7 @@ func (s *AuthenticationService) isLocked(ctx context.Context, email string) bool
 	return count >= s.maxAttempts
 }
 
-func (s *AuthenticationService) recordFailure(ctx context.Context, email string) error {
+func (s *LoginService) recordFailure(ctx context.Context, email string) error {
 	count, err := s.attempts.Increment(ctx, email)
 	if err != nil {
 		return err

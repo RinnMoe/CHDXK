@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"jcourse/internal/domain/auth"
+	"jcourse/internal/domain/account"
 	"jcourse/internal/domain/point"
 )
 
@@ -15,12 +15,12 @@ type PointRecordListFilter struct {
 
 type PointQueryService struct {
 	query           point.Query
-	userRepo        auth.UserRepository
+	accountRepo     account.AccountRepository
 	transferService *point.TransferService
 }
 
-func NewPointQueryService(query point.Query, userRepo auth.UserRepository, transferService *point.TransferService) *PointQueryService {
-	return &PointQueryService{query: query, userRepo: userRepo, transferService: transferService}
+func NewPointQueryService(query point.Query, accountRepo account.AccountRepository, transferService *point.TransferService) *PointQueryService {
+	return &PointQueryService{query: query, accountRepo: accountRepo, transferService: transferService}
 }
 
 func (s *PointQueryService) GetUserPoints(ctx context.Context, userID int, f PointRecordListFilter) (*PointSummaryDTO, error) {
@@ -75,7 +75,7 @@ func (s *PointQueryService) PreviewTransfer(ctx context.Context, userID int, par
 var ErrPointUserNotFound = errors.New("user not found")
 
 func (s *PointQueryService) GetUserPointsByEmail(ctx context.Context, email string) (int, error) {
-	u, err := s.userRepo.FindByEmail(ctx, email)
+	u, err := s.accountRepo.FindByEmail(ctx, email)
 	if err != nil {
 		return 0, err
 	}

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"jcourse/internal/application"
-	"jcourse/internal/domain/auth"
+	"jcourse/internal/domain/account"
 	"jcourse/internal/domain/point"
 )
 
@@ -20,7 +20,7 @@ func TestPointQueryService_GetUserPoints(t *testing.T) {
 		},
 		recordTotal: 2,
 	}
-	svc := application.NewPointQueryService(repo, &fakeUserRepoForQuery{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}))
+	svc := application.NewPointQueryService(repo, &fakeAccountRepoForQuery{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}))
 
 	result, err := svc.GetUserPoints(context.Background(), 7, application.PointRecordListFilter{Page: 1, PageSize: 20})
 	if err != nil {
@@ -42,7 +42,7 @@ func TestPointQueryService_GetUserPoints(t *testing.T) {
 
 func TestPointQueryService_PreviewTransfer(t *testing.T) {
 	repo := &fakePointQuery{total: 500}
-	svc := application.NewPointQueryService(repo, &fakeUserRepoForQuery{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}))
+	svc := application.NewPointQueryService(repo, &fakeAccountRepoForQuery{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}))
 
 	got, err := svc.PreviewTransfer(context.Background(), 7, application.PreviewTransferParams{Amount: 100, FeePayer: point.FeePayerRecipient})
 	if err != nil {
@@ -73,19 +73,19 @@ func (q *fakePointQuery) FindRecordsByUser(_ context.Context, filter point.Recor
 	return q.records, q.recordTotal, nil
 }
 
-type fakeUserRepoForQuery struct{}
+type fakeAccountRepoForQuery struct{}
 
-func (r *fakeUserRepoForQuery) Create(_ context.Context, _ *auth.User) error { return nil }
-func (r *fakeUserRepoForQuery) Update(_ context.Context, _ *auth.User) error { return nil }
-func (r *fakeUserRepoForQuery) TouchLastSeen(_ context.Context, _ int, _ time.Time) error {
+func (r *fakeAccountRepoForQuery) Create(_ context.Context, _ *account.Account) error { return nil }
+func (r *fakeAccountRepoForQuery) Update(_ context.Context, _ *account.Account) error { return nil }
+func (r *fakeAccountRepoForQuery) TouchLastSeen(_ context.Context, _ int, _ time.Time) error {
 	return nil
 }
-func (r *fakeUserRepoForQuery) FindByID(_ context.Context, _ int) (*auth.User, error) {
+func (r *fakeAccountRepoForQuery) FindByID(_ context.Context, _ int) (*account.Account, error) {
 	return nil, nil
 }
-func (r *fakeUserRepoForQuery) FindByUsername(_ context.Context, _ string) (*auth.User, error) {
+func (r *fakeAccountRepoForQuery) FindByUsername(_ context.Context, _ string) (*account.Account, error) {
 	return nil, nil
 }
-func (r *fakeUserRepoForQuery) FindByEmail(_ context.Context, _ string) (*auth.User, error) {
+func (r *fakeAccountRepoForQuery) FindByEmail(_ context.Context, _ string) (*account.Account, error) {
 	return nil, nil
 }

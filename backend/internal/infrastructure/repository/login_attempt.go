@@ -7,7 +7,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"jcourse/internal/domain/auth"
+	"jcourse/internal/domain/account"
 )
 
 type LoginAttemptRepository struct {
@@ -50,4 +50,4 @@ func (r *LoginAttemptRepository) key(email string) string {
 	return "auth:login_attempts:" + strings.ToLower(email)
 }
 
-var _ auth.LoginAttemptRepository = (*LoginAttemptRepository)(nil)
+var _ account.LoginAttemptRepository = (*LoginAttemptRepository)(nil)

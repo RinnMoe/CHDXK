@@ -4,18 +4,20 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"jcourse/internal/application"
+	"jcourse/internal/domain/account"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/point"
 )
 
 func TestPointCommandService_CreateTransferSenderPaysFee(t *testing.T) {
-	userRepo := newFakeUserRepo()
-	sender := seedFakePointUser(userRepo, 1, "alice@example.edu")
-	seedFakePointUser(userRepo, 2, "bob@example.edu")
+	accountRepo := newFakePointAccountRepo()
+	sender := seedFakePointAccount(accountRepo, 1, "alice@example.edu")
+	seedFakePointAccount(accountRepo, 2, "bob@example.edu")
 	transferRepo := &fakePointTransferRepo{}
-	svc := newPointCommandService(userRepo, transferRepo)
+	svc := newPointCommandService(accountRepo, transferRepo)
 
 	got, err := svc.CreateTransfer(context.Background(), sender, application.CreatePointTransferCommand{
 		RecipientUsername: "bob@example.edu",
@@ -37,10 +39,10 @@ func TestPointCommandService_CreateTransferSenderPaysFee(t *testing.T) {
 }
 
 func TestPointCommandService_CreateTransferRejectsInvalidCases(t *testing.T) {
-	userRepo := newFakeUserRepo()
-	sender := seedFakePointUser(userRepo, 1, "alice@example.edu")
-	seedFakePointUser(userRepo, 2, "bob@example.edu")
-	svc := newPointCommandService(userRepo, &fakePointTransferRepo{})
+	accountRepo := newFakePointAccountRepo()
+	sender := seedFakePointAccount(accountRepo, 1, "alice@example.edu")
+	seedFakePointAccount(accountRepo, 2, "bob@example.edu")
+	svc := newPointCommandService(accountRepo, &fakePointTransferRepo{})
 
 	tests := []struct {
 		name string
@@ -64,15 +66,39 @@ func TestPointCommandService_CreateTransferRejectsInvalidCases(t *testing.T) {
 	}
 }
 
-func newPointCommandService(userRepo *fakeUserRepo, transferRepo point.TransferRepository) *application.PointCommandService {
-	return application.NewPointCommandService(userRepo, transferRepo, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}))
+func newPointCommandService(accountRepo *fakePointAccountRepo, transferRepo point.TransferRepository) *application.PointCommandService {
+	return application.NewPointCommandService(accountRepo, transferRepo, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}))
 }
 
-func seedFakePointUser(repo *fakeUserRepo, id int, email string) *auth.User {
-	u := &auth.User{ID: id, Username: email, Email: email, Role: auth.RoleUser}
-	repo.usersByID[id] = u
-	repo.usersByEmail[email] = u
-	return u
+func seedFakePointAccount(repo *fakePointAccountRepo, id int, email string) *auth.User {
+	acct := &account.Account{ID: id, Username: email, Email: email}
+	repo.accountsByID[id] = acct
+	repo.accountsByUsername[email] = acct
+	return &auth.User{ID: id, Role: auth.RoleUser}
+}
+
+type fakePointAccountRepo struct {
+	accountsByID       map[int]*account.Account
+	accountsByUsername map[string]*account.Account
+}
+
+func newFakePointAccountRepo() *fakePointAccountRepo {
+	return &fakePointAccountRepo{accountsByID: map[int]*account.Account{}, accountsByUsername: map[string]*account.Account{}}
+}
+
+func (r *fakePointAccountRepo) Create(_ context.Context, _ *account.Account) error { return nil }
+func (r *fakePointAccountRepo) Update(_ context.Context, _ *account.Account) error { return nil }
+func (r *fakePointAccountRepo) TouchLastSeen(_ context.Context, _ int, _ time.Time) error {
+	return nil
+}
+func (r *fakePointAccountRepo) FindByID(_ context.Context, id int) (*account.Account, error) {
+	return r.accountsByID[id], nil
+}
+func (r *fakePointAccountRepo) FindByUsername(_ context.Context, username string) (*account.Account, error) {
+	return r.accountsByUsername[username], nil
+}
+func (r *fakePointAccountRepo) FindByEmail(_ context.Context, email string) (*account.Account, error) {
+	return r.accountsByUsername[email], nil
 }
 
 type fakePointTransferRepo struct {

@@ -5,112 +5,136 @@ import (
 	"testing"
 	"time"
 
+	"jcourse/internal/domain/account"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/infrastructure/repository"
 )
 
-func TestUserRepository_Create(t *testing.T) {
+func TestAccountRepository_CreateAndFind(t *testing.T) {
 	db := newTestDB(t)
-	repo := repository.NewUserRepository(db)
+	repo := repository.NewAccountRepository(db)
 	ctx := context.Background()
 
-	u := &auth.User{
+	acct := &account.Account{
 		Username:   "alice",
 		Email:      "alice@example.com",
-		Role:       auth.RoleUser,
 		Password:   "secret",
 		CreatedAt:  time.Now(),
 		LastSeenAt: time.Now(),
 	}
-
-	if err := repo.Create(ctx, u); err != nil {
+	if err := repo.Create(ctx, acct); err != nil {
 		t.Fatalf("Create: %v", err)
 	}
-	if u.ID == 0 {
+	if acct.ID == 0 {
 		t.Fatal("expected non-zero ID after Create")
 	}
 
-	got, err := repo.FindByID(ctx, u.ID)
+	got, err := repo.FindByID(ctx, acct.ID)
 	if err != nil {
 		t.Fatalf("FindByID: %v", err)
 	}
-	if got.Username != u.Username {
-		t.Errorf("Username: got %q, want %q", got.Username, u.Username)
+	if got.Username != acct.Username || got.Email != acct.Email || got.Password != acct.Password {
+		t.Fatalf("account = %+v, want username/email/password from %+v", got, acct)
 	}
-	if got.Email != u.Email {
-		t.Errorf("Email: got %q, want %q", got.Email, u.Email)
+
+	userRepo := repository.NewUserRepository(db)
+	u, err := userRepo.FindByID(ctx, acct.ID)
+	if err != nil {
+		t.Fatalf("FindByID user: %v", err)
 	}
-	if got.Role != u.Role {
-		t.Errorf("Role: got %q, want %q", got.Role, u.Role)
+	if u.Role != auth.RoleUser {
+		t.Fatalf("created user role = %q, want %q", u.Role, auth.RoleUser)
 	}
 }
 
-func TestUserRepository_FindByUsername(t *testing.T) {
+func TestAccountRepository_FindByUsernameAndEmail(t *testing.T) {
 	db := newTestDB(t)
-	repo := repository.NewUserRepository(db)
+	repo := repository.NewAccountRepository(db)
 	ctx := context.Background()
-
 	e := seedUser(t, db)
 
-	got, err := repo.FindByUsername(ctx, e.Username)
+	byUsername, err := repo.FindByUsername(ctx, e.Username)
 	if err != nil {
 		t.Fatalf("FindByUsername: %v", err)
 	}
-	if got.ID != e.ID {
-		t.Errorf("ID: got %d, want %d", got.ID, e.ID)
+	if byUsername.ID != e.ID || byUsername.Username != e.Username {
+		t.Fatalf("by username = %+v, want id=%d username=%q", byUsername, e.ID, e.Username)
 	}
-	if got.Username != e.Username {
-		t.Errorf("Username: got %q, want %q", got.Username, e.Username)
-	}
-}
 
-func TestUserRepository_FindByUsername_NotFound(t *testing.T) {
-	db := newTestDB(t)
-	repo := repository.NewUserRepository(db)
-	ctx := context.Background()
-
-	got, err := repo.FindByUsername(ctx, "nobody")
-	if err != nil {
-		t.Fatalf("FindByUsername: %v", err)
-	}
-	if got != nil {
-		t.Fatalf("FindByUsername got %+v, want nil", got)
-	}
-}
-
-func TestUserRepository_FindByEmail(t *testing.T) {
-	db := newTestDB(t)
-	repo := repository.NewUserRepository(db)
-	ctx := context.Background()
-
-	e := seedUser(t, db)
-
-	got, err := repo.FindByEmail(ctx, e.Email)
+	byEmail, err := repo.FindByEmail(ctx, e.Email)
 	if err != nil {
 		t.Fatalf("FindByEmail: %v", err)
 	}
-	if got.Email != e.Email {
-		t.Errorf("Email: got %q, want %q", got.Email, e.Email)
+	if byEmail.ID != e.ID || byEmail.Email != e.Email {
+		t.Fatalf("by email = %+v, want id=%d email=%q", byEmail, e.ID, e.Email)
 	}
 }
 
-func TestUserRepository_Update(t *testing.T) {
+func TestAccountRepository_NotFound(t *testing.T) {
+	db := newTestDB(t)
+	repo := repository.NewAccountRepository(db)
+	ctx := context.Background()
+
+	got, err := repo.FindByEmail(ctx, "nobody@example.com")
+	if err != nil {
+		t.Fatalf("FindByEmail: %v", err)
+	}
+	if got != nil {
+		t.Fatalf("FindByEmail got %+v, want nil", got)
+	}
+}
+
+func TestAccountRepository_UpdatePasswordAndTouchLastSeen(t *testing.T) {
+	db := newTestDB(t)
+	repo := repository.NewAccountRepository(db)
+	ctx := context.Background()
+	e := seedUser(t, db)
+
+	acct := &account.Account{ID: e.ID, Username: e.Username, Email: e.Email, Password: "new_password", LastSeenAt: e.LastSeenAt.Add(time.Hour)}
+	if err := repo.Update(ctx, acct); err != nil {
+		t.Fatalf("Update: %v", err)
+	}
+
+	got, err := repo.FindByID(ctx, e.ID)
+	if err != nil {
+		t.Fatalf("FindByID: %v", err)
+	}
+	if got.Password != "new_password" {
+		t.Fatalf("password = %q, want new_password", got.Password)
+	}
+
+	newLastSeen := time.Now().Add(2 * time.Hour)
+	if err := repo.TouchLastSeen(ctx, e.ID, newLastSeen); err != nil {
+		t.Fatalf("TouchLastSeen: %v", err)
+	}
+	got, err = repo.FindByID(ctx, e.ID)
+	if err != nil {
+		t.Fatalf("FindByID after touch: %v", err)
+	}
+	if got.LastSeenAt.Before(newLastSeen.Add(-time.Second)) {
+		t.Fatalf("LastSeenAt was not refreshed: got %v, want around %v", got.LastSeenAt, newLastSeen)
+	}
+}
+
+func TestUserRepository_FindByIDAndUpdateAuthFields(t *testing.T) {
 	db := newTestDB(t)
 	repo := repository.NewUserRepository(db)
 	ctx := context.Background()
-
 	e := seedUser(t, db)
 
-	u := &auth.User{
-		ID:         e.ID,
-		Username:   e.Username,
-		Email:      e.Email,
-		Role:       auth.RoleAdmin,
-		Password:   e.Password,
-		CreatedAt:  e.CreatedAt,
-		LastSeenAt: time.Now(),
+	u, err := repo.FindByID(ctx, e.ID)
+	if err != nil {
+		t.Fatalf("FindByID: %v", err)
+	}
+	if u.ID != e.ID || u.Role != e.Role {
+		t.Fatalf("user = %+v, want id=%d role=%q", u, e.ID, e.Role)
 	}
 
+	suspendedAt := time.Now().Add(-time.Hour)
+	suspendTill := time.Now().Add(time.Hour)
+	u.Role = auth.RoleAdmin
+	u.SuspendedAt = &suspendedAt
+	u.SuspendTill = &suspendTill
 	if err := repo.Update(ctx, u); err != nil {
 		t.Fatalf("Update: %v", err)
 	}
@@ -119,85 +143,20 @@ func TestUserRepository_Update(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindByID after update: %v", err)
 	}
-	if got.Role != auth.RoleAdmin {
-		t.Errorf("Role after update: got %q, want %q", got.Role, auth.RoleAdmin)
-	}
-}
-
-func TestUserRepository_UpdateClearsSuspension(t *testing.T) {
-	db := newTestDB(t)
-	repo := repository.NewUserRepository(db)
-	ctx := context.Background()
-
-	e := seedUser(t, db)
-	suspendedAt := time.Now().Add(-2 * time.Hour)
-	suspendTill := time.Now().Add(-time.Hour)
-	u := &auth.User{
-		ID:          e.ID,
-		Username:    e.Username,
-		Email:       e.Email,
-		Role:        e.Role,
-		Password:    e.Password,
-		CreatedAt:   e.CreatedAt,
-		LastSeenAt:  e.LastSeenAt,
-		SuspendedAt: &suspendedAt,
-		SuspendTill: &suspendTill,
-	}
-	if err := repo.Update(ctx, u); err != nil {
-		t.Fatalf("Update suspended user: %v", err)
+	if got.Role != auth.RoleAdmin || got.SuspendedAt == nil || got.SuspendTill == nil {
+		t.Fatalf("updated user = %+v", got)
 	}
 
-	u.ClearSuspension()
-	if err := repo.Update(ctx, u); err != nil {
+	got.ClearSuspension()
+	if err := repo.Update(ctx, got); err != nil {
 		t.Fatalf("Update cleared suspension: %v", err)
 	}
-
-	got, err := repo.FindByID(ctx, e.ID)
+	got, err = repo.FindByID(ctx, e.ID)
 	if err != nil {
-		t.Fatalf("FindByID after clear suspension: %v", err)
+		t.Fatalf("FindByID after clear: %v", err)
 	}
 	if got.SuspendedAt != nil || got.SuspendTill != nil {
-		t.Fatalf("expected suspension fields cleared, got suspended_at=%v suspend_till=%v", got.SuspendedAt, got.SuspendTill)
-	}
-}
-
-func TestUserRepository_TouchLastSeenPreservesSuspension(t *testing.T) {
-	db := newTestDB(t)
-	repo := repository.NewUserRepository(db)
-	ctx := context.Background()
-
-	e := seedUser(t, db)
-	suspendedAt := time.Now().Add(-2 * time.Hour)
-	suspendTill := time.Now().Add(time.Hour)
-	u := &auth.User{
-		ID:          e.ID,
-		Username:    e.Username,
-		Email:       e.Email,
-		Role:        e.Role,
-		Password:    e.Password,
-		CreatedAt:   e.CreatedAt,
-		LastSeenAt:  e.LastSeenAt,
-		SuspendedAt: &suspendedAt,
-		SuspendTill: &suspendTill,
-	}
-	if err := repo.Update(ctx, u); err != nil {
-		t.Fatalf("Update suspended user: %v", err)
-	}
-
-	newLastSeen := time.Now().Add(time.Hour)
-	if err := repo.TouchLastSeen(ctx, e.ID, newLastSeen); err != nil {
-		t.Fatalf("TouchLastSeen: %v", err)
-	}
-
-	got, err := repo.FindByID(ctx, e.ID)
-	if err != nil {
-		t.Fatalf("FindByID after TouchLastSeen: %v", err)
-	}
-	if got.LastSeenAt.Before(newLastSeen.Add(-time.Second)) {
-		t.Fatalf("LastSeenAt was not refreshed: got %v, want around %v", got.LastSeenAt, newLastSeen)
-	}
-	if got.SuspendedAt == nil || got.SuspendTill == nil {
-		t.Fatalf("expected suspension fields preserved, got suspended_at=%v suspend_till=%v", got.SuspendedAt, got.SuspendTill)
+		t.Fatalf("expected suspension cleared, got %+v", got)
 	}
 }
 

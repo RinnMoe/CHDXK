@@ -1,4 +1,4 @@
-package auth
+package account
 
 import (
 	"context"
@@ -14,7 +14,7 @@ type RegistrationConfig struct {
 }
 
 type RegistrationService struct {
-	userRepo  UserRepository
+	userRepo  AccountRepository
 	codes     VerificationCodeRepository
 	sender    VerificationCodeSender
 	hasher    PasswordHasher
@@ -23,7 +23,7 @@ type RegistrationService struct {
 }
 
 func NewRegistrationService(
-	userRepo UserRepository,
+	userRepo AccountRepository,
 	codes VerificationCodeRepository,
 	sender VerificationCodeSender,
 	hasher PasswordHasher,
@@ -80,7 +80,7 @@ func (s *RegistrationService) SendRegisterCode(ctx context.Context, email string
 	return s.sender.SendVerificationCode(ctx, normalized, code)
 }
 
-func (s *RegistrationService) Register(ctx context.Context, email, code, password string) (*User, error) {
+func (s *RegistrationService) Register(ctx context.Context, email, code, password string) (*Account, error) {
 	normalized, err := s.normalizeAllowedEmail(email)
 	if err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ func (s *RegistrationService) Register(ctx context.Context, email, code, passwor
 		return nil, err
 	}
 	now := time.Now()
-	u := NewRegisteredUser(normalized, passwordHash, now)
+	u := NewRegisteredAccount(normalized, passwordHash, now)
 	if err := s.userRepo.Create(ctx, u); err != nil {
 		return nil, err
 	}

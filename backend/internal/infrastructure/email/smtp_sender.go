@@ -7,7 +7,7 @@ import (
 	"gopkg.in/gomail.v2"
 
 	"jcourse/config"
-	"jcourse/internal/domain/auth"
+	"jcourse/internal/domain/account"
 )
 
 type SMTPVerificationCodeSender struct {
@@ -35,4 +35,4 @@ func (s *SMTPVerificationCodeSender) SendVerificationCode(_ context.Context, ema
 	return nil
 }
 
-var _ auth.VerificationCodeSender = (*SMTPVerificationCodeSender)(nil)
+var _ account.VerificationCodeSender = (*SMTPVerificationCodeSender)(nil)

@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"jcourse/internal/domain/auth"
+	"jcourse/internal/domain/account"
 )
 
 type LogVerificationCodeSender struct{}
@@ -18,4 +18,4 @@ func (s *LogVerificationCodeSender) SendVerificationCode(_ context.Context, emai
 	return nil
 }
 
-var _ auth.VerificationCodeSender = (*LogVerificationCodeSender)(nil)
+var _ account.VerificationCodeSender = (*LogVerificationCodeSender)(nil)

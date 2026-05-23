@@ -10,10 +10,10 @@ import (
 )
 
 type clearExpiredSuspensionHandler struct {
-	currentUserService *domainauth.CurrentUserService
+	currentUserService *domainauth.AuthUserService
 }
 
-func newClearExpiredSuspensionHandler(currentUserService *domainauth.CurrentUserService) asynq.Handler {
+func newClearExpiredSuspensionHandler(currentUserService *domainauth.AuthUserService) asynq.Handler {
 	return &clearExpiredSuspensionHandler{currentUserService: currentUserService}
 }
 

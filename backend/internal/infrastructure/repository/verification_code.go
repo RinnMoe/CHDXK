@@ -10,7 +10,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"jcourse/internal/domain/auth"
+	"jcourse/internal/domain/account"
 )
 
 type VerificationCodeRepository struct {
@@ -45,12 +45,12 @@ func (r *VerificationCodeRepository) ReserveSend(ctx context.Context, email stri
 	return ttl, nil
 }
 
-func (r *VerificationCodeRepository) Save(ctx context.Context, code auth.VerificationCode, ttl time.Duration) error {
+func (r *VerificationCodeRepository) Save(ctx context.Context, code account.VerificationCode, ttl time.Duration) error {
 	value := fmt.Sprintf("%s|%d", code.Code, code.ExpiresAt.Unix())
 	return r.client.Set(ctx, r.codeKey(code.Email), value, ttl).Err()
 }
 
-func (r *VerificationCodeRepository) Get(ctx context.Context, email string) (*auth.VerificationCode, error) {
+func (r *VerificationCodeRepository) Get(ctx context.Context, email string) (*account.VerificationCode, error) {
 	value, err := r.client.Get(ctx, r.codeKey(email)).Result()
 	if errors.Is(err, redis.Nil) {
 		return nil, nil
@@ -60,14 +60,14 @@ func (r *VerificationCodeRepository) Get(ctx context.Context, email string) (*au
 	}
 	parts := strings.Split(value, "|")
 	if len(parts) != 2 {
-		return nil, auth.ErrVerificationCodeInvalid
+		return nil, account.ErrVerificationCodeInvalid
 	}
 	expiresAtUnix, err := strconv.ParseInt(parts[1], 10, 64)
 	if err != nil {
 		return nil, err
 	}
 	expiresAt := time.Unix(expiresAtUnix, 0)
-	return &auth.VerificationCode{Email: email, Code: parts[0], ExpiresAt: expiresAt}, nil
+	return &account.VerificationCode{Email: email, Code: parts[0], ExpiresAt: expiresAt}, nil
 }
 
 func (r *VerificationCodeRepository) Delete(ctx context.Context, email string) error {
@@ -82,4 +82,4 @@ func (r *VerificationCodeRepository) cooldownKey(email string) string {
 	return "auth:" + r.keyPrefix + "_code_cooldown:" + strings.ToLower(email)
 }
 
-var _ auth.VerificationCodeRepository = (*VerificationCodeRepository)(nil)
+var _ account.VerificationCodeRepository = (*VerificationCodeRepository)(nil)

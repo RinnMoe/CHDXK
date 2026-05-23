@@ -5,6 +5,7 @@ import (
 
 	"jcourse/config"
 	"jcourse/internal/application"
+	domainaccount "jcourse/internal/domain/account"
 	domainauth "jcourse/internal/domain/auth"
 	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/review"
@@ -24,8 +25,9 @@ type ServiceContainer struct {
 	PointCommand       *application.PointCommandService
 	SiteStatsQuery     *application.SiteStatsQueryService
 	SiteStatsCommand   *application.SiteStatsCommandService
-	AuthCommand        *application.AuthCommandService
-	CurrentUserService *domainauth.CurrentUserService
+	AccountQuery       *application.AccountQueryService
+	AccountCommand     *application.AccountCommandService
+	CurrentUserService *domainauth.AuthUserService
 	AnnouncementQuery  *application.AnnouncementQueryService
 	ApiKeySvc          *domainauth.ApiKeyService
 	ApiKeyQuery        *application.ApiKeyQueryService
@@ -44,6 +46,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	announcementRepo := repository.NewAnnouncementRepository(db)
 	notificationRepo := repository.NewCourseNotificationRepository(db)
 	pointRepo := repository.NewPointRepository(db)
+	accountRepo := repository.NewAccountRepository(db)
 	userRepo := repository.NewUserRepository(db)
 	apiKeyRepo := repository.NewApiKeyRepository(db)
 	statRepo := repository.NewSiteDailyStatRepository(db)
@@ -73,28 +76,31 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	courseCommand := application.NewCourseCommandService(courseRepo, notificationRepo)
 	teacherQuery := application.NewTeacherQueryService(teacherRepo)
 	announcementQuery := application.NewAnnouncementQueryService(announcementRepo)
-	pointQuery := application.NewPointQueryService(pointRepo, userRepo, point.NewTransferService(point.TransferFeeConfig{
+	pointQuery := application.NewPointQueryService(pointRepo, accountRepo, point.NewTransferService(point.TransferFeeConfig{
 		RateBps: conf.Point.TransferFeeRateBps,
 		MinFee:  conf.Point.TransferMinFee,
 	}))
-	pointCommand := application.NewPointCommandService(userRepo, pointRepo, point.NewTransferService(point.TransferFeeConfig{
+	pointCommand := application.NewPointCommandService(accountRepo, pointRepo, point.NewTransferService(point.TransferFeeConfig{
 		RateBps: conf.Point.TransferFeeRateBps,
 		MinFee:  conf.Point.TransferMinFee,
 	}))
 	siteStatsQuery := application.NewSiteStatsQueryService(statRepo)
 	siteStatsCommand := application.NewSiteStatsCommandService(statRepo, statRepo)
-	authCommand := application.NewAuthCommandService(
-		userRepo,
+	currentUserService := domainauth.NewCurrentUserService(userRepo)
+	accountQuery := application.NewAccountQueryService(accountRepo)
+	accountCommand := application.NewAccountCommandService(
+		accountRepo,
+		currentUserService,
 		verificationRepo,
 		resetCodeRepo,
 		email.NewSMTPVerificationCodeSender(conf.SMTP),
-		domainauth.NewDjangoPBKDF2SHA256PasswordHasher(0),
-		application.AuthCommandConfig{
+		domainaccount.NewDjangoPBKDF2SHA256PasswordHasher(0),
+		application.AccountCommandConfig{
 			EmailWhitelist: conf.Auth.EmailWhitelist,
 			CodeInterval:   time.Duration(conf.Auth.VerificationCodeInterval) * time.Second,
 			CodeTTL:        time.Duration(conf.Auth.VerificationCodeTTL) * time.Second,
 		},
-		domainauth.PasswordResetConfig{
+		domainaccount.PasswordResetConfig{
 			CodeInterval: time.Duration(conf.Auth.VerificationCodeInterval) * time.Second,
 			CodeTTL:      time.Duration(conf.Auth.VerificationCodeTTL) * time.Second,
 		},
@@ -102,7 +108,6 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		conf.Auth.MaxLoginAttempts,
 		time.Duration(conf.Auth.LoginLockoutDuration)*time.Second,
 	)
-	currentUserService := domainauth.NewCurrentUserService(userRepo)
 	apiKeySvc := domainauth.NewApiKeyService(apiKeyRepo)
 	apiKeyQuery := application.NewApiKeyQueryService(apiKeySvc)
 	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc)
@@ -117,7 +122,8 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		PointCommand:       pointCommand,
 		SiteStatsQuery:     siteStatsQuery,
 		SiteStatsCommand:   siteStatsCommand,
-		AuthCommand:        authCommand,
+		AccountQuery:       accountQuery,
+		AccountCommand:     accountCommand,
 		CurrentUserService: currentUserService,
 		AnnouncementQuery:  announcementQuery,
 		ApiKeySvc:          apiKeySvc,

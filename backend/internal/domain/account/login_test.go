@@ -1,4 +1,4 @@
-package auth
+package account
 
 import (
 	"context"
@@ -7,16 +7,16 @@ import (
 	"time"
 )
 
-func TestAuthenticationService_LoginLockedAfterMaxAttempts(t *testing.T) {
+func TestLoginService_LoginLockedAfterMaxAttempts(t *testing.T) {
 	hasher := NewDjangoPBKDF2SHA256PasswordHasher(1)
 	password, _ := hasher.Hash("secret")
 	repo := &lockFakeUserRepo{
-		users: map[string]*User{
-			"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: password, Role: RoleUser},
+		users: map[string]*Account{
+			"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: password},
 		},
 	}
 	attempts := &lockFakeAttempts{counts: map[string]int{"alice@example.edu": 5}}
-	svc := NewAuthenticationService(repo, hasher, attempts, 5, 15*time.Minute)
+	svc := NewLoginService(repo, hasher, attempts, 5, 15*time.Minute)
 
 	_, err := svc.Login(context.Background(), "alice@example.edu", "secret")
 	if !errors.Is(err, ErrLoginLocked) {
@@ -24,16 +24,16 @@ func TestAuthenticationService_LoginLockedAfterMaxAttempts(t *testing.T) {
 	}
 }
 
-func TestAuthenticationService_LoginNotLockedWhenBelowMax(t *testing.T) {
+func TestLoginService_LoginNotLockedWhenBelowMax(t *testing.T) {
 	hasher := NewDjangoPBKDF2SHA256PasswordHasher(1)
 	password, _ := hasher.Hash("secret")
 	repo := &lockFakeUserRepo{
-		users: map[string]*User{
-			"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: password, Role: RoleUser},
+		users: map[string]*Account{
+			"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: password},
 		},
 	}
 	attempts := &lockFakeAttempts{counts: map[string]int{"alice@example.edu": 4}}
-	svc := NewAuthenticationService(repo, hasher, attempts, 5, 15*time.Minute)
+	svc := NewLoginService(repo, hasher, attempts, 5, 15*time.Minute)
 
 	u, err := svc.Login(context.Background(), "alice@example.edu", "secret")
 	if err != nil {
@@ -44,16 +44,16 @@ func TestAuthenticationService_LoginNotLockedWhenBelowMax(t *testing.T) {
 	}
 }
 
-func TestAuthenticationService_FailedLoginIncrementsAttempts(t *testing.T) {
+func TestLoginService_FailedLoginIncrementsAttempts(t *testing.T) {
 	hasher := NewDjangoPBKDF2SHA256PasswordHasher(1)
 	password, _ := hasher.Hash("secret")
 	repo := &lockFakeUserRepo{
-		users: map[string]*User{
-			"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: password, Role: RoleUser},
+		users: map[string]*Account{
+			"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: password},
 		},
 	}
 	attempts := &lockFakeAttempts{counts: map[string]int{}}
-	svc := NewAuthenticationService(repo, hasher, attempts, 5, 15*time.Minute)
+	svc := NewLoginService(repo, hasher, attempts, 5, 15*time.Minute)
 
 	_, err := svc.Login(context.Background(), "alice@example.edu", "wrong")
 	if !errors.Is(err, ErrInvalidCredentials) {
@@ -64,16 +64,16 @@ func TestAuthenticationService_FailedLoginIncrementsAttempts(t *testing.T) {
 	}
 }
 
-func TestAuthenticationService_SuccessfulLoginResetsAttempts(t *testing.T) {
+func TestLoginService_SuccessfulLoginResetsAttempts(t *testing.T) {
 	hasher := NewDjangoPBKDF2SHA256PasswordHasher(1)
 	password, _ := hasher.Hash("secret")
 	repo := &lockFakeUserRepo{
-		users: map[string]*User{
-			"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: password, Role: RoleUser},
+		users: map[string]*Account{
+			"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: password},
 		},
 	}
 	attempts := &lockFakeAttempts{counts: map[string]int{"alice@example.edu": 3}}
-	svc := NewAuthenticationService(repo, hasher, attempts, 5, 15*time.Minute)
+	svc := NewLoginService(repo, hasher, attempts, 5, 15*time.Minute)
 
 	_, err := svc.Login(context.Background(), "alice@example.edu", "secret")
 	if err != nil {
@@ -84,16 +84,16 @@ func TestAuthenticationService_SuccessfulLoginResetsAttempts(t *testing.T) {
 	}
 }
 
-func TestAuthenticationService_NoLockoutWhenMaxAttemptsZero(t *testing.T) {
+func TestLoginService_NoLockoutWhenMaxAttemptsZero(t *testing.T) {
 	hasher := NewDjangoPBKDF2SHA256PasswordHasher(1)
 	password, _ := hasher.Hash("secret")
 	repo := &lockFakeUserRepo{
-		users: map[string]*User{
-			"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: password, Role: RoleUser},
+		users: map[string]*Account{
+			"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: password},
 		},
 	}
 	attempts := &lockFakeAttempts{counts: map[string]int{"alice@example.edu": 999}}
-	svc := NewAuthenticationService(repo, hasher, attempts, 0, 15*time.Minute)
+	svc := NewLoginService(repo, hasher, attempts, 0, 15*time.Minute)
 
 	u, err := svc.Login(context.Background(), "alice@example.edu", "secret")
 	if err != nil {
@@ -104,15 +104,15 @@ func TestAuthenticationService_NoLockoutWhenMaxAttemptsZero(t *testing.T) {
 	}
 }
 
-func TestAuthenticationService_LockoutTriggersOnNthFailure(t *testing.T) {
+func TestLoginService_LockoutTriggersOnNthFailure(t *testing.T) {
 	hasher := NewDjangoPBKDF2SHA256PasswordHasher(1)
 	repo := &lockFakeUserRepo{
-		users: map[string]*User{
-			"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: "irrelevant", Role: RoleUser},
+		users: map[string]*Account{
+			"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: "irrelevant"},
 		},
 	}
 	attempts := &lockFakeAttempts{counts: map[string]int{}}
-	svc := NewAuthenticationService(repo, hasher, attempts, 3, 15*time.Minute)
+	svc := NewLoginService(repo, hasher, attempts, 3, 15*time.Minute)
 	ctx := context.Background()
 
 	for i := 1; i <= 3; i++ {
@@ -128,31 +128,31 @@ func TestAuthenticationService_LockoutTriggersOnNthFailure(t *testing.T) {
 	}
 }
 
-// --- fakes for authentication lockout tests ---
+// --- fakes for login lockout tests ---
 
 type lockFakeUserRepo struct {
-	users map[string]*User
+	users map[string]*Account
 }
 
-func (r *lockFakeUserRepo) Create(_ context.Context, u *User) error {
+func (r *lockFakeUserRepo) Create(_ context.Context, u *Account) error {
 	r.users[u.Email] = u
 	return nil
 }
 
-func (r *lockFakeUserRepo) Update(_ context.Context, u *User) error {
+func (r *lockFakeUserRepo) Update(_ context.Context, u *Account) error {
 	r.users[u.Email] = u
 	return nil
 }
 
 func (r *lockFakeUserRepo) TouchLastSeen(_ context.Context, _ int, _ time.Time) error { return nil }
 
-func (r *lockFakeUserRepo) FindByID(_ context.Context, _ int) (*User, error) { return nil, nil }
+func (r *lockFakeUserRepo) FindByID(_ context.Context, _ int) (*Account, error) { return nil, nil }
 
-func (r *lockFakeUserRepo) FindByUsername(_ context.Context, _ string) (*User, error) {
+func (r *lockFakeUserRepo) FindByUsername(_ context.Context, _ string) (*Account, error) {
 	return nil, nil
 }
 
-func (r *lockFakeUserRepo) FindByEmail(_ context.Context, email string) (*User, error) {
+func (r *lockFakeUserRepo) FindByEmail(_ context.Context, email string) (*Account, error) {
 	u, ok := r.users[email]
 	if !ok {
 		return nil, nil

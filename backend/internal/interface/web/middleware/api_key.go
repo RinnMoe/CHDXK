@@ -35,7 +35,7 @@ func SystemAPIKeyAuth(apiKeySvc *auth.ApiKeyService) gin.HandlerFunc {
 	}
 }
 
-func UserAPIKeyAuth(apiKeySvc *auth.ApiKeyService, currentUserSvc *auth.CurrentUserService) gin.HandlerFunc {
+func UserAPIKeyAuth(apiKeySvc *auth.ApiKeyService, currentUserSvc *auth.AuthUserService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		apiKey, ok := authenticateAPIKey(c, apiKeySvc)
 		if !ok {

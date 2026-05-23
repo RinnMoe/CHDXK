@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"jcourse/internal/domain/account"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/point"
 )
@@ -25,21 +26,29 @@ type CreatePointTransferCommand struct {
 }
 
 type PointCommandService struct {
-	userRepo        auth.UserRepository
+	accountRepo     account.AccountRepository
 	transferRepo    point.TransferRepository
 	transferService *point.TransferService
 }
 
-func NewPointCommandService(userRepo auth.UserRepository, transferRepo point.TransferRepository, transferService *point.TransferService) *PointCommandService {
+func NewPointCommandService(accountRepo account.AccountRepository, transferRepo point.TransferRepository, transferService *point.TransferService) *PointCommandService {
 	return &PointCommandService{
-		userRepo:        userRepo,
+		accountRepo:     accountRepo,
 		transferRepo:    transferRepo,
 		transferService: transferService,
 	}
 }
 
 func (s *PointCommandService) CreateTransfer(ctx context.Context, sender *auth.User, cmd CreatePointTransferCommand) (*PointTransferDTO, error) {
-	recipient, err := s.userRepo.FindByUsername(ctx, strings.TrimSpace(cmd.RecipientUsername))
+	senderAccount, err := s.accountRepo.FindByID(ctx, sender.ID)
+	if err != nil {
+		return nil, err
+	}
+	if senderAccount == nil {
+		return nil, ErrPointTransferRecipientNotFound
+	}
+
+	recipient, err := s.accountRepo.FindByUsername(ctx, strings.TrimSpace(cmd.RecipientUsername))
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +58,7 @@ func (s *PointCommandService) CreateTransfer(ctx context.Context, sender *auth.U
 
 	now := time.Now()
 	transfer, senderRecord, recipientRecord, err := s.transferService.NewTransfer(
-		point.UserRef{ID: sender.ID, Username: sender.Username},
+		point.UserRef{ID: sender.ID, Username: senderAccount.Username},
 		point.UserRef{ID: recipient.ID, Username: recipient.Username},
 		cmd.Amount,
 		cmd.FeePayer,

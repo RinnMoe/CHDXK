@@ -14,7 +14,7 @@ func TestCurrentUserService_GetUserRejectsSuspendedUser(t *testing.T) {
 	nowTime := time.Now()
 	suspendedAt := nowTime.Add(-time.Hour)
 	suspendTill := nowTime.Add(time.Hour)
-	repo.users[1] = &User{ID: 1, Email: "alice@example.edu", SuspendedAt: &suspendedAt, SuspendTill: &suspendTill}
+	repo.users[1] = &User{ID: 1, SuspendedAt: &suspendedAt, SuspendTill: &suspendTill}
 
 	_, err := NewCurrentUserService(repo).GetUser(context.Background(), 1)
 	if !errors.Is(err, ErrUserSuspended) {
@@ -30,7 +30,7 @@ func TestCurrentUserService_GetUserEnqueuesCleanupForExpiredSuspension(t *testin
 	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
 	suspendedAt := nowTime.Add(-2 * time.Hour)
 	suspendTill := nowTime.Add(-time.Hour)
-	repo.users[1] = &User{ID: 1, Email: "alice@example.edu", SuspendedAt: &suspendedAt, SuspendTill: &suspendTill}
+	repo.users[1] = &User{ID: 1, SuspendedAt: &suspendedAt, SuspendTill: &suspendTill}
 
 	u, err := NewCurrentUserService(repo).GetUser(context.Background(), 1)
 	if err != nil {
@@ -52,23 +52,9 @@ func newCurrentUserServiceFakeRepo() *currentUserServiceFakeRepo {
 	return &currentUserServiceFakeRepo{users: map[int]*User{}}
 }
 
-func (r *currentUserServiceFakeRepo) Create(_ context.Context, u *User) error {
-	r.users[u.ID] = u
-	return nil
-}
-
 func (r *currentUserServiceFakeRepo) Update(_ context.Context, u *User) error {
 	copy := *u
 	r.users[u.ID] = &copy
-	return nil
-}
-
-func (r *currentUserServiceFakeRepo) TouchLastSeen(_ context.Context, userID int, at time.Time) error {
-	u, ok := r.users[userID]
-	if !ok {
-		return errors.New("user not found")
-	}
-	u.LastSeenAt = at
 	return nil
 }
 
@@ -89,23 +75,3 @@ func (f *fakeEnqueuer) Enqueue(context.Context, task.Task, ...task.EnqueueOption
 }
 
 var taskEnqueuer *fakeEnqueuer
-
-func (r *currentUserServiceFakeRepo) FindByUsername(_ context.Context, username string) (*User, error) {
-	for _, u := range r.users {
-		if u.Username == username {
-			copy := *u
-			return &copy, nil
-		}
-	}
-	return nil, nil
-}
-
-func (r *currentUserServiceFakeRepo) FindByEmail(_ context.Context, email string) (*User, error) {
-	for _, u := range r.users {
-		if u.Email == email {
-			copy := *u
-			return &copy, nil
-		}
-	}
-	return nil, nil
-}

@@ -1,4 +1,4 @@
-package auth
+package account
 
 import (
 	"context"
@@ -13,7 +13,7 @@ type PasswordResetConfig struct {
 }
 
 type PasswordResetService struct {
-	userRepo UserRepository
+	userRepo AccountRepository
 	codes    VerificationCodeRepository
 	sender   VerificationCodeSender
 	hasher   PasswordHasher
@@ -21,7 +21,7 @@ type PasswordResetService struct {
 }
 
 func NewPasswordResetService(
-	userRepo UserRepository,
+	userRepo AccountRepository,
 	codes VerificationCodeRepository,
 	sender VerificationCodeSender,
 	hasher PasswordHasher,

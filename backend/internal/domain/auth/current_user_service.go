@@ -4,15 +4,15 @@ import (
 	"context"
 )
 
-type CurrentUserService struct {
+type AuthUserService struct {
 	userRepo UserRepository
 }
 
-func NewCurrentUserService(userRepo UserRepository) *CurrentUserService {
-	return &CurrentUserService{userRepo: userRepo}
+func NewCurrentUserService(userRepo UserRepository) *AuthUserService {
+	return &AuthUserService{userRepo: userRepo}
 }
 
-func (s *CurrentUserService) GetUser(ctx context.Context, id int) (*User, error) {
+func (s *AuthUserService) GetUser(ctx context.Context, id int) (*User, error) {
 	u, err := s.userRepo.FindByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -26,7 +26,7 @@ func (s *CurrentUserService) GetUser(ctx context.Context, id int) (*User, error)
 	return u, nil
 }
 
-func (s *CurrentUserService) ClearExpiredSuspension(ctx context.Context, userID int) error {
+func (s *AuthUserService) ClearExpiredSuspension(ctx context.Context, userID int) error {
 	u, err := s.userRepo.FindByID(ctx, userID)
 	if err != nil {
 		return err

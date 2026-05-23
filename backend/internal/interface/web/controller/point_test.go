@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"jcourse/internal/application"
+	"jcourse/internal/domain/account"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/point"
 	"jcourse/internal/interface/web/controller"
@@ -36,7 +37,7 @@ func TestPointController_GetUserPointsAuth(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := &pointControllerFakeQuery{}
 			cmd := newPointControllerCommand()
-			ctrl := controller.NewPointController(application.NewPointQueryService(repo, &pointControllerFakeUserRepo{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1})), cmd)
+			ctrl := controller.NewPointController(application.NewPointQueryService(repo, &pointControllerFakeAccountRepo{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1})), cmd)
 			r := gin.New()
 			r.GET("/api/user/:userID/points", func(c *gin.Context) {
 				if tt.current != nil {
@@ -59,7 +60,7 @@ func TestPointController_GetUserPointsAuth(t *testing.T) {
 func TestPointController_PreviewAndCreateTransfer(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	command := newPointControllerCommand()
-	ctrl := controller.NewPointController(application.NewPointQueryService(&pointControllerFakeQuery{}, &pointControllerFakeUserRepo{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1})), command)
+	ctrl := controller.NewPointController(application.NewPointQueryService(&pointControllerFakeQuery{}, &pointControllerFakeAccountRepo{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1})), command)
 	r := gin.New()
 	r.POST("/api/point/transfers/preview", func(c *gin.Context) {
 		c.Request = c.Request.WithContext(auth.WithUser(c.Request.Context(), &auth.User{ID: 1, Role: auth.RoleUser}))
@@ -100,32 +101,39 @@ func (q *pointControllerFakeQuery) FindRecordsByUser(_ context.Context, filter p
 
 func newPointControllerCommand() *application.PointCommandService {
 	return application.NewPointCommandService(
-		&pointControllerFakeUserRepo{usersByUsername: map[string]*auth.User{
-			"bob@example.edu": &auth.User{ID: 2, Username: "bob@example.edu", Email: "bob@example.edu", Role: auth.RoleUser},
+		&pointControllerFakeAccountRepo{accountsByID: map[int]*account.Account{
+			1: {ID: 1, Username: "alice@example.edu", Email: "alice@example.edu"},
+		}, accountsByUsername: map[string]*account.Account{
+			"bob@example.edu": {ID: 2, Username: "bob@example.edu", Email: "bob@example.edu"},
 		}},
 		&pointControllerFakeTransferRepo{},
 		point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}),
 	)
 }
 
-type pointControllerFakeUserRepo struct {
-	usersByUsername map[string]*auth.User
-	usersByEmail    map[string]*auth.User
+type pointControllerFakeAccountRepo struct {
+	accountsByID       map[int]*account.Account
+	accountsByUsername map[string]*account.Account
+	accountsByEmail    map[string]*account.Account
 }
 
-func (r *pointControllerFakeUserRepo) Create(_ context.Context, _ *auth.User) error { return nil }
-func (r *pointControllerFakeUserRepo) Update(_ context.Context, _ *auth.User) error { return nil }
-func (r *pointControllerFakeUserRepo) TouchLastSeen(_ context.Context, _ int, _ time.Time) error {
+func (r *pointControllerFakeAccountRepo) Create(_ context.Context, _ *account.Account) error {
 	return nil
 }
-func (r *pointControllerFakeUserRepo) FindByID(_ context.Context, _ int) (*auth.User, error) {
-	return nil, nil
+func (r *pointControllerFakeAccountRepo) Update(_ context.Context, _ *account.Account) error {
+	return nil
 }
-func (r *pointControllerFakeUserRepo) FindByUsername(_ context.Context, username string) (*auth.User, error) {
-	return r.usersByUsername[username], nil
+func (r *pointControllerFakeAccountRepo) TouchLastSeen(_ context.Context, _ int, _ time.Time) error {
+	return nil
 }
-func (r *pointControllerFakeUserRepo) FindByEmail(_ context.Context, email string) (*auth.User, error) {
-	return r.usersByEmail[email], nil
+func (r *pointControllerFakeAccountRepo) FindByID(_ context.Context, id int) (*account.Account, error) {
+	return r.accountsByID[id], nil
+}
+func (r *pointControllerFakeAccountRepo) FindByUsername(_ context.Context, username string) (*account.Account, error) {
+	return r.accountsByUsername[username], nil
+}
+func (r *pointControllerFakeAccountRepo) FindByEmail(_ context.Context, email string) (*account.Account, error) {
+	return r.accountsByEmail[email], nil
 }
 
 type pointControllerFakeTransferRepo struct{}
@@ -142,13 +150,13 @@ func TestPointController_GetPointsByEmail(t *testing.T) {
 	fakeQuery := &pointControllerFakeQueryWithEmail{
 		balances: map[int]int{1: 42},
 	}
-	fakeUserRepo := &pointControllerFakeUserRepo{
-		usersByEmail: map[string]*auth.User{
-			email: {ID: 1, Email: email, Role: auth.RoleUser},
+	fakeAccountRepo := &pointControllerFakeAccountRepo{
+		accountsByEmail: map[string]*account.Account{
+			email: {ID: 1, Email: email},
 		},
 	}
 	ctrl := controller.NewPointController(
-		application.NewPointQueryService(fakeQuery, fakeUserRepo, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1})),
+		application.NewPointQueryService(fakeQuery, fakeAccountRepo, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1})),
 		newPointControllerCommand(),
 	)
 
