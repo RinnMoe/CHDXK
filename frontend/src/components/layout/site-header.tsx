@@ -1,8 +1,19 @@
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useState } from "react"
-import { RiMenuLine } from "@remixicon/react"
+import { RiMenuLine, RiSearchLine } from "@remixicon/react"
 import { UserMenu } from "@/components/auth/user-menu"
 import { Button } from "@/components/ui/button"
+import {
+  Command,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { brand } from "@/config/brand"
 import {
   Sheet,
@@ -37,6 +48,72 @@ const navItems = [
   },
 ]
 
+const searchTargets = [
+  { label: "课程", path: "/courses" },
+  { label: "教师", path: "/teachers" },
+  { label: "点评", path: "/reviews" },
+]
+
+function HeaderSearch() {
+  const navigate = useNavigate()
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState("")
+  const keyword = query.trim()
+
+  function go(path: string) {
+    if (!keyword) return
+
+    navigate(`${path}?${new URLSearchParams({ q: keyword }).toString()}`)
+    setOpen(false)
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-expanded={open}
+        >
+          <RiSearchLine />
+          <span className="sr-only">搜索</span>
+        </Button>
+      </PopoverTrigger>
+
+      <PopoverContent
+        align="end"
+        sideOffset={8}
+        className="w-[min(calc(100vw-2rem),20rem)]"
+      >
+        <Command shouldFilter={false} loop>
+          <CommandInput
+            autoFocus
+            aria-label="搜索关键词"
+            placeholder="搜索..."
+            value={query}
+            onValueChange={setQuery}
+          />
+
+          {keyword && (
+            <CommandList>
+              {searchTargets.map((target) => (
+                <CommandItem
+                  key={target.path}
+                  value={target.path}
+                  onSelect={() => go(target.path)}
+                >
+                  搜索 "{keyword}" {target.label}
+                </CommandItem>
+              ))}
+            </CommandList>
+          )}
+        </Command>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 export function SiteHeader() {
   const { pathname } = useLocation()
   const [open, setOpen] = useState(false)
@@ -69,6 +146,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          <HeaderSearch />
           <UserMenu />
 
           {/* Mobile menu trigger */}

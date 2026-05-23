@@ -18,7 +18,7 @@ export function HomePage() {
         <div className="space-y-6 lg:flex lg:gap-8 lg:space-y-0">
           <div className="min-w-0 flex-1 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">点评</h2>
+              <h2 className="text-lg font-semibold">最新点评</h2>
               <Link
                 to="/reviews"
                 className="text-sm text-muted-foreground transition-colors hover:text-foreground"
