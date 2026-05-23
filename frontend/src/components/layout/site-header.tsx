@@ -75,6 +75,8 @@ function HeaderSearch() {
           variant="ghost"
           size="icon-sm"
           aria-expanded={open}
+          aria-label="搜索"
+          data-shortcut-target="site-search"
         >
           <RiSearchLine />
           <span className="sr-only">搜索</span>
