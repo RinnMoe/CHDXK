@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { RiShareForwardLine, RiWrenchLine } from "@remixicon/react"
+import { RiShareLine, RiWrenchLine } from "@remixicon/react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -254,16 +254,14 @@ export function ReviewCard({
           content={review.content}
         />
 
-        <div className="flex items-center justify-between gap-2">
-          {showVoteButtons ? (
+        <div className="flex items-center justify-start gap-1">
+          {showVoteButtons && (
             <VoteButtons
               reviewID={review.id}
               likeCount={review.vote.like_count}
               dislikeCount={review.vote.dislike_count}
               myVote={review.vote.my_vote}
             />
-          ) : (
-            <span />
           )}
 
           <div className="flex items-center gap-1">
@@ -272,11 +270,11 @@ export function ReviewCard({
               variant="ghost"
               size="sm"
               onClick={handleShare}
-              className="gap-1 text-muted-foreground"
+              className="gap-1 hover:text-inherit"
               aria-label="复制点评链接"
               title="复制点评链接"
             >
-              <RiShareForwardLine data-icon="inline-start" />
+              <RiShareLine data-icon="inline-start" />
               {copied && <span className="text-sm">已复制</span>}
             </Button>
             {canManage && (
@@ -284,8 +282,8 @@ export function ReviewCard({
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    size="icon"
-                    className="size-8 text-muted-foreground"
+                    size="sm"
+                    className="size-8 hover:text-inherit"
                   >
                     <RiWrenchLine className="size-4" />
                   </Button>
