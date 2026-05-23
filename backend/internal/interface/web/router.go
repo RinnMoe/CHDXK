@@ -18,7 +18,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		panic(err)
 	}
 	g.Use(sessions.Sessions("jcourse_session", store))
-	g.Use(middleware.OptionalAuth(container.CurrentUserService))
+	g.Use(middleware.OptionalAuth(container.AuthUserService))
 	g.Use(middleware.UserIDRateLimit())
 
 	reviewController := controller.NewReviewController(container.ReviewQuery, container.ReviewCommand)
@@ -31,15 +31,26 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	announcementController := controller.NewAnnouncementController(container.AnnouncementQuery)
 
 	apiGroup := g.Group("/api")
+	publicAuthGroup := apiGroup.Group("/auth")
+	{
+		publicAuthGroup.POST("/register/code", accountController.SendRegisterCode)
+		publicAuthGroup.POST("/register", accountController.Register)
+		publicAuthGroup.POST("/login", accountController.Login)
+		publicAuthGroup.POST("/password-reset/code", accountController.SendResetCode)
+		publicAuthGroup.POST("/password-reset", accountController.ResetPassword)
+	}
+
+	extGroup := apiGroup.Group("/ext", middleware.SystemAPIKeyAuth(container.ApiKeySvc))
+	{
+		extGroup.GET("/points", pointController.GetPointsByEmail)
+	}
+
+	apiGroup.Use(middleware.Auth(container.AuthUserService))
+
 	authGroup := apiGroup.Group("/auth")
 	{
-		authGroup.POST("/register/code", accountController.SendRegisterCode)
-		authGroup.POST("/register", accountController.Register)
-		authGroup.POST("/login", accountController.Login)
 		authGroup.POST("/logout", accountController.Logout)
 		authGroup.GET("/me", accountController.Me)
-		authGroup.POST("/password-reset/code", accountController.SendResetCode)
-		authGroup.POST("/password-reset", accountController.ResetPassword)
 	}
 	courseGroup := apiGroup.Group("/course")
 	{
@@ -77,7 +88,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		userGroup.GET("/:userID/points", pointController.GetUserPoints)
 		userGroup.GET("/:userID/reviews", reviewController.ListUserReviews)
 	}
-	apiKeyGroup := apiGroup.Group("/api-keys", middleware.Auth(container.CurrentUserService))
+	apiKeyGroup := apiGroup.Group("/api-keys")
 	{
 		apiKeyGroup.GET("/", apiKeyController.ListMyApiKeys)
 		apiKeyGroup.POST("/", apiKeyController.CreateMyApiKey)
@@ -96,11 +107,6 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	announcementGroup := apiGroup.Group("/announcement")
 	{
 		announcementGroup.GET("/", announcementController.ListAnnouncements)
-	}
-
-	extGroup := apiGroup.Group("/ext", middleware.SystemAPIKeyAuth(container.ApiKeySvc))
-	{
-		extGroup.GET("/points", pointController.GetPointsByEmail)
 	}
 
 	return g

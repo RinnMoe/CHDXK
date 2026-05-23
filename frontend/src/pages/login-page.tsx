@@ -1,5 +1,6 @@
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { AboutAgreementExcerpt } from "@/components/about/about-content"
 import { LoginForm } from "@/components/auth/login-form"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
@@ -15,15 +16,16 @@ export function LoginPage() {
     }
   }, [user, isLoading, navigate])
 
-  if (isLoading) return null
+  if (isLoading || user) return null
 
   return (
     <>
       <PageTitle>登录</PageTitle>
-      <PageShell>
+      <PageShell showAnnouncements={false}>
         <div className="flex justify-center">
           <LoginForm />
         </div>
+        <AboutAgreementExcerpt />
       </PageShell>
     </>
   )

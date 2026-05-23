@@ -1,6 +1,8 @@
 import { lazy, type ComponentType } from "react"
-import { createBrowserRouter } from "react-router-dom"
+import { Navigate, Outlet, createBrowserRouter } from "react-router-dom"
 import { Layout } from "@/components/layout/layout"
+import { PublicLayout } from "@/components/layout/public-layout"
+import { useAuth } from "@/contexts/auth-context"
 
 function lazyNamedPage<TModule extends Record<string, ComponentType>>(
   loader: () => Promise<TModule>,
@@ -11,6 +13,20 @@ function lazyNamedPage<TModule extends Record<string, ComponentType>>(
       default: module[exportName],
     }))
   )
+}
+
+function RequireAuth() {
+  const { user, isLoading } = useAuth()
+
+  if (isLoading) {
+    return null
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />
+  }
+
+  return <Outlet />
 }
 
 const HomePage = lazyNamedPage(() => import("@/pages/home-page"), "HomePage")
@@ -92,30 +108,40 @@ const NotFoundPage = lazyNamedPage(
 
 export const router = createBrowserRouter([
   {
-    element: <Layout />,
+    element: <PublicLayout />,
     children: [
-      { path: "/", element: <HomePage /> },
-      { path: "/courses", element: <CoursesPage /> },
-      { path: "/courses/hot", element: <HotCoursesPage /> },
-      { path: "/courses/:courseID", element: <CourseDetailPage /> },
-      { path: "/courses/:courseID/review/new", element: <NewReviewPage /> },
-      { path: "/reviews", element: <ReviewsPage /> },
-      { path: "/reviews/followed", element: <FollowedReviewsPage /> },
-      { path: "/reviews/mine", element: <UserReviewsPage /> },
-      { path: "/courses/mine", element: <UserCoursesPage /> },
-      { path: "/reviews/:reviewID", element: <ReviewDetailPage /> },
-      { path: "/reviews/:reviewID/edit", element: <EditReviewPage /> },
-      { path: "/teachers", element: <TeachersPage /> },
-      { path: "/teachers/:teacherID", element: <TeacherDetailPage /> },
       { path: "/login", element: <LoginPage /> },
       { path: "/register", element: <RegisterPage /> },
       { path: "/password-reset", element: <PasswordResetPage /> },
-      { path: "/points", element: <UserPointsPage /> },
-      { path: "/api-keys", element: <ApiKeysPage /> },
-      { path: "/admin/site-stats", element: <SiteStatsPage /> },
-      { path: "/about", element: <AboutPage /> },
-      { path: "/faq", element: <FaqPage /> },
-      { path: "*", element: <NotFoundPage /> },
+    ],
+  },
+  {
+    element: <RequireAuth />,
+    children: [
+      {
+        element: <Layout />,
+        children: [
+          { path: "/", element: <HomePage /> },
+          { path: "/courses", element: <CoursesPage /> },
+          { path: "/courses/hot", element: <HotCoursesPage /> },
+          { path: "/courses/:courseID", element: <CourseDetailPage /> },
+          { path: "/courses/:courseID/review/new", element: <NewReviewPage /> },
+          { path: "/reviews", element: <ReviewsPage /> },
+          { path: "/reviews/followed", element: <FollowedReviewsPage /> },
+          { path: "/reviews/mine", element: <UserReviewsPage /> },
+          { path: "/courses/mine", element: <UserCoursesPage /> },
+          { path: "/reviews/:reviewID", element: <ReviewDetailPage /> },
+          { path: "/reviews/:reviewID/edit", element: <EditReviewPage /> },
+          { path: "/teachers", element: <TeachersPage /> },
+          { path: "/teachers/:teacherID", element: <TeacherDetailPage /> },
+          { path: "/points", element: <UserPointsPage /> },
+          { path: "/api-keys", element: <ApiKeysPage /> },
+          { path: "/admin/site-stats", element: <SiteStatsPage /> },
+          { path: "/about", element: <AboutPage /> },
+          { path: "/faq", element: <FaqPage /> },
+          { path: "*", element: <NotFoundPage /> },
+        ],
+      },
     ],
   },
 ])

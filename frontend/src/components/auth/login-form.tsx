@@ -1,14 +1,16 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
+import { EmailPrefixInput } from "@/components/auth/email-prefix-input"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { buildAuthEmail } from "@/config/auth"
 import { useAuth } from "@/contexts/auth-context"
 
 export function LoginForm() {
   const { login } = useAuth()
-  const [email, setEmail] = useState("")
+  const [emailPrefix, setEmailPrefix] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -16,7 +18,8 @@ export function LoginForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-    if (!email || !password) {
+    const email = buildAuthEmail(emailPrefix)
+    if (!emailPrefix.trim() || !password) {
       setError("请填写邮箱和密码")
       return
     }
@@ -36,17 +39,12 @@ export function LoginForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">邮箱</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-            />
-          </div>
+          <EmailPrefixInput
+            id="email"
+            label="邮箱"
+            value={emailPrefix}
+            onChange={setEmailPrefix}
+          />
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">密码</Label>

@@ -15,12 +15,12 @@ export function PasswordResetPage() {
     }
   }, [user, isLoading, navigate])
 
-  if (isLoading) return null
+  if (isLoading || user) return null
 
   return (
     <>
       <PageTitle>重置密码</PageTitle>
-      <PageShell>
+      <PageShell showAnnouncements={false}>
         <div className="flex justify-center">
           <PasswordResetForm />
         </div>

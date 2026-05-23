@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { RiCloseLine, RiInformationLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/contexts/auth-context"
 import { useAnnouncements } from "@/hooks/use-announcement"
 
 const STORAGE_KEY = "jcourse:dismissed-announcements"
@@ -24,8 +25,11 @@ function persistDismissed(ids: Set<number>) {
 }
 
 export function AnnouncementBanner() {
-  const { data } = useAnnouncements()
+  const { user, isLoading } = useAuth()
+  const { data } = useAnnouncements(Boolean(user))
   const [dismissed, setDismissed] = useState(() => getDismissed())
+
+  if (isLoading || !user) return null
 
   const visible = (data ?? []).filter((a) => !dismissed.has(a.id))
   if (visible.length === 0) return null

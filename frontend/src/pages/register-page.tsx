@@ -15,12 +15,12 @@ export function RegisterPage() {
     }
   }, [user, isLoading, navigate])
 
-  if (isLoading) return null
+  if (isLoading || user) return null
 
   return (
     <>
       <PageTitle>注册</PageTitle>
-      <PageShell>
+      <PageShell showAnnouncements={false}>
         <div className="flex justify-center">
           <RegisterForm />
         </div>
