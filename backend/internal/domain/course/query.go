@@ -56,6 +56,8 @@ type CourseDetailView struct {
 	Department        string
 	MainTeacherID     int
 	MainTeacher       *teacher.TeacherView
+	LastSemester      string
+	TeacherIDs        []int
 	Categories        []string
 	Language          string
 	TargetYears       []string

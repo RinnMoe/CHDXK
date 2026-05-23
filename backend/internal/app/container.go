@@ -69,7 +69,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		},
 		[]review.CreatePolicy{freqPolicy, safetyPolicy},
 	)
-	courseQuery := application.NewCourseQueryService(courseRepo, reviewRepo, notificationRepo, courseHotRepo)
+	courseQuery := application.NewCourseQueryService(courseRepo, teacherRepo, reviewRepo, notificationRepo, courseHotRepo)
 	courseCommand := application.NewCourseCommandService(courseRepo, notificationRepo)
 	teacherQuery := application.NewTeacherQueryService(teacherRepo)
 	announcementQuery := application.NewAnnouncementQueryService(announcementRepo)

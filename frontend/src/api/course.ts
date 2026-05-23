@@ -58,10 +58,12 @@ export interface CourseDetailDTO {
   name: string
   credit: number
   department: string
+  last_semester: string
   language: string
   target_years: string[]
   categories: string[]
   main_teacher: TeacherDTO
+  teacher_group?: TeacherDTO[]
   offered_courses: OfferedCourseDTO[]
   rating: RatingInfoDTO
   same_code_courses: CourseListItemDTO[]

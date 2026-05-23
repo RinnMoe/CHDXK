@@ -22,6 +22,10 @@ type fakeHotCourseRepo struct {
 	ranks []course.HotCourseRank
 }
 
+type fakeTeacherQuery struct {
+	views map[int]teacher.TeacherView
+}
+
 func (r *fakeHotCourseRepo) AddScore(ctx context.Context, courseID int, score int64, at time.Time) error {
 	return nil
 }
@@ -38,6 +42,25 @@ func newFakeCourseQuery() *fakeCourseQuery {
 		details: make(map[int]*course.CourseDetailView),
 		views:   make(map[int]course.CourseView),
 	}
+}
+
+func newFakeTeacherQuery() *fakeTeacherQuery {
+	return &fakeTeacherQuery{views: make(map[int]teacher.TeacherView)}
+}
+
+func (q *fakeTeacherQuery) FindBy(ctx context.Context, filter teacher.TeacherFilter) ([]teacher.TeacherView, int64, error) {
+	var results []teacher.TeacherView
+	for id, v := range q.views {
+		if len(filter.TeacherIDs) > 0 && !slices.Contains(filter.TeacherIDs, id) {
+			continue
+		}
+		results = append(results, v)
+	}
+	return results, int64(len(results)), nil
+}
+
+func (q *fakeTeacherQuery) GetFilters(ctx context.Context) (*teacher.TeacherFilters, error) {
+	return &teacher.TeacherFilters{}, nil
 }
 
 func (q *fakeCourseQuery) FindBy(ctx context.Context, filter course.CourseFilter) ([]course.CourseView, int64, error) {
@@ -95,7 +118,7 @@ func TestCourseQueryService_GetCourseDetail_WithUser(t *testing.T) {
 	}
 	notifRepo := newFakeNotificationRepo()
 	notifRepo.SetLevel(context.Background(), 100, 1, course.NotificationLevelFollow)
-	svc := application.NewCourseQueryService(query, newFakeReviewQuery(), notifRepo, nil)
+	svc := application.NewCourseQueryService(query, nil, newFakeReviewQuery(), notifRepo, nil)
 	ctx := context.Background()
 
 	user := &auth.User{ID: 100}
@@ -122,7 +145,7 @@ func TestCourseQueryService_GetCourseDetail_WithMyReview(t *testing.T) {
 		{ID: 11, CourseID: 1, UserID: 101, Rating: 3, Content: "一般"},
 		{ID: 12, CourseID: 2, UserID: 100, Rating: 4, Content: "还行"},
 	}
-	svc := application.NewCourseQueryService(query, reviewQuery, newFakeNotificationRepo(), nil)
+	svc := application.NewCourseQueryService(query, nil, reviewQuery, newFakeNotificationRepo(), nil)
 
 	dto, err := svc.GetCourseDetail(context.Background(), &auth.User{ID: 100}, 1)
 	if err != nil {
@@ -148,7 +171,7 @@ func TestCourseQueryService_GetCourseDetail_WithoutUser(t *testing.T) {
 		MainTeacher: &teacher.TeacherView{ID: 1, Name: "张三"},
 	}
 	notifRepo := newFakeNotificationRepo()
-	svc := application.NewCourseQueryService(query, newFakeReviewQuery(), notifRepo, nil)
+	svc := application.NewCourseQueryService(query, nil, newFakeReviewQuery(), notifRepo, nil)
 	ctx := context.Background()
 
 	dto, err := svc.GetCourseDetail(ctx, nil, 1)
@@ -157,6 +180,36 @@ func TestCourseQueryService_GetCourseDetail_WithoutUser(t *testing.T) {
 	}
 	if dto.NotificationLevel != int(course.NotificationLevelNormal) {
 		t.Errorf("NotificationLevel: got %d, want %d", dto.NotificationLevel, course.NotificationLevelNormal)
+	}
+}
+
+func TestCourseQueryService_GetCourseDetail_WithTeacherGroup(t *testing.T) {
+	query := newFakeCourseQuery()
+	query.details[1] = &course.CourseDetailView{
+		ID:           1,
+		Code:         "CS101",
+		Name:         "数据结构",
+		LastSemester: "2025-2026-1",
+		TeacherIDs:   []int{2, 1},
+		MainTeacher:  &teacher.TeacherView{ID: 1, Name: "张三"},
+	}
+	teacherQuery := newFakeTeacherQuery()
+	teacherQuery.views[1] = teacher.TeacherView{ID: 1, Name: "张三"}
+	teacherQuery.views[2] = teacher.TeacherView{ID: 2, Name: "李四"}
+	svc := application.NewCourseQueryService(query, teacherQuery, newFakeReviewQuery(), newFakeNotificationRepo(), nil)
+
+	dto, err := svc.GetCourseDetail(context.Background(), nil, 1)
+	if err != nil {
+		t.Fatalf("GetCourseDetail: %v", err)
+	}
+	if dto.LastSemester != "2025-2026-1" {
+		t.Errorf("LastSemester: got %q, want 2025-2026-1", dto.LastSemester)
+	}
+	if len(dto.TeacherGroup) != 2 {
+		t.Fatalf("TeacherGroup count: got %d, want 2", len(dto.TeacherGroup))
+	}
+	if dto.TeacherGroup[0].ID != 2 || dto.TeacherGroup[1].ID != 1 {
+		t.Errorf("TeacherGroup order: got [%d %d], want [2 1]", dto.TeacherGroup[0].ID, dto.TeacherGroup[1].ID)
 	}
 }
 
@@ -172,7 +225,7 @@ func TestCourseQueryService_ListCoursesByNotificationLevel(t *testing.T) {
 	notifRepo.SetLevel(ctx, 100, 2, course.NotificationLevelIgnored)
 	notifRepo.SetLevel(ctx, 100, 3, course.NotificationLevelFollow)
 
-	svc := application.NewCourseQueryService(query, newFakeReviewQuery(), notifRepo, nil)
+	svc := application.NewCourseQueryService(query, nil, newFakeReviewQuery(), notifRepo, nil)
 
 	t.Run("list followed", func(t *testing.T) {
 		result, err := svc.ListCoursesByNotificationLevel(ctx, 100, course.NotificationLevelFollow, application.CourseListFilter{})
@@ -217,7 +270,7 @@ func TestCourseQueryService_ListHotCourses(t *testing.T) {
 		{CourseID: 2, Score: 10},
 		{CourseID: 1, Score: 8},
 	}}
-	svc := application.NewCourseQueryService(query, newFakeReviewQuery(), newFakeNotificationRepo(), hotRepo)
+	svc := application.NewCourseQueryService(query, nil, newFakeReviewQuery(), newFakeNotificationRepo(), hotRepo)
 
 	result, err := svc.ListHotCourses(context.Background(), "week", 5)
 	if err != nil {
@@ -246,7 +299,7 @@ func TestCourseQueryService_ListHotCourses_WithLimit(t *testing.T) {
 		{CourseID: 2, Score: 10},
 		{CourseID: 1, Score: 8},
 	}}
-	svc := application.NewCourseQueryService(query, newFakeReviewQuery(), newFakeNotificationRepo(), hotRepo)
+	svc := application.NewCourseQueryService(query, nil, newFakeReviewQuery(), newFakeNotificationRepo(), hotRepo)
 
 	t.Run("limit 1 returns only top course", func(t *testing.T) {
 		result, err := svc.ListHotCourses(context.Background(), "week", 1)
@@ -263,7 +316,7 @@ func TestCourseQueryService_ListHotCourses_WithLimit(t *testing.T) {
 }
 
 func TestCourseQueryService_ListHotCourses_InvalidPeriod(t *testing.T) {
-	svc := application.NewCourseQueryService(newFakeCourseQuery(), newFakeReviewQuery(), newFakeNotificationRepo(), &fakeHotCourseRepo{})
+	svc := application.NewCourseQueryService(newFakeCourseQuery(), nil, newFakeReviewQuery(), newFakeNotificationRepo(), &fakeHotCourseRepo{})
 	_, err := svc.ListHotCourses(context.Background(), "daily", 5)
 	if err != course.ErrInvalidHotCoursePeriod {
 		t.Fatalf("err: got %v, want %v", err, course.ErrInvalidHotCoursePeriod)

@@ -65,10 +65,12 @@ type CourseDetailDTO struct {
 	Name               string              `json:"name"`
 	Credit             float32             `json:"credit"`
 	Department         string              `json:"department"`
+	LastSemester       string              `json:"last_semester"`
 	Language           string              `json:"language"`
 	TargetYears        []string            `json:"target_years"`
 	Categories         []string            `json:"categories"`
 	MainTeacher        TeacherDTO          `json:"main_teacher"`
+	TeacherGroup       []TeacherDTO        `json:"teacher_group,omitempty"`
 	OfferedCourses     []OfferedCourseDTO  `json:"offered_courses"`
 	Rating             RatingInfoDTO       `json:"rating"`
 	SameCodeCourses    []CourseListItemDTO `json:"same_code_courses"`

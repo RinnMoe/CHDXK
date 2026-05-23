@@ -5,6 +5,17 @@ import (
 	"jcourse/internal/domain/teacher"
 )
 
+func int64ArrayToInts(values []int64) []int {
+	if len(values) == 0 {
+		return nil
+	}
+	result := make([]int, len(values))
+	for i, value := range values {
+		result[i] = int(value)
+	}
+	return result
+}
+
 func newTeacherView(e *TeacherEntity) *teacher.TeacherView {
 	return &teacher.TeacherView{
 		ID:         e.ID,
@@ -45,6 +56,8 @@ func newCourseDetailViewFromEntity(e *CourseEntity) *course.CourseDetailView {
 		Credit:        e.Credit,
 		Department:    e.Department,
 		MainTeacherID: e.MainTeacherID,
+		LastSemester:  e.LastSemester,
+		TeacherIDs:    int64ArrayToInts(e.TeacherIDs),
 		Categories:    e.Categories,
 		Language:      e.Language,
 		TargetYears:   e.TargetYears,

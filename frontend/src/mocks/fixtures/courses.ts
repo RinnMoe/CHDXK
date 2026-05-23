@@ -257,6 +257,10 @@ export function makeCourseDetail(course: CourseListItemDTO): CourseDetailDTO {
   const sameTeacher = mockCourses.filter(
     (c) => c.main_teacher.id === course.main_teacher.id && c.id !== course.id
   )
+  const currentTeacherGroup = [
+    course.main_teacher,
+    makeTeacher(pick(TEACHER_NAMES)),
+  ]
 
   return {
     id: course.id,
@@ -264,10 +268,12 @@ export function makeCourseDetail(course: CourseListItemDTO): CourseDetailDTO {
     name: course.name,
     credit: course.credit,
     department: course.department,
+    last_semester: "2025-2026-1",
     language: course.language,
     target_years: course.target_years,
     categories: course.categories,
     main_teacher: course.main_teacher,
+    teacher_group: currentTeacherGroup,
     rating: course.rating,
     notification_level: 0,
     offered_courses: [
@@ -276,7 +282,7 @@ export function makeCourseDetail(course: CourseListItemDTO): CourseDetailDTO {
         language: course.language,
         target_years: course.target_years,
         categories: course.categories,
-        teacher_group: [course.main_teacher, makeTeacher(pick(TEACHER_NAMES))],
+        teacher_group: currentTeacherGroup,
       },
       {
         semester: "2024-2025-2",

@@ -106,6 +106,10 @@ export function CourseDetailPage() {
 
   const listedReviews =
     reviews?.items.filter((review) => review.id !== course.my_review?.id) ?? []
+  const historicalOfferedCourses = course.offered_courses.filter(
+    (oc) => oc.semester !== course.last_semester
+  )
+  const teacherGroup = course.teacher_group ?? []
 
   return (
     <>
@@ -130,11 +134,13 @@ export function CourseDetailPage() {
                   </div>
                   <div className="space-y-2">
                     <h1 className="text-3xl font-bold">{course.name}</h1>
-                    <div className="text-lg font-medium">
-                      主讲教师：
+                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <span className="text-sm font-normal text-muted-foreground">
+                        主讲教师：
+                      </span>
                       <Link
                         to={`/teachers/${course.main_teacher.id}`}
-                        className="font-semibold text-primary hover:underline"
+                        className="text-lg font-semibold text-primary hover:underline"
                       >
                         {course.main_teacher.name}
                       </Link>
@@ -142,6 +148,25 @@ export function CourseDetailPage() {
                         <TitleBadge className="ml-1">
                           {course.main_teacher.title}
                         </TitleBadge>
+                      )}
+                      {teacherGroup.length > 1 && (
+                        <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm font-normal text-muted-foreground">
+                          <span>合上教师：</span>
+                          {teacherGroup.map((teacher, index) => (
+                            <span
+                              key={teacher.id}
+                              className="inline-flex items-baseline"
+                            >
+                              {index > 0 && <span className="mr-2">/</span>}
+                              <Link
+                                to={`/teachers/${teacher.id}`}
+                                className="hover:text-primary hover:underline"
+                              >
+                                {teacher.name}
+                              </Link>
+                            </span>
+                          ))}
+                        </span>
                       )}
                     </div>
                   </div>
@@ -153,13 +178,13 @@ export function CourseDetailPage() {
                   />
                 </header>
 
-                {course.offered_courses.length > 0 && (
+                {historicalOfferedCourses.length > 0 && (
                   <section className="space-y-3">
                     <h2 className="text-sm font-medium text-muted-foreground">
                       历史开课
                     </h2>
                     <div className="space-y-3">
-                      {course.offered_courses.map((oc) => (
+                      {historicalOfferedCourses.map((oc) => (
                         <div
                           key={oc.semester}
                           className="flex items-center gap-3 text-sm"

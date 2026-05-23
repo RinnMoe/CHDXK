@@ -20,6 +20,9 @@ func NewTeacherRepository(db *gorm.DB) *TeacherRepository {
 func (r *TeacherRepository) FindBy(ctx context.Context, filter teacher.TeacherFilter) ([]teacher.TeacherView, int64, error) {
 	db := r.db.WithContext(ctx).Model(&TeacherEntity{})
 
+	if len(filter.TeacherIDs) > 0 {
+		db = db.Where("id IN ?", filter.TeacherIDs)
+	}
 	if filter.Department != "" {
 		db = db.Where("department = ?", filter.Department)
 	}

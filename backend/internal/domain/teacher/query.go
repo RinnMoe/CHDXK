@@ -8,6 +8,7 @@ type FilterItem struct {
 }
 
 type TeacherFilter struct {
+	TeacherIDs []int
 	Department string
 	Title      string
 	Q          string

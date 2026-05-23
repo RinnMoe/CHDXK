@@ -7,6 +7,7 @@ import (
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/review"
+	"jcourse/internal/domain/teacher"
 )
 
 type CourseListFilter struct {
@@ -25,18 +26,41 @@ type CourseListFilter struct {
 
 type CourseQueryService struct {
 	courseQuery      course.CourseQuery
+	teacherQuery     teacher.TeacherQuery
 	reviewQuery      review.ReviewQuery
 	notificationRepo course.CourseNotificationRepository
 	hotRepo          course.HotCourseRepository
 }
 
-func NewCourseQueryService(courseQuery course.CourseQuery, reviewQuery review.ReviewQuery, notificationRepo course.CourseNotificationRepository, hotRepo course.HotCourseRepository) *CourseQueryService {
+func NewCourseQueryService(courseQuery course.CourseQuery, teacherQuery teacher.TeacherQuery, reviewQuery review.ReviewQuery, notificationRepo course.CourseNotificationRepository, hotRepo course.HotCourseRepository) *CourseQueryService {
 	return &CourseQueryService{
 		courseQuery:      courseQuery,
+		teacherQuery:     teacherQuery,
 		reviewQuery:      reviewQuery,
 		notificationRepo: notificationRepo,
 		hotRepo:          hotRepo,
 	}
+}
+
+func (s *CourseQueryService) teacherGroupDTOs(ctx context.Context, teacherIDs []int) ([]TeacherDTO, error) {
+	if len(teacherIDs) <= 1 || s.teacherQuery == nil {
+		return []TeacherDTO{}, nil
+	}
+	teachers, _, err := s.teacherQuery.FindBy(ctx, teacher.TeacherFilter{TeacherIDs: teacherIDs})
+	if err != nil {
+		return nil, err
+	}
+	teacherMap := make(map[int]teacher.TeacherView, len(teachers))
+	for i := range teachers {
+		teacherMap[teachers[i].ID] = teachers[i]
+	}
+	group := make([]TeacherDTO, 0, len(teacherIDs))
+	for _, id := range teacherIDs {
+		if tv, ok := teacherMap[id]; ok {
+			group = append(group, newTeacherDTO(&tv))
+		}
+	}
+	return group, nil
 }
 
 func (s *CourseQueryService) GetCourseFilters(ctx context.Context) (*course.CourseFilters, error) {
@@ -147,6 +171,7 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 		Name:              detail.Name,
 		Credit:            detail.Credit,
 		Department:        detail.Department,
+		LastSemester:      detail.LastSemester,
 		Language:          detail.Language,
 		TargetYears:       detail.TargetYears,
 		Categories:        detail.Categories,
@@ -157,6 +182,11 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 	if detail.MainTeacher != nil {
 		dto.MainTeacher = newTeacherDTO(detail.MainTeacher)
 	}
+	teacherGroup, err := s.teacherGroupDTOs(ctx, detail.TeacherIDs)
+	if err != nil {
+		return nil, err
+	}
+	dto.TeacherGroup = teacherGroup
 
 	dto.OfferedCourses = make([]OfferedCourseDTO, 0, len(detail.OfferedCourses))
 	for _, oc := range detail.OfferedCourses {
