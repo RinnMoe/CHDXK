@@ -28,6 +28,8 @@ type ServiceContainer struct {
 	AuthService       *domainauth.AuthService
 	AnnouncementQuery *application.AnnouncementQueryService
 	ApiKeySvc         *domainauth.ApiKeyService
+	ApiKeyQuery       *application.ApiKeyQueryService
+	ApiKeyCommand     *application.ApiKeyCommandService
 }
 
 func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
@@ -102,6 +104,8 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	)
 	authService := domainauth.NewAuthService(userRepo)
 	apiKeySvc := domainauth.NewApiKeyService(apiKeyRepo)
+	apiKeyQuery := application.NewApiKeyQueryService(apiKeySvc)
+	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc)
 
 	return &ServiceContainer{
 		ReviewQuery:       reviewQuery,
@@ -117,6 +121,8 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		AuthService:       authService,
 		AnnouncementQuery: announcementQuery,
 		ApiKeySvc:         apiKeySvc,
+		ApiKeyQuery:       apiKeyQuery,
+		ApiKeyCommand:     apiKeyCommand,
 	}
 }
 

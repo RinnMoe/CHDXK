@@ -103,6 +103,22 @@ CREATE TABLE IF NOT EXISTS users
     suspend_till TIMESTAMPTZ
 );
 
+CREATE TABLE IF NOT EXISTS api_keys
+(
+    id           SERIAL PRIMARY KEY,
+    name         TEXT        NOT NULL,
+    key          TEXT        NOT NULL UNIQUE,
+    role         TEXT        NOT NULL CHECK (role IN ('system', 'user')),
+    user_id      INTEGER     NOT NULL DEFAULT 0,
+    last_used_at TIMESTAMPTZ,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT chk_api_keys_role_user
+        CHECK ((role = 'system' AND user_id = 0) OR (role = 'user' AND user_id > 0))
+);
+
+CREATE INDEX idx_api_keys_user ON api_keys (user_id, created_at DESC, id DESC);
+
 CREATE TABLE IF NOT EXISTS user_point_records
 (
     id          SERIAL PRIMARY KEY,

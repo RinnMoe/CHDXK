@@ -25,6 +25,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	teacherController := controller.NewTeacherController(container.TeacherQuery, container.CourseQuery)
 	pointController := controller.NewPointController(container.PointQuery, container.PointCommand)
 	authController := controller.NewAuthController(container.AuthCommand)
+	apiKeyController := controller.NewApiKeyController(container.ApiKeyQuery, container.ApiKeyCommand)
 	siteStatsController := controller.NewSiteStatsController(container.SiteStatsQuery)
 	announcementController := controller.NewAnnouncementController(container.AnnouncementQuery)
 
@@ -72,6 +73,12 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		userGroup.GET("/:userID/points", pointController.GetUserPoints)
 		userGroup.GET("/:userID/reviews", reviewController.ListUserReviews)
 	}
+	apiKeyGroup := apiGroup.Group("/api-keys", middleware.Auth(container.AuthService))
+	{
+		apiKeyGroup.GET("/", apiKeyController.ListMyApiKeys)
+		apiKeyGroup.POST("/", apiKeyController.CreateMyApiKey)
+		apiKeyGroup.DELETE("/:apiKeyID", apiKeyController.DeleteMyApiKey)
+	}
 	pointGroup := apiGroup.Group("/point")
 	{
 		pointGroup.POST("/transfers/preview", pointController.PreviewTransfer)
@@ -87,7 +94,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		announcementGroup.GET("/", announcementController.ListAnnouncements)
 	}
 
-	extGroup := apiGroup.Group("/ext", middleware.APIKeyAuth(container.ApiKeySvc))
+	extGroup := apiGroup.Group("/ext", middleware.SystemAPIKeyAuth(container.ApiKeySvc))
 	{
 		extGroup.GET("/points", pointController.GetPointsByEmail)
 	}

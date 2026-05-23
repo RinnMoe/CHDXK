@@ -216,10 +216,13 @@ func (CategoryEntity) TableName() string {
 }
 
 type ApiKeyEntity struct {
-	ID        int       `gorm:"column:id"`
-	Name      string    `gorm:"column:name"`
-	Key       string    `gorm:"column:key;uniqueIndex"`
-	CreatedAt time.Time `gorm:"column:created_at"`
+	ID         int        `gorm:"column:id"`
+	Name       string     `gorm:"column:name"`
+	Key        string     `gorm:"column:key;uniqueIndex"`
+	Role       string     `gorm:"column:role"`
+	UserID     int        `gorm:"column:user_id;index"`
+	LastUsedAt *time.Time `gorm:"column:last_used_at"`
+	CreatedAt  time.Time  `gorm:"column:created_at"`
 }
 
 func (ApiKeyEntity) TableName() string {

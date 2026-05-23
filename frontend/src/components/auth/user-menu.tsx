@@ -45,7 +45,7 @@ export function UserMenu() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm" className="gap-2">
-            <span className="flex size-6 items-center justify-center rounded-full bg-primary text-sm text-primary-foreground font-medium">
+            <span className="flex size-6 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
               {initials}
             </span>
             <span className="hidden sm:inline">{user.username}</span>
@@ -60,6 +60,9 @@ export function UserMenu() {
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link to="/points">积分</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/api-keys">API Keys</Link>
           </DropdownMenuItem>
           {user.role === "admin" && (
             <DropdownMenuItem asChild>
