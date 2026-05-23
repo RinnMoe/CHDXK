@@ -29,12 +29,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { useAuth } from "@/contexts/auth-context"
 import {
   useDeleteReview,
@@ -192,6 +186,11 @@ export function ReviewCard({
   const { mutateAsync: deleteReview } = useDeleteReview()
   const [copied, setCopied] = useState(false)
   const [remarkDialogOpen, setRemarkDialogOpen] = useState(false)
+  const [manageMenuOpen, setManageMenuOpen] = useState(false)
+  const [manageMenuSide, setManageMenuSide] = useState<"top" | "bottom">(
+    "bottom"
+  )
+  const manageMenuTriggerRef = useRef<HTMLButtonElement | null>(null)
   const resetCopiedTimer = useRef<number | undefined>(undefined)
   const isOwnReview = review.user_id != null && user?.id === review.user_id
   const isAdmin = user?.role === "admin"
@@ -214,6 +213,16 @@ export function ReviewCard({
 
   async function handleDelete() {
     await deleteReview(review.id)
+  }
+
+  function handleManageMenuOpenChange(open: boolean) {
+    if (open && manageMenuTriggerRef.current) {
+      const rect = manageMenuTriggerRef.current.getBoundingClientRect()
+      setManageMenuSide(
+        rect.top < window.innerHeight / 2 ? "bottom" : "top"
+      )
+    }
+    setManageMenuOpen(open)
   }
 
   return (
@@ -284,29 +293,27 @@ export function ReviewCard({
               {copied && <span className="text-sm">已复制</span>}
             </Button>
             {canEdit && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      asChild
-                      variant="ghost"
-                      size="sm"
-                      className="size-8 hover:text-inherit"
-                      aria-label="修改点评"
-                    >
-                      <Link to={`/reviews/${review.id}/edit`}>
-                        <RiEditLine className="size-4" />
-                      </Link>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>修改点评</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="size-8 hover:text-inherit"
+                aria-label="修改点评"
+                title="修改点评"
+              >
+                <Link to={`/reviews/${review.id}/edit`}>
+                  <RiEditLine className="size-4" />
+                </Link>
+              </Button>
             )}
             {canManage && (
-              <DropdownMenu>
+              <DropdownMenu
+                open={manageMenuOpen}
+                onOpenChange={handleManageMenuOpenChange}
+              >
                 <DropdownMenuTrigger asChild>
                   <Button
+                    ref={manageMenuTriggerRef}
                     variant="ghost"
                     size="sm"
                     className="size-8 hover:text-inherit"
@@ -314,7 +321,7 @@ export function ReviewCard({
                     <RiWrenchLine className="size-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" side={manageMenuSide}>
                   {isAdmin && (
                     <DropdownMenuItem onClick={() => setRemarkDialogOpen(true)}>
                       {review.moderator_remark ? "修改批注" : "添加批注"}

@@ -277,10 +277,7 @@ export function CourseDetailPage() {
                 <div className="mb-6">
                   <h2 className="mb-3 text-lg font-semibold">我的点评</h2>
                   <div className="border-t">
-                    <ReviewCard
-                      review={course.my_review}
-                      showVoteButtons={false}
-                    />
+                    <ReviewCard review={course.my_review} />
                   </div>
                 </div>
               )}
