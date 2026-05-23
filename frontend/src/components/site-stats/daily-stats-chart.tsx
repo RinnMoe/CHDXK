@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { formatDateInputValue } from "@/lib/date"
 import {
   CartesianGrid,
   Line,
@@ -64,6 +65,10 @@ export function DailyStatsChart({ stats }: DailyStatsChartProps) {
     a.stat_date.localeCompare(b.stat_date)
   )
 
+  function formatStatDateLabel(label: unknown): string {
+    return formatDateInputValue(String(label ?? ""))
+  }
+
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {metricConfig.map((metric) => (
@@ -86,6 +91,7 @@ export function DailyStatsChart({ stats }: DailyStatsChartProps) {
                   />
                   <XAxis
                     dataKey="stat_date"
+                    tickFormatter={formatDateInputValue}
                     tick={{
                       fontSize: 11,
                       fill: "var(--color-muted-foreground)",
@@ -100,6 +106,7 @@ export function DailyStatsChart({ stats }: DailyStatsChartProps) {
                     width={36}
                   />
                   <Tooltip
+                    labelFormatter={formatStatDateLabel}
                     contentStyle={{
                       borderRadius: 12,
                       border: "1px solid var(--color-border)",

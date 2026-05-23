@@ -42,19 +42,8 @@ import {
   useCreateApiKey,
   useDeleteApiKey,
 } from "@/hooks/use-api-key"
+import { formatNullableDateTime } from "@/lib/date"
 import type { ApiKeyDTO } from "@/api/api-key"
-
-function formatDate(value?: string | null) {
-  if (!value) return "从未使用"
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return value
-  const yyyy = d.getFullYear()
-  const mm = String(d.getMonth() + 1).padStart(2, "0")
-  const dd = String(d.getDate()).padStart(2, "0")
-  const hh = String(d.getHours()).padStart(2, "0")
-  const min = String(d.getMinutes()).padStart(2, "0")
-  return `${yyyy}-${mm}-${dd} ${hh}:${min}`
-}
 
 export function ApiKeysPage() {
   const { user, isLoading: authLoading } = useAuth()
@@ -238,10 +227,13 @@ export function ApiKeysPage() {
                           </code>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {formatDate(key.created_at)}
+                          {formatNullableDateTime(key.created_at)}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {formatDate(key.last_used_at)}
+                          {formatNullableDateTime(
+                            key.last_used_at,
+                            "从未使用"
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <AlertDialog>

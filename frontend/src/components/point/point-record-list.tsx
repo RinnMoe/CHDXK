@@ -1,4 +1,5 @@
 import type { PointRecordDTO } from "@/api/point"
+import { formatDateTime } from "@/lib/date"
 
 const REASON_LABELS: Record<string, string> = {
   review_create: "发表点评",
@@ -6,17 +7,6 @@ const REASON_LABELS: Record<string, string> = {
   daily_login: "每日登录",
   transfer_in: "转账收入",
   transfer_out: "转账支出",
-}
-
-function formatDate(s: string) {
-  const d = new Date(s)
-  if (Number.isNaN(d.getTime())) return s
-  const yyyy = d.getFullYear()
-  const mm = String(d.getMonth() + 1).padStart(2, "0")
-  const dd = String(d.getDate()).padStart(2, "0")
-  const hh = String(d.getHours()).padStart(2, "0")
-  const min = String(d.getMinutes()).padStart(2, "0")
-  return `${yyyy}-${mm}-${dd} ${hh}:${min}`
 }
 
 export function PointRecordList({ records }: { records: PointRecordDTO[] }) {
@@ -40,7 +30,7 @@ export function PointRecordList({ records }: { records: PointRecordDTO[] }) {
                 {REASON_LABELS[r.reason] ?? r.reason}
               </span>
               <span className="text-sm text-muted-foreground">
-                {formatDate(r.created_at)}
+                {formatDateTime(r.created_at)}
               </span>
             </div>
             <p className="truncate text-sm font-normal text-muted-foreground">

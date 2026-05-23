@@ -1,5 +1,6 @@
 import type { SiteDailyStatDTO } from "@/api/site-stats"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { formatDateInputValue } from "@/lib/date"
 import {
   Table,
   TableBody,
@@ -48,7 +49,7 @@ export function DailyStatsTable({
               {stats.map((s) => (
                 <TableRow key={s.stat_date}>
                   <TableCell className="font-mono text-sm">
-                    {s.stat_date}
+                    {formatDateInputValue(s.stat_date)}
                   </TableCell>
                   <TableCell>{s.total_user_count}</TableCell>
                   <TableCell>{s.total_review_count}</TableCell>

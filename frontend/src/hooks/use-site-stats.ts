@@ -4,17 +4,12 @@ import {
   listDailyStats,
   type SiteDailyStatListFilter,
 } from "@/api/site-stats"
-
-function yesterdayDateStr(): string {
-  const d = new Date()
-  d.setDate(d.getDate() - 1)
-  return d.toISOString().split("T")[0]
-}
+import { formatRelativeDateInputValue } from "@/lib/date"
 
 export function useYesterdayStats() {
   return useQuery({
     queryKey: ["site-stats", "daily", "yesterday"],
-    queryFn: () => getDailyStat(yesterdayDateStr()),
+    queryFn: () => getDailyStat(formatRelativeDateInputValue(-1)),
     retry: false,
   })
 }

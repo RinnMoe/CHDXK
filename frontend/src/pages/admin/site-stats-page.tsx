@@ -12,24 +12,15 @@ import { DailyStatsChart } from "@/components/site-stats/daily-stats-chart"
 import { DailyStatsTable } from "@/components/site-stats/daily-stats-table"
 import { useDailyStats, useYesterdayStats } from "@/hooks/use-site-stats"
 import { useAuth } from "@/contexts/auth-context"
+import { formatDateInputValue, formatRelativeDateInputValue } from "@/lib/date"
 
 const tablePageSize = 20
 const chartPageSize = 10000
 
-function formatDateInputValue(date: Date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
-  return `${year}-${month}-${day}`
-}
-
 function getDefaultDateRange() {
-  const endDate = new Date()
-  const startDate = new Date(endDate)
-  startDate.setDate(startDate.getDate() - 29)
   return {
-    startDate: formatDateInputValue(startDate),
-    endDate: formatDateInputValue(endDate),
+    startDate: formatRelativeDateInputValue(-29),
+    endDate: formatDateInputValue(new Date()),
   }
 }
 

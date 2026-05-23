@@ -1,5 +1,6 @@
 import type { SiteDailyStatDTO } from "@/api/site-stats"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { formatDateInputValue } from "@/lib/date"
 
 interface StatItem {
   label: string
@@ -31,7 +32,9 @@ export function StatsCard({
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <p className="text-sm text-muted-foreground">{stat.stat_date}</p>
+        <p className="text-sm text-muted-foreground">
+          {formatDateInputValue(stat.stat_date)}
+        </p>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
