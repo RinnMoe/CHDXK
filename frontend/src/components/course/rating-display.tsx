@@ -12,8 +12,8 @@ export function RatingDisplay({ rating, size = "md" }: RatingDisplayProps) {
   const stars = Array.from({ length: 5 }, (_, i) => i < filled)
 
   return (
-    <div className="flex flex-col">
-      <div className="flex items-center gap-1.5">
+    <div className="flex flex-col max-sm:items-center">
+      <div className="flex items-center gap-1.5 max-sm:flex-col max-sm:gap-0.5">
         <div className="flex">
           {stars.map((on, i) =>
             on ? (
