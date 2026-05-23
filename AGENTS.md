@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This repository contains `jcourse`, split into `backend/` and `frontend/`. Backend entrypoints live in `backend/cmd/api`, `backend/cmd/taskworker`, and `backend/cmd/importer`; core Go code is under `backend/internal` with `domain`, `application`, `infrastructure`, and `interface` layers. SQL schemas are in `backend/script`, and config examples are in `backend/config`. The React/Vite frontend lives in `frontend/src`, with pages in `src/pages`, API clients in `src/api`, hooks in `src/hooks`, UI primitives in `src/components/ui`, and MSW mocks in `src/mocks`.
+This repository contains `jcourse`, split into `backend/` and `frontend/`. Backend entrypoints live in `backend/cmd/api`, `backend/cmd/taskworker`, and `backend/cmd/importer`; core Go code is under `backend/internal` with `domain`, `application`, `infrastructure`, and `interface` layers. SQL schemas are in `backend/script`, and config examples are in `backend/config`. The React/Vite frontend lives in `frontend/src`, with pages in `src/pages`, API clients in `src/api`, hooks in `src/hooks`, UI primitives in `src/components/ui`, reusable feature components in `src/components/*`, and MSW assets in `public/` when mocks are enabled.
 
 ## Build, Test, and Development Commands
 
@@ -13,15 +13,17 @@ This repository contains `jcourse`, split into `backend/` and `frontend/`. Backe
 - `cd backend && go run cmd/api/main.go --config config/config.yaml` starts the API.
 - `cd frontend && pnpm dev` starts Vite locally.
 - `cd frontend && pnpm build` type-checks and builds the frontend.
+- `cd frontend && pnpm typecheck` runs TypeScript without bundling.
 - `cd frontend && pnpm lint` runs ESLint.
+- `cd frontend && pnpm test` runs Vitest.
 
 ## Coding Style & Naming Conventions
 
-Use `gofmt` for Go and keep package names short, lower-case nouns such as `course`, `review`, or `repository`. Keep domain code independent of Gin, Gorm, Redis, and other adapter details. Frontend code uses TypeScript, React function components, path aliases such as `@/components/ui/button`, Prettier, Tailwind CSS, and ESLint. Name components in PascalCase, hooks as `useThing`, and page files with kebab-case names such as `course-detail-page.tsx`.
+Use `gofmt` for Go and keep package names short, lower-case nouns such as `course`, `review`, or `repository`. Keep domain code independent of Gin, Gorm, Redis, and other adapter details. Frontend code uses TypeScript, React function components, path aliases such as `@/components/ui/button`, Prettier, Tailwind CSS, and ESLint. Name components in PascalCase, hooks as `useThing`, and page files with kebab-case names such as `course-detail-page.tsx`. Prefer existing feature folders and UI primitives before adding new structure.
 
 ## Testing Guidelines
 
-Backend tests use Go's standard `testing` package and sit beside code as `*_test.go`. Prefer table-driven tests for domain policy and application logic. Repository tests use helpers in `backend/internal/infrastructure/repository` and require local PostgreSQL. The frontend currently relies on lint and type-check coverage; add focused component or hook tests when behavior becomes complex.
+Backend tests use Go's standard `testing` package and sit beside code as `*_test.go`. Prefer table-driven tests for domain policy and application logic. Repository tests use helpers in `backend/internal/infrastructure/repository` and require local PostgreSQL. Frontend changes should pass lint and type-check; add focused Vitest coverage for nontrivial hooks, API behavior, or UI logic.
 
 ## Commit & Pull Request Guidelines
 
