@@ -43,7 +43,7 @@ export function HomePage() {
                 查看更多
               </Link>
             </div>
-            <HotCourseList period="week" limit={5} />
+            <HotCourseList period="week" limit={10} skeletonCount={10} />
           </div>
         </div>
       </PageShell>

@@ -26,7 +26,7 @@ export function HotCoursesPage() {
               <TabsTrigger value="month">本月</TabsTrigger>
             </TabsList>
             <TabsContent value={period}>
-              <HotCourseList period={period} limit={20} skeletonCount={6} />
+              <HotCourseList period={period} limit={50} skeletonCount={10} />
             </TabsContent>
           </Tabs>
         </div>
