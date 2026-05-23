@@ -107,7 +107,7 @@ func (s *PasswordResetService) ResetPassword(ctx context.Context, email, code, n
 	if err != nil {
 		return err
 	}
-	u.Password = passwordHash
+	u.PasswordHash = passwordHash
 	if err := s.userRepo.Update(ctx, u); err != nil {
 		return err
 	}

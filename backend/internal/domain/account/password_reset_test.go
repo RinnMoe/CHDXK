@@ -66,7 +66,7 @@ func TestPasswordResetService_ResetPasswordSuccess(t *testing.T) {
 		t.Fatalf("Hash: %v", err)
 	}
 	repo := newResetFakeUserRepo(map[string]*Account{
-		"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: oldHash},
+		"alice@example.edu": {ID: 1, Email: "alice@example.edu", PasswordHash: oldHash},
 	})
 	codes := newResetFakeCodeRepo()
 	codes.saved["alice@example.edu"] = VerificationCode{
@@ -77,7 +77,7 @@ func TestPasswordResetService_ResetPasswordSuccess(t *testing.T) {
 	if err := svc.ResetPassword(context.Background(), "alice@example.edu", "123456", "newpass"); err != nil {
 		t.Fatalf("ResetPassword: %v", err)
 	}
-	if !hasher.Verify("newpass", repo.users["alice@example.edu"].Password) {
+	if !hasher.Verify("newpass", repo.users["alice@example.edu"].PasswordHash) {
 		t.Fatal("password was not updated")
 	}
 	if _, exists := codes.saved["alice@example.edu"]; exists {

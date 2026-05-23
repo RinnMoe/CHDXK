@@ -77,7 +77,7 @@ func TestAccountCommandService_RegisterRejectsWrongCode(t *testing.T) {
 
 func TestAccountCommandService_LoginRejectsWrongPassword(t *testing.T) {
 	accountRepo := newFakeAccountRepo(map[string]*account.Account{
-		"alice@example.edu": {ID: 1, Username: "alice@example.edu", Email: "alice@example.edu", Password: mustHash(t, "secret")},
+		"alice@example.edu": {ID: 1, Username: "alice@example.edu", Email: "alice@example.edu", PasswordHash: mustHash(t, "secret")},
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
 	svc := newAccountService(accountRepo, userRepo, newFakeCodeRepo(), &fakeCodeSender{})
@@ -93,7 +93,7 @@ func TestAccountCommandService_LoginRejectsSuspendedUser(t *testing.T) {
 	suspendedAt := now.Add(-time.Hour)
 	suspendTill := now.Add(time.Hour)
 	accountRepo := newFakeAccountRepo(map[string]*account.Account{
-		"alice@example.edu": {ID: 1, Username: "alice@example.edu", Email: "alice@example.edu", Password: mustHash(t, "secret")},
+		"alice@example.edu": {ID: 1, Username: "alice@example.edu", Email: "alice@example.edu", PasswordHash: mustHash(t, "secret")},
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser, SuspendedAt: &suspendedAt, SuspendTill: &suspendTill}})
 	svc := newAccountService(accountRepo, userRepo, newFakeCodeRepo(), &fakeCodeSender{})
@@ -109,7 +109,7 @@ func TestAccountCommandService_LoginAllowsExpiredSuspensionAndEnqueuesCleanup(t 
 	suspendedAt := now.Add(-2 * time.Hour)
 	suspendTill := now.Add(-time.Hour)
 	accountRepo := newFakeAccountRepo(map[string]*account.Account{
-		"alice@example.edu": {ID: 1, Username: "alice@example.edu", Email: "alice@example.edu", Password: mustHash(t, "secret")},
+		"alice@example.edu": {ID: 1, Username: "alice@example.edu", Email: "alice@example.edu", PasswordHash: mustHash(t, "secret")},
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser, SuspendedAt: &suspendedAt, SuspendTill: &suspendTill}})
 	enqueuer := &fakeEnqueuer{}
@@ -134,7 +134,7 @@ func TestAccountCommandService_LoginAllowsExpiredSuspensionAndEnqueuesCleanup(t 
 
 func TestAccountCommandService_LoginLockedAfterMaxAttempts(t *testing.T) {
 	accountRepo := newFakeAccountRepo(map[string]*account.Account{
-		"alice@example.edu": {ID: 1, Username: "alice@example.edu", Email: "alice@example.edu", Password: mustHash(t, "secret")},
+		"alice@example.edu": {ID: 1, Username: "alice@example.edu", Email: "alice@example.edu", PasswordHash: mustHash(t, "secret")},
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
 	attempts := &fakeLoginAttemptRepo{counts: map[string]int{"alice@example.edu": 5}}
@@ -160,7 +160,7 @@ func TestAccountCommandService_LoginLockedAfterMaxAttempts(t *testing.T) {
 
 func TestAccountCommandService_SendResetCodeAndResetPassword(t *testing.T) {
 	accountRepo := newFakeAccountRepo(map[string]*account.Account{
-		"alice@example.edu": {ID: 1, Username: "alice@example.edu", Email: "alice@example.edu", Password: mustHash(t, "oldpass")},
+		"alice@example.edu": {ID: 1, Username: "alice@example.edu", Email: "alice@example.edu", PasswordHash: mustHash(t, "oldpass")},
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
 	sender := &fakeCodeSender{}
@@ -198,7 +198,7 @@ func TestAccountCommandService_SendResetCodeRejectsUnknownEmail(t *testing.T) {
 
 func TestAccountCommandService_ResetPasswordRejectsWrongCode(t *testing.T) {
 	accountRepo := newFakeAccountRepo(map[string]*account.Account{
-		"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: mustHash(t, "oldpass")},
+		"alice@example.edu": {ID: 1, Email: "alice@example.edu", PasswordHash: mustHash(t, "oldpass")},
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
 	svc := newAccountService(accountRepo, userRepo, newFakeCodeRepo(), &fakeCodeSender{})
@@ -211,7 +211,7 @@ func TestAccountCommandService_ResetPasswordRejectsWrongCode(t *testing.T) {
 
 func TestAccountCommandService_LoginFailedIncrementsAndLocks(t *testing.T) {
 	accountRepo := newFakeAccountRepo(map[string]*account.Account{
-		"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: mustHash(t, "secret")},
+		"alice@example.edu": {ID: 1, Email: "alice@example.edu", PasswordHash: mustHash(t, "secret")},
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
 	attempts := &fakeLoginAttemptRepo{counts: map[string]int{}}

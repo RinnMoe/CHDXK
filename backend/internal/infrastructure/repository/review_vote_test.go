@@ -203,12 +203,12 @@ func TestVoteRepository_MultipleUsers(t *testing.T) {
 
 	// Seed a second user
 	e2 := repository.UserEntity{
-		Username:   "testuser2",
-		Email:      "testuser2@example.com",
-		Role:       "user",
-		Password:   "hashed_password",
-		CreatedAt:  time.Now(),
-		LastSeenAt: time.Now(),
+		Username:     "testuser2",
+		Email:        "testuser2@example.com",
+		Role:         "user",
+		PasswordHash: "hashed_password",
+		CreatedAt:    time.Now(),
+		LastSeenAt:   time.Now(),
 	}
 	if err := db.Create(&e2).Error; err != nil {
 		t.Fatalf("seed user2: %v", err)

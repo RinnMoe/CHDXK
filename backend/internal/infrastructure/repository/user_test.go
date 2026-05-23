@@ -16,11 +16,11 @@ func TestAccountRepository_CreateAndFind(t *testing.T) {
 	ctx := context.Background()
 
 	acct := &account.Account{
-		Username:   "alice",
-		Email:      "alice@example.com",
-		Password:   "secret",
-		CreatedAt:  time.Now(),
-		LastSeenAt: time.Now(),
+		Username:     "alice",
+		Email:        "alice@example.com",
+		PasswordHash: "secret",
+		CreatedAt:    time.Now(),
+		LastSeenAt:   time.Now(),
 	}
 	if err := repo.Create(ctx, acct); err != nil {
 		t.Fatalf("Create: %v", err)
@@ -33,8 +33,8 @@ func TestAccountRepository_CreateAndFind(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindByID: %v", err)
 	}
-	if got.Username != acct.Username || got.Email != acct.Email || got.Password != acct.Password {
-		t.Fatalf("account = %+v, want username/email/password from %+v", got, acct)
+	if got.Username != acct.Username || got.Email != acct.Email || got.PasswordHash != acct.PasswordHash {
+		t.Fatalf("account = %+v, want username/email/password_hash from %+v", got, acct)
 	}
 
 	userRepo := repository.NewUserRepository(db)
@@ -84,13 +84,13 @@ func TestAccountRepository_NotFound(t *testing.T) {
 	}
 }
 
-func TestAccountRepository_UpdatePasswordAndTouchLastSeen(t *testing.T) {
+func TestAccountRepository_UpdatePasswordHashAndTouchLastSeen(t *testing.T) {
 	db := newTestDB(t)
 	repo := repository.NewAccountRepository(db)
 	ctx := context.Background()
 	e := seedUser(t, db)
 
-	acct := &account.Account{ID: e.ID, Username: e.Username, Email: e.Email, Password: "new_password", LastSeenAt: e.LastSeenAt.Add(time.Hour)}
+	acct := &account.Account{ID: e.ID, Username: e.Username, Email: e.Email, PasswordHash: "new_password", LastSeenAt: e.LastSeenAt.Add(time.Hour)}
 	if err := repo.Update(ctx, acct); err != nil {
 		t.Fatalf("Update: %v", err)
 	}
@@ -99,8 +99,8 @@ func TestAccountRepository_UpdatePasswordAndTouchLastSeen(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindByID: %v", err)
 	}
-	if got.Password != "new_password" {
-		t.Fatalf("password = %q, want new_password", got.Password)
+	if got.PasswordHash != "new_password" {
+		t.Fatalf("password_hash = %q, want new_password", got.PasswordHash)
 	}
 
 	newLastSeen := time.Now().Add(2 * time.Hour)

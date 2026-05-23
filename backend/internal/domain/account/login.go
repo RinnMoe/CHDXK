@@ -44,7 +44,7 @@ func (s *LoginService) Login(ctx context.Context, email, password string) (*Acco
 	if err != nil {
 		return nil, err
 	}
-	if u == nil || !s.hasher.Verify(password, u.Password) {
+	if u == nil || !s.hasher.Verify(password, u.PasswordHash) {
 		_ = s.recordFailure(ctx, normalized)
 		return nil, ErrInvalidCredentials
 	}

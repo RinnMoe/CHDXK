@@ -12,7 +12,7 @@ func TestLoginService_LoginLockedAfterMaxAttempts(t *testing.T) {
 	password, _ := hasher.Hash("secret")
 	repo := &lockFakeUserRepo{
 		users: map[string]*Account{
-			"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: password},
+			"alice@example.edu": {ID: 1, Email: "alice@example.edu", PasswordHash: password},
 		},
 	}
 	attempts := &lockFakeAttempts{counts: map[string]int{"alice@example.edu": 5}}
@@ -29,7 +29,7 @@ func TestLoginService_LoginNotLockedWhenBelowMax(t *testing.T) {
 	password, _ := hasher.Hash("secret")
 	repo := &lockFakeUserRepo{
 		users: map[string]*Account{
-			"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: password},
+			"alice@example.edu": {ID: 1, Email: "alice@example.edu", PasswordHash: password},
 		},
 	}
 	attempts := &lockFakeAttempts{counts: map[string]int{"alice@example.edu": 4}}
@@ -49,7 +49,7 @@ func TestLoginService_FailedLoginIncrementsAttempts(t *testing.T) {
 	password, _ := hasher.Hash("secret")
 	repo := &lockFakeUserRepo{
 		users: map[string]*Account{
-			"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: password},
+			"alice@example.edu": {ID: 1, Email: "alice@example.edu", PasswordHash: password},
 		},
 	}
 	attempts := &lockFakeAttempts{counts: map[string]int{}}
@@ -69,7 +69,7 @@ func TestLoginService_SuccessfulLoginResetsAttempts(t *testing.T) {
 	password, _ := hasher.Hash("secret")
 	repo := &lockFakeUserRepo{
 		users: map[string]*Account{
-			"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: password},
+			"alice@example.edu": {ID: 1, Email: "alice@example.edu", PasswordHash: password},
 		},
 	}
 	attempts := &lockFakeAttempts{counts: map[string]int{"alice@example.edu": 3}}
@@ -89,7 +89,7 @@ func TestLoginService_NoLockoutWhenMaxAttemptsZero(t *testing.T) {
 	password, _ := hasher.Hash("secret")
 	repo := &lockFakeUserRepo{
 		users: map[string]*Account{
-			"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: password},
+			"alice@example.edu": {ID: 1, Email: "alice@example.edu", PasswordHash: password},
 		},
 	}
 	attempts := &lockFakeAttempts{counts: map[string]int{"alice@example.edu": 999}}
@@ -108,7 +108,7 @@ func TestLoginService_LockoutTriggersOnNthFailure(t *testing.T) {
 	hasher := NewDjangoPBKDF2SHA256PasswordHasher(1)
 	repo := &lockFakeUserRepo{
 		users: map[string]*Account{
-			"alice@example.edu": {ID: 1, Email: "alice@example.edu", Password: "irrelevant"},
+			"alice@example.edu": {ID: 1, Email: "alice@example.edu", PasswordHash: "irrelevant"},
 		},
 	}
 	attempts := &lockFakeAttempts{counts: map[string]int{}}

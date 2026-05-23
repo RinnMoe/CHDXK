@@ -120,12 +120,12 @@ func TestSiteDailyStatRepository_UpsertAndFindByDateRange(t *testing.T) {
 func seedStatUser(t *testing.T, db *gorm.DB, username, email string, createdAt, lastSeenAt time.Time) repository.UserEntity {
 	t.Helper()
 	e := repository.UserEntity{
-		Username:   username,
-		Email:      email,
-		Role:       "user",
-		Password:   "hashed_password",
-		CreatedAt:  createdAt,
-		LastSeenAt: lastSeenAt,
+		Username:     username,
+		Email:        email,
+		Role:         "user",
+		PasswordHash: "hashed_password",
+		CreatedAt:    createdAt,
+		LastSeenAt:   lastSeenAt,
 	}
 	if err := db.Create(&e).Error; err != nil {
 		t.Fatalf("seed stat user: %v", err)

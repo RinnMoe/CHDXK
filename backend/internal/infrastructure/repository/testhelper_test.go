@@ -209,12 +209,12 @@ func seedOfferedCourseRaw(t *testing.T, db *gorm.DB, courseID int, semester, lan
 func seedUser(t *testing.T, db *gorm.DB) repository.UserEntity {
 	t.Helper()
 	e := repository.UserEntity{
-		Username:   "testuser",
-		Email:      "testuser@example.com",
-		Role:       "user",
-		Password:   "hashed_password",
-		CreatedAt:  time.Now(),
-		LastSeenAt: time.Now(),
+		Username:     "testuser",
+		Email:        "testuser@example.com",
+		Role:         "user",
+		PasswordHash: "hashed_password",
+		CreatedAt:    time.Now(),
+		LastSeenAt:   time.Now(),
 	}
 	if err := db.Create(&e).Error; err != nil {
 		t.Fatalf("seed user: %v", err)

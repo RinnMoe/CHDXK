@@ -21,24 +21,24 @@ type UserRepository struct {
 
 func newAccountEntity(u *account.Account) UserEntity {
 	return UserEntity{
-		ID:         u.ID,
-		Username:   u.Username,
-		Role:       auth.RoleUser,
-		Email:      u.Email,
-		Password:   u.Password,
-		CreatedAt:  u.CreatedAt,
-		LastSeenAt: u.LastSeenAt,
+		ID:           u.ID,
+		Username:     u.Username,
+		Role:         auth.RoleUser,
+		Email:        u.Email,
+		PasswordHash: u.PasswordHash,
+		CreatedAt:    u.CreatedAt,
+		LastSeenAt:   u.LastSeenAt,
 	}
 }
 
 func newAccountDomain(e *UserEntity) account.Account {
 	return account.Account{
-		ID:         e.ID,
-		Username:   e.Username,
-		Email:      e.Email,
-		Password:   e.Password,
-		CreatedAt:  e.CreatedAt,
-		LastSeenAt: e.LastSeenAt,
+		ID:           e.ID,
+		Username:     e.Username,
+		Email:        e.Email,
+		PasswordHash: e.PasswordHash,
+		CreatedAt:    e.CreatedAt,
+		LastSeenAt:   e.LastSeenAt,
 	}
 }
 
@@ -65,10 +65,10 @@ func (r *AccountRepository) Update(ctx context.Context, u *account.Account) erro
 		Model(&UserEntity{}).
 		Where("id = ?", u.ID).
 		Updates(map[string]any{
-			"username":     u.Username,
-			"email":        u.Email,
-			"password":     u.Password,
-			"last_seen_at": u.LastSeenAt,
+			"username":      u.Username,
+			"email":         u.Email,
+			"password_hash": u.PasswordHash,
+			"last_seen_at":  u.LastSeenAt,
 		}).Error
 }
 

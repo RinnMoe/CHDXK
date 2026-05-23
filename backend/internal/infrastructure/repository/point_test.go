@@ -172,12 +172,12 @@ func TestPointRepository_CreateTransferRejectsInsufficientBalance(t *testing.T) 
 func seedUserRaw(t *testing.T, db *gorm.DB, username, email string) repository.UserEntity {
 	t.Helper()
 	e := repository.UserEntity{
-		Username:   username,
-		Email:      email,
-		Role:       "user",
-		Password:   "hashed_password",
-		CreatedAt:  time.Now(),
-		LastSeenAt: time.Now(),
+		Username:     username,
+		Email:        email,
+		Role:         "user",
+		PasswordHash: "hashed_password",
+		CreatedAt:    time.Now(),
+		LastSeenAt:   time.Now(),
 	}
 	if err := db.Create(&e).Error; err != nil {
 		t.Fatalf("seed user raw: %v", err)

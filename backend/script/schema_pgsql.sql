@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS users
     username     TEXT        NOT NULL UNIQUE,
     email        TEXT        NOT NULL UNIQUE,
     role         TEXT        NOT NULL,
-    password     TEXT        NOT NULL,
+    password_hash TEXT       NOT NULL,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     suspended_at TIMESTAMPTZ,
