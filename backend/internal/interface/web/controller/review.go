@@ -142,6 +142,40 @@ func (r *ReviewController) UpdateReview(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "ok"})
 }
 
+func (r *ReviewController) UpdateModeratorRemark(c *gin.Context) {
+	reviewID, err := strconv.Atoi(c.Param("reviewID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid review id"})
+		return
+	}
+
+	u := auth.GetUserFromCtx(c.Request.Context())
+	if u == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var cmd application.UpdateReviewModeratorRemarkCommand
+	if err := c.ShouldBindJSON(&cmd); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := r.command.UpdateModeratorRemark(c.Request.Context(), u, reviewID, &cmd); err != nil {
+		if errors.Is(err, review.ErrReviewNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "review not found"})
+			return
+		}
+		if errors.Is(err, review.ErrUserCannotModerate) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "ok"})
+}
+
 func (r *ReviewController) DeleteReview(c *gin.Context) {
 	reviewID, err := strconv.Atoi(c.Param("reviewID"))
 	if err != nil {

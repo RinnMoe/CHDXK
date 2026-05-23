@@ -53,6 +53,17 @@ func (r *fakeCommandReviewRepo) Update(ctx context.Context, rv *review.Review, r
 	return nil
 }
 
+func (r *fakeCommandReviewRepo) UpdateModeratorRemark(ctx context.Context, reviewID int, moderatorRemark string) error {
+	rv, ok := r.reviews[reviewID]
+	if !ok {
+		return nil
+	}
+	copy := *rv
+	copy.ModeratorRemark = moderatorRemark
+	r.reviews[reviewID] = &copy
+	return nil
+}
+
 func (r *fakeCommandReviewRepo) Delete(ctx context.Context, rv *review.Review) error {
 	delete(r.reviews, rv.ID)
 	return nil
@@ -162,6 +173,29 @@ func TestReviewCommandService_UpdateReviewRecordsHotScore(t *testing.T) {
 	}
 	if len(hotRepo.calls) != 1 || hotRepo.calls[0].CourseID != 1 || hotRepo.calls[0].Score != 2 {
 		t.Fatalf("hot calls = %+v, want course=1 score=2", hotRepo.calls)
+	}
+}
+
+func TestReviewCommandService_UpdateModeratorRemarkRequiresAdmin(t *testing.T) {
+	reviewRepo := newFakeCommandReviewRepo()
+	reviewRepo.reviews[1] = &review.Review{ID: 1, CourseID: 1, UserID: 10, Semester: "2025-2026-1", Rating: 4, Content: "old"}
+	svc := newReviewCommandTestService(reviewRepo, &fakeCommandVoteRepo{}, &fakeHotScoreRepo{})
+
+	err := svc.UpdateModeratorRemark(context.Background(), &auth.User{ID: 10, Role: auth.RoleUser}, 1, &application.UpdateReviewModeratorRemarkCommand{
+		ModeratorRemark: "需要补充依据",
+	})
+	if err != review.ErrUserCannotModerate {
+		t.Fatalf("non-admin UpdateModeratorRemark error = %v, want %v", err, review.ErrUserCannotModerate)
+	}
+
+	err = svc.UpdateModeratorRemark(context.Background(), &auth.User{ID: 99, Role: auth.RoleAdmin}, 1, &application.UpdateReviewModeratorRemarkCommand{
+		ModeratorRemark: "已核实",
+	})
+	if err != nil {
+		t.Fatalf("admin UpdateModeratorRemark: %v", err)
+	}
+	if got := reviewRepo.reviews[1].ModeratorRemark; got != "已核实" {
+		t.Fatalf("ModeratorRemark = %q, want 已核实", got)
 	}
 }
 

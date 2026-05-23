@@ -88,6 +88,13 @@ func (s *ReviewCommandService) DeleteReview(ctx context.Context, u *auth.User, r
 	return s.reviewService.Delete(ctx, u, reviewID)
 }
 
+func (s *ReviewCommandService) UpdateModeratorRemark(ctx context.Context, u *auth.User, reviewID int, cmd *UpdateReviewModeratorRemarkCommand) error {
+	return s.reviewService.UpdateModeratorRemark(ctx, u, review.UpdateModeratorRemark{
+		ReviewID:        reviewID,
+		ModeratorRemark: cmd.ModeratorRemark,
+	})
+}
+
 func (s *ReviewCommandService) VoteReview(ctx context.Context, userID int, reviewID int, voteType int) error {
 	now := time.Now()
 	result, err := s.voteService.Vote(ctx, userID, reviewID, voteType, now)

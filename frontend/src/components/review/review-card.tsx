@@ -14,13 +14,26 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/contexts/auth-context"
-import { useDeleteReview } from "@/hooks/use-review"
+import {
+  useDeleteReview,
+  useUpdateReviewModeratorRemark,
+} from "@/hooks/use-review"
 import { cn } from "@/lib/utils"
 import { VoteButtons } from "./vote-buttons"
 import { ReviewContent } from "./review-content"
@@ -63,6 +76,107 @@ async function copyText(text: string) {
   }
 }
 
+interface ModeratorRemarkDialogProps {
+  review: ReviewDTO
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+function ModeratorRemarkDialog({
+  review,
+  open,
+  onOpenChange,
+}: ModeratorRemarkDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <ModeratorRemarkForm
+          key={`${review.id}-${open ? review.moderator_remark : "closed"}`}
+          review={review}
+          onOpenChange={onOpenChange}
+        />
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function ModeratorRemarkForm({
+  review,
+  onOpenChange,
+}: Pick<ModeratorRemarkDialogProps, "review" | "onOpenChange">) {
+  const [remark, setRemark] = useState(review.moderator_remark ?? "")
+  const [error, setError] = useState<string | null>(null)
+  const { mutateAsync, isPending } = useUpdateReviewModeratorRemark()
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError(null)
+    try {
+      await mutateAsync({
+        reviewID: review.id,
+        cmd: { moderator_remark: remark },
+      })
+      onOpenChange(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "保存失败")
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <DialogHeader>
+        <DialogTitle>管理员批注</DialogTitle>
+        <DialogDescription>
+          点评 #{review.id} 的批注会对所有用户可见。
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-2">
+        <Label htmlFor={`moderator-remark-${review.id}`}>批注内容</Label>
+        <Textarea
+          id={`moderator-remark-${review.id}`}
+          value={remark}
+          onChange={(e) => setRemark(e.target.value)}
+          rows={5}
+          className="resize-y text-sm"
+          placeholder="填写管理员批注，清空后保存可移除批注"
+        />
+      </div>
+
+      {error && (
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      )}
+
+      <DialogFooter>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => onOpenChange(false)}
+        >
+          取消
+        </Button>
+        <Button type="submit" disabled={isPending}>
+          {isPending ? "保存中..." : "保存批注"}
+        </Button>
+      </DialogFooter>
+    </form>
+  )
+}
+
+function ModeratorRemarkBanner({ remark }: { remark: string }) {
+  const trimmed = remark.trim()
+  if (!trimmed) return null
+
+  return (
+    <div className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-sm">
+      <div className="mb-1 font-medium text-primary">管理员批注</div>
+      <div className="whitespace-pre-wrap text-foreground/90">{trimmed}</div>
+    </div>
+  )
+}
+
 export function ReviewCard({
   review,
   showCourse = false,
@@ -72,12 +186,14 @@ export function ReviewCard({
   const navigate = useNavigate()
   const { mutateAsync: deleteReview } = useDeleteReview()
   const [copied, setCopied] = useState(false)
+  const [remarkDialogOpen, setRemarkDialogOpen] = useState(false)
   const resetCopiedTimer = useRef<number | undefined>(undefined)
   const isOwnReview = review.user_id != null && user?.id === review.user_id
+  const isAdmin = user?.role === "admin"
   const canManage =
     review.user_id != null &&
     user != null &&
-    (user.id === review.user_id || user.role === "admin")
+    (user.id === review.user_id || isAdmin)
 
   useEffect(() => {
     return () => window.clearTimeout(resetCopiedTimer.current)
@@ -129,6 +245,8 @@ export function ReviewCard({
           <ReviewRevisionsDialog review={review} />
         </div>
 
+        <ModeratorRemarkBanner remark={review.moderator_remark} />
+
         <ReviewContent
           rating={review.rating}
           semester={review.semester}
@@ -178,6 +296,11 @@ export function ReviewCard({
                   >
                     修改点评
                   </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem onClick={() => setRemarkDialogOpen(true)}>
+                      {review.moderator_remark ? "修改批注" : "添加批注"}
+                    </DropdownMenuItem>
+                  )}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <DropdownMenuItem
@@ -207,6 +330,13 @@ export function ReviewCard({
                   </AlertDialog>
                 </DropdownMenuContent>
               </DropdownMenu>
+            )}
+            {isAdmin && (
+              <ModeratorRemarkDialog
+                review={review}
+                open={remarkDialogOpen}
+                onOpenChange={setRemarkDialogOpen}
+              />
             )}
           </div>
         </div>

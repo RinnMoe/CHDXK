@@ -33,6 +33,9 @@ func (g Guardian) CanDelete(ctx context.Context) bool {
 func (g Guardian) CanUpdate(ctx context.Context) bool {
 	return g.u.ID == g.r.UserID || g.u.IsAdmin()
 }
+func (g Guardian) CanUpdateModeratorRemark(ctx context.Context) bool {
+	return g.u != nil && g.u.IsAdmin()
+}
 func (g Guardian) CanCreate(ctx context.Context) bool {
 	return !g.u.IsSuspended()
 }

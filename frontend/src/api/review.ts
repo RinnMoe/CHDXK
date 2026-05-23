@@ -25,6 +25,7 @@ export interface ReviewDTO {
   score: string
   rating: number
   content: string
+  moderator_remark: string
   vote: VoteStats
   created_at: string
   updated_at: string
@@ -67,6 +68,10 @@ export interface UpdateReviewCommand {
   rating: number
   content: string
   score?: string
+}
+
+export interface UpdateReviewModeratorRemarkCommand {
+  moderator_remark: string
 }
 
 function buildQuery(filter: Record<string, unknown>): string {
@@ -121,6 +126,16 @@ export function updateReview(
   cmd: UpdateReviewCommand
 ): Promise<{ message: string }> {
   return apiClient(`${BASE}/review/${reviewID}`, {
+    method: "PUT",
+    body: JSON.stringify(cmd),
+  })
+}
+
+export function updateReviewModeratorRemark(
+  reviewID: number,
+  cmd: UpdateReviewModeratorRemarkCommand
+): Promise<{ message: string }> {
+  return apiClient(`${BASE}/review/${reviewID}/moderator-remark`, {
     method: "PUT",
     body: JSON.stringify(cmd),
   })

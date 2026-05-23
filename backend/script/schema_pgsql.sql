@@ -170,6 +170,7 @@ CREATE TABLE IF NOT EXISTS reviews
     rating        INTEGER     NOT NULL CHECK (rating BETWEEN 1 AND 5),
     content       TEXT        NOT NULL,
     score         TEXT        NOT NULL,
+    moderator_remark TEXT     NOT NULL DEFAULT '',
     like_count    INTEGER     NOT NULL DEFAULT 0,
     dislike_count INTEGER     NOT NULL DEFAULT 0,
     search_vector TSVECTOR    NOT NULL DEFAULT '',

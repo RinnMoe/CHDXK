@@ -15,6 +15,7 @@ var (
 	ErrOfferedCourseMissing = errors.New("offered course not found for the given semester")
 	ErrUserCannotCreate     = errors.New("user cannot create review")
 	ErrUserCannotUpdate     = errors.New("user cannot update review")
+	ErrUserCannotModerate   = errors.New("user cannot update moderator remark")
 	ErrUserCannotDelete     = errors.New("user cannot delete review")
 )
 
@@ -35,6 +36,11 @@ type UpdateReview struct {
 	Content  string
 	Score    string
 	Now      time.Time
+}
+
+type UpdateModeratorRemark struct {
+	ReviewID        int
+	ModeratorRemark string
 }
 
 type Service struct {
@@ -136,6 +142,23 @@ func (s *Service) Delete(ctx context.Context, u *auth.User, reviewID int) error 
 		return ErrUserCannotDelete
 	}
 	return s.reviewRepo.Delete(ctx, r)
+}
+
+func (s *Service) UpdateModeratorRemark(ctx context.Context, u *auth.User, cmd UpdateModeratorRemark) error {
+	r, err := s.reviewRepo.Get(ctx, cmd.ReviewID)
+	if err != nil {
+		return err
+	}
+	if r == nil {
+		return ErrReviewNotFound
+	}
+
+	g := NewGuardian(u, r)
+	if !g.CanUpdateModeratorRemark(ctx) {
+		return ErrUserCannotModerate
+	}
+	r.ModeratorRemark = cmd.ModeratorRemark
+	return s.reviewRepo.UpdateModeratorRemark(ctx, r.ID, r.ModeratorRemark)
 }
 
 type CreatePolicy interface {

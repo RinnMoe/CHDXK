@@ -135,6 +135,24 @@ export const reviewHandlers = [
     return HttpResponse.json({ message: "ok" })
   }),
 
+  http.put(
+    "/api/review/:reviewID/moderator-remark",
+    async ({ request, params }) => {
+      await randomDelay()
+      if (!isCurrentUserAdmin()) {
+        return HttpResponse.json({ error: "forbidden" }, { status: 403 })
+      }
+      const id = Number(params.reviewID)
+      const review = findReview(id)
+      if (!review) {
+        return HttpResponse.json({ error: "review not found" }, { status: 404 })
+      }
+      const body = (await request.json()) as { moderator_remark?: string }
+      review.moderator_remark = body.moderator_remark ?? ""
+      return HttpResponse.json({ message: "ok" })
+    }
+  ),
+
   http.delete("/api/review/:reviewID", async () => {
     await randomDelay()
     return HttpResponse.json({ message: "ok" })

@@ -50,17 +50,18 @@ type ReviewFilter struct {
 
 // Read model: review with eager-loaded course summary
 type ReviewView struct {
-	ID        int
-	CourseID  int
-	Semester  string
-	UserID    int
-	Rating    int
-	Content   string
-	Score     string
-	Vote      ReviewVoteStats
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Course    *course.CourseView
+	ID              int
+	CourseID        int
+	Semester        string
+	UserID          int
+	Rating          int
+	Content         string
+	Score           string
+	ModeratorRemark string
+	Vote            ReviewVoteStats
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	Course          *course.CourseView
 }
 
 type ReviewVoteStats struct {

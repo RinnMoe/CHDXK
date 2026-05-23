@@ -125,6 +125,8 @@ export function generateReviewsForCourse(courseID: number, n = 8): ReviewDTO[] {
       score: pick(SCORES),
       rating: randInt(1, 5),
       content: pick(SAMPLE_CONTENTS),
+      moderator_remark:
+        randInt(0, 9) < 2 ? pick(["内容已核实", "请注意描述规范", ""]) : "",
       vote: {
         like_count: randInt(0, 30),
         dislike_count: randInt(0, 5),

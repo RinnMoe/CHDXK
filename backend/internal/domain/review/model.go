@@ -7,15 +7,16 @@ import (
 )
 
 type Review struct {
-	ID        int
-	CourseID  int
-	Semester  string
-	UserID    int
-	Rating    int
-	Content   string
-	Score     string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID              int
+	CourseID        int
+	Semester        string
+	UserID          int
+	Rating          int
+	Content         string
+	Score           string
+	ModeratorRemark string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
 
 func (r *Review) MakeRevision() Revision {
@@ -75,6 +76,7 @@ type Revision struct {
 type ReviewRepository interface {
 	Create(ctx context.Context, r *Review) error
 	Update(ctx context.Context, r *Review, rv Revision) error
+	UpdateModeratorRemark(ctx context.Context, reviewID int, moderatorRemark string) error
 	Delete(ctx context.Context, r *Review) error
 	Get(ctx context.Context, reviewID int) (*Review, error)
 }

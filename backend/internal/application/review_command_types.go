@@ -16,6 +16,10 @@ type UpdateReviewCommand struct {
 	Score    string `json:"score,omitempty"`
 }
 
+type UpdateReviewModeratorRemarkCommand struct {
+	ModeratorRemark string `json:"moderator_remark,omitempty"`
+}
+
 type VoteReviewCommand struct {
 	VoteType int `json:"vote_type"`
 }

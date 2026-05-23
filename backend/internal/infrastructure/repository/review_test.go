@@ -115,6 +115,39 @@ func TestReviewRepository_Update(t *testing.T) {
 	}
 }
 
+func TestReviewRepository_UpdateModeratorRemark(t *testing.T) {
+	db := newTestDB(t)
+	repo := repository.NewReviewRepository(db)
+	ctx := context.Background()
+
+	cleanTables(t, db, "reviews", "review_revisions", "courses", "teachers", "users")
+
+	teacher := seedTeacher(t, db)
+	course := seedCourse(t, db, teacher.ID)
+	user := seedUser(t, db)
+	entity := seedReview(t, db, course.ID, user.ID)
+
+	if err := repo.UpdateModeratorRemark(ctx, entity.ID, "管理员已核实"); err != nil {
+		t.Fatalf("UpdateModeratorRemark: %v", err)
+	}
+
+	got, err := repo.Get(ctx, entity.ID)
+	if err != nil {
+		t.Fatalf("Get after update moderator remark: %v", err)
+	}
+	if got.ModeratorRemark != "管理员已核实" {
+		t.Errorf("ModeratorRemark: got %q, want 管理员已核实", got.ModeratorRemark)
+	}
+
+	revisions, err := repo.FindRevisions(ctx, entity.ID)
+	if err != nil {
+		t.Fatalf("FindRevisions: %v", err)
+	}
+	if len(revisions) != 0 {
+		t.Fatalf("revisions count after moderator remark update: got %d, want 0", len(revisions))
+	}
+}
+
 func TestReviewRepository_Delete(t *testing.T) {
 	db := newTestDB(t)
 	repo := repository.NewReviewRepository(db)

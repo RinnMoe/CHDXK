@@ -13,9 +13,11 @@ import {
   listReviews,
   listUserReviews,
   updateReview,
+  updateReviewModeratorRemark,
   voteReview,
   type CreateReviewCommand,
   type ReviewListFilter,
+  type UpdateReviewModeratorRemarkCommand,
   type UpdateReviewCommand,
   type VoteType,
 } from "@/api/review"
@@ -82,6 +84,23 @@ export function useUpdateReview() {
       reviewID: number
       cmd: UpdateReviewCommand
     }) => updateReview(reviewID, cmd),
+    onSuccess: (_, { reviewID }) => {
+      queryClient.invalidateQueries({ queryKey: ["reviews"] })
+      queryClient.invalidateQueries({ queryKey: ["review", reviewID] })
+    },
+  })
+}
+
+export function useUpdateReviewModeratorRemark() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      reviewID,
+      cmd,
+    }: {
+      reviewID: number
+      cmd: UpdateReviewModeratorRemarkCommand
+    }) => updateReviewModeratorRemark(reviewID, cmd),
     onSuccess: (_, { reviewID }) => {
       queryClient.invalidateQueries({ queryKey: ["reviews"] })
       queryClient.invalidateQueries({ queryKey: ["review", reviewID] })

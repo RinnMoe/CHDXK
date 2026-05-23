@@ -88,19 +88,20 @@ func (CourseEntity) TableName() string {
 }
 
 type ReviewEntity struct {
-	ID           int           `gorm:"column:id"`
-	CourseID     int           `gorm:"column:course_id;index"`
-	Semester     string        `gorm:"column:semester"`
-	UserID       int           `gorm:"column:user_id;index"`
-	Rating       int           `gorm:"column:rating"`
-	Content      string        `gorm:"column:content"`
-	Score        string        `gorm:"column:score"`
-	LikeCount    int           `gorm:"column:like_count"`
-	DislikeCount int           `gorm:"column:dislike_count"`
-	SearchVector string        `gorm:"column:search_vector;type:tsvector;index:,type:gin;<-:false"`
-	CreatedAt    time.Time     `gorm:"column:created_at"`
-	UpdatedAt    time.Time     `gorm:"column:updated_at"`
-	Course       *CourseEntity `gorm:"foreignKey:course_id;references:id"`
+	ID              int           `gorm:"column:id"`
+	CourseID        int           `gorm:"column:course_id;index"`
+	Semester        string        `gorm:"column:semester"`
+	UserID          int           `gorm:"column:user_id;index"`
+	Rating          int           `gorm:"column:rating"`
+	Content         string        `gorm:"column:content"`
+	Score           string        `gorm:"column:score"`
+	ModeratorRemark string        `gorm:"column:moderator_remark"`
+	LikeCount       int           `gorm:"column:like_count"`
+	DislikeCount    int           `gorm:"column:dislike_count"`
+	SearchVector    string        `gorm:"column:search_vector;type:tsvector;index:,type:gin;<-:false"`
+	CreatedAt       time.Time     `gorm:"column:created_at"`
+	UpdatedAt       time.Time     `gorm:"column:updated_at"`
+	Course          *CourseEntity `gorm:"foreignKey:course_id;references:id"`
 }
 
 func (ReviewEntity) TableName() string {

@@ -13,17 +13,18 @@ type VoteStats struct {
 }
 
 type ReviewDTO struct {
-	ID        int                `json:"id"`
-	Course    *CourseListItemDTO `json:"course,omitempty"`
-	CourseID  int                `json:"course_id"`
-	UserID    int                `json:"user_id,omitempty"`
-	Semester  string             `json:"semester"`
-	Score     string             `json:"score"`
-	Rating    int                `json:"rating"`
-	Content   string             `json:"content"`
-	Vote      VoteStats          `json:"vote"`
-	CreatedAt time.Time          `json:"created_at"`
-	UpdatedAt time.Time          `json:"updated_at"`
+	ID              int                `json:"id"`
+	Course          *CourseListItemDTO `json:"course,omitempty"`
+	CourseID        int                `json:"course_id"`
+	UserID          int                `json:"user_id,omitempty"`
+	Semester        string             `json:"semester"`
+	Score           string             `json:"score"`
+	Rating          int                `json:"rating"`
+	Content         string             `json:"content"`
+	ModeratorRemark string             `json:"moderator_remark"`
+	Vote            VoteStats          `json:"vote"`
+	CreatedAt       time.Time          `json:"created_at"`
+	UpdatedAt       time.Time          `json:"updated_at"`
 }
 
 type ReviewRevisionDTO struct {
@@ -40,12 +41,13 @@ type ReviewRevisionDTO struct {
 
 func newReviewDTO(r *review.ReviewView, showUserID bool) ReviewDTO {
 	dto := ReviewDTO{
-		ID:       r.ID,
-		CourseID: r.CourseID,
-		Semester: r.Semester,
-		Score:    r.Score,
-		Rating:   r.Rating,
-		Content:  r.Content,
+		ID:              r.ID,
+		CourseID:        r.CourseID,
+		Semester:        r.Semester,
+		Score:           r.Score,
+		Rating:          r.Rating,
+		Content:         r.Content,
+		ModeratorRemark: r.ModeratorRemark,
 		Vote: VoteStats{
 			LikeCount:    r.Vote.LikeCount,
 			DislikeCount: r.Vote.DislikeCount,

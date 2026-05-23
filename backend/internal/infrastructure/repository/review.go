@@ -13,29 +13,31 @@ import (
 
 func newReviewEntity(r *review.Review) ReviewEntity {
 	return ReviewEntity{
-		ID:        r.ID,
-		CourseID:  r.CourseID,
-		Semester:  r.Semester,
-		UserID:    r.UserID,
-		Rating:    r.Rating,
-		Content:   r.Content,
-		Score:     r.Score,
-		CreatedAt: r.CreatedAt,
-		UpdatedAt: r.UpdatedAt,
+		ID:              r.ID,
+		CourseID:        r.CourseID,
+		Semester:        r.Semester,
+		UserID:          r.UserID,
+		Rating:          r.Rating,
+		Content:         r.Content,
+		Score:           r.Score,
+		ModeratorRemark: r.ModeratorRemark,
+		CreatedAt:       r.CreatedAt,
+		UpdatedAt:       r.UpdatedAt,
 	}
 }
 
 func newReviewDomain(e *ReviewEntity) review.Review {
 	return review.Review{
-		ID:        e.ID,
-		CourseID:  e.CourseID,
-		Semester:  e.Semester,
-		UserID:    e.UserID,
-		Rating:    e.Rating,
-		Content:   e.Content,
-		Score:     e.Score,
-		CreatedAt: e.CreatedAt,
-		UpdatedAt: e.UpdatedAt,
+		ID:              e.ID,
+		CourseID:        e.CourseID,
+		Semester:        e.Semester,
+		UserID:          e.UserID,
+		Rating:          e.Rating,
+		Content:         e.Content,
+		Score:           e.Score,
+		ModeratorRemark: e.ModeratorRemark,
+		CreatedAt:       e.CreatedAt,
+		UpdatedAt:       e.UpdatedAt,
 	}
 }
 
@@ -69,13 +71,14 @@ func newReviewRevisionQuery(e *ReviewRevisionEntity) review.RevisionView {
 
 func newReviewView(e *ReviewEntity) review.ReviewView {
 	v := review.ReviewView{
-		ID:       e.ID,
-		CourseID: e.CourseID,
-		Semester: e.Semester,
-		UserID:   e.UserID,
-		Rating:   e.Rating,
-		Content:  e.Content,
-		Score:    e.Score,
+		ID:              e.ID,
+		CourseID:        e.CourseID,
+		Semester:        e.Semester,
+		UserID:          e.UserID,
+		Rating:          e.Rating,
+		Content:         e.Content,
+		Score:           e.Score,
+		ModeratorRemark: e.ModeratorRemark,
 		Vote: review.ReviewVoteStats{
 			LikeCount:    e.LikeCount,
 			DislikeCount: e.DislikeCount,
@@ -309,6 +312,12 @@ func (r2 *ReviewRepository) Update(ctx context.Context, r *review.Review, rv rev
 
 	r.ID = e.ID
 	return nil
+}
+
+func (r2 *ReviewRepository) UpdateModeratorRemark(ctx context.Context, reviewID int, moderatorRemark string) error {
+	return r2.db.WithContext(ctx).Model(&ReviewEntity{}).
+		Where("id = ?", reviewID).
+		Update("moderator_remark", moderatorRemark).Error
 }
 
 func (r2 *ReviewRepository) Delete(ctx context.Context, r *review.Review) error {
