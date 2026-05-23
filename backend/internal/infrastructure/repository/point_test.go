@@ -2,6 +2,7 @@ package repository_test
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"testing"
 	"time"
@@ -173,7 +174,7 @@ func seedUserRaw(t *testing.T, db *gorm.DB, username, email string) repository.U
 	t.Helper()
 	e := repository.UserEntity{
 		Username:     username,
-		Email:        email,
+		Email:        sql.NullString{String: email, Valid: email != ""},
 		Role:         "user",
 		PasswordHash: "hashed_password",
 		CreatedAt:    time.Now(),

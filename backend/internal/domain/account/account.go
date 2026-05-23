@@ -18,7 +18,6 @@ type Account struct {
 func NewRegisteredAccount(username, passwordHash string, now time.Time) *Account {
 	return &Account{
 		Username:     username,
-		Email:        username,
 		PasswordHash: passwordHash,
 		CreatedAt:    now,
 		LastSeenAt:   now,

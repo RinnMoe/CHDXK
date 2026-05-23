@@ -21,16 +21,17 @@ func TestEmailWhitelist_AllowsExactAndDomain(t *testing.T) {
 	}
 }
 
-func TestNormalizeEmail(t *testing.T) {
-	got, err := NormalizeEmail("Alice@Example.EDU")
+func TestUsernameFromEmail(t *testing.T) {
+	deriver := NewBLAKE2bUsernameDeriver("SALT")
+	got, err := deriver.UsernameFromEmail("Alice@Example.EDU")
 	if err != nil {
-		t.Fatalf("NormalizeEmail: %v", err)
+		t.Fatalf("UsernameFromEmail: %v", err)
 	}
-	if got != "alice@example.edu" {
-		t.Fatalf("NormalizeEmail = %q", got)
+	if got != "ca96242b3be38504f62aedd9191470aa" {
+		t.Fatalf("UsernameFromEmail = %q", got)
 	}
 
-	if _, err := NormalizeEmail("not an email"); err == nil {
+	if _, err := deriver.UsernameFromEmail("not an email"); err == nil {
 		t.Fatal("expected invalid email error")
 	}
 }

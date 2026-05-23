@@ -37,7 +37,7 @@ func TestPointController_GetUserPointsAuth(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := &pointControllerFakeQuery{}
 			cmd := newPointControllerCommand()
-			ctrl := controller.NewPointController(application.NewPointQueryService(repo, &pointControllerFakeAccountRepo{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1})), cmd)
+			ctrl := controller.NewPointController(application.NewPointQueryService(repo, &pointControllerFakeAccountRepo{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), testPointUsernameDeriver()), cmd)
 			r := gin.New()
 			r.GET("/api/user/:userID/points", func(c *gin.Context) {
 				if tt.current != nil {
@@ -60,7 +60,7 @@ func TestPointController_GetUserPointsAuth(t *testing.T) {
 func TestPointController_PreviewAndCreateTransfer(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	command := newPointControllerCommand()
-	ctrl := controller.NewPointController(application.NewPointQueryService(&pointControllerFakeQuery{}, &pointControllerFakeAccountRepo{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1})), command)
+	ctrl := controller.NewPointController(application.NewPointQueryService(&pointControllerFakeQuery{}, &pointControllerFakeAccountRepo{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), testPointUsernameDeriver()), command)
 	r := gin.New()
 	r.POST("/api/point/transfers/preview", func(c *gin.Context) {
 		c.Request = c.Request.WithContext(auth.WithUser(c.Request.Context(), &auth.User{ID: 1, Role: auth.RoleUser}))
@@ -111,6 +111,10 @@ func newPointControllerCommand() *application.PointCommandService {
 	)
 }
 
+func testPointUsernameDeriver() account.UsernameDeriver {
+	return account.NewBLAKE2bUsernameDeriver("SALT")
+}
+
 type pointControllerFakeAccountRepo struct {
 	accountsByID       map[int]*account.Account
 	accountsByUsername map[string]*account.Account
@@ -147,16 +151,20 @@ func TestPointController_GetPointsByEmail(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	email := "alice@example.edu"
+	username, err := testPointUsernameDeriver().UsernameFromEmail(email)
+	if err != nil {
+		t.Fatalf("UsernameFromEmail: %v", err)
+	}
 	fakeQuery := &pointControllerFakeQueryWithEmail{
 		balances: map[int]int{1: 42},
 	}
 	fakeAccountRepo := &pointControllerFakeAccountRepo{
-		accountsByEmail: map[string]*account.Account{
-			email: {ID: 1, Email: email},
+		accountsByUsername: map[string]*account.Account{
+			username: {ID: 1, Username: username},
 		},
 	}
 	ctrl := controller.NewPointController(
-		application.NewPointQueryService(fakeQuery, fakeAccountRepo, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1})),
+		application.NewPointQueryService(fakeQuery, fakeAccountRepo, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), testPointUsernameDeriver()),
 		newPointControllerCommand(),
 	)
 

@@ -45,6 +45,7 @@ type SessionConfig struct {
 
 type AuthConfig struct {
 	EmailWhitelist           []string `mapstructure:"email_whitelist"`
+	UsernameSalt             string   `mapstructure:"username_salt"`
 	VerificationCodeInterval int      `mapstructure:"verification_code_interval"` // seconds
 	VerificationCodeTTL      int      `mapstructure:"verification_code_ttl"`      // seconds
 	MaxLoginAttempts         int      `mapstructure:"max_login_attempts"`
@@ -104,6 +105,9 @@ func Load(configPath string) (AppConfig, error) {
 	var conf AppConfig
 	if err := v.Unmarshal(&conf); err != nil {
 		return AppConfig{}, fmt.Errorf("unmarshal config: %w", err)
+	}
+	if strings.TrimSpace(conf.Auth.UsernameSalt) == "" {
+		return AppConfig{}, fmt.Errorf("auth.username_salt is required")
 	}
 	return conf, nil
 }

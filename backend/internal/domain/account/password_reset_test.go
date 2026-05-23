@@ -8,13 +8,14 @@ import (
 )
 
 func TestPasswordResetService_SendResetCodeSuccess(t *testing.T) {
+	username := mustUsernameFromEmail(t, "alice@example.edu")
 	repo := newResetFakeUserRepo(map[string]*Account{
-		"alice@example.edu": {ID: 1, Email: "alice@example.edu"},
+		username: {ID: 1, Username: username},
 	})
 	codes := newResetFakeCodeRepo()
 	sender := &resetFakeSender{}
 	hasher := NewDjangoPBKDF2SHA256PasswordHasher(1)
-	svc := NewPasswordResetService(repo, codes, sender, hasher, PasswordResetConfig{
+	svc := NewPasswordResetService(repo, codes, sender, hasher, testUsernameDeriver(), PasswordResetConfig{
 		CodeInterval: time.Minute,
 		CodeTTL:      10 * time.Minute,
 	})
@@ -32,7 +33,7 @@ func TestPasswordResetService_SendResetCodeSuccess(t *testing.T) {
 
 func TestPasswordResetService_SendResetCodeRejectsUnknownUser(t *testing.T) {
 	repo := newResetFakeUserRepo(nil)
-	svc := NewPasswordResetService(repo, newResetFakeCodeRepo(), &resetFakeSender{}, nil, PasswordResetConfig{})
+	svc := NewPasswordResetService(repo, newResetFakeCodeRepo(), &resetFakeSender{}, nil, testUsernameDeriver(), PasswordResetConfig{})
 
 	err := svc.SendResetCode(context.Background(), "nobody@example.edu")
 	if !errors.Is(err, ErrUserNotFound) {
@@ -41,10 +42,11 @@ func TestPasswordResetService_SendResetCodeRejectsUnknownUser(t *testing.T) {
 }
 
 func TestPasswordResetService_SendResetCodeRateLimit(t *testing.T) {
+	username := mustUsernameFromEmail(t, "alice@example.edu")
 	repo := newResetFakeUserRepo(map[string]*Account{
-		"alice@example.edu": {ID: 1, Email: "alice@example.edu"},
+		username: {ID: 1, Username: username},
 	})
-	svc := NewPasswordResetService(repo, newResetFakeCodeRepo(), &resetFakeSender{}, nil, PasswordResetConfig{
+	svc := NewPasswordResetService(repo, newResetFakeCodeRepo(), &resetFakeSender{}, nil, testUsernameDeriver(), PasswordResetConfig{
 		CodeInterval: time.Minute,
 		CodeTTL:      10 * time.Minute,
 	})
@@ -65,19 +67,20 @@ func TestPasswordResetService_ResetPasswordSuccess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Hash: %v", err)
 	}
+	username := mustUsernameFromEmail(t, "alice@example.edu")
 	repo := newResetFakeUserRepo(map[string]*Account{
-		"alice@example.edu": {ID: 1, Email: "alice@example.edu", PasswordHash: oldHash},
+		username: {ID: 1, Username: username, PasswordHash: oldHash},
 	})
 	codes := newResetFakeCodeRepo()
 	codes.saved["alice@example.edu"] = VerificationCode{
 		Email: "alice@example.edu", Code: "123456", ExpiresAt: time.Now().Add(10 * time.Minute),
 	}
-	svc := NewPasswordResetService(repo, codes, &resetFakeSender{}, hasher, PasswordResetConfig{})
+	svc := NewPasswordResetService(repo, codes, &resetFakeSender{}, hasher, testUsernameDeriver(), PasswordResetConfig{})
 
 	if err := svc.ResetPassword(context.Background(), "alice@example.edu", "123456", "newpass"); err != nil {
 		t.Fatalf("ResetPassword: %v", err)
 	}
-	if !hasher.Verify("newpass", repo.users["alice@example.edu"].PasswordHash) {
+	if !hasher.Verify("newpass", repo.users[username].PasswordHash) {
 		t.Fatal("password was not updated")
 	}
 	if _, exists := codes.saved["alice@example.edu"]; exists {
@@ -86,14 +89,15 @@ func TestPasswordResetService_ResetPasswordSuccess(t *testing.T) {
 }
 
 func TestPasswordResetService_ResetPasswordRejectsInvalidCode(t *testing.T) {
+	username := mustUsernameFromEmail(t, "alice@example.edu")
 	repo := newResetFakeUserRepo(map[string]*Account{
-		"alice@example.edu": {ID: 1, Email: "alice@example.edu"},
+		username: {ID: 1, Username: username},
 	})
 	codes := newResetFakeCodeRepo()
 	codes.saved["alice@example.edu"] = VerificationCode{
 		Email: "alice@example.edu", Code: "123456", ExpiresAt: time.Now().Add(10 * time.Minute),
 	}
-	svc := NewPasswordResetService(repo, codes, &resetFakeSender{}, NewDjangoPBKDF2SHA256PasswordHasher(1), PasswordResetConfig{})
+	svc := NewPasswordResetService(repo, codes, &resetFakeSender{}, NewDjangoPBKDF2SHA256PasswordHasher(1), testUsernameDeriver(), PasswordResetConfig{})
 
 	err := svc.ResetPassword(context.Background(), "alice@example.edu", "000000", "newpass")
 	if !errors.Is(err, ErrVerificationCodeInvalid) {
@@ -102,10 +106,11 @@ func TestPasswordResetService_ResetPasswordRejectsInvalidCode(t *testing.T) {
 }
 
 func TestPasswordResetService_ResetPasswordRejectsEmptyPassword(t *testing.T) {
+	username := mustUsernameFromEmail(t, "alice@example.edu")
 	repo := newResetFakeUserRepo(map[string]*Account{
-		"alice@example.edu": {ID: 1, Email: "alice@example.edu"},
+		username: {ID: 1, Username: username},
 	})
-	svc := NewPasswordResetService(repo, newResetFakeCodeRepo(), &resetFakeSender{}, nil, PasswordResetConfig{})
+	svc := NewPasswordResetService(repo, newResetFakeCodeRepo(), &resetFakeSender{}, nil, testUsernameDeriver(), PasswordResetConfig{})
 
 	err := svc.ResetPassword(context.Background(), "alice@example.edu", "123456", "  ")
 	if !errors.Is(err, ErrPasswordRequired) {
@@ -118,7 +123,7 @@ func TestPasswordResetService_ResetPasswordRejectsUnknownUser(t *testing.T) {
 	codes.saved["nobody@example.edu"] = VerificationCode{
 		Email: "nobody@example.edu", Code: "123456", ExpiresAt: time.Now().Add(10 * time.Minute),
 	}
-	svc := NewPasswordResetService(newResetFakeUserRepo(nil), codes, &resetFakeSender{}, NewDjangoPBKDF2SHA256PasswordHasher(1), PasswordResetConfig{})
+	svc := NewPasswordResetService(newResetFakeUserRepo(nil), codes, &resetFakeSender{}, NewDjangoPBKDF2SHA256PasswordHasher(1), testUsernameDeriver(), PasswordResetConfig{})
 
 	err := svc.ResetPassword(context.Background(), "nobody@example.edu", "123456", "newpass")
 	if !errors.Is(err, ErrUserNotFound) {
@@ -140,12 +145,12 @@ func newResetFakeUserRepo(users map[string]*Account) *resetFakeUserRepo {
 }
 
 func (r *resetFakeUserRepo) Create(_ context.Context, u *Account) error {
-	r.users[u.Email] = u
+	r.users[u.Username] = u
 	return nil
 }
 
 func (r *resetFakeUserRepo) Update(_ context.Context, u *Account) error {
-	r.users[u.Email] = u
+	r.users[u.Username] = u
 	return nil
 }
 
@@ -153,8 +158,13 @@ func (r *resetFakeUserRepo) TouchLastSeen(_ context.Context, _ int, _ time.Time)
 
 func (r *resetFakeUserRepo) FindByID(_ context.Context, _ int) (*Account, error) { return nil, nil }
 
-func (r *resetFakeUserRepo) FindByUsername(_ context.Context, _ string) (*Account, error) {
-	return nil, nil
+func (r *resetFakeUserRepo) FindByUsername(_ context.Context, username string) (*Account, error) {
+	u, ok := r.users[username]
+	if !ok {
+		return nil, nil
+	}
+	cp := *u
+	return &cp, nil
 }
 
 func (r *resetFakeUserRepo) FindByEmail(_ context.Context, email string) (*Account, error) {

@@ -18,6 +18,7 @@ type RegistrationService struct {
 	codes     VerificationCodeRepository
 	sender    VerificationCodeSender
 	hasher    PasswordHasher
+	usernames UsernameDeriver
 	whitelist EmailWhitelist
 	config    RegistrationConfig
 }
@@ -27,6 +28,7 @@ func NewRegistrationService(
 	codes VerificationCodeRepository,
 	sender VerificationCodeSender,
 	hasher PasswordHasher,
+	usernames UsernameDeriver,
 	config RegistrationConfig,
 ) *RegistrationService {
 	if config.CodeInterval <= 0 {
@@ -40,6 +42,7 @@ func NewRegistrationService(
 		codes:     codes,
 		sender:    sender,
 		hasher:    hasher,
+		usernames: usernames,
 		whitelist: NewEmailWhitelist(config.EmailWhitelist),
 		config:    config,
 	}
@@ -50,7 +53,11 @@ func (s *RegistrationService) SendRegisterCode(ctx context.Context, email string
 	if err != nil {
 		return err
 	}
-	existing, err := s.userRepo.FindByEmail(ctx, normalized)
+	username, err := s.usernames.UsernameFromEmail(normalized)
+	if err != nil {
+		return err
+	}
+	existing, err := s.userRepo.FindByUsername(ctx, username)
 	if err != nil {
 		return err
 	}
@@ -85,6 +92,10 @@ func (s *RegistrationService) Register(ctx context.Context, email, code, passwor
 	if err != nil {
 		return nil, err
 	}
+	username, err := s.usernames.UsernameFromEmail(normalized)
+	if err != nil {
+		return nil, err
+	}
 	if strings.TrimSpace(password) == "" {
 		return nil, ErrPasswordRequired
 	}
@@ -97,7 +108,7 @@ func (s *RegistrationService) Register(ctx context.Context, email, code, passwor
 		return nil, ErrVerificationCodeInvalid
 	}
 
-	existing, err := s.userRepo.FindByEmail(ctx, normalized)
+	existing, err := s.userRepo.FindByUsername(ctx, username)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +121,7 @@ func (s *RegistrationService) Register(ctx context.Context, email, code, passwor
 		return nil, err
 	}
 	now := time.Now()
-	u := NewRegisteredAccount(normalized, passwordHash, now)
+	u := NewRegisteredAccount(username, passwordHash, now)
 	if err := s.userRepo.Create(ctx, u); err != nil {
 		return nil, err
 	}
@@ -119,10 +130,7 @@ func (s *RegistrationService) Register(ctx context.Context, email, code, passwor
 }
 
 func (s *RegistrationService) normalizeAllowedEmail(email string) (string, error) {
-	normalized, err := NormalizeEmail(email)
-	if err != nil {
-		return "", err
-	}
+	normalized := normalizeEmail(email)
 	if !s.whitelist.Allows(normalized) {
 		return "", ErrEmailNotAllowed
 	}

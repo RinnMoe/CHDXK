@@ -25,6 +25,7 @@ session:
 auth:
   email_whitelist:
     - "@example.edu"
+  username_salt: "SALT"
   verification_code_interval: 60
   verification_code_ttl: 600
 

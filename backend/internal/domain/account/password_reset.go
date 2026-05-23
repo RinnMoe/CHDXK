@@ -13,11 +13,12 @@ type PasswordResetConfig struct {
 }
 
 type PasswordResetService struct {
-	userRepo AccountRepository
-	codes    VerificationCodeRepository
-	sender   VerificationCodeSender
-	hasher   PasswordHasher
-	config   PasswordResetConfig
+	userRepo  AccountRepository
+	codes     VerificationCodeRepository
+	sender    VerificationCodeSender
+	hasher    PasswordHasher
+	usernames UsernameDeriver
+	config    PasswordResetConfig
 }
 
 func NewPasswordResetService(
@@ -25,6 +26,7 @@ func NewPasswordResetService(
 	codes VerificationCodeRepository,
 	sender VerificationCodeSender,
 	hasher PasswordHasher,
+	usernames UsernameDeriver,
 	config PasswordResetConfig,
 ) *PasswordResetService {
 	if config.CodeInterval <= 0 {
@@ -34,21 +36,23 @@ func NewPasswordResetService(
 		config.CodeTTL = 10 * time.Minute
 	}
 	return &PasswordResetService{
-		userRepo: userRepo,
-		codes:    codes,
-		sender:   sender,
-		hasher:   hasher,
-		config:   config,
+		userRepo:  userRepo,
+		codes:     codes,
+		sender:    sender,
+		hasher:    hasher,
+		usernames: usernames,
+		config:    config,
 	}
 }
 
 func (s *PasswordResetService) SendResetCode(ctx context.Context, email string) error {
-	normalized, err := NormalizeEmail(email)
+	normalized := normalizeEmail(email)
+	username, err := s.usernames.UsernameFromEmail(normalized)
 	if err != nil {
 		return err
 	}
 
-	existing, err := s.userRepo.FindByEmail(ctx, normalized)
+	existing, err := s.userRepo.FindByUsername(ctx, username)
 	if err != nil {
 		return err
 	}
@@ -79,7 +83,8 @@ func (s *PasswordResetService) SendResetCode(ctx context.Context, email string) 
 }
 
 func (s *PasswordResetService) ResetPassword(ctx context.Context, email, code, newPassword string) error {
-	normalized, err := NormalizeEmail(email)
+	normalized := normalizeEmail(email)
+	username, err := s.usernames.UsernameFromEmail(normalized)
 	if err != nil {
 		return err
 	}
@@ -95,7 +100,7 @@ func (s *PasswordResetService) ResetPassword(ctx context.Context, email, code, n
 		return ErrVerificationCodeInvalid
 	}
 
-	u, err := s.userRepo.FindByEmail(ctx, normalized)
+	u, err := s.userRepo.FindByUsername(ctx, username)
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,7 @@ package repository_test
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 	"time"
 
@@ -204,7 +205,7 @@ func TestVoteRepository_MultipleUsers(t *testing.T) {
 	// Seed a second user
 	e2 := repository.UserEntity{
 		Username:     "testuser2",
-		Email:        "testuser2@example.com",
+		Email:        sql.NullString{String: "testuser2@example.com", Valid: true},
 		Role:         "user",
 		PasswordHash: "hashed_password",
 		CreatedAt:    time.Now(),

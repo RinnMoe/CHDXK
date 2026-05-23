@@ -61,12 +61,36 @@ func TestAccountRepository_FindByUsernameAndEmail(t *testing.T) {
 		t.Fatalf("by username = %+v, want id=%d username=%q", byUsername, e.ID, e.Username)
 	}
 
-	byEmail, err := repo.FindByEmail(ctx, e.Email)
+	byEmail, err := repo.FindByEmail(ctx, e.Email.String)
 	if err != nil {
 		t.Fatalf("FindByEmail: %v", err)
 	}
-	if byEmail.ID != e.ID || byEmail.Email != e.Email {
-		t.Fatalf("by email = %+v, want id=%d email=%q", byEmail, e.ID, e.Email)
+	if byEmail.ID != e.ID || byEmail.Email != e.Email.String {
+		t.Fatalf("by email = %+v, want id=%d email=%q", byEmail, e.ID, e.Email.String)
+	}
+}
+
+func TestAccountRepository_CreateWithoutEmail(t *testing.T) {
+	db := newTestDB(t)
+	repo := repository.NewAccountRepository(db)
+	ctx := context.Background()
+
+	acct := &account.Account{
+		Username:     "hashedusername",
+		PasswordHash: "secret",
+		CreatedAt:    time.Now(),
+		LastSeenAt:   time.Now(),
+	}
+	if err := repo.Create(ctx, acct); err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+
+	var raw repository.UserEntity
+	if err := db.First(&raw, acct.ID).Error; err != nil {
+		t.Fatalf("load raw user: %v", err)
+	}
+	if raw.Email.Valid {
+		t.Fatalf("stored email = %q, want NULL", raw.Email.String)
 	}
 }
 
@@ -90,7 +114,7 @@ func TestAccountRepository_UpdatePasswordHashAndTouchLastSeen(t *testing.T) {
 	ctx := context.Background()
 	e := seedUser(t, db)
 
-	acct := &account.Account{ID: e.ID, Username: e.Username, Email: e.Email, PasswordHash: "new_password", LastSeenAt: e.LastSeenAt.Add(time.Hour)}
+	acct := &account.Account{ID: e.ID, Username: e.Username, Email: e.Email.String, PasswordHash: "new_password", LastSeenAt: e.LastSeenAt.Add(time.Hour)}
 	if err := repo.Update(ctx, acct); err != nil {
 		t.Fatalf("Update: %v", err)
 	}

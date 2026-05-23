@@ -24,6 +24,7 @@ func NewAccountCommandService(
 	resetCodes account.VerificationCodeRepository,
 	sender account.VerificationCodeSender,
 	hasher account.PasswordHasher,
+	usernames account.UsernameDeriver,
 	config AccountCommandConfig,
 	resetConfig account.PasswordResetConfig,
 	loginAttempts account.LoginAttemptRepository,
@@ -31,9 +32,9 @@ func NewAccountCommandService(
 	loginLockout time.Duration,
 ) *AccountCommandService {
 	return &AccountCommandService{
-		registration:    account.NewRegistrationService(accountRepo, codes, sender, hasher, config),
-		login:           account.NewLoginService(accountRepo, hasher, loginAttempts, maxLoginAttempts, loginLockout),
-		passwordReset:   account.NewPasswordResetService(accountRepo, resetCodes, sender, hasher, resetConfig),
+		registration:    account.NewRegistrationService(accountRepo, codes, sender, hasher, usernames, config),
+		login:           account.NewLoginService(accountRepo, hasher, loginAttempts, usernames, maxLoginAttempts, loginLockout),
+		passwordReset:   account.NewPasswordResetService(accountRepo, resetCodes, sender, hasher, usernames, resetConfig),
 		authUserService: authUserService,
 	}
 }

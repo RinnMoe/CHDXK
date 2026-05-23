@@ -17,10 +17,11 @@ type PointQueryService struct {
 	query           point.Query
 	accountRepo     account.AccountRepository
 	transferService *point.TransferService
+	usernames       account.UsernameDeriver
 }
 
-func NewPointQueryService(query point.Query, accountRepo account.AccountRepository, transferService *point.TransferService) *PointQueryService {
-	return &PointQueryService{query: query, accountRepo: accountRepo, transferService: transferService}
+func NewPointQueryService(query point.Query, accountRepo account.AccountRepository, transferService *point.TransferService, usernames account.UsernameDeriver) *PointQueryService {
+	return &PointQueryService{query: query, accountRepo: accountRepo, transferService: transferService, usernames: usernames}
 }
 
 func (s *PointQueryService) GetUserPoints(ctx context.Context, userID int, f PointRecordListFilter) (*PointSummaryDTO, error) {
@@ -75,7 +76,11 @@ func (s *PointQueryService) PreviewTransfer(ctx context.Context, userID int, par
 var ErrPointUserNotFound = errors.New("user not found")
 
 func (s *PointQueryService) GetUserPointsByEmail(ctx context.Context, email string) (int, error) {
-	u, err := s.accountRepo.FindByEmail(ctx, email)
+	username, err := s.usernames.UsernameFromEmail(email)
+	if err != nil {
+		return 0, err
+	}
+	u, err := s.accountRepo.FindByUsername(ctx, username)
 	if err != nil {
 		return 0, err
 	}

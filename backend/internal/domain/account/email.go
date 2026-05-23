@@ -1,12 +1,26 @@
 package account
 
 import (
-	"net/mail"
+	"encoding/hex"
 	"strings"
+
+	"golang.org/x/crypto/blake2b"
 )
 
 type EmailWhitelist struct {
 	entries []string
+}
+
+type UsernameDeriver interface {
+	UsernameFromEmail(email string) (string, error)
+}
+
+type BLAKE2bUsernameDeriver struct {
+	salt string
+}
+
+func NewBLAKE2bUsernameDeriver(salt string) *BLAKE2bUsernameDeriver {
+	return &BLAKE2bUsernameDeriver{salt: salt}
 }
 
 func NewEmailWhitelist(entries []string) EmailWhitelist {
@@ -20,13 +34,23 @@ func NewEmailWhitelist(entries []string) EmailWhitelist {
 	return EmailWhitelist{entries: normalized}
 }
 
-func NormalizeEmail(email string) (string, error) {
+func (d *BLAKE2bUsernameDeriver) UsernameFromEmail(email string) (string, error) {
 	email = strings.TrimSpace(email)
-	addr, err := mail.ParseAddress(email)
-	if err != nil || addr.Address != email {
+	localPart, _, ok := strings.Cut(email, "@")
+	if !ok || localPart == "" {
 		return "", ErrEmailNotAllowed
 	}
-	return strings.ToLower(addr.Address), nil
+
+	h, err := blake2b.New(16, nil)
+	if err != nil {
+		return "", err
+	}
+	_, _ = h.Write([]byte(strings.ToLower(localPart) + d.salt))
+	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
+func normalizeEmail(email string) string {
+	return strings.ToLower(strings.TrimSpace(email))
 }
 
 func (w EmailWhitelist) Allows(email string) bool {

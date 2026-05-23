@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/lib/pq"
@@ -104,11 +105,11 @@ func (ReviewRevisionEntity) TableName() string {
 }
 
 type UserEntity struct {
-	ID           int    `gorm:"column:id"`
-	Username     string `gorm:"column:username;uniqueIndex"`
-	Email        string `gorm:"column:email;uniqueIndex"`
-	Role         string `gorm:"column:role"`
-	PasswordHash string `gorm:"column:password_hash"`
+	ID           int            `gorm:"column:id"`
+	Username     string         `gorm:"column:username;uniqueIndex"`
+	Email        sql.NullString `gorm:"column:email;uniqueIndex"`
+	Role         string         `gorm:"column:role"`
+	PasswordHash string         `gorm:"column:password_hash"`
 
 	CreatedAt  time.Time `gorm:"column:created_at"`
 	LastSeenAt time.Time `gorm:"column:last_seen_at"`

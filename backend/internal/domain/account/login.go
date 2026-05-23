@@ -10,6 +10,7 @@ type LoginService struct {
 	accountRepo AccountRepository
 	hasher      PasswordHasher
 	attempts    LoginAttemptRepository
+	usernames   UsernameDeriver
 	maxAttempts int
 	lockout     time.Duration
 }
@@ -18,6 +19,7 @@ func NewLoginService(
 	userRepo AccountRepository,
 	hasher PasswordHasher,
 	attempts LoginAttemptRepository,
+	usernames UsernameDeriver,
 	maxAttempts int,
 	lockout time.Duration,
 ) *LoginService {
@@ -25,13 +27,15 @@ func NewLoginService(
 		accountRepo: userRepo,
 		hasher:      hasher,
 		attempts:    attempts,
+		usernames:   usernames,
 		maxAttempts: maxAttempts,
 		lockout:     lockout,
 	}
 }
 
 func (s *LoginService) Login(ctx context.Context, email, password string) (*Account, error) {
-	normalized, err := NormalizeEmail(email)
+	normalized := normalizeEmail(email)
+	username, err := s.usernames.UsernameFromEmail(normalized)
 	if err != nil {
 		return nil, ErrInvalidCredentials
 	}
@@ -40,7 +44,7 @@ func (s *LoginService) Login(ctx context.Context, email, password string) (*Acco
 		return nil, ErrLoginLocked
 	}
 
-	u, err := s.accountRepo.FindByEmail(ctx, normalized)
+	u, err := s.accountRepo.FindByUsername(ctx, username)
 	if err != nil {
 		return nil, err
 	}

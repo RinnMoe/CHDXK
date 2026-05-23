@@ -54,6 +54,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	verificationRepo := repository.NewVerificationCodeRepository(redisClient)
 	resetCodeRepo := repository.NewVerificationCodeRepositoryWithPrefix(redisClient, "reset")
 	loginAttemptRepo := repository.NewLoginAttemptRepository(redisClient, time.Duration(conf.Auth.LoginLockoutDuration)*time.Second)
+	usernameDeriver := account.NewBLAKE2bUsernameDeriver(conf.Auth.UsernameSalt)
 
 	reviewQuery := application.NewReviewQueryService(reviewRepo, voteRepo, notificationRepo)
 
@@ -79,7 +80,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	pointQuery := application.NewPointQueryService(pointRepo, accountRepo, point.NewTransferService(point.TransferFeeConfig{
 		RateBps: conf.Point.TransferFeeRateBps,
 		MinFee:  conf.Point.TransferMinFee,
-	}))
+	}), usernameDeriver)
 	pointCommand := application.NewPointCommandService(accountRepo, pointRepo, point.NewTransferService(point.TransferFeeConfig{
 		RateBps: conf.Point.TransferFeeRateBps,
 		MinFee:  conf.Point.TransferMinFee,
@@ -95,6 +96,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		resetCodeRepo,
 		email.NewSMTPVerificationCodeSender(conf.SMTP),
 		account.NewDjangoPBKDF2SHA256PasswordHasher(0),
+		usernameDeriver,
 		application.AccountCommandConfig{
 			EmailWhitelist: conf.Auth.EmailWhitelist,
 			CodeInterval:   time.Duration(conf.Auth.VerificationCodeInterval) * time.Second,
