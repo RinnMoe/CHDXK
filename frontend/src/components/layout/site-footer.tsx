@@ -1,0 +1,29 @@
+import { Link } from "react-router-dom"
+
+const footerLinks = [
+  { to: "/about", label: "关于" },
+  { to: "/faq", label: "常见问题" },
+]
+
+export function SiteFooter() {
+  const year = new Date().getFullYear()
+
+  return (
+    <footer className="border-t bg-background">
+      <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-4 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <p>&copy; {year} JCourse. 保留所有权利。</p>
+        <nav className="flex gap-4" aria-label="页脚导航">
+          {footerLinks.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className="transition-colors hover:text-foreground"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+      </div>
+    </footer>
+  )
+}

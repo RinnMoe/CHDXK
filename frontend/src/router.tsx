@@ -19,6 +19,9 @@ import { UserPointsPage } from "@/pages/user-points-page"
 import { UserCoursesPage } from "@/pages/user-courses-page"
 import { ApiKeysPage } from "@/pages/api-keys-page"
 import { SiteStatsPage } from "@/pages/admin/site-stats-page"
+import { AboutPage } from "@/pages/about-page"
+import { FaqPage } from "@/pages/faq-page"
+import { NotFoundPage } from "@/pages/not-found-page"
 
 export const router = createBrowserRouter([
   {
@@ -43,6 +46,9 @@ export const router = createBrowserRouter([
       { path: "/points", element: <UserPointsPage /> },
       { path: "/api-keys", element: <ApiKeysPage /> },
       { path: "/admin/site-stats", element: <SiteStatsPage /> },
+      { path: "/about", element: <AboutPage /> },
+      { path: "/faq", element: <FaqPage /> },
+      { path: "*", element: <NotFoundPage /> },
     ],
   },
 ])
