@@ -3,6 +3,7 @@ import { useState } from "react"
 import { RiMenuLine } from "@remixicon/react"
 import { UserMenu } from "@/components/auth/user-menu"
 import { Button } from "@/components/ui/button"
+import { brand } from "@/config/brand"
 import {
   Sheet,
   SheetTrigger,
@@ -44,7 +45,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-14 max-w-[1440px] items-center px-4">
         <Link to="/" className="flex items-center gap-2 font-semibold">
-          <span className="text-lg">JCourse</span>
+          <span className="text-lg">{brand.name}</span>
         </Link>
 
         {/* Desktop nav */}

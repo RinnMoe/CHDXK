@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ReviewCard } from "@/components/review/review-card"
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
 import { useReview } from "@/hooks/use-review"
 
 export function ReviewDetailPage() {
@@ -14,7 +15,7 @@ export function ReviewDetailPage() {
   if (isLoading) {
     return (
       <>
-        <title>点评 - JCourse</title>
+        <PageTitle>点评</PageTitle>
         <PageShell>
           <Button asChild variant="ghost" size="sm" className="mb-4">
             <Link to="/reviews">
@@ -34,7 +35,7 @@ export function ReviewDetailPage() {
   if (!review) {
     return (
       <>
-        <title>点评 - JCourse</title>
+        <PageTitle>点评</PageTitle>
         <PageShell>
           <div className="py-16 text-center">
             <p className="text-muted-foreground">点评不存在</p>
@@ -49,7 +50,7 @@ export function ReviewDetailPage() {
 
   return (
     <>
-      <title>点评 - JCourse</title>
+      <PageTitle>点评</PageTitle>
       <PageShell>
         <Button asChild variant="ghost" size="sm" className="mb-4">
           <Link to="/reviews">

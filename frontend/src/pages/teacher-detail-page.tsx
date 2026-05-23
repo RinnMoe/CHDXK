@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { CourseCard } from "@/components/course/course-card"
 import { PaginationComponent } from "@/components/common/pagination"
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
 import { useSearchParams } from "react-router-dom"
 import { getMockTeacher } from "@/mocks/fixtures/teachers"
 import { useTeacherCourses } from "@/hooks/use-teacher"
@@ -29,7 +30,7 @@ export function TeacherDetailPage() {
 
   return (
     <>
-      <title>{mockTeacher?.name ?? "教师"} - JCourse</title>
+      <PageTitle>{mockTeacher?.name ?? "教师"}</PageTitle>
       <PageShell>
         <Button asChild variant="ghost" size="sm" className="mb-4">
           <Link to="/teachers">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
 import { ReviewList } from "@/components/review/review-list"
 import { PaginationComponent } from "@/components/common/pagination"
 import { Input } from "@/components/ui/input"
@@ -49,7 +50,7 @@ export function ReviewsPage() {
 
   return (
     <>
-      <title>点评 - JCourse</title>
+      <PageTitle>点评</PageTitle>
       <PageShell>
         <div className="space-y-6">
           <div>

@@ -13,6 +13,7 @@ import { CourseNotificationControl } from "@/components/course/course-notificati
 import { CourseReviewTrendDialog } from "@/components/course/course-review-trend-dialog"
 import { RatingDistribution } from "@/components/course/rating-distribution"
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
 import {
   useCourseDetail,
   useCourseReviewFilters,
@@ -76,7 +77,7 @@ export function CourseDetailPage() {
   if (isLoading) {
     return (
       <>
-        <title>课程 - JCourse</title>
+        <PageTitle>课程</PageTitle>
         <PageShell>
           <div className="space-y-4">
             <Skeleton className="h-4 w-24" />
@@ -91,7 +92,7 @@ export function CourseDetailPage() {
   if (!course) {
     return (
       <>
-        <title>课程 - JCourse</title>
+        <PageTitle>课程</PageTitle>
         <PageShell>
           <div className="py-16 text-center">
             <p className="text-muted-foreground">课程不存在</p>
@@ -113,7 +114,7 @@ export function CourseDetailPage() {
 
   return (
     <>
-      <title>{course.name} - JCourse</title>
+      <PageTitle>{course.name}</PageTitle>
       <PageShell>
         <Button asChild variant="ghost" size="sm" className="mb-4">
           <Link to="/courses">

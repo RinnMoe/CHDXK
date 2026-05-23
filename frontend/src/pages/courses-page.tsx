@@ -4,6 +4,7 @@ import { CourseList } from "@/components/course/course-list"
 import { CourseFilters } from "@/components/course/course-filters"
 import { PaginationComponent } from "@/components/common/pagination"
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
 import { useCourseFilters, useCourses } from "@/hooks/use-course"
 
 export function CoursesPage() {
@@ -41,7 +42,7 @@ export function CoursesPage() {
 
   return (
     <>
-      <title>课程 - JCourse</title>
+      <PageTitle>课程</PageTitle>
       <PageShell>
         <div className="space-y-6 lg:flex lg:flex-col lg:gap-6 lg:space-y-0">
           <div>

@@ -3,6 +3,7 @@ import { RiArrowLeftLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
 import { ReviewForm } from "@/components/review/review-form"
 import { useCourseDetail } from "@/hooks/use-course"
 import { useCreateReview } from "@/hooks/use-review"
@@ -23,7 +24,7 @@ export function NewReviewPage() {
 
   return (
     <>
-      <title>写点评 - JCourse</title>
+      <PageTitle>写点评</PageTitle>
       <PageShell>
         <Button asChild variant="ghost" size="sm" className="mb-4">
           <Link to={`/courses/${id}`}>

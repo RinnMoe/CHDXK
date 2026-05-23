@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { LoginForm } from "@/components/auth/login-form"
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
 import { useAuth } from "@/contexts/auth-context"
 
 export function LoginPage() {
@@ -18,7 +19,7 @@ export function LoginPage() {
 
   return (
     <>
-      <title>登录 - JCourse</title>
+      <PageTitle>登录</PageTitle>
       <PageShell>
         <div className="flex justify-center">
           <LoginForm />

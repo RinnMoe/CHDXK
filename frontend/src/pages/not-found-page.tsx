@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
 
 export function NotFoundPage() {
   return (
     <>
-      <title>页面不存在 - JCourse</title>
+      <PageTitle>页面不存在</PageTitle>
       <PageShell showAnnouncements={false}>
         <div className="mx-auto flex min-h-[calc(100svh-15rem)] max-w-2xl flex-col items-center justify-center py-16 text-center">
           <p className="text-sm font-medium text-primary">404</p>

@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { RegisterForm } from "@/components/auth/register-form"
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
 import { useAuth } from "@/contexts/auth-context"
 
 export function RegisterPage() {
@@ -18,7 +19,7 @@ export function RegisterPage() {
 
   return (
     <>
-      <title>注册 - JCourse</title>
+      <PageTitle>注册</PageTitle>
       <PageShell>
         <div className="flex justify-center">
           <RegisterForm />

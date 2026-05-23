@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Navigate, useSearchParams } from "react-router-dom"
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -88,7 +89,7 @@ export function SiteStatsPage() {
   if (user.role !== "admin") {
     return (
       <>
-        <title>站点统计 - JCourse</title>
+        <PageTitle>站点统计</PageTitle>
         <PageShell>
           <p className="py-12 text-center text-muted-foreground">
             需要管理员权限
@@ -100,7 +101,7 @@ export function SiteStatsPage() {
 
   return (
     <>
-      <title>站点统计 - JCourse</title>
+      <PageTitle>站点统计</PageTitle>
       <PageShell>
         <div className="space-y-6">
           <h1 className="text-2xl font-semibold">站点统计</h1>

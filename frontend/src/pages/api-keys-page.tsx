@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react"
 import { Navigate } from "react-router-dom"
 import { RiAddLine, RiDeleteBinLine, RiFileCopyLine } from "@remixicon/react"
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -120,7 +121,7 @@ export function ApiKeysPage() {
 
   return (
     <>
-      <title>API Keys - JCourse</title>
+      <PageTitle>API Keys</PageTitle>
       <PageShell>
         <div className="space-y-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

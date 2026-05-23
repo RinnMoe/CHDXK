@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
 import { HotCourseList } from "@/components/course/hot-course-list"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 
@@ -8,7 +9,7 @@ export function HotCoursesPage() {
 
   return (
     <>
-      <title>热门 - JCourse</title>
+      <PageTitle>热门</PageTitle>
       <PageShell>
         <div className="space-y-6">
           <div>

@@ -3,6 +3,9 @@ import { createRoot } from "react-dom/client"
 
 import "./index.css"
 import App from "./App.tsx"
+import { brand } from "@/config/brand"
+
+document.title = brand.name
 
 async function enableMocking() {
   if (!import.meta.env.DEV) return

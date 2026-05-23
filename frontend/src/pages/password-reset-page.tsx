@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { PasswordResetForm } from "@/components/auth/password-reset-form"
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
 import { useAuth } from "@/contexts/auth-context"
 
 export function PasswordResetPage() {
@@ -18,7 +19,7 @@ export function PasswordResetPage() {
 
   return (
     <>
-      <title>重置密码 - JCourse</title>
+      <PageTitle>重置密码</PageTitle>
       <PageShell>
         <div className="flex justify-center">
           <PasswordResetForm />

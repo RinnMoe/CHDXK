@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
 import { PointRecordList } from "@/components/point/point-record-list"
 import { TransferForm } from "@/components/point/transfer-form"
 import { useUserPoints } from "@/hooks/use-point"
@@ -23,7 +24,7 @@ export function UserPointsPage() {
   if (!user) {
     return (
       <>
-        <title>我的积分 - JCourse</title>
+        <PageTitle>我的积分</PageTitle>
         <PageShell>
           <p className="py-12 text-center text-muted-foreground">请先登录</p>
         </PageShell>
@@ -33,7 +34,7 @@ export function UserPointsPage() {
 
   return (
     <>
-      <title>我的积分 - JCourse</title>
+      <PageTitle>我的积分</PageTitle>
       <PageShell>
         <div className="space-y-6">
           <Card>

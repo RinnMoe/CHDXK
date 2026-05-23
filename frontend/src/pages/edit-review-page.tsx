@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
 import { ReviewForm } from "@/components/review/review-form"
 import { useCourseDetail } from "@/hooks/use-course"
 import { useReview, useUpdateReview } from "@/hooks/use-review"
@@ -26,7 +27,7 @@ export function EditReviewPage() {
   if (isLoading || !review) {
     return (
       <>
-        <title>编辑点评 - JCourse</title>
+        <PageTitle>编辑点评</PageTitle>
         <PageShell>
           <div className="space-y-4">
             <Skeleton className="h-8 w-1/2" />
@@ -39,7 +40,7 @@ export function EditReviewPage() {
 
   return (
     <>
-      <title>编辑点评 - JCourse</title>
+      <PageTitle>编辑点评</PageTitle>
       <PageShell>
         <Button asChild variant="ghost" size="sm" className="mb-4">
           <Link to={`/reviews/${id}`}>

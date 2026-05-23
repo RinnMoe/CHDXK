@@ -1,4 +1,5 @@
 import type { AnnouncementDTO } from "@/api/announcement"
+import { brand } from "@/config/brand"
 
 const now = Date.now()
 
@@ -19,8 +20,8 @@ export const mockAnnouncements: AnnouncementDTO[] = [
   },
   {
     id: 3,
-    title: "欢迎使用 JCourse",
-    body: "JCourse 是一个课程评价平台，欢迎大家分享自己的选课心得。",
+    title: `欢迎使用 ${brand.name}`,
+    body: `${brand.name} 是一个课程评价平台，欢迎大家分享自己的选课心得。`,
     priority: 1,
     created_at: new Date(now - 1000 * 60 * 60 * 24 * 30).toISOString(),
   },

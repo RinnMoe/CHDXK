@@ -1,5 +1,6 @@
 import { useSearchParams } from "react-router-dom"
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
 import { TeacherList } from "@/components/teacher/teacher-list"
 import { PaginationComponent } from "@/components/common/pagination"
 import { Input } from "@/components/ui/input"
@@ -47,7 +48,7 @@ export function TeachersPage() {
 
   return (
     <>
-      <title>教师 - JCourse</title>
+      <PageTitle>教师</PageTitle>
       <PageShell>
         <div className="space-y-6">
           <div>

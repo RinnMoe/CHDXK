@@ -1,4 +1,5 @@
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
 
 const faqs = [
   {
@@ -26,7 +27,7 @@ const faqs = [
 export function FaqPage() {
   return (
     <>
-      <title>常见问题 - JCourse</title>
+      <PageTitle>常见问题</PageTitle>
       <PageShell>
         <div className="mx-auto max-w-3xl space-y-6">
           <div>

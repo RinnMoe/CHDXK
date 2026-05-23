@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom"
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
 import { ReviewList } from "@/components/review/review-list"
 import { HotCourseList } from "@/components/course/hot-course-list"
 import { useReviews } from "@/hooks/use-review"
@@ -12,7 +13,7 @@ export function HomePage() {
 
   return (
     <>
-      <title>JCourse</title>
+      <PageTitle />
       <PageShell>
         <div className="space-y-6 lg:flex lg:gap-8 lg:space-y-0">
           <div className="min-w-0 flex-1 space-y-4">

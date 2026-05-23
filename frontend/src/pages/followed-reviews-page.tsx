@@ -1,4 +1,5 @@
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
 import { ReviewList } from "@/components/review/review-list"
 import { PaginationComponent } from "@/components/common/pagination"
 import { useFollowedReviews } from "@/hooks/use-review"
@@ -17,7 +18,7 @@ export function FollowedReviewsPage() {
 
   return (
     <>
-      <title>关注动态 - JCourse</title>
+      <PageTitle>关注动态</PageTitle>
       <PageShell>
         <div className="space-y-6">
           <div>

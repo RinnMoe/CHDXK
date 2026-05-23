@@ -1,15 +1,17 @@
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
+import { brand } from "@/config/brand"
 
 export function AboutPage() {
   return (
     <>
-      <title>关于 - JCourse</title>
+      <PageTitle>关于</PageTitle>
       <PageShell>
         <div className="mx-auto max-w-3xl space-y-6">
           <div>
-            <h1 className="text-2xl font-bold">关于 JCourse</h1>
+            <h1 className="text-2xl font-bold">关于 {brand.name}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              JCourse 是面向学生的课程信息与课程点评平台，帮助用户查找课程、了解教师授课情况，并分享真实的学习体验。
+              {brand.name} 是面向学生的课程信息与课程点评平台，帮助用户查找课程、了解教师授课情况，并分享真实的学习体验。
             </p>
           </div>
 

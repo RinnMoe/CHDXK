@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CourseList } from "@/components/course/course-list"
 import { PaginationComponent } from "@/components/common/pagination"
 import { PageShell } from "@/components/layout/page-shell"
+import { PageTitle } from "@/components/common/page-title"
 import { useAuth } from "@/contexts/auth-context"
 import { useFollowedCourses, useIgnoredCourses } from "@/hooks/use-course"
 
@@ -43,7 +44,7 @@ export function UserCoursesPage() {
 
   return (
     <>
-      <title>我的课程 - JCourse</title>
+      <PageTitle>我的课程</PageTitle>
       <PageShell>
         <div className="space-y-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
