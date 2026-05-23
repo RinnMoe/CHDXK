@@ -1,27 +1,94 @@
+import { lazy, type ComponentType } from "react"
 import { createBrowserRouter } from "react-router-dom"
 import { Layout } from "@/components/layout/layout"
-import { HomePage } from "@/pages/home-page"
-import { CoursesPage } from "@/pages/courses-page"
-import { HotCoursesPage } from "@/pages/hot-courses-page"
-import { CourseDetailPage } from "@/pages/course-detail-page"
-import { ReviewsPage } from "@/pages/reviews-page"
-import { FollowedReviewsPage } from "@/pages/followed-reviews-page"
-import { UserReviewsPage } from "@/pages/user-reviews-page"
-import { ReviewDetailPage } from "@/pages/review-detail-page"
-import { NewReviewPage } from "@/pages/new-review-page"
-import { EditReviewPage } from "@/pages/edit-review-page"
-import { TeachersPage } from "@/pages/teachers-page"
-import { TeacherDetailPage } from "@/pages/teacher-detail-page"
-import { LoginPage } from "@/pages/login-page"
-import { RegisterPage } from "@/pages/register-page"
-import { PasswordResetPage } from "@/pages/password-reset-page"
-import { UserPointsPage } from "@/pages/user-points-page"
-import { UserCoursesPage } from "@/pages/user-courses-page"
-import { ApiKeysPage } from "@/pages/api-keys-page"
-import { SiteStatsPage } from "@/pages/admin/site-stats-page"
-import { AboutPage } from "@/pages/about-page"
-import { FaqPage } from "@/pages/faq-page"
-import { NotFoundPage } from "@/pages/not-found-page"
+
+function lazyNamedPage<TModule extends Record<string, ComponentType>>(
+  loader: () => Promise<TModule>,
+  exportName: keyof TModule
+) {
+  return lazy(() =>
+    loader().then((module) => ({
+      default: module[exportName],
+    }))
+  )
+}
+
+const HomePage = lazyNamedPage(() => import("@/pages/home-page"), "HomePage")
+const CoursesPage = lazyNamedPage(
+  () => import("@/pages/courses-page"),
+  "CoursesPage"
+)
+const HotCoursesPage = lazyNamedPage(
+  () => import("@/pages/hot-courses-page"),
+  "HotCoursesPage"
+)
+const CourseDetailPage = lazyNamedPage(
+  () => import("@/pages/course-detail-page"),
+  "CourseDetailPage"
+)
+const ReviewsPage = lazyNamedPage(
+  () => import("@/pages/reviews-page"),
+  "ReviewsPage"
+)
+const FollowedReviewsPage = lazyNamedPage(
+  () => import("@/pages/followed-reviews-page"),
+  "FollowedReviewsPage"
+)
+const UserReviewsPage = lazyNamedPage(
+  () => import("@/pages/user-reviews-page"),
+  "UserReviewsPage"
+)
+const ReviewDetailPage = lazyNamedPage(
+  () => import("@/pages/review-detail-page"),
+  "ReviewDetailPage"
+)
+const NewReviewPage = lazyNamedPage(
+  () => import("@/pages/new-review-page"),
+  "NewReviewPage"
+)
+const EditReviewPage = lazyNamedPage(
+  () => import("@/pages/edit-review-page"),
+  "EditReviewPage"
+)
+const TeachersPage = lazyNamedPage(
+  () => import("@/pages/teachers-page"),
+  "TeachersPage"
+)
+const TeacherDetailPage = lazyNamedPage(
+  () => import("@/pages/teacher-detail-page"),
+  "TeacherDetailPage"
+)
+const LoginPage = lazyNamedPage(() => import("@/pages/login-page"), "LoginPage")
+const RegisterPage = lazyNamedPage(
+  () => import("@/pages/register-page"),
+  "RegisterPage"
+)
+const PasswordResetPage = lazyNamedPage(
+  () => import("@/pages/password-reset-page"),
+  "PasswordResetPage"
+)
+const UserPointsPage = lazyNamedPage(
+  () => import("@/pages/user-points-page"),
+  "UserPointsPage"
+)
+const UserCoursesPage = lazyNamedPage(
+  () => import("@/pages/user-courses-page"),
+  "UserCoursesPage"
+)
+const ApiKeysPage = lazyNamedPage(
+  () => import("@/pages/api-keys-page"),
+  "ApiKeysPage"
+)
+const SiteStatsPage = lazyNamedPage(
+  () => import("@/pages/admin/site-stats-page"),
+  "SiteStatsPage"
+)
+const AboutPage = lazyNamedPage(() => import("@/pages/about-page"), "AboutPage")
+const FaqPage = lazyNamedPage(() => import("@/pages/faq-page"), "FaqPage")
+const NotFoundPage = lazyNamedPage(
+  () => import("@/pages/not-found-page"),
+  "NotFoundPage"
+)
 
 export const router = createBrowserRouter([
   {
