@@ -2,7 +2,6 @@ import { useMemo, useState } from "react"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -12,10 +11,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { PaginationComponent } from "@/components/common/pagination"
+import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
 import { useReviewRevisions } from "@/hooks/use-review"
 import { formatDateTime } from "@/lib/date"
+import { RiArrowLeftSLine, RiArrowRightSLine } from "@remixicon/react"
 import { ReviewContent } from "./review-content"
 import type { ReviewDTO } from "@/api/review"
 
@@ -55,6 +55,7 @@ export function ReviewRevisionsDialog({ review }: ReviewRevisionsDialogProps) {
     const start = (currentPage - 1) * REVISION_PAGE_SIZE
     return (revisions ?? []).slice(start, start + REVISION_PAGE_SIZE)
   }, [currentPage, revisions])
+  const currentRevision = pagedRevisions[0]
 
   function handleOpenChange(nextOpen: boolean) {
     setOpen(nextOpen)
@@ -99,10 +100,7 @@ export function ReviewRevisionsDialog({ review }: ReviewRevisionsDialogProps) {
       {canViewRevisions && (
         <DialogContent className="max-h-[80vh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Revision 历史</DialogTitle>
-            <DialogDescription>
-              点评 #{review.id} 的历次修改前内容，最新版本在前。
-            </DialogDescription>
+            <DialogTitle>点评 #{review.id} 的修订历史</DialogTitle>
           </DialogHeader>
 
           <div className="min-h-0 overflow-y-auto pr-1">
@@ -116,24 +114,15 @@ export function ReviewRevisionsDialog({ review }: ReviewRevisionsDialogProps) {
               </div>
             ) : revisions?.length ? (
               <div className="space-y-5">
-                {pagedRevisions.map((revision, i) => {
-                  const revisionNumber =
-                    (revisions?.length ?? 0) -
-                    ((currentPage - 1) * REVISION_PAGE_SIZE + i)
+                {pagedRevisions.map((revision) => {
                   return (
-                    <section key={revision.id} className="space-y-3">
+                    <section key={revision.id}>
                       <ReviewContent
                         rating={revision.rating}
                         semester={revision.semester}
                         score={revision.score}
                         content={revision.content}
                       />
-                      <div className="flex items-center justify-between gap-3 border-t pt-3 text-xs text-muted-foreground">
-                        <span>第 {revisionNumber} 版内容</span>
-                        <span className="font-mono tabular-nums">
-                          {formatDateTime(revision.created_at)}
-                        </span>
-                      </div>
                     </section>
                   )
                 })}
@@ -145,14 +134,36 @@ export function ReviewRevisionsDialog({ review }: ReviewRevisionsDialogProps) {
             )}
           </div>
 
-          {revisions?.length ? (
-            <div className="border-t pt-4">
-              <PaginationComponent
-                page={currentPage}
-                pageSize={REVISION_PAGE_SIZE}
-                total={revisions.length}
-                onPageChange={setPage}
-              />
+          {revisions?.length && currentRevision ? (
+            <div className="flex items-center justify-between gap-3 border-t pt-4">
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {formatDateTime(currentRevision.created_at)}
+              </span>
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="上一条 revision"
+                  disabled={currentPage <= 1}
+                  onClick={() => setPage(currentPage - 1)}
+                >
+                  <RiArrowLeftSLine />
+                </Button>
+                <span className="min-w-16 text-center text-sm font-medium text-muted-foreground tabular-nums">
+                  {currentPage} / {totalPages}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="下一条 revision"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setPage(currentPage + 1)}
+                >
+                  <RiArrowRightSLine />
+                </Button>
+              </div>
             </div>
           ) : null}
         </DialogContent>
