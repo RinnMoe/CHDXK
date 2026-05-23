@@ -7,3 +7,4 @@ data/
 
 *.exe
 backend/config/config.yaml
+.pnpm-store/
