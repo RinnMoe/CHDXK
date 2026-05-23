@@ -25,6 +25,7 @@ import { ReviewCard } from "@/components/review/review-card"
 import { CourseReviewFilters } from "@/components/course/course-review-filters"
 import { PaginationComponent } from "@/components/common/pagination"
 import { brand } from "@/config/brand"
+import { cn } from "@/lib/utils"
 
 const REVIEW_PAGE_SIZE = 10
 
@@ -150,6 +151,8 @@ export function CourseDetailPage() {
   )
   const teacherGroup = course.teacher_group ?? []
   const feedbackMailto = buildFeedbackMailto(course)
+  const hasRelatedCourses =
+    course.same_code_courses.length > 0 || course.same_teacher_courses.length > 0
 
   return (
     <>
@@ -162,8 +165,13 @@ export function CourseDetailPage() {
           </Link>
         </Button>
 
-        <div className="space-y-6 lg:grid lg:grid-cols-3 lg:gap-6 lg:space-y-0">
-          <div className="space-y-6 lg:col-span-2">
+        <div
+          className={cn(
+            "space-y-6",
+            hasRelatedCourses && "lg:grid lg:grid-cols-3 lg:gap-6 lg:space-y-0"
+          )}
+        >
+          <div className={cn("space-y-6", hasRelatedCourses && "lg:col-span-2")}>
             <div className="space-y-6 md:grid md:grid-cols-[minmax(0,1fr)_minmax(18rem,min(24rem,50%))] md:items-start md:gap-6 md:space-y-0">
               <div className="space-y-6">
                 <header className="space-y-3">
@@ -175,23 +183,23 @@ export function CourseDetailPage() {
                   <div className="space-y-2">
                     <h1 className="text-3xl font-bold">{course.name}</h1>
                     <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                      <span className="text-sm font-normal text-muted-foreground">
+                      <span className="text-sm font-medium text-muted-foreground">
                         主讲教师：
                       </span>
-                      <Link
-                        to={`/teachers/${course.main_teacher.id}`}
-                        className="text-lg font-semibold text-primary hover:underline"
-                      >
-                        {course.main_teacher.name}
-                      </Link>
-                      {course.main_teacher.title && (
-                        <TitleBadge className="ml-1">
-                          {course.main_teacher.title}
-                        </TitleBadge>
-                      )}
+                      <span className="inline-flex items-baseline gap-1.5">
+                        <Link
+                          to={`/teachers/${course.main_teacher.id}`}
+                          className="text-lg font-semibold text-primary hover:underline"
+                        >
+                          {course.main_teacher.name}
+                        </Link>
+                        {course.main_teacher.title && (
+                          <TitleBadge>{course.main_teacher.title}</TitleBadge>
+                        )}
+                      </span>
                       {teacherGroup.length > 1 && (
                         <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm font-normal text-muted-foreground">
-                          <span>合上教师：</span>
+                          <span className="font-medium">合上教师：</span>
                           {teacherGroup.map((teacher, index) => (
                             <span
                               key={teacher.id}
@@ -359,8 +367,7 @@ export function CourseDetailPage() {
             </section>
           </div>
 
-          {(course.same_code_courses.length > 0 ||
-            course.same_teacher_courses.length > 0) && (
+          {hasRelatedCourses && (
             <aside className="space-y-6">
               {course.same_code_courses.length > 0 && (
                 <section>

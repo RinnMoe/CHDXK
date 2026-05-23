@@ -95,9 +95,6 @@ export function CourseNotificationControl({
           ))}
         </SelectContent>
       </Select>
-      <Button asChild size="sm" variant="ghost" className="h-7 px-2">
-        <Link to="/courses/mine">查看全部</Link>
-      </Button>
     </div>
   )
 }
