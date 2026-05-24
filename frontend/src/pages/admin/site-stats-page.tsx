@@ -17,10 +17,22 @@ import { formatDateInputValue, formatRelativeDateInputValue } from "@/lib/date"
 const tablePageSize = 20
 const chartPageSize = 10000
 
+type DateRangeParams = {
+  start_date?: string
+  end_date?: string
+}
+
 function getDefaultDateRange() {
   return {
     startDate: formatRelativeDateInputValue(-29),
     endDate: formatDateInputValue(new Date()),
+  }
+}
+
+function getQuickDateRange(days: number): DateRangeParams {
+  return {
+    start_date: formatRelativeDateInputValue(-(days - 1)),
+    end_date: formatDateInputValue(new Date()),
   }
 }
 
@@ -36,7 +48,7 @@ export function SiteStatsPage() {
     end_date: endDate || undefined,
   }
 
-  function updateDateRange(params: { start_date?: string; end_date?: string }) {
+  function updateDateRange(params: DateRangeParams) {
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev)
@@ -132,12 +144,28 @@ export function SiteStatsPage() {
                 className="w-44"
               />
             </div>
-            {(searchParams.get("start_date") ||
-              searchParams.get("end_date")) && (
-              <Button variant="ghost" size="sm" onClick={clearDateRange}>
-                重置
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => updateDateRange(getQuickDateRange(30))}
+              >
+                最近30天
               </Button>
-            )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => updateDateRange(getQuickDateRange(365))}
+              >
+                最近一年
+              </Button>
+              {(searchParams.get("start_date") ||
+                searchParams.get("end_date")) && (
+                <Button variant="ghost" size="sm" onClick={clearDateRange}>
+                  重置
+                </Button>
+              )}
+            </div>
           </div>
 
           <Tabs defaultValue="chart">
