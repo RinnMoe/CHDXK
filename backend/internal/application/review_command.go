@@ -10,11 +10,7 @@ import (
 	"jcourse/internal/domain/review"
 )
 
-type CourseHotScoreConfig struct {
-	ReviewCreateScore int64
-	ReviewUpdateScore int64
-	ReviewVoteScore   int64
-}
+type CourseHotScoreConfig = course.HotScoreConfig
 
 type ReviewCommandService struct {
 	reviewService *review.Service

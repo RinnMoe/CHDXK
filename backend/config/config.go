@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/spf13/viper"
+
+	"jcourse/internal/domain/course"
 )
 
 type AppConfig struct {
@@ -94,9 +96,9 @@ func Load(configPath string) (AppConfig, error) {
 	v.AutomaticEnv()
 	v.SetDefault("stats.daily_cron", "10 0 * * *")
 	v.SetDefault("stats.scheduler_enabled", true)
-	v.SetDefault("course_hot.review_create_score", 3)
-	v.SetDefault("course_hot.review_update_score", 1)
-	v.SetDefault("course_hot.review_vote_score", 1)
+	v.SetDefault("course_hot.review_create_score", course.DefaultHotScoreConfig.ReviewCreateScore)
+	v.SetDefault("course_hot.review_update_score", course.DefaultHotScoreConfig.ReviewUpdateScore)
+	v.SetDefault("course_hot.review_vote_score", course.DefaultHotScoreConfig.ReviewVoteScore)
 
 	if err := v.ReadInConfig(); err != nil {
 		return AppConfig{}, fmt.Errorf("read config: %w", err)

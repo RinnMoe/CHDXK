@@ -14,6 +14,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"jcourse/internal/domain/auth"
+	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/stat"
 	"jcourse/internal/infrastructure/repository"
 )
@@ -67,6 +68,9 @@ func (m *Migrator) Run() error {
 	}
 	if err := m.resetSequences(); err != nil {
 		return fmt.Errorf("reset sequences: %w", err)
+	}
+	if err := m.backfillCourseHotScores(course.DefaultHotScoreConfig); err != nil {
+		return fmt.Errorf("backfill course hot scores: %w", err)
 	}
 	if err := m.backfillSiteDailyStats(); err != nil {
 		return fmt.Errorf("backfill site daily stats: %w", err)
@@ -783,6 +787,95 @@ func (m *Migrator) resetSequences() error {
 		}
 	}
 	return m.checkpoint.MarkDone(stage)
+}
+
+func (m *Migrator) backfillCourseHotScores(scores course.HotScoreConfig) error {
+	const stage = "course_hot_scores_current_period"
+	if m.checkpoint.StageDone(stage) {
+		log.Println("Backfilling course hot scores... already done, skipping")
+		return nil
+	}
+	log.Println("Backfilling course hot scores...")
+
+	loc, err := repository.DefaultHotCourseLocation()
+	if err != nil {
+		return fmt.Errorf("load hot course location: %w", err)
+	}
+	now := time.Now()
+	monthKey := repository.HotCoursePeriodKey(course.HotCoursePeriodMonth, now, loc)
+	weekKey := repository.HotCoursePeriodKey(course.HotCoursePeriodWeek, now, loc)
+	monthStart, monthEnd := repository.HotCoursePeriodRange(course.HotCoursePeriodMonth, now, loc)
+	weekStart, weekEnd := repository.HotCoursePeriodRange(course.HotCoursePeriodWeek, now, loc)
+
+	var rowsAffected int64
+	err = m.target.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Exec(`
+			DELETE FROM course_hot_scores
+			WHERE (period, period_key) IN ((?, ?), (?, ?))
+		`,
+			string(course.HotCoursePeriodMonth), monthKey,
+			string(course.HotCoursePeriodWeek), weekKey,
+		).Error; err != nil {
+			return err
+		}
+
+		result := tx.Exec(`
+		WITH periods AS (
+			SELECT *
+			FROM (VALUES
+				(?::text, ?::text, ?::timestamptz, ?::timestamptz),
+				(?::text, ?::text, ?::timestamptz, ?::timestamptz)
+			) AS p(period, period_key, start_at, end_at)
+		), events AS (
+			SELECT r.course_id, r.created_at AS occurred_at, ?::bigint AS score
+			FROM reviews AS r
+			WHERE ?::bigint <> 0
+
+			UNION ALL
+
+			SELECT rr.course_id, rr.created_at AS occurred_at, ?::bigint AS score
+			FROM review_revisions AS rr
+			WHERE ?::bigint <> 0
+
+			UNION ALL
+
+			SELECT r.course_id, v.updated_at AS occurred_at, ?::bigint AS score
+			FROM review_votes AS v
+			JOIN reviews AS r ON r.id = v.review_id
+			WHERE ?::bigint <> 0
+		), period_scores AS (
+			SELECT p.period, p.period_key, e.course_id, SUM(e.score)::bigint AS score
+			FROM periods AS p
+			JOIN events AS e ON e.occurred_at >= p.start_at AND e.occurred_at < p.end_at
+			GROUP BY p.period, p.period_key, e.course_id
+			HAVING SUM(e.score) <> 0
+		)
+		INSERT INTO course_hot_scores (period, period_key, course_id, score, created_at, updated_at)
+		SELECT period, period_key, course_id, score, ? AS created_at, ? AS updated_at
+		FROM period_scores
+	`,
+			string(course.HotCoursePeriodMonth), monthKey, monthStart, monthEnd,
+			string(course.HotCoursePeriodWeek), weekKey, weekStart, weekEnd,
+			scores.ReviewCreateScore, scores.ReviewCreateScore,
+			scores.ReviewUpdateScore, scores.ReviewUpdateScore,
+			scores.ReviewVoteScore, scores.ReviewVoteScore,
+			now, now,
+		)
+		if result.Error != nil {
+			return result.Error
+		}
+		rowsAffected = result.RowsAffected
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	if err := m.checkpoint.MarkDone(stage); err != nil {
+		return err
+	}
+	log.Printf("  Course hot scores: %d rows backfilled for month=%s week=%s", rowsAffected, monthKey, weekKey)
+	return nil
 }
 
 func (m *Migrator) backfillSiteDailyStats() error {

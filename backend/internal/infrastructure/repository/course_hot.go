@@ -15,6 +15,12 @@ import (
 
 const courseHotKeyPrefix = "course:hot"
 
+const DefaultHotCourseLocationName = "Asia/Shanghai"
+
+func DefaultHotCourseLocation() (*time.Location, error) {
+	return time.LoadLocation(DefaultHotCourseLocationName)
+}
+
 type CourseHotRepository struct {
 	client *redis.Client
 	loc    *time.Location
@@ -70,9 +76,9 @@ func (r *CourseHotRepository) Top(ctx context.Context, period course.HotCoursePe
 func (r *CourseHotRepository) key(period course.HotCoursePeriod, at time.Time) string {
 	switch period {
 	case course.HotCoursePeriodMonth:
-		return courseHotKeyPrefix + ":month:" + monthKeyPart(at, r.loc)
+		return courseHotKeyPrefix + ":month:" + HotCoursePeriodKey(course.HotCoursePeriodMonth, at, r.loc)
 	default:
-		return courseHotKeyPrefix + ":week:" + weekKeyPart(at, r.loc)
+		return courseHotKeyPrefix + ":week:" + HotCoursePeriodKey(course.HotCoursePeriodWeek, at, r.loc)
 	}
 }
 
@@ -82,7 +88,7 @@ type GormCourseHotRepository struct {
 }
 
 func NewGormCourseHotRepository(db *gorm.DB) *GormCourseHotRepository {
-	loc, err := time.LoadLocation("Asia/Shanghai")
+	loc, err := DefaultHotCourseLocation()
 	if err != nil {
 		panic(err)
 	}
@@ -122,7 +128,7 @@ func (r *GormCourseHotRepository) Top(ctx context.Context, period course.HotCour
 
 	var items []CourseHotScoreEntity
 	if err := r.db.WithContext(ctx).
-		Where("period = ? AND period_key = ?", string(period), hotCoursePeriodKey(period, at, r.loc)).
+		Where("period = ? AND period_key = ?", string(period), HotCoursePeriodKey(period, at, r.loc)).
 		Order("score DESC, course_id ASC").
 		Limit(int(limit)).
 		Find(&items).Error; err != nil {
@@ -142,7 +148,7 @@ func (r *GormCourseHotRepository) Top(ctx context.Context, period course.HotCour
 func (r *GormCourseHotRepository) newScoreEntity(period course.HotCoursePeriod, courseID int, score int64, at time.Time, now time.Time) CourseHotScoreEntity {
 	return CourseHotScoreEntity{
 		Period:    string(period),
-		PeriodKey: hotCoursePeriodKey(period, at, r.loc),
+		PeriodKey: HotCoursePeriodKey(period, at, r.loc),
 		CourseID:  courseID,
 		Score:     score,
 		CreatedAt: now,
@@ -150,7 +156,7 @@ func (r *GormCourseHotRepository) newScoreEntity(period course.HotCoursePeriod, 
 	}
 }
 
-func hotCoursePeriodKey(period course.HotCoursePeriod, at time.Time, loc *time.Location) string {
+func HotCoursePeriodKey(period course.HotCoursePeriod, at time.Time, loc *time.Location) string {
 	switch period {
 	case course.HotCoursePeriodMonth:
 		return monthKeyPart(at, loc)
@@ -159,26 +165,42 @@ func hotCoursePeriodKey(period course.HotCoursePeriod, at time.Time, loc *time.L
 	}
 }
 
+func HotCoursePeriodRange(period course.HotCoursePeriod, at time.Time, loc *time.Location) (time.Time, time.Time) {
+	switch period {
+	case course.HotCoursePeriodMonth:
+		start := startOfHotCourseMonth(at, loc)
+		return start, start.AddDate(0, 1, 0)
+	default:
+		start := hotCourseStartOfWeek(at, loc)
+		return start, start.AddDate(0, 0, 7)
+	}
+}
+
 func monthKeyPart(at time.Time, loc *time.Location) string {
 	t := at.In(loc)
 	return fmt.Sprintf("%04d-%02d", t.Year(), int(t.Month()))
 }
 
+func startOfHotCourseMonth(at time.Time, loc *time.Location) time.Time {
+	t := at.In(loc)
+	return time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, loc)
+}
+
 func weekKeyPart(at time.Time, loc *time.Location) string {
-	monday := startOfWeek(at, loc)
-	firstMonday := firstMondayOfYear(monday.Year(), loc)
+	monday := hotCourseStartOfWeek(at, loc)
+	firstMonday := hotCourseFirstMondayOfYear(monday.Year(), loc)
 	week := int(monday.Sub(firstMonday).Hours()/(24*7)) + 1
 	return fmt.Sprintf("%04d-%02d", monday.Year(), week)
 }
 
-func startOfWeek(at time.Time, loc *time.Location) time.Time {
+func hotCourseStartOfWeek(at time.Time, loc *time.Location) time.Time {
 	t := at.In(loc)
 	date := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, loc)
 	daysSinceMonday := (int(date.Weekday()) + 6) % 7
 	return date.AddDate(0, 0, -daysSinceMonday)
 }
 
-func firstMondayOfYear(year int, loc *time.Location) time.Time {
+func hotCourseFirstMondayOfYear(year int, loc *time.Location) time.Time {
 	date := time.Date(year, time.January, 1, 0, 0, 0, 0, loc)
 	daysUntilMonday := (int(time.Monday) - int(date.Weekday()) + 7) % 7
 	return date.AddDate(0, 0, daysUntilMonday)
