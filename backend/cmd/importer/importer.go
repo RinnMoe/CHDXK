@@ -250,9 +250,17 @@ func (imp *Importer) upsertOfferedCourses(rows []CSVRow, teacherIDMap map[string
 		}
 	}
 
+	var batch []repository.OfferedCourseEntity
+	processed := 0
+	skipped := 0
 	for key, agg := range aggMap {
+		processed++
 		courseID, ok := courseIDMap[key]
 		if !ok {
+			skipped++
+			if processed%500 == 0 {
+				log.Printf("  Processed %d/%d offered courses...", processed, len(aggMap))
+			}
 			continue
 		}
 
@@ -277,7 +285,7 @@ func (imp *Importer) upsertOfferedCourses(rows []CSVRow, teacherIDMap map[string
 			"teacher_ids":     allTIDs,
 		})
 
-		entity := repository.OfferedCourseEntity{
+		batch = append(batch, repository.OfferedCourseEntity{
 			CourseID:    courseID,
 			Semester:    imp.semester,
 			Language:    agg.language,
@@ -285,7 +293,17 @@ func (imp *Importer) upsertOfferedCourses(rows []CSVRow, teacherIDMap map[string
 			Categories:  courseCats,
 			TeacherIDs:  allTIDs,
 			CreatedAt:   time.Now(),
+		})
+		if len(batch) >= batchSize {
+			imp.db.Clauses(onConflict).Create(&batch)
+			batch = batch[:0]
 		}
-		imp.db.Clauses(onConflict).Create(&entity)
+		if processed%500 == 0 {
+			log.Printf("  Processed %d/%d offered courses...", processed, len(aggMap))
+		}
 	}
+	if len(batch) > 0 {
+		imp.db.Clauses(onConflict).Create(&batch)
+	}
+	log.Printf("  Offered courses: %d imported, %d skipped", processed-skipped, skipped)
 }
