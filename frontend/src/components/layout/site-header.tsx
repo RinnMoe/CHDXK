@@ -1,8 +1,9 @@
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useLayoutEffect, useRef, useState } from "react"
-import { RiMenuLine, RiSearchLine } from "@remixicon/react"
+import { RiArrowDownSLine, RiMenuLine, RiSearchLine } from "@remixicon/react"
 import { UserMenu } from "@/components/auth/user-menu"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/contexts/auth-context"
 import {
   Command,
   CommandInput,
@@ -46,6 +47,16 @@ const navItems = [
     label: "热门",
     match: (p: string) => p === "/course/hot",
   },
+]
+
+const adminNavItem = {
+  label: "管理",
+  match: (p: string) => p.startsWith("/admin"),
+}
+
+const adminLinks = [
+  { to: "/admin/user", label: "用户管理" },
+  { to: "/admin/site-stat", label: "站点统计" },
 ]
 
 const searchTargets = [
@@ -118,9 +129,12 @@ function HeaderSearch() {
 
 export function SiteHeader() {
   const { pathname } = useLocation()
+  const { user } = useAuth()
   const [open, setOpen] = useState(false)
   const navRef = useRef<HTMLElement>(null)
-  const activeIndex = navItems.findIndex((item) => item.match(pathname))
+  const visibleNavItems =
+    user?.role === "admin" ? [...navItems, adminNavItem] : navItems
+  const activeIndex = visibleNavItems.findIndex((item) => item.match(pathname))
   const [navIndicator, setNavIndicator] = useState({
     left: 0,
     width: 0,
@@ -131,7 +145,7 @@ export function SiteHeader() {
     function updateIndicator() {
       const nav = navRef.current
       const activeLink =
-        nav?.querySelectorAll<HTMLAnchorElement>("a")[activeIndex]
+        nav?.querySelectorAll<HTMLElement>("[data-nav-item]")[activeIndex]
 
       if (!activeLink) {
         setNavIndicator((current) => ({ ...current, opacity: 0 }))
@@ -167,12 +181,47 @@ export function SiteHeader() {
             className="pointer-events-none absolute bottom-0 h-0.5 rounded-full bg-primary transition-[left,width,opacity] duration-200 ease-out dark:bg-primary"
             style={navIndicator}
           />
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const active = item.match(pathname)
+            if (item === adminNavItem) {
+              return (
+                <div
+                  key={item.label}
+                  data-nav-item
+                  className="group relative flex items-center"
+                >
+                  <button
+                    type="button"
+                    className={
+                      active
+                        ? "flex items-center gap-1 font-medium text-primary transition-colors dark:text-primary"
+                        : "flex items-center gap-1 text-foreground transition-colors hover:text-primary"
+                    }
+                  >
+                    {item.label}
+                    <RiArrowDownSLine className="size-4 transition-transform group-hover:rotate-180" />
+                  </button>
+                  <div className="invisible absolute top-full left-0 z-50 min-w-32 pt-2 opacity-0 transition-[opacity,visibility] duration-100 group-hover:visible group-hover:opacity-100">
+                    <div className="rounded-md bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10">
+                      {adminLinks.map((link) => (
+                        <Link
+                          key={link.to}
+                          to={link.to}
+                          className="flex items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors hover:bg-accent hover:text-accent-foreground"
+                        >
+                          {link.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )
+            }
             return (
               <Link
                 key={item.to}
                 to={item.to}
+                data-nav-item
                 className={
                   active
                     ? "flex items-center font-medium text-primary transition-colors dark:text-primary"
@@ -202,8 +251,24 @@ export function SiteHeader() {
                 <SheetTitle>导航</SheetTitle>
               </SheetHeader>
               <nav className="flex flex-col gap-1 px-4">
-                {navItems.map((item) => {
+                {visibleNavItems.map((item) => {
                   const active = item.match(pathname)
+                  if (item === adminNavItem) {
+                    return adminLinks.map((link) => (
+                      <SheetClose asChild key={link.to}>
+                        <Link
+                          to={link.to}
+                          className={
+                            pathname === link.to
+                              ? "rounded-md bg-primary/10 px-3 py-2 font-medium text-primary dark:bg-primary/18 dark:text-primary"
+                              : "rounded-md px-3 py-2 text-foreground transition-colors hover:bg-accent hover:text-primary"
+                          }
+                        >
+                          {link.label}
+                        </Link>
+                      </SheetClose>
+                    ))
+                  }
                   return (
                     <SheetClose asChild key={item.to}>
                       <Link

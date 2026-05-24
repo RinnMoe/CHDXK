@@ -29,6 +29,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	apiKeyController := controller.NewApiKeyController(container.ApiKeyQuery, container.ApiKeyCommand)
 	siteStatsController := controller.NewSiteStatsController(container.SiteStatsQuery)
 	announcementController := controller.NewAnnouncementController(container.AnnouncementQuery)
+	adminUserController := controller.NewAdminUserController(container.AdminUserQuery, container.AdminUserCommand)
 
 	apiGroup := g.Group("/api")
 	publicAuthGroup := apiGroup.Group("/auth")
@@ -104,6 +105,12 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	{
 		siteStatsGroup.GET("/daily/:date", siteStatsController.GetByDate)
 		siteStatsGroup.GET("/daily", siteStatsController.ListDaily)
+	}
+	adminUserGroup := apiGroup.Group("/admin/user", middleware.Admin())
+	{
+		adminUserGroup.GET("/by-email", adminUserController.GetUserByEmail)
+		adminUserGroup.PUT("/:userID/suspension", adminUserController.SuspendUser)
+		adminUserGroup.DELETE("/:userID/suspension", adminUserController.ClearSuspension)
 	}
 	announcementGroup := apiGroup.Group("/announcement")
 	{

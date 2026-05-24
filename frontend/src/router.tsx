@@ -85,6 +85,10 @@ const SiteStatsPage = lazyNamedPage(
   () => import("@/pages/admin/site-stats-page"),
   "SiteStatsPage"
 )
+const UserAdminPage = lazyNamedPage(
+  () => import("@/pages/admin/user-admin-page"),
+  "UserAdminPage"
+)
 const AboutPage = lazyNamedPage(() => import("@/pages/about-page"), "AboutPage")
 const FaqPage = lazyNamedPage(() => import("@/pages/faq-page"), "FaqPage")
 const NotFoundPage = lazyNamedPage(
@@ -122,6 +126,7 @@ export const router = createBrowserRouter([
           { path: "/teacher/:teacherID", element: <TeacherDetailPage /> },
           { path: "/point", element: <UserPointsPage /> },
           { path: "/api-key", element: <ApiKeysPage /> },
+          { path: "/admin/user", element: <UserAdminPage /> },
           { path: "/admin/site-stat", element: <SiteStatsPage /> },
           { path: "/about", element: <AboutPage /> },
           { path: "/faq", element: <FaqPage /> },

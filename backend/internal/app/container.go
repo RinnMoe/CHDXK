@@ -27,6 +27,8 @@ type ServiceContainer struct {
 	SiteStatsCommand  *application.SiteStatsCommandService
 	AccountQuery      *application.AccountQueryService
 	AccountCommand    *application.AccountCommandService
+	AdminUserQuery    *application.AdminUserQueryService
+	AdminUserCommand  *application.AdminUserCommandService
 	AuthUserService   *auth.AuthUserService
 	AnnouncementQuery *application.AnnouncementQueryService
 	ApiKeySvc         *auth.ApiKeyService
@@ -89,6 +91,8 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	siteStatsCommand := application.NewSiteStatsCommandService(statRepo, statRepo)
 	currentUserService := auth.NewCurrentUserService(userRepo)
 	accountQuery := application.NewAccountQueryService(accountRepo)
+	adminUserQuery := application.NewAdminUserQueryService(accountRepo, userRepo, usernameDeriver)
+	adminUserCommand := application.NewAdminUserCommandService(userRepo)
 	accountCommand := application.NewAccountCommandService(
 		accountRepo,
 		currentUserService,
@@ -126,6 +130,8 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		SiteStatsCommand:  siteStatsCommand,
 		AccountQuery:      accountQuery,
 		AccountCommand:    accountCommand,
+		AdminUserQuery:    adminUserQuery,
+		AdminUserCommand:  adminUserCommand,
 		AuthUserService:   currentUserService,
 		AnnouncementQuery: announcementQuery,
 		ApiKeySvc:         apiKeySvc,

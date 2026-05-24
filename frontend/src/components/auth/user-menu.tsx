@@ -68,11 +68,6 @@ export function UserMenu() {
           <DropdownMenuItem asChild>
             <Link to="/api-key">API Keys</Link>
           </DropdownMenuItem>
-          {user.role === "admin" && (
-            <DropdownMenuItem asChild>
-              <Link to="/admin/site-stat">站点统计</Link>
-            </DropdownMenuItem>
-          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut}>
             退出登录
