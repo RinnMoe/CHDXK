@@ -10,8 +10,8 @@ export interface FilterItem {
 }
 
 export interface TeacherFilters {
-  departments: FilterItem[]
-  titles: FilterItem[]
+  departments?: FilterItem[]
+  titles?: FilterItem[]
 }
 
 export interface TeacherDTO {

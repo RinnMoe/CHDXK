@@ -23,7 +23,7 @@ interface CourseBadgeProps {
 
 interface CourseBadgesProps {
   credit: number
-  language: string
+  language?: string
   categories: string[]
   targetYears?: string[]
   categoryLimit?: number
@@ -57,7 +57,9 @@ export function CourseBadges({
   return (
     <div className={cn("flex flex-wrap items-center gap-1.5", className)}>
       <CourseBadge kind="credit">{credit} 学分</CourseBadge>
-      <CourseBadge kind="language">{language}</CourseBadge>
+      {language && language.trim() && (
+        <CourseBadge kind="language">{language}</CourseBadge>
+      )}
       {visibleCategories.map((category) => (
         <CourseBadge key={category} kind="category">
           {category}

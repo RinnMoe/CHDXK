@@ -11,16 +11,16 @@ import { apiClient } from "./client"
 const BASE = "/api"
 
 export interface CourseFilters {
-  credits: FilterItem[]
-  departments: FilterItem[]
-  categories: FilterItem[]
-  target_years: FilterItem[]
-  languages: FilterItem[]
+  credits?: FilterItem[]
+  departments?: FilterItem[]
+  categories?: FilterItem[]
+  target_years?: FilterItem[]
+  languages?: FilterItem[]
 }
 
 export interface CourseReviewFilters {
-  semesters: FilterItem[]
-  ratings: FilterItem[]
+  semesters?: FilterItem[]
+  ratings?: FilterItem[]
 }
 
 export interface CourseReviewTrendItemDTO {

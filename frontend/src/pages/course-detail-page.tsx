@@ -309,8 +309,8 @@ export function CourseDetailPage() {
 
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <CourseReviewFilters
-                  semesters={reviewFilters?.semesters ?? []}
-                  ratings={reviewFilters?.ratings ?? []}
+                  semesters={reviewFilters?.semesters}
+                  ratings={reviewFilters?.ratings}
                   value={{
                     semester,
                     rating,

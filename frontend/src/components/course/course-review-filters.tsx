@@ -21,8 +21,8 @@ interface CourseReviewFilterValue {
 }
 
 interface CourseReviewFiltersProps {
-  semesters: FilterItem[]
-  ratings: FilterItem[]
+  semesters?: FilterItem[]
+  ratings?: FilterItem[]
   value: CourseReviewFilterValue
   onChange: (next: Partial<CourseReviewFilterValue>) => void
 }
@@ -46,43 +46,47 @@ export function CourseReviewFilters({
 }: CourseReviewFiltersProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Select
-        value={value.semester ?? ALL}
-        onValueChange={(semester) =>
-          onChange({ semester: semester === ALL ? undefined : semester })
-        }
-      >
-        <SelectTrigger size="sm" className="w-[220px]">
-          <SelectValue placeholder="学期" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value={ALL}>全部学期</SelectItem>
-          {semesters.map((semester) => (
-            <SelectItem key={semester.name} value={semester.name}>
-              <OptionLabel label={semester.name} count={semester.count} />
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {semesters && (
+        <Select
+          value={value.semester ?? ALL}
+          onValueChange={(semester) =>
+            onChange({ semester: semester === ALL ? undefined : semester })
+          }
+        >
+          <SelectTrigger size="sm" className="w-[220px]">
+            <SelectValue placeholder="学期" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>全部学期</SelectItem>
+            {semesters.map((semester) => (
+              <SelectItem key={semester.name} value={semester.name}>
+                <OptionLabel label={semester.name} count={semester.count} />
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
 
-      <Select
-        value={value.rating ? String(value.rating) : ALL}
-        onValueChange={(rating) =>
-          onChange({ rating: rating === ALL ? undefined : Number(rating) })
-        }
-      >
-        <SelectTrigger size="sm" className="w-[170px]">
-          <SelectValue placeholder="评分" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value={ALL}>全部评分</SelectItem>
-          {ratings.map((rating) => (
-            <SelectItem key={rating.name} value={rating.name}>
-              <OptionLabel label={`${rating.name} 分`} count={rating.count} />
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {ratings && (
+        <Select
+          value={value.rating ? String(value.rating) : ALL}
+          onValueChange={(rating) =>
+            onChange({ rating: rating === ALL ? undefined : Number(rating) })
+          }
+        >
+          <SelectTrigger size="sm" className="w-[170px]">
+            <SelectValue placeholder="评分" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>全部评分</SelectItem>
+            {ratings.map((rating) => (
+              <SelectItem key={rating.name} value={rating.name}>
+                <OptionLabel label={`${rating.name} 分`} count={rating.count} />
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
 
       <div className="flex items-center gap-1">
         <span className="px-1 text-sm text-muted-foreground">排序</span>

@@ -13,6 +13,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import type { FilterItem } from "@/api/teacher"
 import type { TeacherFilters as TeacherFiltersDTO } from "@/api/teacher"
 
 interface TeacherFiltersProps {
@@ -37,23 +38,28 @@ export function TeacherFilters({ filters }: TeacherFiltersProps) {
 
   const content = (
     <div className="space-y-6">
-      <FilterCheckGroup
-        label="学院"
-        items={filters.departments}
-        paramKey="department"
-        selected={searchParams.get("department")}
-        onToggle={toggleSingle}
-      />
+      {filters.departments && (
+        <>
+          <FilterCheckGroup
+            label="学院"
+            items={filters.departments}
+            paramKey="department"
+            selected={searchParams.get("department")}
+            onToggle={toggleSingle}
+          />
+          <Separator />
+        </>
+      )}
 
-      <Separator />
-
-      <FilterCheckGroup
-        label="职称"
-        items={filters.titles}
-        paramKey="title"
-        selected={searchParams.get("title")}
-        onToggle={toggleSingle}
-      />
+      {filters.titles && (
+        <FilterCheckGroup
+          label="职称"
+          items={filters.titles}
+          paramKey="title"
+          selected={searchParams.get("title")}
+          onToggle={toggleSingle}
+        />
+      )}
 
       <Button
         variant="outline"
@@ -98,7 +104,7 @@ export function TeacherFilters({ filters }: TeacherFiltersProps) {
 interface FilterCheckGroupProps {
   label: string
   paramKey: string
-  items: { name: string; count: number }[]
+  items?: FilterItem[]
   selected: string | null
   onToggle: (key: string, value: string) => void
 }
@@ -110,6 +116,8 @@ function FilterCheckGroup({
   selected,
   onToggle,
 }: FilterCheckGroupProps) {
+  if (!items) return null
+
   return (
     <div className="space-y-3">
       <Label>{label}</Label>

@@ -14,6 +14,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import type { FilterItem } from "@/api/types"
 import type { CourseFilters as CourseFiltersDTO } from "@/api/course"
 
 const ALL = "__all__"
@@ -69,53 +70,67 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
         </Tabs>
       </div>
 
-      <FilterCheckGroup
-        label="授课语言"
-        items={filters.languages}
-        paramKey="language"
-        selected={searchParams.getAll("language")}
-        onToggle={toggleMulti}
-      />
+      {filters.languages && (
+        <>
+          <FilterCheckGroup
+            label="授课语言"
+            items={filters.languages}
+            paramKey="language"
+            selected={searchParams.getAll("language")}
+            onToggle={toggleMulti}
+          />
+          <Separator />
+        </>
+      )}
 
-      <Separator />
+      {filters.departments && (
+        <>
+          <FilterCheckGroup
+            label="学院"
+            items={filters.departments}
+            paramKey="department"
+            selected={searchParams.getAll("department")}
+            onToggle={toggleMulti}
+          />
+          <Separator />
+        </>
+      )}
 
-      <FilterCheckGroup
-        label="学院"
-        items={filters.departments}
-        paramKey="department"
-        selected={searchParams.getAll("department")}
-        onToggle={toggleMulti}
-      />
+      {filters.categories && (
+        <>
+          <FilterCheckGroup
+            label="课程类别"
+            items={filters.categories}
+            paramKey="categories"
+            selected={searchParams.getAll("categories")}
+            onToggle={toggleMulti}
+          />
+          <Separator />
+        </>
+      )}
 
-      <Separator />
+      {filters.target_years && (
+        <>
+          <FilterCheckGroup
+            label="目标年级"
+            items={filters.target_years}
+            paramKey="target_years"
+            selected={searchParams.getAll("target_years")}
+            onToggle={toggleMulti}
+          />
+          <Separator />
+        </>
+      )}
 
-      <FilterCheckGroup
-        label="课程类别"
-        items={filters.categories}
-        paramKey="categories"
-        selected={searchParams.getAll("categories")}
-        onToggle={toggleMulti}
-      />
-
-      <Separator />
-
-      <FilterCheckGroup
-        label="目标年级"
-        items={filters.target_years}
-        paramKey="target_years"
-        selected={searchParams.getAll("target_years")}
-        onToggle={toggleMulti}
-      />
-
-      <Separator />
-
-      <FilterCheckGroup
-        label="学分"
-        items={filters.credits}
-        paramKey="credit"
-        selected={searchParams.getAll("credit")}
-        onToggle={toggleMulti}
-      />
+      {filters.credits && (
+        <FilterCheckGroup
+          label="学分"
+          items={filters.credits}
+          paramKey="credit"
+          selected={searchParams.getAll("credit")}
+          onToggle={toggleMulti}
+        />
+      )}
 
       <Button
         variant="outline"
@@ -160,7 +175,7 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
 interface FilterCheckGroupProps {
   label: string
   paramKey: string
-  items: { name: string; count: number }[]
+  items?: FilterItem[]
   selected: string[]
   onToggle: (key: string, value: string) => void
 }
@@ -172,6 +187,8 @@ function FilterCheckGroup({
   selected,
   onToggle,
 }: FilterCheckGroupProps) {
+  if (!items) return null
+
   return (
     <div className="space-y-3">
       <Label>{label}</Label>
