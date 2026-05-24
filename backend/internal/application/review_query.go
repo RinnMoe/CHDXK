@@ -37,13 +37,30 @@ func (s *ReviewQueryService) GetCourseReviewTrend(ctx context.Context, courseID 
 	return s.repo.GetCourseTrend(ctx, courseID)
 }
 
-func (s *ReviewQueryService) buildDTOs(reviews []review.ReviewView, u *auth.User) []ReviewDTO {
-	items := make([]ReviewDTO, len(reviews))
-	for i, r := range reviews {
-		g := review.NewViewGuardian(u, &reviews[i])
-		items[i] = newReviewDTO(&r, g.CanViewPrivate())
+func (s *ReviewQueryService) buildDTOs(ctx context.Context, reviews []review.ReviewView, u *auth.User) ([]ReviewDTO, error) {
+	myVotes := map[int]review.Vote{}
+	if u != nil && len(reviews) > 0 {
+		reviewIDs := make([]int, 0, len(reviews))
+		for _, r := range reviews {
+			reviewIDs = append(reviewIDs, r.ID)
+		}
+		votes, err := s.voteRepo.FindByReviewsAndUser(ctx, reviewIDs, u.ID)
+		if err != nil {
+			return nil, err
+		}
+		myVotes = votes
 	}
-	return items
+
+	items := make([]ReviewDTO, len(reviews))
+	for i := range reviews {
+		g := review.NewViewGuardian(u, &reviews[i])
+		items[i] = newReviewDTO(&reviews[i], g.CanViewPrivate())
+		if vote, ok := myVotes[reviews[i].ID]; ok {
+			vt := vote.VoteType
+			items[i].Vote.MyVote = &vt
+		}
+	}
+	return items, nil
 }
 
 func (s *ReviewQueryService) GetReviewsByCourse(ctx context.Context, courseID int, u *auth.User, f ReviewListFilter) (*PaginatedResult[ReviewDTO], error) {
@@ -66,9 +83,13 @@ func (s *ReviewQueryService) GetReviewsByCourse(ctx context.Context, courseID in
 	if err != nil {
 		return nil, err
 	}
+	items, err := s.buildDTOs(ctx, reviews, u)
+	if err != nil {
+		return nil, err
+	}
 
 	return &PaginatedResult[ReviewDTO]{
-		Items:    s.buildDTOs(reviews, u),
+		Items:    items,
 		Total:    total,
 		Page:     f.Page,
 		PageSize: f.PageSize,
@@ -96,9 +117,13 @@ func (s *ReviewQueryService) GetReviewsByUser(ctx context.Context, userID int, u
 	if err != nil {
 		return nil, err
 	}
+	items, err := s.buildDTOs(ctx, reviews, u)
+	if err != nil {
+		return nil, err
+	}
 
 	return &PaginatedResult[ReviewDTO]{
-		Items:    s.buildDTOs(reviews, u),
+		Items:    items,
 		Total:    total,
 		Page:     f.Page,
 		PageSize: f.PageSize,
@@ -136,9 +161,13 @@ func (s *ReviewQueryService) GetReviews(ctx context.Context, user *auth.User, f 
 	if err != nil {
 		return nil, err
 	}
+	items, err := s.buildDTOs(ctx, reviews, user)
+	if err != nil {
+		return nil, err
+	}
 
 	return &PaginatedResult[ReviewDTO]{
-		Items:    s.buildDTOs(reviews, user),
+		Items:    items,
 		Total:    total,
 		Page:     f.Page,
 		PageSize: f.PageSize,
@@ -179,9 +208,13 @@ func (s *ReviewQueryService) GetFollowedReviews(ctx context.Context, userID int,
 	if err != nil {
 		return nil, err
 	}
+	items, err := s.buildDTOs(ctx, reviews, u)
+	if err != nil {
+		return nil, err
+	}
 
 	return &PaginatedResult[ReviewDTO]{
-		Items:    s.buildDTOs(reviews, u),
+		Items:    items,
 		Total:    total,
 		Page:     f.Page,
 		PageSize: f.PageSize,
@@ -200,7 +233,10 @@ func (s *ReviewQueryService) GetReviewByID(ctx context.Context, u *auth.User, re
 	view := newReviewDTO(reviewView, g.CanViewPrivate())
 	if u != nil {
 		vote, err := s.voteRepo.FindByReviewAndUser(ctx, reviewID, u.ID)
-		if err == nil && vote != nil {
+		if err != nil {
+			return nil, err
+		}
+		if vote != nil {
 			vt := vote.VoteType
 			view.Vote.MyVote = &vt
 		}

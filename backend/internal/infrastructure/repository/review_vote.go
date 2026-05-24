@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -60,6 +61,80 @@ func (r *ReviewVoteRepository) FindByReviewAndUser(ctx context.Context, reviewID
 	v := newVoteDomain(&e)
 	cacheSetJSON(ctx, r.cache, key, &v)
 	return &v, nil
+}
+
+func (r *ReviewVoteRepository) FindByReviewsAndUser(ctx context.Context, reviewIDs []int, userID int) (map[int]review.Vote, error) {
+	votes := make(map[int]review.Vote)
+	if userID == 0 || len(reviewIDs) == 0 {
+		return votes, nil
+	}
+
+	ids := make([]int, 0, len(reviewIDs))
+	seen := make(map[int]struct{}, len(reviewIDs))
+	for _, id := range reviewIDs {
+		if id == 0 {
+			continue
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		ids = append(ids, id)
+	}
+	if len(ids) == 0 {
+		return votes, nil
+	}
+
+	missing := ids
+	if r.cache != nil {
+		keys := make([]string, len(ids))
+		for i, reviewID := range ids {
+			keys[i] = cacheKey("review_vote", reviewID, userID)
+		}
+		if cached, err := r.cache.MGet(ctx, keys...).Result(); err == nil {
+			missing = make([]int, 0, len(ids))
+			for i, value := range cached {
+				if value == nil {
+					missing = append(missing, ids[i])
+					continue
+				}
+
+				data, ok := value.(string)
+				if !ok {
+					cacheDelete(ctx, r.cache, keys[i])
+					missing = append(missing, ids[i])
+					continue
+				}
+
+				var vote review.Vote
+				if err := json.Unmarshal([]byte(data), &vote); err != nil {
+					cacheDelete(ctx, r.cache, keys[i])
+					missing = append(missing, ids[i])
+					continue
+				}
+				votes[vote.ReviewID] = vote
+			}
+		}
+	}
+
+	if len(missing) == 0 {
+		return votes, nil
+	}
+
+	var entities []ReviewVoteEntity
+	if err := r.db.WithContext(ctx).
+		Where("user_id = ? AND review_id IN ?", userID, missing).
+		Find(&entities).Error; err != nil {
+		return nil, err
+	}
+
+	for _, entity := range entities {
+		vote := newVoteDomain(&entity)
+		votes[vote.ReviewID] = vote
+		cacheSetJSON(ctx, r.cache, cacheKey("review_vote", vote.ReviewID, userID), &vote)
+	}
+
+	return votes, nil
 }
 
 func (r *ReviewVoteRepository) CountTodayByUser(ctx context.Context, userID int) (int64, error) {

@@ -154,6 +154,8 @@ export function useVoteReview() {
     },
     onSettled: (_data, _err, { reviewID }) => {
       queryClient.invalidateQueries({ queryKey: ["review", reviewID] })
+      queryClient.invalidateQueries({ queryKey: ["reviews"] })
+      queryClient.invalidateQueries({ queryKey: ["course-reviews"] })
     },
   })
 }

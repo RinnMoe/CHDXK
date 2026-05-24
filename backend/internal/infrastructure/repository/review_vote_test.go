@@ -157,6 +157,62 @@ func TestVoteRepository_FindByReviewAndUser_NotFound(t *testing.T) {
 	}
 }
 
+func TestVoteRepository_FindByReviewsAndUser(t *testing.T) {
+	db, repo, reviewID, userID := setupVoteTest(t)
+	ctx := context.Background()
+
+	var firstReview repository.ReviewEntity
+	if err := db.Where("id = ?", reviewID).Take(&firstReview).Error; err != nil {
+		t.Fatalf("load review: %v", err)
+	}
+
+	otherUser := repository.UserEntity{
+		Username:     "testuser2",
+		Email:        sql.NullString{String: "testuser2@example.com", Valid: true},
+		Role:         "user",
+		PasswordHash: "hashed_password",
+		CreatedAt:    time.Now(),
+		LastSeenAt:   time.Now(),
+	}
+	if err := db.Create(&otherUser).Error; err != nil {
+		t.Fatalf("seed user2: %v", err)
+	}
+	secondReview := seedReview(t, db, firstReview.CourseID, otherUser.ID)
+
+	if err := repo.Save(ctx, &review.Vote{
+		ReviewID: reviewID, UserID: userID, VoteType: review.VoteLike,
+		CreatedAt: time.Now(), UpdatedAt: time.Now(),
+	}); err != nil {
+		t.Fatalf("save first vote: %v", err)
+	}
+	if err := repo.Save(ctx, &review.Vote{
+		ReviewID: secondReview.ID, UserID: userID, VoteType: review.VoteDislike,
+		CreatedAt: time.Now(), UpdatedAt: time.Now(),
+	}); err != nil {
+		t.Fatalf("save second vote: %v", err)
+	}
+	if err := repo.Save(ctx, &review.Vote{
+		ReviewID: reviewID, UserID: otherUser.ID, VoteType: review.VoteDislike,
+		CreatedAt: time.Now(), UpdatedAt: time.Now(),
+	}); err != nil {
+		t.Fatalf("save other user vote: %v", err)
+	}
+
+	got, err := repo.FindByReviewsAndUser(ctx, []int{reviewID, secondReview.ID, reviewID, 99999}, userID)
+	if err != nil {
+		t.Fatalf("FindByReviewsAndUser: %v", err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("votes length = %d, want 2", len(got))
+	}
+	if got[reviewID].VoteType != review.VoteLike {
+		t.Fatalf("first vote = %d, want %d", got[reviewID].VoteType, review.VoteLike)
+	}
+	if got[secondReview.ID].VoteType != review.VoteDislike {
+		t.Fatalf("second vote = %d, want %d", got[secondReview.ID].VoteType, review.VoteDislike)
+	}
+}
+
 func TestVoteRepository_CountTodayByUser(t *testing.T) {
 	_, repo, reviewID, userID := setupVoteTest(t)
 	ctx := context.Background()
