@@ -1,11 +1,19 @@
 import { useState } from "react"
+import dayjs from "dayjs"
+import { zhCN } from "date-fns/locale"
+import { RiCalendarLine } from "@remixicon/react"
 import { Navigate, useSearchParams } from "react-router-dom"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Calendar } from "@/components/ui/calendar"
 import { Label } from "@/components/ui/label"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { StatsCard } from "@/components/site-stats/stats-card"
 import { DailyStatsChart } from "@/components/site-stats/daily-stats-chart"
@@ -34,6 +42,58 @@ function getQuickDateRange(days: number): DateRangeParams {
     start_date: formatRelativeDateInputValue(-(days - 1)),
     end_date: formatDateInputValue(new Date()),
   }
+}
+
+function parseDateInputValue(value: string): Date | undefined {
+  const date = dayjs(value)
+  return date.isValid() ? date.toDate() : undefined
+}
+
+type DatePickerProps = {
+  id: string
+  label: string
+  value: string
+  onChange: (value: string) => void
+}
+
+function DatePicker({ id, label, value, onChange }: DatePickerProps) {
+  const [open, setOpen] = useState(false)
+  const selectedDate = parseDateInputValue(value)
+
+  return (
+    <div className="space-y-1">
+      <Label htmlFor={id} className="text-sm">
+        {label}
+      </Label>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            id={id}
+            type="button"
+            variant="outline"
+            className="w-44 justify-between font-normal"
+          >
+            {value}
+            <RiCalendarLine className="size-4 text-muted-foreground" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            defaultMonth={selectedDate}
+            onSelect={(date) => {
+              if (!date) return
+              onChange(formatDateInputValue(date))
+              setOpen(false)
+            }}
+            locale={zhCN}
+            captionLayout="dropdown"
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+  )
 }
 
 export function SiteStatsPage() {
@@ -118,32 +178,18 @@ export function SiteStatsPage() {
           )}
 
           <div className="flex flex-wrap items-end gap-2">
-            <div className="space-y-1">
-              <Label htmlFor="start-date" className="text-sm">
-                开始日期
-              </Label>
-              <Input
-                id="start-date"
-                type="date"
-                value={startDate}
-                onChange={(e) =>
-                  updateDateRange({ start_date: e.target.value })
-                }
-                className="w-44"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="end-date" className="text-sm">
-                结束日期
-              </Label>
-              <Input
-                id="end-date"
-                type="date"
-                value={endDate}
-                onChange={(e) => updateDateRange({ end_date: e.target.value })}
-                className="w-44"
-              />
-            </div>
+            <DatePicker
+              id="start-date"
+              label="开始日期"
+              value={startDate}
+              onChange={(value) => updateDateRange({ start_date: value })}
+            />
+            <DatePicker
+              id="end-date"
+              label="结束日期"
+              value={endDate}
+              onChange={(value) => updateDateRange({ end_date: value })}
+            />
             <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant="outline"
