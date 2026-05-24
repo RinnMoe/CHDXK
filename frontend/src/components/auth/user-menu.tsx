@@ -5,6 +5,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -44,14 +45,17 @@ export function UserMenu() {
     <div className="ml-auto">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="gap-2">
+          <Button variant="ghost" size="icon" aria-label="打开用户菜单">
             <span className="flex size-6 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
               {initials}
             </span>
-            <span className="hidden sm:inline">{user.username}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+            用户 ID: {user.id}
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <Link to={`/reviews/mine`}>我的点评</Link>
           </DropdownMenuItem>
