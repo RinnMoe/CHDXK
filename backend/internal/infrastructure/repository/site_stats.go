@@ -6,6 +6,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -14,11 +15,16 @@ import (
 )
 
 type SiteDailyStatRepository struct {
-	db *gorm.DB
+	db    *gorm.DB
+	cache *redis.Client
 }
 
-func NewSiteDailyStatRepository(db *gorm.DB) *SiteDailyStatRepository {
-	return &SiteDailyStatRepository{db: db}
+func NewSiteDailyStatRepository(db *gorm.DB, cache ...*redis.Client) *SiteDailyStatRepository {
+	var client *redis.Client
+	if len(cache) > 0 {
+		client = cache[0]
+	}
+	return &SiteDailyStatRepository{db: db, cache: client}
 }
 
 func metricsToJSONMap(metrics stat.Metrics) datatypes.JSONMap {
@@ -158,7 +164,7 @@ func (r *SiteDailyStatRepository) Collect(ctx context.Context, periodStart, peri
 
 func (r *SiteDailyStatRepository) Upsert(ctx context.Context, s *stat.DailyStat) error {
 	e := newDailyStatEntity(s)
-	return r.db.WithContext(ctx).
+	if err := r.db.WithContext(ctx).
 		Clauses(clause.OnConflict{
 			Columns: []clause.Column{{Name: "stat_date"}},
 			DoUpdates: clause.AssignmentColumns([]string{
@@ -166,10 +172,19 @@ func (r *SiteDailyStatRepository) Upsert(ctx context.Context, s *stat.DailyStat)
 				"generated_at",
 				"updated_at",
 			}),
-		}).Create(&e).Error
+		}).Create(&e).Error; err != nil {
+		return err
+	}
+	cacheDelete(ctx, r.cache, cacheKey("site_daily_stat", s.StatDate.Format(time.DateOnly)))
+	return nil
 }
 
 func (r *SiteDailyStatRepository) GetByDate(ctx context.Context, statDate time.Time) (*stat.DailyStatView, error) {
+	key := cacheKey("site_daily_stat", statDate.Format(time.DateOnly))
+	if cached, ok := cacheGetJSON[stat.DailyStatView](ctx, r.cache, key); ok {
+		return cached, nil
+	}
+
 	e, err := gorm.G[SiteDailyStatEntity](r.db).Where("stat_date = ?", statDate).First(ctx)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -178,6 +193,7 @@ func (r *SiteDailyStatRepository) GetByDate(ctx context.Context, statDate time.T
 		return nil, err
 	}
 	v := newDailyStatView(&e)
+	cacheSetJSON(ctx, r.cache, key, &v)
 	return &v, nil
 }
 

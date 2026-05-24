@@ -5,17 +5,23 @@ import (
 	"errors"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
 	"jcourse/internal/domain/review"
 )
 
 type ReviewVoteRepository struct {
-	db *gorm.DB
+	db    *gorm.DB
+	cache *redis.Client
 }
 
-func NewReviewVoteRepository(db *gorm.DB) *ReviewVoteRepository {
-	return &ReviewVoteRepository{db: db}
+func NewReviewVoteRepository(db *gorm.DB, cache ...*redis.Client) *ReviewVoteRepository {
+	var client *redis.Client
+	if len(cache) > 0 {
+		client = cache[0]
+	}
+	return &ReviewVoteRepository{db: db, cache: client}
 }
 
 func newVoteEntity(v *review.Vote) ReviewVoteEntity {
@@ -39,6 +45,11 @@ func newVoteDomain(e *ReviewVoteEntity) review.Vote {
 }
 
 func (r *ReviewVoteRepository) FindByReviewAndUser(ctx context.Context, reviewID, userID int) (*review.Vote, error) {
+	key := cacheKey("review_vote", reviewID, userID)
+	if cached, ok := cacheGetJSON[review.Vote](ctx, r.cache, key); ok {
+		return cached, nil
+	}
+
 	e, err := gorm.G[ReviewVoteEntity](r.db).Where("review_id = ? AND user_id = ?", reviewID, userID).First(ctx)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -47,6 +58,7 @@ func (r *ReviewVoteRepository) FindByReviewAndUser(ctx context.Context, reviewID
 		return nil, err
 	}
 	v := newVoteDomain(&e)
+	cacheSetJSON(ctx, r.cache, key, &v)
 	return &v, nil
 }
 
@@ -59,22 +71,36 @@ func (r *ReviewVoteRepository) CountTodayByUser(ctx context.Context, userID int)
 }
 
 func (r *ReviewVoteRepository) Save(ctx context.Context, v *review.Vote) error {
-	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	if err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		e := newVoteEntity(v)
 		if err := tx.Save(&e).Error; err != nil {
 			return err
 		}
 		return r.updateReviewVoteCounts(tx, v.ReviewID)
-	})
+	}); err != nil {
+		return err
+	}
+	cacheDelete(ctx, r.cache,
+		cacheKey("review", v.ReviewID, "view"),
+		cacheKey("review_vote", v.ReviewID, v.UserID),
+	)
+	return nil
 }
 
 func (r *ReviewVoteRepository) Delete(ctx context.Context, reviewID, userID int) error {
-	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	if err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Where("review_id = ? AND user_id = ?", reviewID, userID).Delete(&ReviewVoteEntity{}).Error; err != nil {
 			return err
 		}
 		return r.updateReviewVoteCounts(tx, reviewID)
-	})
+	}); err != nil {
+		return err
+	}
+	cacheDelete(ctx, r.cache,
+		cacheKey("review", reviewID, "view"),
+		cacheKey("review_vote", reviewID, userID),
+	)
+	return nil
 }
 
 func (r *ReviewVoteRepository) updateReviewVoteCounts(tx *gorm.DB, reviewID int) error {

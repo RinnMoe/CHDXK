@@ -2,7 +2,9 @@ package repository
 
 import (
 	"context"
+	"errors"
 
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -10,11 +12,28 @@ import (
 )
 
 type TeacherRepository struct {
-	db *gorm.DB
+	db    *gorm.DB
+	cache *redis.Client
 }
 
-func NewTeacherRepository(db *gorm.DB) *TeacherRepository {
-	return &TeacherRepository{db: db}
+func NewTeacherRepository(db *gorm.DB, cache ...*redis.Client) *TeacherRepository {
+	var client *redis.Client
+	if len(cache) > 0 {
+		client = cache[0]
+	}
+	return &TeacherRepository{db: db, cache: client}
+}
+
+func newTeacherViewFromEntity(e *TeacherEntity) teacher.TeacherView {
+	return teacher.TeacherView{
+		ID:         e.ID,
+		Code:       e.Code,
+		Name:       e.Name,
+		Department: e.Department,
+		Title:      e.Title,
+		Pinyin:     e.Pinyin,
+		PinyinAbbr: e.PinyinAbbr,
+	}
 }
 
 func (r *TeacherRepository) FindBy(ctx context.Context, filter teacher.TeacherFilter) ([]teacher.TeacherView, int64, error) {
@@ -63,20 +82,35 @@ func (r *TeacherRepository) FindBy(ctx context.Context, filter teacher.TeacherFi
 
 	result := make([]teacher.TeacherView, len(entities))
 	for i, e := range entities {
-		result[i] = teacher.TeacherView{
-			ID:         e.ID,
-			Code:       e.Code,
-			Name:       e.Name,
-			Department: e.Department,
-			Title:      e.Title,
-			Pinyin:     e.Pinyin,
-			PinyinAbbr: e.PinyinAbbr,
-		}
+		result[i] = newTeacherViewFromEntity(&e)
 	}
 	return result, total, nil
 }
 
+func (r *TeacherRepository) GetByID(ctx context.Context, teacherID int) (*teacher.TeacherView, error) {
+	key := cacheKey("teacher", teacherID)
+	if cached, ok := cacheGetJSON[teacher.TeacherView](ctx, r.cache, key); ok {
+		return cached, nil
+	}
+
+	e, err := gorm.G[TeacherEntity](r.db).Where("id = ?", teacherID).Take(ctx)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	v := newTeacherViewFromEntity(&e)
+	cacheSetJSON(ctx, r.cache, key, &v)
+	return &v, nil
+}
+
 func (r *TeacherRepository) GetFilters(ctx context.Context) (*teacher.TeacherFilters, error) {
+	key := cacheKey("teacher", "filters")
+	if cached, ok := cacheGetJSON[teacher.TeacherFilters](ctx, r.cache, key); ok {
+		return cached, nil
+	}
+
 	var departments []teacher.FilterItem
 	if err := r.db.WithContext(ctx).Model(&TeacherEntity{}).
 		Select("department AS name, COUNT(*) AS count").
@@ -93,10 +127,12 @@ func (r *TeacherRepository) GetFilters(ctx context.Context) (*teacher.TeacherFil
 		return nil, err
 	}
 
-	return &teacher.TeacherFilters{
+	filters := &teacher.TeacherFilters{
 		Departments: departments,
 		Titles:      titles,
-	}, nil
+	}
+	cacheSetJSON(ctx, r.cache, key, filters)
+	return filters, nil
 }
 
 var _ teacher.TeacherQuery = (*TeacherRepository)(nil)

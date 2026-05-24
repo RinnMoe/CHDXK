@@ -59,6 +59,14 @@ func (q *fakeTeacherQuery) FindBy(ctx context.Context, filter teacher.TeacherFil
 	return results, int64(len(results)), nil
 }
 
+func (q *fakeTeacherQuery) GetByID(ctx context.Context, teacherID int) (*teacher.TeacherView, error) {
+	v, ok := q.views[teacherID]
+	if !ok {
+		return nil, nil
+	}
+	return &v, nil
+}
+
 func (q *fakeTeacherQuery) GetFilters(ctx context.Context) (*teacher.TeacherFilters, error) {
 	return &teacher.TeacherFilters{}, nil
 }

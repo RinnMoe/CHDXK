@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -10,11 +11,16 @@ import (
 )
 
 type PointRepository struct {
-	db *gorm.DB
+	db    *gorm.DB
+	cache *redis.Client
 }
 
-func NewPointRepository(db *gorm.DB) *PointRepository {
-	return &PointRepository{db: db}
+func NewPointRepository(db *gorm.DB, cache ...*redis.Client) *PointRepository {
+	var client *redis.Client
+	if len(cache) > 0 {
+		client = cache[0]
+	}
+	return &PointRepository{db: db, cache: client}
 }
 
 func newPointRecordDomain(e *UserPointRecordEntity) point.Record {
@@ -29,13 +35,23 @@ func newPointRecordDomain(e *UserPointRecordEntity) point.Record {
 }
 
 func (r *PointRepository) SumByUser(ctx context.Context, userID int) (int, error) {
+	key := cacheKey("point", userID, "sum")
+	if cached, ok := cacheGetJSON[int](ctx, r.cache, key); ok {
+		return *cached, nil
+	}
+
 	var total int64
 	err := r.db.WithContext(ctx).
 		Model(&UserPointRecordEntity{}).
 		Where("user_id = ?", userID).
 		Select("COALESCE(SUM(amount), 0)").
 		Scan(&total).Error
-	return int(total), err
+	if err != nil {
+		return 0, err
+	}
+	result := int(total)
+	cacheSetJSON(ctx, r.cache, key, result)
+	return result, nil
 }
 
 func (r *PointRepository) FindRecordsByUser(ctx context.Context, filter point.RecordFilter) ([]point.Record, int64, error) {

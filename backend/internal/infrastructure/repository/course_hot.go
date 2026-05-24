@@ -83,16 +83,21 @@ func (r *CourseHotRepository) key(period course.HotCoursePeriod, at time.Time) s
 }
 
 type GormCourseHotRepository struct {
-	db  *gorm.DB
-	loc *time.Location
+	db    *gorm.DB
+	loc   *time.Location
+	cache *redis.Client
 }
 
-func NewGormCourseHotRepository(db *gorm.DB) *GormCourseHotRepository {
+func NewGormCourseHotRepository(db *gorm.DB, cache ...*redis.Client) *GormCourseHotRepository {
 	loc, err := DefaultHotCourseLocation()
 	if err != nil {
 		panic(err)
 	}
-	return &GormCourseHotRepository{db: db, loc: loc}
+	var client *redis.Client
+	if len(cache) > 0 {
+		client = cache[0]
+	}
+	return &GormCourseHotRepository{db: db, loc: loc, cache: client}
 }
 
 func (r *GormCourseHotRepository) AddScore(ctx context.Context, courseID int, score int64, at time.Time) error {
@@ -105,7 +110,7 @@ func (r *GormCourseHotRepository) AddScore(ctx context.Context, courseID int, sc
 		r.newScoreEntity(course.HotCoursePeriodWeek, courseID, score, at, now),
 		r.newScoreEntity(course.HotCoursePeriodMonth, courseID, score, at, now),
 	}
-	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
+	if err := r.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns: []clause.Column{
 			{Name: "period"},
 			{Name: "period_key"},
@@ -115,7 +120,11 @@ func (r *GormCourseHotRepository) AddScore(ctx context.Context, courseID int, sc
 			"score":      gorm.Expr("course_hot_scores.score + EXCLUDED.score"),
 			"updated_at": now,
 		}),
-	}).Create(&items).Error
+	}).Create(&items).Error; err != nil {
+		return err
+	}
+	cacheDeletePattern(ctx, r.cache, cacheKey("course", "hot", "*")+":*")
+	return nil
 }
 
 func (r *GormCourseHotRepository) Top(ctx context.Context, period course.HotCoursePeriod, at time.Time, limit int64) ([]course.HotCourseRank, error) {
@@ -126,9 +135,15 @@ func (r *GormCourseHotRepository) Top(ctx context.Context, period course.HotCour
 		return nil, course.ErrInvalidHotCoursePeriod
 	}
 
+	periodKey := HotCoursePeriodKey(period, at, r.loc)
+	key := cacheKey("course", "hot", period, periodKey, limit)
+	if cached, ok := cacheGetJSON[[]course.HotCourseRank](ctx, r.cache, key); ok {
+		return *cached, nil
+	}
+
 	var items []CourseHotScoreEntity
 	if err := r.db.WithContext(ctx).
-		Where("period = ? AND period_key = ?", string(period), HotCoursePeriodKey(period, at, r.loc)).
+		Where("period = ? AND period_key = ?", string(period), periodKey).
 		Order("score DESC, course_id ASC").
 		Limit(int(limit)).
 		Find(&items).Error; err != nil {
@@ -142,6 +157,7 @@ func (r *GormCourseHotRepository) Top(ctx context.Context, period course.HotCour
 			Score:    item.Score,
 		})
 	}
+	cacheSetJSON(ctx, r.cache, key, ranks)
 	return ranks, nil
 }
 

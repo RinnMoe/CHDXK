@@ -35,7 +35,7 @@ func newPointRecordEntity(r point.Record) UserPointRecordEntity {
 }
 
 func (r *PointRepository) CreateTransfer(ctx context.Context, t *point.Transfer, senderRecord point.Record, recipientRecord point.Record) error {
-	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	if err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var sender UserEntity
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ?", t.SenderUserID).Take(&sender).Error; err != nil {
 			return err
@@ -64,7 +64,14 @@ func (r *PointRepository) CreateTransfer(ctx context.Context, t *point.Transfer,
 			return err
 		}
 		return tx.Create(&recipientEntity).Error
-	})
+	}); err != nil {
+		return err
+	}
+	cacheDelete(ctx, r.cache,
+		cacheKey("point", t.SenderUserID, "sum"),
+		cacheKey("point", t.RecipientUserID, "sum"),
+	)
+	return nil
 }
 
 var _ point.TransferRepository = (*PointRepository)(nil)

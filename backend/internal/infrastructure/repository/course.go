@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/lib/pq"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -29,11 +30,16 @@ func newCourseDomain(e *CourseEntity) course.Course {
 }
 
 type CourseRepository struct {
-	db *gorm.DB
+	db    *gorm.DB
+	cache *redis.Client
 }
 
-func NewCourseRepository(db *gorm.DB) *CourseRepository {
-	return &CourseRepository{db: db}
+func NewCourseRepository(db *gorm.DB, cache ...*redis.Client) *CourseRepository {
+	var client *redis.Client
+	if len(cache) > 0 {
+		client = cache[0]
+	}
+	return &CourseRepository{db: db, cache: client}
 }
 
 func (r *CourseRepository) baseCourseQuery(ctx context.Context) *gorm.DB {
@@ -110,11 +116,18 @@ func (r *CourseRepository) applyPagination(db *gorm.DB, f course.CourseFilter) *
 }
 
 func (r *CourseRepository) OfferedCourseExists(ctx context.Context, courseID int, semester string) (bool, error) {
+	key := cacheKey("course", courseID, "offered", semester)
+	if cached, ok := cacheGetJSON[bool](ctx, r.cache, key); ok {
+		return *cached, nil
+	}
+
 	count, err := gorm.G[OfferedCourseEntity](r.db).Where("course_id = ? AND semester = ?", courseID, semester).Count(ctx, "id")
 	if err != nil {
 		return false, err
 	}
-	return count > 0, nil
+	exists := count > 0
+	cacheSetJSON(ctx, r.cache, key, exists)
+	return exists, nil
 }
 
 func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int) ([]course.OfferedCourseView, error) {
@@ -168,6 +181,11 @@ func (r *CourseRepository) FindBy(ctx context.Context, filter course.CourseFilte
 }
 
 func (r *CourseRepository) Get(ctx context.Context, courseID int) (*course.Course, error) {
+	key := cacheKey("course", courseID)
+	if cached, ok := cacheGetJSON[course.Course](ctx, r.cache, key); ok {
+		return cached, nil
+	}
+
 	e, err := gorm.G[CourseEntity](r.db).Where("id = ?", courseID).Take(ctx)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -175,10 +193,17 @@ func (r *CourseRepository) Get(ctx context.Context, courseID int) (*course.Cours
 		}
 		return nil, err
 	}
-	return new(newCourseDomain(&e)), nil
+	c := newCourseDomain(&e)
+	cacheSetJSON(ctx, r.cache, key, &c)
+	return &c, nil
 }
 
 func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course.CourseDetailView, error) {
+	key := cacheKey("course", courseID, "detail")
+	if cached, ok := cacheGetJSON[course.CourseDetailView](ctx, r.cache, key); ok {
+		return cached, nil
+	}
+
 	var entity CourseEntity
 	err := r.db.WithContext(ctx).
 		Joins("MainTeacher").
@@ -217,10 +242,16 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 	}
 	result.OfferedCourses = offeredCourses
 
+	cacheSetJSON(ctx, r.cache, key, result)
 	return result, nil
 }
 
 func (r *CourseRepository) GetFilters(ctx context.Context) (*course.CourseFilters, error) {
+	key := cacheKey("course", "filters")
+	if cached, ok := cacheGetJSON[course.CourseFilters](ctx, r.cache, key); ok {
+		return cached, nil
+	}
+
 	var credits []course.FilterItem
 	if err := r.db.WithContext(ctx).Model(&CourseEntity{}).
 		Select("CAST(credit AS TEXT) AS name, COUNT(*) AS count").
@@ -264,13 +295,15 @@ func (r *CourseRepository) GetFilters(ctx context.Context) (*course.CourseFilter
 		return nil, err
 	}
 
-	return &course.CourseFilters{
+	filters := &course.CourseFilters{
 		Credits:     credits,
 		Departments: departments,
 		Categories:  categories,
 		TargetYears: targetYears,
 		Languages:   languages,
-	}, nil
+	}
+	cacheSetJSON(ctx, r.cache, key, filters)
+	return filters, nil
 }
 
 var _ course.CourseRepository = (*CourseRepository)(nil)

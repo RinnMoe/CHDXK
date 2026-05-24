@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -93,7 +94,24 @@ func newReviewView(e *ReviewEntity) review.ReviewView {
 }
 
 type ReviewRepository struct {
-	db *gorm.DB
+	db    *gorm.DB
+	cache *redis.Client
+}
+
+func (r2 *ReviewRepository) deleteReviewCache(ctx context.Context, reviewID, courseID int) {
+	keys := []string{
+		cacheKey("review", reviewID),
+		cacheKey("review", reviewID, "view"),
+	}
+	if courseID > 0 {
+		keys = append(keys,
+			cacheKey("course", courseID),
+			cacheKey("course", courseID, "detail"),
+			cacheKey("review", "course", courseID, "filters"),
+			cacheKey("review", "course", courseID, "trend"),
+		)
+	}
+	cacheDelete(ctx, r2.cache, keys...)
 }
 
 func (r2 *ReviewRepository) updateCourseStats(tx *gorm.DB, courseID int) error {
@@ -133,6 +151,11 @@ func (r2 *ReviewRepository) FindBy(ctx context.Context, filter review.ReviewFilt
 }
 
 func (r2 *ReviewRepository) GetByID(ctx context.Context, reviewID int) (*review.ReviewView, error) {
+	key := cacheKey("review", reviewID, "view")
+	if cached, ok := cacheGetJSON[review.ReviewView](ctx, r2.cache, key); ok {
+		return cached, nil
+	}
+
 	var entity ReviewEntity
 	if err := r2.db.WithContext(ctx).
 		Joins("Course").
@@ -145,10 +168,16 @@ func (r2 *ReviewRepository) GetByID(ctx context.Context, reviewID int) (*review.
 		return nil, err
 	}
 	view := newReviewView(&entity)
+	cacheSetJSON(ctx, r2.cache, key, &view)
 	return &view, nil
 }
 
 func (r2 *ReviewRepository) GetCourseFilters(ctx context.Context, courseID int) (*review.ReviewFilters, error) {
+	key := cacheKey("review", "course", courseID, "filters")
+	if cached, ok := cacheGetJSON[review.ReviewFilters](ctx, r2.cache, key); ok {
+		return cached, nil
+	}
+
 	var semesters []review.FilterItem
 	if err := r2.db.WithContext(ctx).
 		Model(&ReviewEntity{}).
@@ -186,10 +215,17 @@ func (r2 *ReviewRepository) GetCourseFilters(ctx context.Context, courseID int) 
 		})
 	}
 
-	return &review.ReviewFilters{Semesters: semesters, Ratings: ratings}, nil
+	filters := &review.ReviewFilters{Semesters: semesters, Ratings: ratings}
+	cacheSetJSON(ctx, r2.cache, key, filters)
+	return filters, nil
 }
 
 func (r2 *ReviewRepository) GetCourseTrend(ctx context.Context, courseID int) ([]review.ReviewTrendItem, error) {
+	key := cacheKey("review", "course", courseID, "trend")
+	if cached, ok := cacheGetJSON[[]review.ReviewTrendItem](ctx, r2.cache, key); ok {
+		return *cached, nil
+	}
+
 	var items []review.ReviewTrendItem
 	if err := r2.db.WithContext(ctx).
 		Model(&ReviewEntity{}).
@@ -200,6 +236,7 @@ func (r2 *ReviewRepository) GetCourseTrend(ctx context.Context, courseID int) ([
 		Scan(&items).Error; err != nil {
 		return nil, err
 	}
+	cacheSetJSON(ctx, r2.cache, key, items)
 	return items, nil
 }
 
@@ -289,6 +326,8 @@ func (r2 *ReviewRepository) Create(ctx context.Context, r *review.Review) error 
 	}
 
 	r.ID = e.ID
+	r2.deleteReviewCache(ctx, r.ID, r.CourseID)
+	cacheDelete(ctx, r2.cache, cacheKey("course", "filters"))
 	return nil
 }
 
@@ -311,25 +350,40 @@ func (r2 *ReviewRepository) Update(ctx context.Context, r *review.Review, rv rev
 	}
 
 	r.ID = e.ID
+	r2.deleteReviewCache(ctx, r.ID, r.CourseID)
 	return nil
 }
 
 func (r2 *ReviewRepository) UpdateModeratorRemark(ctx context.Context, reviewID int, moderatorRemark string) error {
-	return r2.db.WithContext(ctx).Model(&ReviewEntity{}).
+	if err := r2.db.WithContext(ctx).Model(&ReviewEntity{}).
 		Where("id = ?", reviewID).
-		Update("moderator_remark", moderatorRemark).Error
+		Update("moderator_remark", moderatorRemark).Error; err != nil {
+		return err
+	}
+	r2.deleteReviewCache(ctx, reviewID, 0)
+	return nil
 }
 
 func (r2 *ReviewRepository) Delete(ctx context.Context, r *review.Review) error {
-	return r2.db.Transaction(func(tx *gorm.DB) error {
+	if err := r2.db.Transaction(func(tx *gorm.DB) error {
 		if _, err := gorm.G[ReviewEntity](tx).Where("id = ?", r.ID).Delete(ctx); err != nil {
 			return err
 		}
 		return r2.updateCourseStats(tx, r.CourseID)
-	})
+	}); err != nil {
+		return err
+	}
+	r2.deleteReviewCache(ctx, r.ID, r.CourseID)
+	cacheDelete(ctx, r2.cache, cacheKey("course", "filters"))
+	return nil
 }
 
 func (r2 *ReviewRepository) Get(ctx context.Context, reviewID int) (*review.Review, error) {
+	key := cacheKey("review", reviewID)
+	if cached, ok := cacheGetJSON[review.Review](ctx, r2.cache, key); ok {
+		return cached, nil
+	}
+
 	e, err := gorm.G[ReviewEntity](r2.db).Where("id = ?", reviewID).First(ctx)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -338,11 +392,16 @@ func (r2 *ReviewRepository) Get(ctx context.Context, reviewID int) (*review.Revi
 		return nil, err
 	}
 	r := newReviewDomain(&e)
+	cacheSetJSON(ctx, r2.cache, key, &r)
 	return &r, nil
 }
 
-func NewReviewRepository(db *gorm.DB) *ReviewRepository {
-	return &ReviewRepository{db: db}
+func NewReviewRepository(db *gorm.DB, cache ...*redis.Client) *ReviewRepository {
+	var client *redis.Client
+	if len(cache) > 0 {
+		client = cache[0]
+	}
+	return &ReviewRepository{db: db, cache: client}
 }
 
 var _ review.ReviewRepository = (*ReviewRepository)(nil)

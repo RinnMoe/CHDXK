@@ -38,5 +38,6 @@ type TeacherFilters struct {
 // Read model interface
 type TeacherQuery interface {
 	FindBy(ctx context.Context, filter TeacherFilter) ([]TeacherView, int64, error)
+	GetByID(ctx context.Context, teacherID int) (*TeacherView, error)
 	GetFilters(ctx context.Context) (*TeacherFilters, error)
 }
