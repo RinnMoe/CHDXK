@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react"
 import { RiLineChartLine } from "@remixicon/react"
 import {
+  Bar,
   CartesianGrid,
+  ComposedChart,
   Legend,
   Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -65,7 +66,7 @@ export function CourseReviewTrendDialog({
         ) : chartData.length > 0 ? (
           <div className="h-80 w-full min-w-0">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart
+              <ComposedChart
                 data={chartData}
                 margin={{ top: 8, right: 8, left: 0, bottom: 8 }}
               >
@@ -122,16 +123,13 @@ export function CourseReviewTrendDialog({
                   dot={{ r: 3 }}
                   activeDot={{ r: 5 }}
                 />
-                <Line
+                <Bar
                   yAxisId="count"
-                  type="monotone"
                   dataKey="count"
-                  stroke="var(--color-chart-5)"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 5 }}
+                  fill="var(--color-chart-3)"
+                  radius={[4, 4, 0, 0]}
                 />
-              </LineChart>
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
         ) : (
