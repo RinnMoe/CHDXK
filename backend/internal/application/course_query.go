@@ -30,15 +30,17 @@ type CourseQueryService struct {
 	teacherQuery     teacher.TeacherQuery
 	reviewQuery      review.ReviewQuery
 	notificationRepo course.CourseNotificationRepository
+	enrollmentQuery  course.CourseEnrollmentQuery
 	hotRepo          course.HotCourseRepository
 }
 
-func NewCourseQueryService(courseQuery course.CourseQuery, teacherQuery teacher.TeacherQuery, reviewQuery review.ReviewQuery, notificationRepo course.CourseNotificationRepository, hotRepo course.HotCourseRepository) *CourseQueryService {
+func NewCourseQueryService(courseQuery course.CourseQuery, teacherQuery teacher.TeacherQuery, reviewQuery review.ReviewQuery, notificationRepo course.CourseNotificationRepository, enrollmentQuery course.CourseEnrollmentQuery, hotRepo course.HotCourseRepository) *CourseQueryService {
 	return &CourseQueryService{
 		courseQuery:      courseQuery,
 		teacherQuery:     teacherQuery,
 		reviewQuery:      reviewQuery,
 		notificationRepo: notificationRepo,
+		enrollmentQuery:  enrollmentQuery,
 		hotRepo:          hotRepo,
 	}
 }
@@ -167,6 +169,14 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 		detail.NotificationLevel = level
 	}
 
+	var myEnrollments []course.CourseEnrollmentView
+	if user != nil && s.enrollmentQuery != nil {
+		myEnrollments, err = s.enrollmentQuery.FindUserCourseEnrollments(ctx, user.ID, courseID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	dto := &CourseDetailDTO{
 		ID:                detail.ID,
 		Code:              detail.Code,
@@ -183,6 +193,12 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 	}
 	if detail.MainTeacher != nil {
 		dto.MainTeacher = newTeacherDTO(detail.MainTeacher)
+	}
+	if len(myEnrollments) > 0 {
+		dto.MyEnrollments = make([]CourseEnrollmentDTO, len(myEnrollments))
+		for i := range myEnrollments {
+			dto.MyEnrollments[i] = newCourseEnrollmentDTO(&myEnrollments[i])
+		}
 	}
 	teacherGroup, err := s.teacherGroupDTOs(ctx, detail.TeacherIDs)
 	if err != nil {

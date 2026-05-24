@@ -22,6 +22,10 @@ type fakeHotCourseRepo struct {
 	ranks []course.HotCourseRank
 }
 
+type fakeEnrollmentQuery struct {
+	rows []course.CourseEnrollmentView
+}
+
 type fakeTeacherQuery struct {
 	views map[int]teacher.TeacherView
 }
@@ -46,6 +50,20 @@ func newFakeCourseQuery() *fakeCourseQuery {
 
 func newFakeTeacherQuery() *fakeTeacherQuery {
 	return &fakeTeacherQuery{views: make(map[int]teacher.TeacherView)}
+}
+
+func (q *fakeEnrollmentQuery) FindUserEnrollments(ctx context.Context, userID int) ([]course.CourseEnrollmentView, error) {
+	return q.rows, nil
+}
+
+func (q *fakeEnrollmentQuery) FindUserCourseEnrollments(ctx context.Context, userID, courseID int) ([]course.CourseEnrollmentView, error) {
+	var results []course.CourseEnrollmentView
+	for _, row := range q.rows {
+		if row.UserID == userID && row.Course.ID == courseID {
+			results = append(results, row)
+		}
+	}
+	return results, nil
 }
 
 func (q *fakeTeacherQuery) FindBy(ctx context.Context, filter teacher.TeacherFilter) ([]teacher.TeacherView, int64, error) {
@@ -126,7 +144,7 @@ func TestCourseQueryService_GetCourseDetail_WithUser(t *testing.T) {
 	}
 	notifRepo := newFakeNotificationRepo()
 	notifRepo.SetLevel(context.Background(), 100, 1, course.NotificationLevelFollow)
-	svc := application.NewCourseQueryService(query, nil, newFakeReviewQuery(), notifRepo, nil)
+	svc := application.NewCourseQueryService(query, nil, newFakeReviewQuery(), notifRepo, nil, nil)
 	ctx := context.Background()
 
 	user := &auth.User{ID: 100}
@@ -153,7 +171,7 @@ func TestCourseQueryService_GetCourseDetail_WithMyReview(t *testing.T) {
 		{ID: 11, CourseID: 1, UserID: 101, Rating: 3, Content: "一般"},
 		{ID: 12, CourseID: 2, UserID: 100, Rating: 4, Content: "还行"},
 	}
-	svc := application.NewCourseQueryService(query, nil, reviewQuery, newFakeNotificationRepo(), nil)
+	svc := application.NewCourseQueryService(query, nil, reviewQuery, newFakeNotificationRepo(), nil, nil)
 
 	dto, err := svc.GetCourseDetail(context.Background(), &auth.User{ID: 100}, 1)
 	if err != nil {
@@ -170,6 +188,48 @@ func TestCourseQueryService_GetCourseDetail_WithMyReview(t *testing.T) {
 	}
 }
 
+func TestCourseQueryService_GetCourseDetail_WithMyEnrollments(t *testing.T) {
+	query := newFakeCourseQuery()
+	query.details[1] = &course.CourseDetailView{
+		ID:          1,
+		Code:        "CS101",
+		Name:        "数据结构",
+		MainTeacher: &teacher.TeacherView{ID: 1, Name: "张三"},
+	}
+	enrollmentQuery := &fakeEnrollmentQuery{rows: []course.CourseEnrollmentView{
+		{
+			ID:       10,
+			UserID:   100,
+			Course:   course.CourseView{ID: 1, Code: "CS101", Name: "数据结构"},
+			Semester: "2024-2025-1",
+		},
+		{
+			ID:       11,
+			UserID:   100,
+			Course:   course.CourseView{ID: 1, Code: "CS101", Name: "数据结构"},
+			Semester: "2024-2025-2",
+		},
+		{
+			ID:       12,
+			UserID:   100,
+			Course:   course.CourseView{ID: 2, Code: "CS102", Name: "算法"},
+			Semester: "2024-2025-1",
+		},
+	}}
+	svc := application.NewCourseQueryService(query, nil, newFakeReviewQuery(), newFakeNotificationRepo(), enrollmentQuery, nil)
+
+	dto, err := svc.GetCourseDetail(context.Background(), &auth.User{ID: 100}, 1)
+	if err != nil {
+		t.Fatalf("GetCourseDetail: %v", err)
+	}
+	if len(dto.MyEnrollments) != 2 {
+		t.Fatalf("MyEnrollments count: got %d, want 2", len(dto.MyEnrollments))
+	}
+	if dto.MyEnrollments[0].Semester != "2024-2025-1" || dto.MyEnrollments[1].Semester != "2024-2025-2" {
+		t.Fatalf("MyEnrollments semesters: got %+v", dto.MyEnrollments)
+	}
+}
+
 func TestCourseQueryService_GetCourseDetail_WithoutUser(t *testing.T) {
 	query := newFakeCourseQuery()
 	query.details[1] = &course.CourseDetailView{
@@ -179,7 +239,7 @@ func TestCourseQueryService_GetCourseDetail_WithoutUser(t *testing.T) {
 		MainTeacher: &teacher.TeacherView{ID: 1, Name: "张三"},
 	}
 	notifRepo := newFakeNotificationRepo()
-	svc := application.NewCourseQueryService(query, nil, newFakeReviewQuery(), notifRepo, nil)
+	svc := application.NewCourseQueryService(query, nil, newFakeReviewQuery(), notifRepo, nil, nil)
 	ctx := context.Background()
 
 	dto, err := svc.GetCourseDetail(ctx, nil, 1)
@@ -204,7 +264,7 @@ func TestCourseQueryService_GetCourseDetail_WithTeacherGroup(t *testing.T) {
 	teacherQuery := newFakeTeacherQuery()
 	teacherQuery.views[1] = teacher.TeacherView{ID: 1, Name: "张三"}
 	teacherQuery.views[2] = teacher.TeacherView{ID: 2, Name: "李四"}
-	svc := application.NewCourseQueryService(query, teacherQuery, newFakeReviewQuery(), newFakeNotificationRepo(), nil)
+	svc := application.NewCourseQueryService(query, teacherQuery, newFakeReviewQuery(), newFakeNotificationRepo(), nil, nil)
 
 	dto, err := svc.GetCourseDetail(context.Background(), nil, 1)
 	if err != nil {
@@ -233,7 +293,7 @@ func TestCourseQueryService_ListCoursesByNotificationLevel(t *testing.T) {
 	notifRepo.SetLevel(ctx, 100, 2, course.NotificationLevelIgnored)
 	notifRepo.SetLevel(ctx, 100, 3, course.NotificationLevelFollow)
 
-	svc := application.NewCourseQueryService(query, nil, newFakeReviewQuery(), notifRepo, nil)
+	svc := application.NewCourseQueryService(query, nil, newFakeReviewQuery(), notifRepo, nil, nil)
 
 	t.Run("list followed", func(t *testing.T) {
 		result, err := svc.ListCoursesByNotificationLevel(ctx, 100, course.NotificationLevelFollow, application.CourseListFilter{})
@@ -278,7 +338,7 @@ func TestCourseQueryService_ListHotCourses(t *testing.T) {
 		{CourseID: 2, Score: 10},
 		{CourseID: 1, Score: 8},
 	}}
-	svc := application.NewCourseQueryService(query, nil, newFakeReviewQuery(), newFakeNotificationRepo(), hotRepo)
+	svc := application.NewCourseQueryService(query, nil, newFakeReviewQuery(), newFakeNotificationRepo(), nil, hotRepo)
 
 	result, err := svc.ListHotCourses(context.Background(), "week", 5)
 	if err != nil {
@@ -307,7 +367,7 @@ func TestCourseQueryService_ListHotCourses_WithLimit(t *testing.T) {
 		{CourseID: 2, Score: 10},
 		{CourseID: 1, Score: 8},
 	}}
-	svc := application.NewCourseQueryService(query, nil, newFakeReviewQuery(), newFakeNotificationRepo(), hotRepo)
+	svc := application.NewCourseQueryService(query, nil, newFakeReviewQuery(), newFakeNotificationRepo(), nil, hotRepo)
 
 	t.Run("limit 1 returns only top course", func(t *testing.T) {
 		result, err := svc.ListHotCourses(context.Background(), "week", 1)
@@ -324,7 +384,7 @@ func TestCourseQueryService_ListHotCourses_WithLimit(t *testing.T) {
 }
 
 func TestCourseQueryService_ListHotCourses_InvalidPeriod(t *testing.T) {
-	svc := application.NewCourseQueryService(newFakeCourseQuery(), nil, newFakeReviewQuery(), newFakeNotificationRepo(), &fakeHotCourseRepo{})
+	svc := application.NewCourseQueryService(newFakeCourseQuery(), nil, newFakeReviewQuery(), newFakeNotificationRepo(), nil, &fakeHotCourseRepo{})
 	_, err := svc.ListHotCourses(context.Background(), "daily", 5)
 	if err != course.ErrInvalidHotCoursePeriod {
 		t.Fatalf("err: got %v, want %v", err, course.ErrInvalidHotCoursePeriod)

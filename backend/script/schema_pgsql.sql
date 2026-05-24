@@ -91,6 +91,29 @@ CREATE TABLE IF NOT EXISTS users
     suspend_till TIMESTAMPTZ
 );
 
+CREATE TABLE IF NOT EXISTS course_enrollments
+(
+    id         SERIAL PRIMARY KEY,
+    user_id    INTEGER     NOT NULL,
+    course_id  INTEGER     NOT NULL,
+    semester   TEXT        NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT fk_course_enrollments_user
+        FOREIGN KEY (user_id) REFERENCES users (id)
+            ON DELETE CASCADE,
+    CONSTRAINT fk_course_enrollments_course
+        FOREIGN KEY (course_id) REFERENCES courses (id)
+            ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX uniq_course_enrollments_user_course_semester
+    ON course_enrollments (user_id, course_id, semester);
+CREATE INDEX idx_course_enrollments_user_created
+    ON course_enrollments (user_id, created_at DESC, id DESC);
+CREATE INDEX idx_course_enrollments_course_semester
+    ON course_enrollments (course_id, semester, created_at DESC, id DESC);
+
 CREATE TABLE IF NOT EXISTS api_keys
 (
     id           SERIAL PRIMARY KEY,

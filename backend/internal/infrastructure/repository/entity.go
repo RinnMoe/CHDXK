@@ -42,6 +42,19 @@ func (OfferedCourseEntity) TableName() string {
 	return "offered_courses"
 }
 
+type CourseEnrollmentEntity struct {
+	ID        int           `gorm:"column:id"`
+	UserID    int           `gorm:"column:user_id;index;uniqueIndex:uniq_course_enrollments_user_course_semester"`
+	CourseID  int           `gorm:"column:course_id;index;uniqueIndex:uniq_course_enrollments_user_course_semester"`
+	Semester  string        `gorm:"column:semester;uniqueIndex:uniq_course_enrollments_user_course_semester"`
+	CreatedAt time.Time     `gorm:"column:created_at"`
+	Course    *CourseEntity `gorm:"foreignKey:course_id;references:id"`
+}
+
+func (CourseEnrollmentEntity) TableName() string {
+	return "course_enrollments"
+}
+
 type CourseEntity struct {
 	ID            int            `gorm:"column:id"`
 	Code          string         `gorm:"column:code;uniqueIndex:idx_courses_code_teacher"`

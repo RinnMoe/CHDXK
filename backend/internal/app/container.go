@@ -14,24 +14,26 @@ import (
 )
 
 type ServiceContainer struct {
-	ReviewQuery       *application.ReviewQueryService
-	ReviewCommand     *application.ReviewCommandService
-	CourseQuery       *application.CourseQueryService
-	CourseCommand     *application.CourseCommandService
-	TeacherQuery      *application.TeacherQueryService
-	PointQuery        *application.PointQueryService
-	PointCommand      *application.PointCommandService
-	SiteStatsQuery    *application.SiteStatsQueryService
-	SiteStatsCommand  *application.SiteStatsCommandService
-	AccountQuery      *application.AccountQueryService
-	AccountCommand    *application.AccountCommandService
-	AdminUserQuery    *application.AdminUserQueryService
-	AdminUserCommand  *application.AdminUserCommandService
-	AuthUserService   *auth.AuthUserService
-	AnnouncementQuery *application.AnnouncementQueryService
-	ApiKeySvc         *auth.ApiKeyService
-	ApiKeyQuery       *application.ApiKeyQueryService
-	ApiKeyCommand     *application.ApiKeyCommandService
+	ReviewQuery             *application.ReviewQueryService
+	ReviewCommand           *application.ReviewCommandService
+	CourseQuery             *application.CourseQueryService
+	CourseCommand           *application.CourseCommandService
+	CourseEnrollmentQuery   *application.CourseEnrollmentQueryService
+	CourseEnrollmentCommand *application.CourseEnrollmentCommandService
+	TeacherQuery            *application.TeacherQueryService
+	PointQuery              *application.PointQueryService
+	PointCommand            *application.PointCommandService
+	SiteStatsQuery          *application.SiteStatsQueryService
+	SiteStatsCommand        *application.SiteStatsCommandService
+	AccountQuery            *application.AccountQueryService
+	AccountCommand          *application.AccountCommandService
+	AdminUserQuery          *application.AdminUserQueryService
+	AdminUserCommand        *application.AdminUserCommandService
+	AuthUserService         *auth.AuthUserService
+	AnnouncementQuery       *application.AnnouncementQueryService
+	ApiKeySvc               *auth.ApiKeyService
+	ApiKeyQuery             *application.ApiKeyQueryService
+	ApiKeyCommand           *application.ApiKeyCommandService
 }
 
 func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
@@ -42,6 +44,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	reviewRepo := repository.NewReviewRepository(db, redisClient)
 	voteRepo := repository.NewReviewVoteRepository(db, redisClient)
 	courseRepo := repository.NewCourseRepository(db, redisClient)
+	courseEnrollmentRepo := repository.NewCourseEnrollmentRepository(db, redisClient)
 	teacherRepo := repository.NewTeacherRepository(db, redisClient)
 	announcementRepo := repository.NewAnnouncementRepository(db)
 	notificationRepo := repository.NewCourseNotificationRepository(db, redisClient)
@@ -69,8 +72,10 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		conf.Review.Command,
 		[]review.CreatePolicy{freqPolicy, safetyPolicy},
 	)
-	courseQuery := application.NewCourseQueryService(courseRepo, teacherRepo, reviewRepo, notificationRepo, courseHotRepo)
+	courseQuery := application.NewCourseQueryService(courseRepo, teacherRepo, reviewRepo, notificationRepo, courseEnrollmentRepo, courseHotRepo)
 	courseCommand := application.NewCourseCommandService(courseRepo, notificationRepo)
+	courseEnrollmentQuery := application.NewCourseEnrollmentQueryService(courseEnrollmentRepo)
+	courseEnrollmentCommand := application.NewCourseEnrollmentCommandService(courseRepo, courseEnrollmentRepo)
 	teacherQuery := application.NewTeacherQueryService(teacherRepo)
 	announcementQuery := application.NewAnnouncementQueryService(announcementRepo)
 	transferService := point.NewTransferService(conf.Point)
@@ -119,23 +124,25 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc)
 
 	return &ServiceContainer{
-		ReviewQuery:       reviewQuery,
-		ReviewCommand:     reviewCommand,
-		CourseQuery:       courseQuery,
-		CourseCommand:     courseCommand,
-		TeacherQuery:      teacherQuery,
-		PointQuery:        pointQuery,
-		PointCommand:      pointCommand,
-		SiteStatsQuery:    siteStatsQuery,
-		SiteStatsCommand:  siteStatsCommand,
-		AccountQuery:      accountQuery,
-		AccountCommand:    accountCommand,
-		AdminUserQuery:    adminUserQuery,
-		AdminUserCommand:  adminUserCommand,
-		AuthUserService:   currentUserService,
-		AnnouncementQuery: announcementQuery,
-		ApiKeySvc:         apiKeySvc,
-		ApiKeyQuery:       apiKeyQuery,
-		ApiKeyCommand:     apiKeyCommand,
+		ReviewQuery:             reviewQuery,
+		ReviewCommand:           reviewCommand,
+		CourseQuery:             courseQuery,
+		CourseCommand:           courseCommand,
+		CourseEnrollmentQuery:   courseEnrollmentQuery,
+		CourseEnrollmentCommand: courseEnrollmentCommand,
+		TeacherQuery:            teacherQuery,
+		PointQuery:              pointQuery,
+		PointCommand:            pointCommand,
+		SiteStatsQuery:          siteStatsQuery,
+		SiteStatsCommand:        siteStatsCommand,
+		AccountQuery:            accountQuery,
+		AccountCommand:          accountCommand,
+		AdminUserQuery:          adminUserQuery,
+		AdminUserCommand:        adminUserCommand,
+		AuthUserService:         currentUserService,
+		AnnouncementQuery:       announcementQuery,
+		ApiKeySvc:               apiKeySvc,
+		ApiKeyQuery:             apiKeyQuery,
+		ApiKeyCommand:           apiKeyCommand,
 	}
 }

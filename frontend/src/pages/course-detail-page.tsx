@@ -13,6 +13,7 @@ import {
   CourseSemesterBadge,
 } from "@/components/course/course-badges"
 import { CourseNotificationControl } from "@/components/course/course-notification-control"
+import { CourseEnrollmentDialog } from "@/components/course/course-enrollment-dialog"
 import { CourseReviewTrendDialog } from "@/components/course/course-review-trend-dialog"
 import { RatingDistribution } from "@/components/course/rating-distribution"
 import { PageShell } from "@/components/layout/page-shell"
@@ -153,6 +154,10 @@ export function CourseDetailPage() {
   const listedReviews =
     reviews?.items.filter((review) => review.id !== course.my_review?.id) ?? []
   const courseSemesters = getCourseSemesters(course)
+  const selectedSemesters = [
+    ...new Set((course.my_enrollments ?? []).map((item) => item.semester)),
+  ].sort((a, b) => b.localeCompare(a))
+  const hasSelectedCourse = selectedSemesters.length > 0
   const teacherGroup = course.teacher_group ?? []
   const feedbackMailto = buildFeedbackMailto(course)
   const hasRelatedCourses =
@@ -236,10 +241,37 @@ export function CourseDetailPage() {
 
                   {courseSemesters.length > 0 && (
                     <section className="flex flex-wrap items-center gap-2 text-sm">
-                      <h2 className="text-sm text-muted-foreground">开课学期</h2>
+                      <h2 className="text-sm text-muted-foreground">
+                        开课学期
+                      </h2>
                       {courseSemesters.map((semester) => (
-                        <CourseSemesterBadge key={semester} semester={semester} />
+                        <CourseSemesterBadge
+                          key={semester}
+                          semester={semester}
+                        />
                       ))}
+                    </section>
+                  )}
+
+                  {selectedSemesters.length > 0 && (
+                    <section className="flex flex-wrap items-center gap-2 text-sm">
+                      <h2 className="text-sm text-muted-foreground">
+                        已选学期
+                      </h2>
+                      {selectedSemesters.map((semester) => (
+                        <CourseSemesterBadge
+                          key={semester}
+                          semester={semester}
+                        />
+                      ))}
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-muted-foreground hover:text-foreground"
+                      >
+                        <Link to="/course/mine?type=enrolled">查看全部</Link>
+                      </Button>
                     </section>
                   )}
 
@@ -248,6 +280,13 @@ export function CourseDetailPage() {
                       courseID={course.id}
                       level={course.notification_level}
                     />
+                    {courseSemesters.length > 0 && !hasSelectedCourse && (
+                      <CourseEnrollmentDialog
+                        courseID={course.id}
+                        courseName={course.name}
+                        semesters={courseSemesters}
+                      />
+                    )}
                     <Button
                       asChild
                       size="sm"

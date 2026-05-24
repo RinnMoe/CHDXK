@@ -51,6 +51,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 
 	reviewController := controller.NewReviewController(container.ReviewQuery, container.ReviewCommand)
 	courseController := controller.NewCourseController(container.CourseQuery, container.CourseCommand)
+	courseEnrollmentController := controller.NewCourseEnrollmentController(container.CourseEnrollmentQuery, container.CourseEnrollmentCommand)
 	teacherController := controller.NewTeacherController(container.TeacherQuery, container.CourseQuery)
 	pointController := controller.NewPointController(container.PointQuery, container.PointCommand)
 	accountController := controller.NewAccountController(container.AccountCommand, container.AccountQuery)
@@ -87,12 +88,15 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		courseGroup.GET("/filter", courseController.GetCourseFilters)
 		courseGroup.GET("/hot", courseController.ListHotCourses)
 		courseGroup.GET("/", courseController.ListCourses)
+		courseGroup.GET("/enrolled", courseEnrollmentController.ListMyEnrollments)
+		courseGroup.DELETE("/enrollment/:enrollmentID", courseEnrollmentController.DeleteEnrollment)
 		courseGroup.GET("/followed", courseController.ListFollowedCourses)
 		courseGroup.GET("/ignored", courseController.ListIgnoredCourses)
 		courseGroup.GET("/:courseID", courseController.GetCourse)
 		courseGroup.GET("/:courseID/review/filter", reviewController.GetCourseReviewFilters)
 		courseGroup.GET("/:courseID/review/trend", reviewController.GetCourseReviewTrend)
 		courseGroup.GET("/:courseID/review", reviewController.ListCourseReviews)
+		courseGroup.POST("/:courseID/enrollment", courseEnrollmentController.CreateEnrollment)
 		courseGroup.POST("/:courseID/notification", courseController.SetNotificationLevel)
 	}
 	teacherGroup := apiGroup.Group("/teacher")

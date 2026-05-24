@@ -67,7 +67,15 @@ export interface CourseDetailDTO {
   same_code_courses: CourseListItemDTO[]
   same_teacher_courses: CourseListItemDTO[]
   notification_level: CourseNotificationLevel
+  my_enrollments?: CourseEnrollmentDTO[]
   my_review?: ReviewDTO
+}
+
+export interface CourseEnrollmentDTO {
+  id: number
+  course: CourseListItemDTO
+  semester: string
+  created_at: string
 }
 
 export interface HotCourseItemDTO {
@@ -99,7 +107,8 @@ function buildQuery(filter: Record<string, unknown>): string {
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(filter)) {
     if (value === undefined || value === null) continue
-    const normalized = key === "q" && typeof value === "string" ? value.trim() : value
+    const normalized =
+      key === "q" && typeof value === "string" ? value.trim() : value
     if (normalized === "") continue
     if (Array.isArray(value)) {
       for (const v of value) {
@@ -168,6 +177,28 @@ export function listIgnoredCourses(
   filter: CourseListFilter = {}
 ): Promise<PaginatedResult<CourseListItemDTO>> {
   return apiClient(`${BASE_URL}/course/ignored${buildQuery(filter)}`)
+}
+
+export function listCourseEnrollments(): Promise<CourseEnrollmentDTO[]> {
+  return apiClient(`${BASE_URL}/course/enrolled`)
+}
+
+export function createCourseEnrollment(
+  courseID: number,
+  semester: string
+): Promise<{ message: string }> {
+  return apiClient(`${BASE_URL}/course/${courseID}/enrollment`, {
+    method: "POST",
+    body: JSON.stringify({ semester }),
+  })
+}
+
+export function deleteCourseEnrollment(
+  enrollmentID: number
+): Promise<{ message: string }> {
+  return apiClient(`${BASE_URL}/course/enrollment/${enrollmentID}`, {
+    method: "DELETE",
+  })
 }
 
 export function listHotCourses(

@@ -91,6 +91,14 @@ func (legacyCourseNotificationLevel) TableName() string {
 	return "jcourse_api_coursenotificationlevel"
 }
 
+type legacyEnrollCourse struct {
+	ID           int
+	UserID       sql.NullInt64
+	CourseID     sql.NullInt64
+	SemesterName sql.NullString
+	CreatedAt    time.Time
+}
+
 type legacyReview struct {
 	ID              int
 	UserID          int

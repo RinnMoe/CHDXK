@@ -51,6 +51,9 @@ func (m *Migrator) Run() error {
 	if err := m.migrateUserPoints(ctx); err != nil {
 		return fmt.Errorf("migrate user points: %w", err)
 	}
+	if err := m.migrateCourseEnrollments(ctx); err != nil {
+		return fmt.Errorf("migrate course enrollments: %w", err)
+	}
 	if err := m.migrateReviews(ctx); err != nil {
 		return fmt.Errorf("migrate reviews: %w", err)
 	}
@@ -328,6 +331,63 @@ func (m *Migrator) migrateReviews(ctx *migrationContext) error {
 		return err
 	}
 	log.Printf("  Reviews: %d migrated", total)
+	return nil
+}
+
+func (m *Migrator) migrateCourseEnrollments(ctx *migrationContext) error {
+	const stage = "course_enrollments"
+	if m.checkpoint.StageDone(stage) {
+		log.Println("Migrating course enrollments... already done, skipping")
+		return nil
+	}
+	log.Println("Migrating course enrollments...")
+
+	total := 0
+	skipped := 0
+	lastID := m.checkpoint.StageLastID(stage)
+	if lastID > 0 {
+		log.Printf("  Resuming course enrollments after legacy id %d", lastID)
+	}
+	for {
+		rows, err := queryLegacyCourseEnrollments(m.source, lastID)
+		if err != nil {
+			return err
+		}
+		if len(rows) == 0 {
+			break
+		}
+
+		batch := make([]repository.CourseEnrollmentEntity, 0, len(rows))
+		for _, row := range rows {
+			semester := strings.TrimSpace(nullStringValue(row.SemesterName))
+			if !row.UserID.Valid || !row.CourseID.Valid || semester == "" {
+				skipped++
+				continue
+			}
+			batch = append(batch, repository.CourseEnrollmentEntity{
+				ID:        row.ID,
+				UserID:    int(row.UserID.Int64),
+				CourseID:  int(row.CourseID.Int64),
+				Semester:  semester,
+				CreatedAt: row.CreatedAt,
+			})
+		}
+		if len(batch) > 0 {
+			if err := upsertCourseEnrollments(ctx.target, batch); err != nil {
+				return err
+			}
+		}
+		total += len(batch)
+		lastID = rows[len(rows)-1].ID
+		if err := m.checkpoint.MarkProgress(stage, lastID); err != nil {
+			return err
+		}
+		log.Printf("  Course enrollments: %d migrated, %d skipped...", total, skipped)
+	}
+	if err := m.checkpoint.MarkDone(stage); err != nil {
+		return err
+	}
+	log.Printf("  Course enrollments: %d migrated, %d skipped", total, skipped)
 	return nil
 }
 
@@ -671,6 +731,23 @@ func queryLegacyUserPoints(db *gorm.DB, lastID int) ([]legacyUserPoint, error) {
 	return rows, err
 }
 
+func queryLegacyCourseEnrollments(db *gorm.DB, lastID int) ([]legacyEnrollCourse, error) {
+	var rows []legacyEnrollCourse
+	err := db.Raw(`
+		SELECT e.id,
+		       e.user_id,
+		       e.course_id,
+		       s.name AS semester_name,
+		       e.created_at
+		FROM jcourse_api_enrollcourse AS e
+		LEFT JOIN jcourse_api_semester AS s ON s.id = e.semester_id
+		WHERE e.id > ?
+		ORDER BY e.id
+		LIMIT ?
+	`, lastID, batchSize).Scan(&rows).Error
+	return rows, err
+}
+
 func queryLegacyCourseNotifications(db *gorm.DB, lastID int) ([]legacyCourseNotificationLevel, error) {
 	var rows []legacyCourseNotificationLevel
 	err := db.Raw(`
@@ -758,6 +835,13 @@ func upsertUserPoints(db *gorm.DB, batch []repository.UserPointRecordEntity) err
 	}).Create(&batch).Error
 }
 
+func upsertCourseEnrollments(db *gorm.DB, batch []repository.CourseEnrollmentEntity) error {
+	return db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}, {Name: "course_id"}, {Name: "semester"}},
+		DoNothing: true,
+	}).Create(&batch).Error
+}
+
 func upsertCourseNotifications(db *gorm.DB, batch []repository.CourseNotificationEntity) error {
 	return db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "user_id"}, {Name: "course_id"}},
@@ -804,7 +888,7 @@ func (m *Migrator) resetSequences() error {
 	}
 	db := m.target
 	log.Println("Resetting sequences...")
-	for _, table := range []string{"teachers", "courses", "users", "user_point_records", "reviews", "review_revisions"} {
+	for _, table := range []string{"teachers", "courses", "users", "course_enrollments", "user_point_records", "reviews", "review_revisions"} {
 		if err := resetSequence(db, table, "id"); err != nil {
 			return err
 		}

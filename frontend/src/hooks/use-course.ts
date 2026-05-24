@@ -15,6 +15,9 @@ import {
   listFollowedCourses,
   listIgnoredCourses,
   listHotCourses,
+  listCourseEnrollments,
+  createCourseEnrollment,
+  deleteCourseEnrollment,
   type CourseDetailDTO,
   type CourseListFilter,
   type CourseNotificationLevel,
@@ -128,6 +131,42 @@ export function useIgnoredCourses(
     queryFn: () => listIgnoredCourses(filter),
     enabled,
     placeholderData: keepPreviousData,
+  })
+}
+
+export function useCourseEnrollments(enabled = true) {
+  return useQuery({
+    queryKey: ["course-enrollments"],
+    queryFn: listCourseEnrollments,
+    enabled,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useCreateCourseEnrollment() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      courseID,
+      semester,
+    }: {
+      courseID: number
+      semester: string
+    }) => createCourseEnrollment(courseID, semester),
+    onSuccess: (_, { courseID }) => {
+      queryClient.invalidateQueries({ queryKey: ["course-enrollments"] })
+      queryClient.invalidateQueries({ queryKey: ["course", courseID] })
+    },
+  })
+}
+
+export function useDeleteCourseEnrollment() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (enrollmentID: number) => deleteCourseEnrollment(enrollmentID),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["course-enrollments"] })
+    },
   })
 }
 

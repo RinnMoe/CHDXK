@@ -94,6 +94,7 @@ func migrateTestDB(t *testing.T, db *gorm.DB) {
 		&repository.CourseEntity{},
 		&repository.OfferedCourseEntity{},
 		&repository.UserEntity{},
+		&repository.CourseEnrollmentEntity{},
 		&repository.UserPointRecordEntity{},
 		&repository.PointTransferEntity{},
 		&repository.ReviewEntity{},
@@ -220,6 +221,20 @@ func seedOfferedCourseRaw(t *testing.T, db *gorm.DB, courseID int, semester, lan
 	}
 	if err := db.Create(&e).Error; err != nil {
 		t.Fatalf("seed offered course: %v", err)
+	}
+	return e
+}
+
+func seedCourseEnrollment(t *testing.T, db *gorm.DB, userID, courseID int, semester string) repository.CourseEnrollmentEntity {
+	t.Helper()
+	e := repository.CourseEnrollmentEntity{
+		UserID:    userID,
+		CourseID:  courseID,
+		Semester:  semester,
+		CreatedAt: time.Now(),
+	}
+	if err := db.Create(&e).Error; err != nil {
+		t.Fatalf("seed course enrollment: %v", err)
 	}
 	return e
 }

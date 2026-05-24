@@ -1,33 +1,62 @@
 import { Link, useSearchParams } from "react-router-dom"
 import { RiMessage3Line } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CourseList } from "@/components/course/course-list"
+import { CourseEnrollmentList } from "@/components/course/course-enrollment-list"
 import { PaginationComponent } from "@/components/common/pagination"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { useAuth } from "@/contexts/auth-context"
-import { useFollowedCourses, useIgnoredCourses } from "@/hooks/use-course"
+import {
+  useCourseEnrollments,
+  useFollowedCourses,
+  useIgnoredCourses,
+} from "@/hooks/use-course"
 
 const PAGE_SIZE = 20
+const ALL = "__all__"
 
-type View = "followed" | "ignored"
+type View = "enrolled" | "followed" | "ignored"
 
 export function UserCoursesPage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const typeParam = searchParams.get("type")
   const view: View =
-    searchParams.get("type") === "ignored" ? "ignored" : "followed"
+    typeParam === "followed" || typeParam === "ignored" ? typeParam : "enrolled"
   const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1)
+  const semester = searchParams.get("semester") ?? undefined
   const filter = { page, page_size: PAGE_SIZE }
   const { user, isLoading: authLoading } = useAuth()
 
+  const enrolledCourses = useCourseEnrollments(!!user && view === "enrolled")
   const followedCourses = useFollowedCourses(
     filter,
     !!user && view === "followed"
   )
   const ignoredCourses = useIgnoredCourses(filter, !!user && view === "ignored")
-  const activeQuery = view === "followed" ? followedCourses : ignoredCourses
-  const title = view === "followed" ? "已关注课程" : "已屏蔽课程"
+  const enrolledItems = enrolledCourses.data ?? []
+  const enrollmentSemesters = [
+    ...new Set(enrolledItems.map((item) => item.semester)),
+  ].sort((a, b) => b.localeCompare(a))
+  const filteredEnrollments = semester
+    ? enrolledItems.filter((item) => item.semester === semester)
+    : enrolledItems
+  const activeCourseQuery =
+    view === "followed" ? followedCourses : ignoredCourses
+  const title =
+    view === "enrolled"
+      ? "选课记录"
+      : view === "followed"
+        ? "已关注课程"
+        : "已屏蔽课程"
 
   function handleViewChange(nextView: string) {
     const next = new URLSearchParams(searchParams)
@@ -42,6 +71,15 @@ export function UserCoursesPage() {
     setSearchParams(next)
   }
 
+  function handleSemesterChange(value: string) {
+    const next = new URLSearchParams(searchParams)
+    if (value !== ALL) next.set("semester", value)
+    else next.delete("semester")
+    next.set("type", "enrolled")
+    next.set("page", "1")
+    setSearchParams(next)
+  }
+
   return (
     <>
       <PageTitle>我的课程</PageTitle>
@@ -51,7 +89,7 @@ export function UserCoursesPage() {
             <div>
               <h1 className="text-2xl font-bold">我的课程</h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                查看已关注和已屏蔽的课程
+                查看选课记录、已关注和已屏蔽的课程
               </p>
             </div>
             <Button asChild size="sm" variant="outline">
@@ -64,10 +102,32 @@ export function UserCoursesPage() {
 
           <Tabs value={view} onValueChange={handleViewChange}>
             <TabsList>
+              <TabsTrigger value="enrolled">选课记录</TabsTrigger>
               <TabsTrigger value="followed">已关注</TabsTrigger>
               <TabsTrigger value="ignored">已屏蔽</TabsTrigger>
             </TabsList>
           </Tabs>
+
+          {view === "enrolled" && user && (
+            <div className="flex max-w-xs items-center gap-2">
+              <Select
+                value={semester ?? ALL}
+                onValueChange={handleSemesterChange}
+              >
+                <SelectTrigger size="sm" className="w-44">
+                  <SelectValue placeholder="按学期筛选" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>全部学期</SelectItem>
+                  {enrollmentSemesters.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {!authLoading && !user && (
             <div className="py-12 text-center">
@@ -78,29 +138,54 @@ export function UserCoursesPage() {
             </div>
           )}
 
-          {user && activeQuery.data && (
+          {user && view === "enrolled" && enrolledCourses.data && (
             <p className="text-sm text-muted-foreground">
-              {title}共 {activeQuery.data.total} 门
+              {title}共 {filteredEnrollments.length} 条
             </p>
           )}
 
-          {user && (
-            <CourseList
-              courses={activeQuery.data?.items ?? []}
-              isLoading={authLoading || activeQuery.isLoading}
+          {user && view !== "enrolled" && activeCourseQuery.data && (
+            <p className="text-sm text-muted-foreground">
+              {title}共 {activeCourseQuery.data.total} 条
+            </p>
+          )}
+
+          {user && view === "enrolled" && (
+            <CourseEnrollmentList
+              enrollments={filteredEnrollments}
+              isLoading={authLoading || enrolledCourses.isLoading}
             />
           )}
 
-          {user && activeQuery.data && activeQuery.data.total > 0 && (
-            <div className="flex justify-center pt-4">
-              <PaginationComponent
-                page={activeQuery.data.page}
-                pageSize={activeQuery.data.page_size}
-                total={activeQuery.data.total}
-                onPageChange={handlePageChange}
-              />
-            </div>
+          {user && view !== "enrolled" && (
+            <CourseList
+              courses={
+                view === "followed"
+                  ? (followedCourses.data?.items ?? [])
+                  : (ignoredCourses.data?.items ?? [])
+              }
+              isLoading={
+                authLoading ||
+                (view === "followed"
+                  ? followedCourses.isLoading
+                  : ignoredCourses.isLoading)
+              }
+            />
           )}
+
+          {user &&
+            view !== "enrolled" &&
+            activeCourseQuery.data &&
+            activeCourseQuery.data.total > 0 && (
+              <div className="flex justify-center pt-4">
+                <PaginationComponent
+                  page={activeCourseQuery.data.page}
+                  pageSize={activeCourseQuery.data.page_size}
+                  total={activeCourseQuery.data.total}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            )}
         </div>
       </PageShell>
     </>
