@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useDebouncedCallback } from "use-debounce"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -31,26 +32,29 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
   const [error, setError] = useState<string | null>(null)
 
   const previewMutate = previewMutation.mutateAsync
-  useEffect(() => {
-    const num = Number(amount)
-    if (!amount || !Number.isFinite(num) || num <= 0) {
-      return
-    }
-    const handler = setTimeout(async () => {
+  const previewTransfer = useDebouncedCallback(
+    async (num: number, nextFeePayer: FeePayer) => {
       setError(null)
       try {
         const result = await previewMutate({
           amount: num,
-          fee_payer: feePayer,
+          fee_payer: nextFeePayer,
         })
         setPreview(result)
       } catch (err) {
         setPreview(null)
         setError(err instanceof Error ? err.message : "预览失败")
       }
-    }, 200)
-    return () => clearTimeout(handler)
-  }, [amount, feePayer, previewMutate])
+    },
+    250
+  )
+
+  useEffect(() => {
+    const num = Number(amount)
+    if (!amount || !Number.isFinite(num) || num <= 0) return
+
+    previewTransfer(num, feePayer)
+  }, [amount, feePayer, previewTransfer])
 
   async function handleSubmit() {
     setError(null)

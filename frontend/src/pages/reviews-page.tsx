@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router-dom"
+import { useDebounce } from "use-debounce"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { ReviewList } from "@/components/review/review-list"
@@ -8,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { useReviews } from "@/hooks/use-review"
 
 const REVIEW_PAGE_SIZE = 20
+const REVIEW_SEARCH_DEBOUNCE_MS = 250
 
 type ReviewSearchInputProps = {
   initialValue: string
@@ -19,14 +21,14 @@ function ReviewSearchInput({
   onSearchChange,
 }: ReviewSearchInputProps) {
   const [searchValue, setSearchValue] = useState(initialValue)
+  const [debouncedSearchValue] = useDebounce(
+    searchValue,
+    REVIEW_SEARCH_DEBOUNCE_MS
+  )
 
   useEffect(() => {
-    const handler = setTimeout(() => {
-      onSearchChange(searchValue)
-    }, 500)
-
-    return () => clearTimeout(handler)
-  }, [onSearchChange, searchValue])
+    onSearchChange(debouncedSearchValue)
+  }, [debouncedSearchValue, onSearchChange])
 
   return (
     <Input

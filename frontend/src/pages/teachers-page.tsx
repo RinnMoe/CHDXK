@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router-dom"
+import { useDebounce } from "use-debounce"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { TeacherFilters } from "@/components/teacher/teacher-filters"
@@ -6,6 +8,36 @@ import { TeacherList } from "@/components/teacher/teacher-list"
 import { PaginationComponent } from "@/components/common/pagination"
 import { Input } from "@/components/ui/input"
 import { useTeacherFilters, useTeachers } from "@/hooks/use-teacher"
+
+const TEACHER_SEARCH_DEBOUNCE_MS = 250
+
+type TeacherSearchInputProps = {
+  initialValue: string
+  onSearchChange: (value: string) => void
+}
+
+function TeacherSearchInput({
+  initialValue,
+  onSearchChange,
+}: TeacherSearchInputProps) {
+  const [searchValue, setSearchValue] = useState(initialValue)
+  const [debouncedSearchValue] = useDebounce(
+    searchValue,
+    TEACHER_SEARCH_DEBOUNCE_MS
+  )
+
+  useEffect(() => {
+    onSearchChange(debouncedSearchValue)
+  }, [debouncedSearchValue, onSearchChange])
+
+  return (
+    <Input
+      placeholder="搜索教师、工号或拼音..."
+      value={searchValue}
+      onChange={(e) => setSearchValue(e.target.value)}
+    />
+  )
+}
 
 export function TeachersPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -32,6 +64,11 @@ export function TeachersPage() {
     setSearchParams(next)
   }
 
+  function handleSearchChange(value: string) {
+    if (value === q) return
+    update("q", value)
+  }
+
   function handlePageChange(p: number) {
     const next = new URLSearchParams(searchParams)
     next.set("page", String(p))
@@ -50,10 +87,10 @@ export function TeachersPage() {
             </p>
           </div>
 
-          <Input
-            placeholder="搜索教师、工号或拼音..."
-            value={q}
-            onChange={(e) => update("q", e.target.value)}
+          <TeacherSearchInput
+            key={q}
+            initialValue={q}
+            onSearchChange={handleSearchChange}
           />
 
           <div className="flex flex-col gap-6 lg:flex-row">
