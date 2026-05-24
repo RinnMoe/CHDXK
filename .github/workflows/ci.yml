@@ -8,6 +8,8 @@ on:
 
 env:
   GO_VERSION: "1.26"
+  PG_VERSION: "17"
+  REDIS_VERSION: "7"
   WORKING_DIR: backend
 
 jobs:
@@ -37,7 +39,7 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
     services:
       postgres:
-        image: dujiajun/postgres-pg-jieba:18
+        image: dujiajun/postgres-pg-jieba:${{ env.PG_VERSION }}
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -51,7 +53,7 @@ jobs:
           - 5432:5432
 
       redis:
-        image: redis:8
+        image: redis:${{ env.REDIS_VERSION }}
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 5s
