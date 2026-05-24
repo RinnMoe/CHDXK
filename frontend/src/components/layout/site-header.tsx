@@ -164,7 +164,7 @@ export function SiteHeader() {
         >
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute bottom-0 h-0.5 rounded-full bg-primary transition-[left,width,opacity] duration-200 ease-out"
+            className="pointer-events-none absolute bottom-0 h-0.5 rounded-full bg-primary transition-[left,width,opacity] duration-200 ease-out dark:bg-primary"
             style={navIndicator}
           />
           {navItems.map((item) => {
@@ -175,7 +175,7 @@ export function SiteHeader() {
                 to={item.to}
                 className={
                   active
-                    ? "flex items-center font-medium text-primary transition-colors"
+                    ? "flex items-center font-medium text-primary transition-colors dark:text-primary"
                     : "flex items-center text-foreground transition-colors hover:text-primary"
                 }
               >
@@ -210,7 +210,7 @@ export function SiteHeader() {
                         to={item.to}
                         className={
                           active
-                            ? "rounded-md bg-primary/10 px-3 py-2 font-medium text-primary"
+                            ? "rounded-md bg-primary/10 px-3 py-2 font-medium text-primary dark:bg-primary/18 dark:text-primary"
                             : "rounded-md px-3 py-2 text-foreground transition-colors hover:bg-accent hover:text-primary"
                         }
                       >
