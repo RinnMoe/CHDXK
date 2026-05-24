@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { Link, useParams, useSearchParams } from "react-router-dom"
 import { RiArrowLeftLine, RiAddLine, RiMailLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
@@ -84,6 +85,11 @@ export function CourseDetailPage() {
   const { courseID } = useParams<{ courseID: string }>()
   const id = Number(courseID)
   const [searchParams, setSearchParams] = useSearchParams()
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0 })
+  }, [id])
+
   const reviewPage = Math.max(1, Number(searchParams.get("page") ?? "1") || 1)
   const semester = searchParams.get("semester") ?? undefined
   const ratingParam = searchParams.get("rating")
