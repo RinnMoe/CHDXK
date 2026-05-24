@@ -1,4 +1,4 @@
-ARG PG_MAJOR=18
+ARG PG_MAJOR=17
 
 FROM postgres:${PG_MAJOR} AS builder
 

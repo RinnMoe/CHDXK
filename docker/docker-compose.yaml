@@ -4,8 +4,8 @@ services:
       context: ./postgres
       dockerfile: Dockerfile
       args:
-        PG_MAJOR: "18"
-    image: postgres-pg-jieba:18
+        PG_MAJOR: "17"
+    image: postgres-pg-jieba:17
     container_name: jcourse_postgres
     environment:
       POSTGRES_USER: postgres
@@ -22,7 +22,7 @@ services:
       retries: 5
 
   redis:
-    image: redis:8
+    image: redis:7
     container_name: jcourse_redis
     ports:
       - "6379:6379"
