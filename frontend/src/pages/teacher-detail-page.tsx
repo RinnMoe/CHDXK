@@ -9,18 +9,15 @@ import { PaginationComponent } from "@/components/common/pagination"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { useSearchParams } from "react-router-dom"
-import { getMockTeacher } from "@/mocks/fixtures/teachers"
-import { useTeacherCourses } from "@/hooks/use-teacher"
-import type { TeacherDTO } from "@/api/teacher"
+import { useTeacher, useTeacherCourses } from "@/hooks/use-teacher"
 
 export function TeacherDetailPage() {
   const { teacherID } = useParams<{ teacherID: string }>()
   const id = Number(teacherID)
   const [searchParams, setSearchParams] = useSearchParams()
   const page = Number(searchParams.get("page") ?? "1")
+  const { data: teacher, isLoading: isTeacherLoading } = useTeacher(id)
   const { data, isLoading } = useTeacherCourses(id, { page, page_size: 20 })
-
-  const mockTeacher = getMockTeacher(id) as TeacherDTO | undefined
 
   function handlePageChange(p: number) {
     const next = new URLSearchParams(searchParams)
@@ -30,7 +27,7 @@ export function TeacherDetailPage() {
 
   return (
     <>
-      <PageTitle>{mockTeacher?.name ?? "教师"}</PageTitle>
+      <PageTitle>{teacher?.name ?? "教师"}</PageTitle>
       <PageShell>
         <Button asChild variant="ghost" size="sm" className="mb-4">
           <Link to="/teachers">
@@ -41,18 +38,36 @@ export function TeacherDetailPage() {
 
         <div className="space-y-6">
           <header className="space-y-3">
-            <div className="font-mono text-sm text-muted-foreground">
-              {mockTeacher?.code ?? `T${String(id).padStart(5, "0")}`}
-            </div>
-            <h1 className="text-3xl font-bold">
-              {mockTeacher?.name ?? "教师"}
-            </h1>
-            <div className="flex flex-wrap gap-2">
-              {mockTeacher?.title && <TitleBadge>{mockTeacher.title}</TitleBadge>}
-              {mockTeacher?.department && (
-                <Badge variant="outline">{mockTeacher.department}</Badge>
-              )}
-            </div>
+            {isTeacherLoading ? (
+              <>
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-9 w-40" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-6 w-16" />
+                  <Skeleton className="h-6 w-24" />
+                </div>
+              </>
+            ) : teacher ? (
+              <>
+                <div className="font-mono text-sm text-muted-foreground">
+                  {teacher.code}
+                </div>
+                <h1 className="text-3xl font-bold">{teacher.name}</h1>
+                <div className="flex flex-wrap gap-2">
+                  {teacher.title && <TitleBadge>{teacher.title}</TitleBadge>}
+                  {teacher.department && (
+                    <Badge variant="outline">{teacher.department}</Badge>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="font-mono text-sm text-muted-foreground">
+                  #{id}
+                </div>
+                <h1 className="text-3xl font-bold">教师不存在</h1>
+              </>
+            )}
           </header>
 
           <section>

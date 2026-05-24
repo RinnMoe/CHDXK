@@ -40,6 +40,18 @@ export const teacherHandlers = [
     return HttpResponse.json(paginate(list, page, pageSize))
   }),
 
+  http.get("/api/teacher/:teacherID", async ({ params }) => {
+    await randomDelay()
+    const teacherID = Number(params.teacherID)
+    const teacher = getMockTeachers().find((t) => t.id === teacherID)
+
+    if (!teacher) {
+      return HttpResponse.json({ error: "teacher not found" }, { status: 404 })
+    }
+
+    return HttpResponse.json(teacher)
+  }),
+
   http.get("/api/teacher/:teacherID/courses", async ({ params, request }) => {
     await randomDelay()
     const teacherID = Number(params.teacherID)

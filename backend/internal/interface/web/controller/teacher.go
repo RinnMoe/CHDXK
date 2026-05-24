@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -42,6 +43,26 @@ func (ctrl *TeacherController) ListTeachers(c *gin.Context) {
 
 	result, err := ctrl.teacherQuery.ListTeachers(c.Request.Context(), f)
 	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
+func (ctrl *TeacherController) GetTeacher(c *gin.Context) {
+	teacherIDStr := c.Param("teacherID")
+	teacherID, err := strconv.Atoi(teacherIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid teacher ID"})
+		return
+	}
+
+	result, err := ctrl.teacherQuery.GetTeacher(c.Request.Context(), teacherID)
+	if err != nil {
+		if errors.Is(err, application.ErrTeacherNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "teacher not found"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

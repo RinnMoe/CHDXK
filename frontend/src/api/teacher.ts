@@ -55,6 +55,10 @@ export function listTeachers(
   return apiClient(`${BASE}/teacher/${buildQuery(filter)}`)
 }
 
+export function getTeacher(teacherID: number): Promise<TeacherDTO> {
+  return apiClient(`${BASE}/teacher/${teacherID}`)
+}
+
 export function listTeacherCourses(
   teacherID: number,
   filter: Record<string, unknown> = {}
