@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -57,19 +57,14 @@ export function ReviewForm({
   const [semester, setSemester] = useState(initialReview?.semester ?? "")
   const [score, setScore] = useState(initialReview?.score ?? "")
   const [error, setError] = useState<string | null>(null)
-  const availableSemesters = useMemo(() => {
-    const values = semesters ? [...semesters] : []
-    const initialSemester = initialReview?.semester
-    if (initialSemester && !values.includes(initialSemester)) {
-      values.unshift(initialSemester)
-    }
-    return values
-  }, [initialReview?.semester, semesters])
+  const availableSemesters = semesters ?? []
+  const selectedSemester =
+    semesters && semester && !semesters.includes(semester) ? "" : semester
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-    if (!semester) {
+    if (!selectedSemester) {
       setError("请选择学期")
       return
     }
@@ -96,7 +91,7 @@ export function ReviewForm({
     try {
       if (isEdit) {
         await onSubmit({
-          semester,
+          semester: selectedSemester,
           rating,
           content,
           score: score || undefined,
@@ -105,7 +100,7 @@ export function ReviewForm({
         if (!courseID) throw new Error("missing courseID")
         await onSubmit({
           course_id: courseID,
-          semester,
+          semester: selectedSemester,
           rating,
           content,
           score: score || undefined,
@@ -128,7 +123,7 @@ export function ReviewForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>学期</Label>
-          <Select value={semester} onValueChange={setSemester}>
+          <Select value={selectedSemester} onValueChange={setSemester}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="选择学期" />
             </SelectTrigger>

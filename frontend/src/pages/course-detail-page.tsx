@@ -25,6 +25,7 @@ import { ReviewCard } from "@/components/review/review-card"
 import { CourseReviewFilters } from "@/components/course/course-review-filters"
 import { PaginationComponent } from "@/components/common/pagination"
 import { brand } from "@/config/brand"
+import { getCourseSemesters } from "@/lib/course-semesters"
 import { cn } from "@/lib/utils"
 
 const REVIEW_PAGE_SIZE = 10
@@ -148,9 +149,7 @@ export function CourseDetailPage() {
 
   const listedReviews =
     reviews?.items.filter((review) => review.id !== course.my_review?.id) ?? []
-  const historicalOfferedCourses = course.offered_courses.filter(
-    (oc) => oc.semester !== course.last_semester
-  )
+  const courseSemesters = getCourseSemesters(course)
   const teacherGroup = course.teacher_group ?? []
   const feedbackMailto = buildFeedbackMailto(course)
   const hasRelatedCourses =
@@ -232,16 +231,16 @@ export function CourseDetailPage() {
                     targetYears={course.target_years}
                   />
 
-                  {historicalOfferedCourses.length > 0 && (
+                  {courseSemesters.length > 0 && (
                     <section className="flex flex-wrap items-center gap-2 text-sm">
-                      <h2 className="text-sm text-muted-foreground">历史开课</h2>
-                      {historicalOfferedCourses.map((oc) => (
+                      <h2 className="text-sm text-muted-foreground">开课学期</h2>
+                      {courseSemesters.map((semester) => (
                         <CourseBadge
-                          key={oc.semester}
+                          key={semester}
                           kind="targetYear"
                           className="font-mono font-medium"
                         >
-                          {oc.semester}
+                          {semester}
                         </CourseBadge>
                       ))}
                     </section>

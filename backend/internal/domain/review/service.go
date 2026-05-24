@@ -67,7 +67,7 @@ func (s *Service) Create(ctx context.Context, u *auth.User, cmd CreateReview) er
 		return ErrCourseNotFound
 	}
 
-	exists, err := s.courseRepo.OfferedCourseExists(ctx, cmd.CourseID, cmd.Semester)
+	exists, err := s.semesterExists(ctx, cmd.CourseID, cmd.Semester, c.LastSemester)
 	if err != nil {
 		return err
 	}
@@ -115,6 +115,23 @@ func (s *Service) Update(ctx context.Context, u *auth.User, cmd UpdateReview) er
 	if !g.CanUpdate(ctx) {
 		return ErrUserCannotUpdate
 	}
+
+	c, err := s.courseRepo.Get(ctx, r.CourseID)
+	if err != nil {
+		return err
+	}
+	if c == nil {
+		return ErrCourseNotFound
+	}
+
+	exists, err := s.semesterExists(ctx, r.CourseID, cmd.Semester, c.LastSemester)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return ErrOfferedCourseMissing
+	}
+
 	rv := r.MakeRevision()
 	r.ApplyUpdate(Update{
 		Semester: cmd.Semester,
@@ -127,6 +144,13 @@ func (s *Service) Update(ctx context.Context, u *auth.User, cmd UpdateReview) er
 		return err
 	}
 	return s.reviewRepo.Update(ctx, r, rv)
+}
+
+func (s *Service) semesterExists(ctx context.Context, courseID int, semester string, lastSemester string) (bool, error) {
+	if semester != "" && semester == lastSemester {
+		return true, nil
+	}
+	return s.courseRepo.OfferedCourseExists(ctx, courseID, semester)
 }
 
 func (s *Service) Delete(ctx context.Context, u *auth.User, reviewID int) error {

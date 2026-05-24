@@ -14,6 +14,7 @@ type Course struct {
 	Categories    []string
 	Language      string
 	TargetYears   []string
+	LastSemester  string
 	RatingCount   int
 	RatingAvg     float64
 	CreatedAt     time.Time

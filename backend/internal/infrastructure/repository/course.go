@@ -21,6 +21,7 @@ func newCourseDomain(e *CourseEntity) course.Course {
 		Categories:    e.Categories,
 		Language:      e.Language,
 		TargetYears:   e.TargetYears,
+		LastSemester:  e.LastSemester,
 		RatingCount:   e.RatingCount,
 		RatingAvg:     e.RatingAvg,
 		CreatedAt:     e.CreatedAt,

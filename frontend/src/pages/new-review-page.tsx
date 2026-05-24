@@ -7,6 +7,7 @@ import { PageTitle } from "@/components/common/page-title"
 import { ReviewForm } from "@/components/review/review-form"
 import { useCourseDetail } from "@/hooks/use-course"
 import { useCreateReview } from "@/hooks/use-review"
+import { getCourseSemesters } from "@/lib/course-semesters"
 import type { CreateReviewCommand, UpdateReviewCommand } from "@/api/review"
 
 export function NewReviewPage() {
@@ -15,7 +16,7 @@ export function NewReviewPage() {
   const navigate = useNavigate()
   const { data: course } = useCourseDetail(id)
   const { mutateAsync, isPending } = useCreateReview()
-  const semesters = course?.offered_courses?.map((oc) => oc.semester) ?? []
+  const semesters = getCourseSemesters(course)
 
   async function handleSubmit(cmd: CreateReviewCommand | UpdateReviewCommand) {
     await mutateAsync(cmd as CreateReviewCommand)
