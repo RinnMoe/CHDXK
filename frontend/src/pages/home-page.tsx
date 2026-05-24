@@ -3,6 +3,7 @@ import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { ReviewList } from "@/components/review/review-list"
 import { HotCourseList } from "@/components/course/hot-course-list"
+import { FollowedCourseList } from "@/components/course/followed-course-list"
 import { useReviews } from "@/hooks/use-review"
 
 export function HomePage() {
@@ -44,6 +45,17 @@ export function HomePage() {
               </Link>
             </div>
             <HotCourseList period="week" limit={10} skeletonCount={10} />
+
+            <div className="flex items-center justify-between pt-2">
+              <h2 className="text-lg font-semibold">已关注课程</h2>
+              <Link
+                to="/course/mine?type=followed"
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                查看更多
+              </Link>
+            </div>
+            <FollowedCourseList limit={10} skeletonCount={10} />
           </div>
         </div>
       </PageShell>
