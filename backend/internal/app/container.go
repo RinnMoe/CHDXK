@@ -9,6 +9,7 @@ import (
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/review/policy"
 	"jcourse/internal/infrastructure/email"
+	"jcourse/internal/infrastructure/jaccount"
 	"jcourse/internal/infrastructure/persistence"
 	"jcourse/internal/infrastructure/repository"
 )
@@ -20,6 +21,7 @@ type ServiceContainer struct {
 	CourseCommand           *application.CourseCommandService
 	CourseEnrollmentQuery   *application.CourseEnrollmentQueryService
 	CourseEnrollmentCommand *application.CourseEnrollmentCommandService
+	CourseEnrollmentSync    *application.CourseEnrollmentSyncService
 	TeacherQuery            *application.TeacherQueryService
 	PointQuery              *application.PointQueryService
 	PointCommand            *application.PointCommandService
@@ -77,8 +79,10 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	)
 	courseQuery := application.NewCourseQueryService(courseRepo, teacherRepo, reviewRepo, notificationRepo, courseEnrollmentRepo, courseHotRepo)
 	courseCommand := application.NewCourseCommandService(courseRepo, notificationRepo)
+	jaccountClient := jaccount.NewOAuthClient(conf.JAccount)
 	courseEnrollmentQuery := application.NewCourseEnrollmentQueryService(courseEnrollmentRepo)
 	courseEnrollmentCommand := application.NewCourseEnrollmentCommandService(courseRepo, courseEnrollmentRepo)
+	courseEnrollmentSync := application.NewCourseEnrollmentSyncService(courseEnrollmentRepo, courseRepo, jaccountClient)
 	teacherQuery := application.NewTeacherQueryService(teacherRepo)
 	announcementQuery := application.NewAnnouncementQueryService(announcementRepo)
 	transferService := point.NewTransferService(conf.Point)
@@ -135,6 +139,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		CourseCommand:           courseCommand,
 		CourseEnrollmentQuery:   courseEnrollmentQuery,
 		CourseEnrollmentCommand: courseEnrollmentCommand,
+		CourseEnrollmentSync:    courseEnrollmentSync,
 		TeacherQuery:            teacherQuery,
 		PointQuery:              pointQuery,
 		PointCommand:            pointCommand,

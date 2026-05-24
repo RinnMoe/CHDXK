@@ -35,6 +35,7 @@ type AppConfig struct {
 	Asynq    infratask.Config                   `mapstructure:"asynq"`
 	Stats    stat.Config                        `mapstructure:"stats"`
 	SMTP     email.SMTPConfig                   `mapstructure:"smtp"`
+	JAccount JAccountConfig                     `mapstructure:"jaccount"`
 }
 
 type AuthConfig struct {
@@ -52,6 +53,18 @@ type ReviewConfig struct {
 
 type ServerConfig struct {
 	Addr string `mapstructure:"addr"`
+}
+
+type JAccountConfig struct {
+	ClientID            string   `mapstructure:"client_id"`
+	ClientSecret        string   `mapstructure:"client_secret"`
+	AuthorizeURL        string   `mapstructure:"authorize_url"`
+	TokenURL            string   `mapstructure:"token_url"`
+	APIBaseURL          string   `mapstructure:"api_base_url"`
+	RedirectURL         string   `mapstructure:"redirect_url"`
+	FrontendCallbackURL string   `mapstructure:"frontend_callback_url"`
+	Scopes              []string `mapstructure:"scopes"`
+	CourseSyncEnabled   bool     `mapstructure:"course_sync_enabled"`
 }
 
 func Load(configPath string) (AppConfig, error) {
@@ -152,6 +165,13 @@ func setDefaults(v *viper.Viper) {
 	})
 	setSectionDefaults(v, "admin", map[string]any{
 		"default_suspend_days": application.DefaultAdminUserCommandConfig.DefaultSuspendDays,
+	})
+	setSectionDefaults(v, "jaccount", map[string]any{
+		"authorize_url":       "https://jaccount.sjtu.edu.cn/oauth2/authorize",
+		"token_url":           "https://jaccount.sjtu.edu.cn/oauth2/token",
+		"api_base_url":        "https://api.sjtu.edu.cn/",
+		"scopes":              []string{},
+		"course_sync_enabled": false,
 	})
 }
 

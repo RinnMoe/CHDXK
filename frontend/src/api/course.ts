@@ -184,6 +184,11 @@ export function listCourseEnrollments(): Promise<CourseEnrollmentDTO[]> {
   return apiClient(`${BASE_URL}/course/enrolled`)
 }
 
+export function courseEnrollmentSyncStartURL(semester: string): string {
+  const params = new URLSearchParams({ semester })
+  return `${BASE_URL}/course/enrollment-sync/start?${params}`
+}
+
 export function createCourseEnrollment(
   courseID: number,
   semester: string

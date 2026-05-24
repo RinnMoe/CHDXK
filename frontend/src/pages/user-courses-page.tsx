@@ -1,5 +1,15 @@
+import { useEffect, useMemo, useState } from "react"
 import { Link, useSearchParams } from "react-router-dom"
-import { RiDeleteBinLine, RiMessage3Line } from "@remixicon/react"
+import {
+  RiDeleteBinLine,
+  RiMessage3Line,
+  RiRefreshLine,
+} from "@remixicon/react"
+import { courseEnrollmentSyncStartURL } from "@/api/course"
+import {
+  COURSE_ENROLLMENT_SYNC_CHANNEL,
+  type CourseEnrollmentSyncMessage,
+} from "@/lib/course-enrollment-sync"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,6 +22,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   Select,
   SelectContent,
@@ -28,10 +46,12 @@ import { PageTitle } from "@/components/common/page-title"
 import { useAuth } from "@/contexts/auth-context"
 import {
   useCourseEnrollments,
+  useCourseFilters,
   useFollowedCourses,
   useIgnoredCourses,
   useSetNotificationLevel,
 } from "@/hooks/use-course"
+import { useUserSettings } from "@/hooks/use-user-settings"
 
 const PAGE_SIZE = 20
 const ALL = "__all__"
@@ -47,14 +67,23 @@ export function UserCoursesPage() {
   const semester = searchParams.get("semester") ?? undefined
   const filter = { page, page_size: PAGE_SIZE }
   const { user, isLoading: authLoading } = useAuth()
+  const [syncOpen, setSyncOpen] = useState(false)
+  const [syncSemester, setSyncSemester] = useState("")
+  const [syncMessage, setSyncMessage] = useState("")
 
   const enrolledCourses = useCourseEnrollments(!!user && view === "enrolled")
+  const filtersQuery = useCourseFilters()
+  const settingsQuery = useUserSettings(!!user)
   const followedCourses = useFollowedCourses(
     filter,
     !!user && view === "followed"
   )
   const ignoredCourses = useIgnoredCourses(filter, !!user && view === "ignored")
   const notificationMutation = useSetNotificationLevel()
+  const syncSemesters = useMemo(
+    () => filtersQuery.data?.semesters?.filter((item) => item.name) ?? [],
+    [filtersQuery.data?.semesters]
+  )
   const enrolledItems = enrolledCourses.data ?? []
   const enrollmentSemesters = [
     ...new Set(enrolledItems.map((item) => item.semester)),
@@ -70,6 +99,38 @@ export function UserCoursesPage() {
       : view === "followed"
         ? "已关注课程"
         : "已屏蔽课程"
+
+  useEffect(() => {
+    const handleMessage = (payload: CourseEnrollmentSyncMessage) => {
+      if (payload.status === "ok") {
+        void enrolledCourses.refetch()
+        setSyncMessage(
+          `已同步 ${payload.semester}，匹配 ${payload.matched ?? 0} 条记录。`
+        )
+        const next = new URLSearchParams(searchParams)
+        next.set("type", "enrolled")
+        if (payload.semester) next.set("semester", payload.semester)
+        setSearchParams(next, { replace: true })
+        return
+      }
+      setSyncMessage(payload.message ?? "同步失败，请重试。")
+    }
+
+    const channel = new BroadcastChannel(COURSE_ENROLLMENT_SYNC_CHANNEL)
+    channel.onmessage = (event: MessageEvent<CourseEnrollmentSyncMessage>) => {
+      handleMessage(event.data)
+    }
+    const onWindowMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return
+      if (event.data?.type !== COURSE_ENROLLMENT_SYNC_CHANNEL) return
+      handleMessage(event.data.payload as CourseEnrollmentSyncMessage)
+    }
+    window.addEventListener("message", onWindowMessage)
+    return () => {
+      channel.close()
+      window.removeEventListener("message", onWindowMessage)
+    }
+  }, [enrolledCourses, searchParams, setSearchParams])
 
   function handleViewChange(nextView: string) {
     const next = new URLSearchParams(searchParams)
@@ -91,6 +152,36 @@ export function UserCoursesPage() {
     next.set("type", "enrolled")
     next.set("page", "1")
     setSearchParams(next)
+  }
+
+  function handleOpenSyncDialog() {
+    setSyncSemester(
+      semester ??
+        settingsQuery.data?.current_semester ??
+        syncSemesters[0]?.name ??
+        ""
+    )
+    setSyncOpen(true)
+  }
+
+  function handleStartSync() {
+    if (!syncSemester) return
+    setSyncMessage("")
+    const width = 560
+    const height = 720
+    const left = Math.max(0, window.screenX + (window.outerWidth - width) / 2)
+    const top = Math.max(0, window.screenY + (window.outerHeight - height) / 2)
+    const popup = window.open(
+      courseEnrollmentSyncStartURL(syncSemester),
+      "jaccount-course-sync",
+      `popup=yes,width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,status=no,resizable=yes,scrollbars=yes`
+    )
+    if (!popup) {
+      setSyncMessage("浏览器阻止了登录窗口，请允许弹出窗口后重试。")
+      return
+    }
+    popup.focus()
+    setSyncOpen(false)
   }
 
   function renderNotificationDeleteAction(
@@ -158,7 +249,7 @@ export function UserCoursesPage() {
           </Tabs>
 
           {view === "enrolled" && user && (
-            <div className="flex max-w-xs items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Select
                 value={semester ?? ALL}
                 onValueChange={handleSemesterChange}
@@ -178,6 +269,45 @@ export function UserCoursesPage() {
             </div>
           )}
 
+          {syncMessage && view === "enrolled" && user && (
+            <p className="text-sm text-muted-foreground">{syncMessage}</p>
+          )}
+
+          <Dialog open={syncOpen} onOpenChange={setSyncOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>同步课表</DialogTitle>
+                <DialogDescription>
+                  选择学期后会打开 jAccount
+                  登录窗口，同步完成后自动刷新选课记录。
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-2">
+                <Select value={syncSemester} onValueChange={setSyncSemester}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="选择学期" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {syncSemesters.map((s) => (
+                      <SelectItem key={s.name} value={s.name}>
+                        {s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setSyncOpen(false)}>
+                  取消
+                </Button>
+                <Button onClick={handleStartSync} disabled={!syncSemester}>
+                  <RiRefreshLine data-icon="inline-start" />
+                  同步
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
           {!authLoading && !user && (
             <div className="py-12 text-center">
               <p className="text-muted-foreground">登录后可以查看我的课程</p>
@@ -188,9 +318,21 @@ export function UserCoursesPage() {
           )}
 
           {user && view === "enrolled" && enrolledCourses.data && (
-            <p className="text-sm text-muted-foreground">
-              {title}共 {filteredEnrollments.length} 条
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm text-muted-foreground">
+                {title}共 {filteredEnrollments.length} 条
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleOpenSyncDialog}
+                disabled={syncSemesters.length === 0}
+              >
+                <RiRefreshLine data-icon="inline-start" />
+                同步课表
+              </Button>
+            </div>
           )}
 
           {user && view !== "enrolled" && activeCourseQuery.data && (

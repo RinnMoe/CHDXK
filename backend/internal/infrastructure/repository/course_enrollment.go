@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"strings"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -40,6 +42,71 @@ func (r *CourseEnrollmentRepository) Create(ctx context.Context, enrollment *cou
 	enrollment.ID = entity.ID
 	r.deleteEnrollmentCache(ctx, enrollment.UserID, enrollment.CourseID)
 	return nil
+}
+
+func (r *CourseEnrollmentRepository) SyncFromCoursePairs(ctx context.Context, userID int, semester string, pairs []course.CourseCodeTeacher) (int64, error) {
+	normalized := make([]course.CourseCodeTeacher, 0, len(pairs))
+	seen := make(map[course.CourseCodeTeacher]struct{}, len(pairs))
+	for _, pair := range pairs {
+		pair.Code = strings.TrimSpace(pair.Code)
+		pair.TeacherName = strings.TrimSpace(pair.TeacherName)
+		if pair.Code == "" || pair.TeacherName == "" {
+			continue
+		}
+		key := course.CourseCodeTeacher{Code: strings.ToLower(pair.Code), TeacherName: pair.TeacherName}
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
+		normalized = append(normalized, pair)
+	}
+	if len(normalized) == 0 {
+		return 0, nil
+	}
+
+	db := r.db.WithContext(ctx).
+		Model(&CourseEntity{}).
+		Joins("MainTeacher").
+		Distinct("courses.id")
+	for i, pair := range normalized {
+		condition := `LOWER(courses.code) = LOWER(?) AND "MainTeacher".name = ?`
+		if i == 0 {
+			db = db.Where(condition, pair.Code, pair.TeacherName)
+		} else {
+			db = db.Or(condition, pair.Code, pair.TeacherName)
+		}
+	}
+
+	var matched []CourseEntity
+	if err := db.Find(&matched).Error; err != nil {
+		return 0, err
+	}
+	if len(matched) == 0 {
+		return 0, nil
+	}
+
+	now := time.Now()
+	entities := make([]CourseEnrollmentEntity, 0, len(matched))
+	courseIDs := make([]int, 0, len(matched))
+	for _, c := range matched {
+		entities = append(entities, CourseEnrollmentEntity{
+			UserID:    userID,
+			CourseID:  c.ID,
+			Semester:  semester,
+			CreatedAt: now,
+		})
+		courseIDs = append(courseIDs, c.ID)
+	}
+
+	result := r.db.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}, {Name: "course_id"}, {Name: "semester"}},
+		DoUpdates: clause.Assignments(map[string]any{"semester": semester}),
+	}).Create(&entities)
+	if result.Error != nil {
+		return 0, result.Error
+	}
+	r.deleteEnrollmentCache(ctx, userID, courseIDs...)
+	return result.RowsAffected, nil
 }
 
 func (r *CourseEnrollmentRepository) Delete(ctx context.Context, enrollmentID, userID int) error {
@@ -124,9 +191,12 @@ func applyEnrollmentFilter(db *gorm.DB, filter course.CourseEnrollmentFilter) *g
 	return db
 }
 
-func (r *CourseEnrollmentRepository) deleteEnrollmentCache(ctx context.Context, userID, courseID int) {
+func (r *CourseEnrollmentRepository) deleteEnrollmentCache(ctx context.Context, userID int, courseIDs ...int) {
 	keys := []string{cacheKey("course_enrollment", userID, "list")}
-	if courseID > 0 {
+	for _, courseID := range courseIDs {
+		if courseID <= 0 {
+			continue
+		}
 		keys = append(keys, cacheKey("course_enrollment", userID, "course", courseID))
 	}
 	cacheDelete(ctx, r.cache, keys...)

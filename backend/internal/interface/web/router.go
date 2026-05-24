@@ -52,6 +52,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	reviewController := controller.NewReviewController(container.ReviewQuery, container.ReviewCommand)
 	courseController := controller.NewCourseController(container.CourseQuery, container.CourseCommand)
 	courseEnrollmentController := controller.NewCourseEnrollmentController(container.CourseEnrollmentQuery, container.CourseEnrollmentCommand)
+	courseEnrollmentSyncController := controller.NewCourseEnrollmentSyncController(container.CourseEnrollmentSync, conf.JAccount)
 	teacherController := controller.NewTeacherController(container.TeacherQuery, container.CourseQuery)
 	pointController := controller.NewPointController(container.PointQuery, container.PointCommand)
 	accountController := controller.NewAccountController(container.AccountCommand, container.AccountQuery)
@@ -75,6 +76,12 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	extGroup := apiGroup.Group("/ext", middleware.SystemAPIKeyAuth(container.ApiKeySvc))
 	{
 		extGroup.GET("/point", pointController.GetPointsByEmail)
+	}
+
+	enrollmentSyncGroup := apiGroup.Group("/course/enrollment-sync")
+	{
+		enrollmentSyncGroup.GET("/callback", courseEnrollmentSyncController.Callback)
+		enrollmentSyncGroup.GET("/start", middleware.Auth(container.AuthUserService), courseEnrollmentSyncController.Start)
 	}
 
 	apiGroup.Use(middleware.Auth(container.AuthUserService))

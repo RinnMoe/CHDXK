@@ -28,6 +28,7 @@ type CourseEnrollmentFilter struct {
 
 type CourseEnrollmentRepository interface {
 	Create(ctx context.Context, enrollment *CourseEnrollment) error
+	SyncFromCoursePairs(ctx context.Context, userID int, semester string, pairs []CourseCodeTeacher) (int64, error)
 	Delete(ctx context.Context, enrollmentID, userID int) error
 }
 

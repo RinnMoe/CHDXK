@@ -79,3 +79,14 @@ smtp:
   username: "noreply@example.com"
   password: ""
   from: "noreply@example.com"
+
+jaccount:
+  course_sync_enabled: false
+  client_id: ""
+  client_secret: ""
+  authorize_url: "https://jaccount.sjtu.edu.cn/oauth2/authorize"
+  token_url: "https://jaccount.sjtu.edu.cn/oauth2/token"
+  api_base_url: "https://api.sjtu.edu.cn/"
+  redirect_url: "http://localhost:8080/api/course/enrollment-sync/callback"
+  frontend_callback_url: "http://localhost:5173/course/mine/sync-callback"
+  scopes: []

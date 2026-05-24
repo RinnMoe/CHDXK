@@ -77,6 +77,10 @@ const UserCoursesPage = lazyNamedPage(
   () => import("@/pages/user-courses-page"),
   "UserCoursesPage"
 )
+const CourseEnrollmentSyncCallbackPage = lazyNamedPage(
+  () => import("@/pages/course-enrollment-sync-callback-page"),
+  "CourseEnrollmentSyncCallbackPage"
+)
 const ApiKeysPage = lazyNamedPage(
   () => import("@/pages/api-keys-page"),
   "ApiKeysPage"
@@ -107,6 +111,10 @@ export const router = createBrowserRouter([
       { path: "/login", element: <LoginPage /> },
       { path: "/register", element: <RegisterPage /> },
       { path: "/password-reset", element: <PasswordResetPage /> },
+      {
+        path: "/course/mine/sync-callback",
+        element: <CourseEnrollmentSyncCallbackPage />,
+      },
     ],
   },
   {
