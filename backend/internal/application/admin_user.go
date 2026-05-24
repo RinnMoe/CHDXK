@@ -10,7 +10,10 @@ import (
 	"jcourse/internal/domain/auth"
 )
 
-var ErrCannotSuspendAdmin = errors.New("cannot suspend admin user")
+var (
+	ErrCannotSuspendAdmin = errors.New("cannot suspend admin user")
+	ErrCannotOperateSelf  = errors.New("cannot operate on yourself")
+)
 
 type AdminUserQueryService struct {
 	accountRepo account.AccountRepository
@@ -77,11 +80,30 @@ func (s *AdminUserQueryService) FindByEmail(ctx context.Context, email string) (
 	return newAdminUserDTO(acct, u, normalized), nil
 }
 
-func (s *AdminUserCommandService) SuspendUser(ctx context.Context, userID int) error {
-	return s.SuspendUserForDays(ctx, userID, 30)
+func (s *AdminUserQueryService) ListAdmins(ctx context.Context) ([]AdminUserDTO, error) {
+	users, err := s.userRepo.FindByRole(ctx, auth.RoleAdmin)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]AdminUserDTO, 0, len(users))
+	for i := range users {
+		acct, err := s.accountRepo.FindByID(ctx, users[i].ID)
+		if err != nil {
+			return nil, err
+		}
+		if acct == nil {
+			continue
+		}
+		items = append(items, *newAdminUserDTO(acct, &users[i], acct.Email))
+	}
+	return items, nil
 }
 
-func (s *AdminUserCommandService) SuspendUserForDays(ctx context.Context, userID int, days int) error {
+func (s *AdminUserCommandService) SuspendUserForDays(ctx context.Context, actorUserID int, userID int, days int) error {
+	if actorUserID == userID {
+		return ErrCannotOperateSelf
+	}
+
 	u, err := s.userRepo.FindByID(ctx, userID)
 	if err != nil {
 		return err
@@ -100,7 +122,11 @@ func (s *AdminUserCommandService) SuspendUserForDays(ctx context.Context, userID
 	return s.userRepo.Update(ctx, u)
 }
 
-func (s *AdminUserCommandService) ClearSuspension(ctx context.Context, userID int) error {
+func (s *AdminUserCommandService) ClearSuspension(ctx context.Context, actorUserID int, userID int) error {
+	if actorUserID == userID {
+		return ErrCannotOperateSelf
+	}
+
 	u, err := s.userRepo.FindByID(ctx, userID)
 	if err != nil {
 		return err
@@ -110,6 +136,41 @@ func (s *AdminUserCommandService) ClearSuspension(ctx context.Context, userID in
 	}
 
 	u.ClearSuspension()
+	return s.userRepo.Update(ctx, u)
+}
+
+func (s *AdminUserCommandService) GrantAdmin(ctx context.Context, actorUserID int, userID int) error {
+	if actorUserID == userID {
+		return ErrCannotOperateSelf
+	}
+
+	u, err := s.userRepo.FindByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if u == nil {
+		return account.ErrUserNotFound
+	}
+
+	u.Role = auth.RoleAdmin
+	u.ClearSuspension()
+	return s.userRepo.Update(ctx, u)
+}
+
+func (s *AdminUserCommandService) RevokeAdmin(ctx context.Context, actorUserID int, userID int) error {
+	if actorUserID == userID {
+		return ErrCannotOperateSelf
+	}
+
+	u, err := s.userRepo.FindByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if u == nil {
+		return account.ErrUserNotFound
+	}
+
+	u.Role = auth.RoleUser
 	return s.userRepo.Update(ctx, u)
 }
 

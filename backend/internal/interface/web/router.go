@@ -108,9 +108,12 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	}
 	adminUserGroup := apiGroup.Group("/admin/user", middleware.Admin())
 	{
+		adminUserGroup.GET("/admin", adminUserController.ListAdmins)
 		adminUserGroup.GET("/by-email", adminUserController.GetUserByEmail)
 		adminUserGroup.PUT("/:userID/suspension", adminUserController.SuspendUser)
 		adminUserGroup.DELETE("/:userID/suspension", adminUserController.ClearSuspension)
+		adminUserGroup.PUT("/:userID/admin", adminUserController.GrantAdmin)
+		adminUserGroup.DELETE("/:userID/admin", adminUserController.RevokeAdmin)
 	}
 	announcementGroup := apiGroup.Group("/announcement")
 	{

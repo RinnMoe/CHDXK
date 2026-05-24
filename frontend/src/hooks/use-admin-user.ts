@@ -2,6 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   clearAdminUserSuspension,
   getAdminUserByEmail,
+  grantAdminUser,
+  listAdminUsers,
+  revokeAdminUser,
   suspendAdminUser,
   type SuspendAdminUserCommand,
 } from "@/api/admin-user"
@@ -22,6 +25,13 @@ export function useAdminUserByEmail(email: string) {
   })
 }
 
+export function useAdminUsers() {
+  return useQuery({
+    queryKey: ["admin-user", "admins"],
+    queryFn: listAdminUsers,
+  })
+}
+
 export function useSuspendAdminUser() {
   const queryClient = useQueryClient()
 
@@ -39,6 +49,28 @@ export function useClearAdminUserSuspension() {
 
   return useMutation({
     mutationFn: clearAdminUserSuspension,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-user"] })
+    },
+  })
+}
+
+export function useGrantAdminUser() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: grantAdminUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-user"] })
+    },
+  })
+}
+
+export function useRevokeAdminUser() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: revokeAdminUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-user"] })
     },

@@ -143,6 +143,18 @@ func (r *UserRepository) FindByID(ctx context.Context, id int) (*auth.User, erro
 	return &d, nil
 }
 
+func (r *UserRepository) FindByRole(ctx context.Context, role string) ([]auth.User, error) {
+	es, err := gorm.G[UserEntity](r.db).Where("role = ?", role).Order("id ASC").Find(ctx)
+	if err != nil {
+		return nil, err
+	}
+	users := make([]auth.User, len(es))
+	for i := range es {
+		users[i] = newUserDomain(&es[i])
+	}
+	return users, nil
+}
+
 func NewAccountRepository(db *gorm.DB) *AccountRepository {
 	return &AccountRepository{db: db}
 }

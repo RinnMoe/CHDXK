@@ -20,10 +20,21 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { useAuth } from "@/contexts/auth-context"
 import {
+  useAdminUsers,
   useAdminUserByEmail,
   useClearAdminUserSuspension,
+  useGrantAdminUser,
+  useRevokeAdminUser,
   useSuspendAdminUser,
 } from "@/hooks/use-admin-user"
 import { useUserReviews } from "@/hooks/use-review"
@@ -61,6 +72,7 @@ export function UserAdminPage() {
   const [suspendDays, setSuspendDays] = useState(30)
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false)
 
+  const adminsQuery = useAdminUsers()
   const userQuery = useAdminUserByEmail(email)
   const selectedUser = userQuery.data
   const reviewsQuery = useUserReviews(selectedUser?.id ?? 0, {
@@ -70,6 +82,8 @@ export function UserAdminPage() {
   })
   const suspendMutation = useSuspendAdminUser()
   const clearSuspensionMutation = useClearAdminUserSuspension()
+  const grantAdminMutation = useGrantAdminUser()
+  const revokeAdminMutation = useRevokeAdminUser()
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -109,6 +123,15 @@ export function UserAdminPage() {
     setSuspendDialogOpen(false)
   }
 
+  async function grantAdmin() {
+    if (!selectedUser) return
+    await grantAdminMutation.mutateAsync(selectedUser.id)
+  }
+
+  async function revokeAdmin(userID: number) {
+    await revokeAdminMutation.mutateAsync(userID)
+  }
+
   if (authLoading) return null
   if (!user) return <Navigate to="/login" replace />
   if (user.role !== "admin") {
@@ -125,8 +148,12 @@ export function UserAdminPage() {
   }
 
   const isMutating =
-    suspendMutation.isPending || clearSuspensionMutation.isPending
+    suspendMutation.isPending ||
+    clearSuspensionMutation.isPending ||
+    grantAdminMutation.isPending ||
+    revokeAdminMutation.isPending
   const selectedUserIsAdmin = selectedUser?.role === "admin"
+  const selectedUserIsSelf = selectedUser?.id === user.id
 
   return (
     <>
@@ -135,193 +162,295 @@ export function UserAdminPage() {
         <div className="space-y-6">
           <h1 className="text-2xl font-semibold">用户管理</h1>
 
-          <form
-            key={email}
-            className="flex flex-wrap items-end gap-2"
-            onSubmit={handleSearch}
-          >
-            <div className="min-w-72 flex-1 space-y-1">
-              <Label htmlFor="admin-user-email">邮箱</Label>
-              <Input
-                id="admin-user-email"
-                name="email"
-                type="email"
-                defaultValue={email}
-                placeholder="name@example.edu"
-              />
-            </div>
-            <Button type="submit">
-              <RiSearchLine />
-              查询
-            </Button>
-          </form>
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(20rem,0.9fr)]">
+            <div className="space-y-6">
+              <h2 className="text-lg font-medium">邮箱</h2>
 
-          {userQuery.isLoading && email ? (
-            <Skeleton className="h-36 w-full" />
-          ) : null}
-
-          {userQuery.isError && email ? (
-            <p className="text-sm text-destructive">
-              {getErrorMessage(userQuery.error)}
-            </p>
-          ) : null}
-
-          {selectedUser ? (
-            <section className="space-y-4">
-              <div className="flex flex-wrap items-start justify-between gap-4 border-y py-4">
-                <div className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
-                  <div>
-                    <p className="text-muted-foreground">用户 ID</p>
-                    <p className="font-mono">{selectedUser.id}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">用户名</p>
-                    <p className="font-mono">{selectedUser.username}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">邮箱</p>
-                    <p>{selectedUser.email}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">角色</p>
-                    <p>{selectedUser.role}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">注册时间</p>
-                    <p>{formatDateTime(selectedUser.created_at)}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">活跃时间</p>
-                    <p>{formatDateTime(selectedUser.last_seen_at)}</p>
-                  </div>
-                  <div className="sm:col-span-2 lg:col-span-3">
-                    <p className="text-muted-foreground">封禁状态</p>
-                    <div className="mt-1 flex flex-wrap items-center gap-2">
-                      <Badge
-                        variant={
-                          selectedUser.suspended ? "destructive" : "secondary"
-                        }
-                      >
-                        {selectedUser.suspended ? "已封禁" : "正常"}
-                      </Badge>
-                      <SuspensionText
-                        suspendedAt={selectedUser.suspended_at}
-                        suspendTill={selectedUser.suspend_till}
-                      />
-                    </div>
-                  </div>
+              <form
+                key={email}
+                className="flex flex-wrap items-end gap-2"
+                onSubmit={handleSearch}
+              >
+                <div className="min-w-72 flex-1 space-y-1">
+                  <Label htmlFor="admin-user-email" className="sr-only">
+                    邮箱
+                  </Label>
+                  <Input
+                    id="admin-user-email"
+                    name="email"
+                    type="email"
+                    defaultValue={email}
+                    placeholder="name@example.edu"
+                  />
                 </div>
+                <Button type="submit">
+                  <RiSearchLine />
+                  查询
+                </Button>
+              </form>
 
-                {selectedUserIsAdmin ? (
-                  <p className="text-sm text-muted-foreground">
-                    管理员不能被封禁
-                  </p>
-                ) : selectedUser.suspended ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={clearSuspension}
-                    disabled={isMutating}
-                  >
-                    <RiLockUnlockLine />
-                    解封用户
-                  </Button>
-                ) : (
-                  <Dialog
-                    open={suspendDialogOpen}
-                    onOpenChange={setSuspendDialogOpen}
-                  >
-                    <DialogTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        disabled={isMutating}
-                      >
-                        <RiLockLine />
-                        封禁用户
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <form onSubmit={confirmSuspension} className="space-y-6">
-                        <DialogHeader>
-                          <DialogTitle>封禁用户</DialogTitle>
-                          <DialogDescription>
-                            用户 {selectedUser.id}{" "}
-                            将在封禁期间无法登录或继续操作。
-                          </DialogDescription>
-                        </DialogHeader>
+              {userQuery.isLoading && email ? (
+                <Skeleton className="h-36 w-full" />
+              ) : null}
 
-                        <div className="space-y-2">
-                          <Label htmlFor="suspend-days">封禁天数</Label>
-                          <Input
-                            id="suspend-days"
-                            type="number"
-                            min={1}
-                            value={suspendDays}
-                            onChange={(event) =>
-                              setSuspendDays(
-                                Math.max(1, Number(event.target.value) || 30)
-                              )
+              {userQuery.isError && email ? (
+                <p className="text-sm text-destructive">
+                  {getErrorMessage(userQuery.error)}
+                </p>
+              ) : null}
+
+              {selectedUser ? (
+                <section className="space-y-4">
+                  <div className="flex flex-wrap items-start justify-between gap-4 border-y py-4">
+                    <div className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                      <div>
+                        <p className="text-muted-foreground">用户 ID</p>
+                        <p className="font-mono">{selectedUser.id}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">用户名</p>
+                        <p className="font-mono">{selectedUser.username}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">邮箱</p>
+                        <p>{selectedUser.email}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">角色</p>
+                        <p>{selectedUser.role}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">注册时间</p>
+                        <p>{formatDateTime(selectedUser.created_at)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">活跃时间</p>
+                        <p>{formatDateTime(selectedUser.last_seen_at)}</p>
+                      </div>
+                      <div className="sm:col-span-2 lg:col-span-3">
+                        <p className="text-muted-foreground">封禁状态</p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <Badge
+                            variant={
+                              selectedUser.suspended
+                                ? "destructive"
+                                : "secondary"
                             }
-                            autoFocus
+                          >
+                            {selectedUser.suspended ? "已封禁" : "正常"}
+                          </Badge>
+                          <SuspensionText
+                            suspendedAt={selectedUser.suspended_at}
+                            suspendTill={selectedUser.suspend_till}
                           />
                         </div>
+                      </div>
+                    </div>
 
-                        {suspendMutation.isError ? (
-                          <p className="text-sm text-destructive">
-                            {getErrorMessage(suspendMutation.error)}
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      {selectedUserIsSelf ? (
+                        <p className="text-sm text-muted-foreground">
+                          不能对自己操作
+                        </p>
+                      ) : selectedUserIsAdmin ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => revokeAdmin(selectedUser.id)}
+                          disabled={isMutating}
+                        >
+                          撤销权限
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={grantAdmin}
+                          disabled={isMutating}
+                        >
+                          授予 admin
+                        </Button>
+                      )}
+
+                      {!selectedUserIsSelf &&
+                        (selectedUserIsAdmin ? (
+                          <p className="text-sm text-muted-foreground">
+                            管理员不能被封禁
                           </p>
-                        ) : null}
-
-                        <DialogFooter>
-                          <DialogClose asChild>
-                            <Button type="button" variant="outline">
-                              取消
-                            </Button>
-                          </DialogClose>
+                        ) : selectedUser.suspended ? (
                           <Button
-                            type="submit"
-                            variant="destructive"
-                            disabled={suspendMutation.isPending}
+                            type="button"
+                            variant="outline"
+                            onClick={clearSuspension}
+                            disabled={isMutating}
                           >
-                            确认封禁
+                            <RiLockUnlockLine />
+                            解封用户
                           </Button>
-                        </DialogFooter>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
-                )}
-              </div>
+                        ) : (
+                          <Dialog
+                            open={suspendDialogOpen}
+                            onOpenChange={setSuspendDialogOpen}
+                          >
+                            <DialogTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                disabled={isMutating}
+                              >
+                                <RiLockLine />
+                                封禁用户
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <form
+                                onSubmit={confirmSuspension}
+                                className="space-y-6"
+                              >
+                                <DialogHeader>
+                                  <DialogTitle>封禁用户</DialogTitle>
+                                  <DialogDescription>
+                                    用户 {selectedUser.id}{" "}
+                                    将在封禁期间无法登录或继续操作。
+                                  </DialogDescription>
+                                </DialogHeader>
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between gap-4">
-                  <h2 className="text-lg font-medium">点评记录</h2>
-                  {reviewsQuery.data ? (
-                    <p className="text-sm text-muted-foreground">
-                      共 {reviewsQuery.data.total} 条
-                    </p>
-                  ) : null}
-                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="suspend-days">封禁天数</Label>
+                                  <Input
+                                    id="suspend-days"
+                                    type="number"
+                                    min={1}
+                                    value={suspendDays}
+                                    onChange={(event) =>
+                                      setSuspendDays(
+                                        Math.max(
+                                          1,
+                                          Number(event.target.value) || 30
+                                        )
+                                      )
+                                    }
+                                    autoFocus
+                                  />
+                                </div>
 
-                <ReviewList
-                  reviews={reviewsQuery.data?.items ?? []}
-                  isLoading={reviewsQuery.isLoading}
-                  showCourse
-                  emptyText="该用户暂无点评"
-                />
+                                {suspendMutation.isError ? (
+                                  <p className="text-sm text-destructive">
+                                    {getErrorMessage(suspendMutation.error)}
+                                  </p>
+                                ) : null}
 
-                {reviewsQuery.data &&
-                reviewsQuery.data.total > reviewPageSize ? (
-                  <PaginationComponent
-                    page={reviewsQuery.data.page}
-                    pageSize={reviewsQuery.data.page_size}
-                    total={reviewsQuery.data.total}
-                    onPageChange={setPage}
-                  />
+                                <DialogFooter>
+                                  <DialogClose asChild>
+                                    <Button type="button" variant="outline">
+                                      取消
+                                    </Button>
+                                  </DialogClose>
+                                  <Button
+                                    type="submit"
+                                    variant="destructive"
+                                    disabled={suspendMutation.isPending}
+                                  >
+                                    确认封禁
+                                  </Button>
+                                </DialogFooter>
+                              </form>
+                            </DialogContent>
+                          </Dialog>
+                        ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-4">
+                      <h2 className="text-lg font-medium">点评记录</h2>
+                      {reviewsQuery.data ? (
+                        <p className="text-sm text-muted-foreground">
+                          共 {reviewsQuery.data.total} 条
+                        </p>
+                      ) : null}
+                    </div>
+
+                    <ReviewList
+                      reviews={reviewsQuery.data?.items ?? []}
+                      isLoading={reviewsQuery.isLoading}
+                      showCourse
+                      emptyText="该用户暂无点评"
+                    />
+
+                    {reviewsQuery.data &&
+                    reviewsQuery.data.total > reviewPageSize ? (
+                      <PaginationComponent
+                        page={reviewsQuery.data.page}
+                        pageSize={reviewsQuery.data.page_size}
+                        total={reviewsQuery.data.total}
+                        onPageChange={setPage}
+                      />
+                    ) : null}
+                  </div>
+                </section>
+              ) : null}
+            </div>
+
+            <section className="space-y-3">
+              <div className="flex items-center justify-between gap-4">
+                <h2 className="text-lg font-medium">当前管理员</h2>
+                {adminsQuery.data ? (
+                  <p className="text-sm text-muted-foreground">
+                    共 {adminsQuery.data.length} 人
+                  </p>
                 ) : null}
               </div>
+              {adminsQuery.isLoading ? (
+                <Skeleton className="h-32 w-full" />
+              ) : adminsQuery.data && adminsQuery.data.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead className="w-36">用户名</TableHead>
+                      <TableHead>邮箱</TableHead>
+                      <TableHead>活跃时间</TableHead>
+                      <TableHead className="text-right">操作</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {adminsQuery.data.map((admin) => (
+                      <TableRow key={admin.id}>
+                        <TableCell className="font-mono">{admin.id}</TableCell>
+                        <TableCell className="max-w-36 truncate font-mono">
+                          {admin.username}
+                        </TableCell>
+                        <TableCell>{admin.email || "-"}</TableCell>
+                        <TableCell>
+                          {formatDateTime(admin.last_seen_at)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {admin.id === user.id ? (
+                            <span className="inline-flex h-8 items-center text-sm text-muted-foreground">
+                              当前用户
+                            </span>
+                          ) : (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => revokeAdmin(admin.id)}
+                              disabled={isMutating}
+                            >
+                              撤销权限
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-sm text-muted-foreground">暂无管理员</p>
+              )}
             </section>
-          ) : null}
+          </div>
         </div>
       </PageShell>
     </>

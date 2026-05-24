@@ -67,6 +67,16 @@ func (r *currentUserServiceFakeRepo) FindByID(_ context.Context, id int) (*User,
 	return &copy, nil
 }
 
+func (r *currentUserServiceFakeRepo) FindByRole(_ context.Context, role string) ([]User, error) {
+	users := make([]User, 0)
+	for _, u := range r.users {
+		if u.Role == role {
+			users = append(users, *u)
+		}
+	}
+	return users, nil
+}
+
 type fakeEnqueuer struct{ enqueued bool }
 
 func (f *fakeEnqueuer) Enqueue(context.Context, task.Task, ...task.EnqueueOption) error {

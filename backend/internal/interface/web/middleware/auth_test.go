@@ -85,6 +85,13 @@ func (r *authMiddlewareUserRepo) FindByID(_ context.Context, id int) (*auth.User
 	return &copy, nil
 }
 
+func (r *authMiddlewareUserRepo) FindByRole(_ context.Context, role string) ([]auth.User, error) {
+	if r.user == nil || r.user.Role != role {
+		return []auth.User{}, nil
+	}
+	return []auth.User{*r.user}, nil
+}
+
 func (r *authMiddlewareUserRepo) FindByUsername(context.Context, string) (*auth.User, error) {
 	return nil, nil
 }

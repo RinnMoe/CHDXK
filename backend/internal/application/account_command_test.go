@@ -420,6 +420,16 @@ func (r *fakeAuthUserRepo) FindByID(_ context.Context, id int) (*auth.User, erro
 	return &copy, nil
 }
 
+func (r *fakeAuthUserRepo) FindByRole(_ context.Context, role string) ([]auth.User, error) {
+	users := make([]auth.User, 0)
+	for _, u := range r.users {
+		if u.Role == role {
+			users = append(users, *u)
+		}
+	}
+	return users, nil
+}
+
 type fakeCodeRepo struct {
 	saved        map[string]account.VerificationCode
 	cooldownTill map[string]time.Time
