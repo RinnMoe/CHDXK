@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
+	filesession "github.com/gin-contrib/sessions/filesystem"
 	"github.com/gin-gonic/gin"
 
 	"jcourse/internal/domain/auth"
@@ -20,7 +21,7 @@ func TestAuthReusesOptionalAuthUser(t *testing.T) {
 	repo := &authMiddlewareUserRepo{user: &auth.User{ID: 7, Role: auth.RoleUser}}
 	currentUserSvc := auth.NewCurrentUserService(repo)
 	r := gin.New()
-	r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
+	r.Use(sessions.Sessions("jcourse_session", filesession.NewStore(t.TempDir(), []byte("test-secret"))))
 	r.Use(OptionalAuth(currentUserSvc))
 	r.GET("/login-session", func(c *gin.Context) {
 		if err := SetSessionUserID(c, repo.user.ID); err != nil {
@@ -47,6 +48,133 @@ func TestAuthReusesOptionalAuthUser(t *testing.T) {
 	}
 }
 
+func TestCSRFMiddleware(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.New()
+	r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
+	r.Use(CSRF())
+	r.GET("/csrf", func(c *gin.Context) { c.Status(http.StatusNoContent) })
+	r.POST("/protected", func(c *gin.Context) { c.Status(http.StatusNoContent) })
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/protected", nil)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("post without csrf status = %d, want %d", w.Code, http.StatusForbidden)
+	}
+
+	w = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodGet, "/csrf", nil)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("csrf status = %d, want %d", w.Code, http.StatusNoContent)
+	}
+	token := w.Header().Get(csrfHeader)
+	if token == "" {
+		t.Fatal("expected csrf header")
+	}
+	csrfCookie := firstCookie(t, w.Result())
+
+	w = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodPost, "/protected", nil)
+	req.Header.Set("Cookie", csrfCookie)
+	req.Header.Set(csrfHeader, token)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("post with csrf status = %d, want %d", w.Code, http.StatusNoContent)
+	}
+}
+
+func TestSetSessionUserIDClearsExistingSessionState(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.New()
+	r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
+	r.GET("/csrf", func(c *gin.Context) {
+		s := sessions.Default(c)
+		s.Set(sessionKeyCSRFToken, "attacker-token")
+		if err := s.Save(); err != nil {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+		c.Status(http.StatusNoContent)
+	})
+	r.GET("/login-session", func(c *gin.Context) {
+		if err := SetSessionUserID(c, 7); err != nil {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+		c.Status(http.StatusNoContent)
+	})
+	r.POST("/protected", CSRF(), func(c *gin.Context) { c.Status(http.StatusNoContent) })
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/csrf", nil)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("csrf setup status = %d, want %d", w.Code, http.StatusNoContent)
+	}
+	oldCookie := firstCookie(t, w.Result())
+
+	w = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodGet, "/login-session", nil)
+	req.Header.Set("Cookie", oldCookie)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("login status = %d, want %d", w.Code, http.StatusNoContent)
+	}
+	newCookie := firstCookie(t, w.Result())
+
+	w = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodPost, "/protected", nil)
+	req.Header.Set("Cookie", newCookie)
+	req.Header.Set(csrfHeader, "attacker-token")
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("post with old csrf status = %d, want %d", w.Code, http.StatusForbidden)
+	}
+}
+
+func TestClearSessionExpiresCookie(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.New()
+	r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
+	r.GET("/login-session", func(c *gin.Context) {
+		if err := SetSessionUserID(c, 7); err != nil {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+		c.Status(http.StatusNoContent)
+	})
+	r.POST("/logout", func(c *gin.Context) {
+		if err := ClearSession(c); err != nil {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+		c.Status(http.StatusNoContent)
+	})
+
+	cookieValue := captureSessionCookie(t, r)
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/logout", nil)
+	req.Header.Set("Cookie", cookieValue)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("logout status = %d, want %d", w.Code, http.StatusNoContent)
+	}
+	res := w.Result()
+	defer res.Body.Close()
+	cookies := res.Cookies()
+	if len(cookies) == 0 {
+		t.Fatal("expected expired session cookie")
+	}
+	if cookies[0].MaxAge >= 0 {
+		t.Fatalf("logout cookie MaxAge = %d, want negative", cookies[0].MaxAge)
+	}
+}
+
 func captureSessionCookie(t *testing.T, r http.Handler) string {
 	t.Helper()
 
@@ -58,6 +186,12 @@ func captureSessionCookie(t *testing.T, r http.Handler) string {
 	}
 	res := w.Result()
 	defer res.Body.Close()
+	return firstCookie(t, res)
+}
+
+func firstCookie(t *testing.T, res *http.Response) string {
+	t.Helper()
+
 	cookies := res.Cookies()
 	if len(cookies) == 0 {
 		t.Fatal("expected session cookie")

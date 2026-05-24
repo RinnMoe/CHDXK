@@ -1,6 +1,8 @@
 package web
 
 import (
+	"net/http"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 
@@ -18,6 +20,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		panic(err)
 	}
 	g.Use(sessions.Sessions("jcourse_session", store))
+	g.Use(middleware.CSRF())
 	g.Use(middleware.OptionalAuth(container.AuthUserService))
 	g.Use(middleware.UserIDRateLimit())
 
@@ -34,6 +37,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	apiGroup := g.Group("/api")
 	publicAuthGroup := apiGroup.Group("/auth")
 	{
+		publicAuthGroup.GET("/csrf", func(c *gin.Context) { c.Status(http.StatusNoContent) })
 		publicAuthGroup.POST("/register/code", accountController.SendRegisterCode)
 		publicAuthGroup.POST("/register", accountController.Register)
 		publicAuthGroup.POST("/login", accountController.Login)
