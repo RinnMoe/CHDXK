@@ -40,11 +40,7 @@ func (imp *Importer) Run(rows []CSVRow) error {
 	courseIDMap := imp.resolveCourseIDs()
 
 	log.Println("Creating offered courses...")
-	if imp.semesterAlreadyImported() {
-		log.Println("  Semester already imported, skipping offered courses.")
-	} else {
-		imp.createOfferedCourses(rows, teacherIDMap, courseIDMap)
-	}
+	imp.upsertOfferedCourses(rows, teacherIDMap, courseIDMap)
 
 	log.Println("Refreshing course search vectors...")
 	if err := repository.RefreshCourseSearchVectors(imp.db); err != nil {
@@ -53,12 +49,6 @@ func (imp *Importer) Run(rows []CSVRow) error {
 
 	log.Println("Import complete!")
 	return nil
-}
-
-func (imp *Importer) semesterAlreadyImported() bool {
-	var count int64
-	imp.db.Model(&repository.OfferedCourseEntity{}).Where("semester = ?", imp.semester).Count(&count)
-	return count > 0
 }
 
 // courseKey returns the composite key for a course: code|teacherCode
@@ -204,22 +194,26 @@ func (imp *Importer) resolveCourseIDs() map[string]int {
 	return m
 }
 
-type offeredRow struct {
-	language    string
-	categories  []string
-	targetYears []string
-	teacherIDs  []int64
-}
-
 type courseAgg struct {
 	mainTeacherCode string
 	yearSet         map[string]bool
 	catSet          map[string]bool
 	tidSet          map[int64]bool
-	offered         []offeredRow
+	language        string
 }
 
-func (imp *Importer) createOfferedCourses(rows []CSVRow, teacherIDMap map[string]int, courseIDMap map[string]int) {
+func (imp *Importer) upsertOfferedCourses(rows []CSVRow, teacherIDMap map[string]int, courseIDMap map[string]int) {
+	onConflict := clause.OnConflict{
+		Columns: []clause.Column{{Name: "course_id"}, {Name: "semester"}},
+		DoUpdates: clause.Assignments(map[string]interface{}{
+			"language":     clause.Column{Table: "excluded", Name: "language"},
+			"target_years": clause.Column{Table: "excluded", Name: "target_years"},
+			"categories":   clause.Column{Table: "excluded", Name: "categories"},
+			"teacher_ids":  clause.Column{Table: "excluded", Name: "teacher_ids"},
+			"created_at":   clause.Column{Table: "excluded", Name: "created_at"},
+		}),
+	}
+
 	aggMap := make(map[string]*courseAgg)
 	for _, r := range rows {
 		if r.CourseCode == "" || r.MainTeacher.Code == "" {
@@ -251,12 +245,9 @@ func (imp *Importer) createOfferedCourses(rows []CSVRow, teacherIDMap map[string
 		for _, c := range r.Categories {
 			agg.catSet[c] = true
 		}
-		agg.offered = append(agg.offered, offeredRow{
-			language:    r.Language,
-			categories:  r.Categories,
-			targetYears: r.TargetYears,
-			teacherIDs:  tids,
-		})
+		if agg.language == "" && r.Language != "" {
+			agg.language = r.Language
+		}
 	}
 
 	for key, agg := range aggMap {
@@ -286,23 +277,15 @@ func (imp *Importer) createOfferedCourses(rows []CSVRow, teacherIDMap map[string
 			"teacher_ids":     allTIDs,
 		})
 
-		var batch []repository.OfferedCourseEntity
-		for _, od := range agg.offered {
-			batch = append(batch, repository.OfferedCourseEntity{
-				CourseID:    courseID,
-				Semester:    imp.semester,
-				Language:    od.language,
-				TargetYears: pq.StringArray(od.targetYears),
-				Categories:  pq.StringArray(od.categories),
-				TeacherIDs:  pq.Int64Array(od.teacherIDs),
-			})
-			if len(batch) >= batchSize {
-				imp.db.Create(&batch)
-				batch = batch[:0]
-			}
+		entity := repository.OfferedCourseEntity{
+			CourseID:    courseID,
+			Semester:    imp.semester,
+			Language:    agg.language,
+			TargetYears: targetYears,
+			Categories:  courseCats,
+			TeacherIDs:  allTIDs,
+			CreatedAt:   time.Now(),
 		}
-		if len(batch) > 0 {
-			imp.db.Create(&batch)
-		}
+		imp.db.Clauses(onConflict).Create(&entity)
 	}
 }

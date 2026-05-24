@@ -30,7 +30,7 @@ type TeacherInfo struct {
 	Department string
 }
 
-var teacherPartRe = regexp.MustCompile(`^([\w]+)/([^/]+)/([^\[]+)\[([^\]]+)\]$`)
+var teacherPartRe = regexp.MustCompile(`^([^/]+)/([^/]+)/([^\[]+)\[([^\]]+)\]$`)
 
 var gradSuffixRe = regexp.MustCompile(`[（(]研[）)]$`)
 
@@ -47,10 +47,10 @@ func parseTeacherField(raw string) []TeacherInfo {
 			continue
 		}
 		teachers = append(teachers, TeacherInfo{
-			Code:       m[1],
-			Name:       m[2],
-			Title:      m[3],
-			Department: m[4],
+			Code:       strings.TrimSpace(m[1]),
+			Name:       strings.TrimSpace(m[2]),
+			Title:      strings.TrimSpace(m[3]),
+			Department: strings.TrimSpace(m[4]),
 		})
 	}
 	return teachers
@@ -62,9 +62,9 @@ func parseMainTeacher(raw string) TeacherInfo {
 	}
 	parts := strings.SplitN(raw, "|", 2)
 	if len(parts) == 2 {
-		return TeacherInfo{Code: parts[0], Name: parts[1]}
+		return TeacherInfo{Code: strings.TrimSpace(parts[0]), Name: strings.TrimSpace(parts[1])}
 	}
-	return TeacherInfo{Code: raw}
+	return TeacherInfo{Code: strings.TrimSpace(raw)}
 }
 
 func parseFloat(s string) float32 {
@@ -146,14 +146,14 @@ func parseCSV(filepath string) ([]CSVRow, error) {
 		}
 
 		// strip (研) suffix from course name
-		courseName := gradSuffixRe.ReplaceAllString(get("课程名称"), "")
+		courseName := strings.TrimSpace(gradSuffixRe.ReplaceAllString(get("课程名称"), ""))
 
 		rows = append(rows, CSVRow{
-			CourseCode:  get("课程号"),
+			CourseCode:  strings.TrimSpace(get("课程号")),
 			CourseName:  courseName,
 			Credit:      credit,
-			Department:  department,
-			Language:    get("授课语言"),
+			Department:  strings.TrimSpace(department),
+			Language:    strings.TrimSpace(get("授课语言")),
 			Categories:  categories,
 			TargetYears: targetYears,
 			MainTeacher: mainTeacher,

@@ -29,8 +29,8 @@ func (TeacherEntity) TableName() string {
 
 type OfferedCourseEntity struct {
 	ID          int            `gorm:"column:id"`
-	CourseID    int            `gorm:"column:course_id;index"`
-	Semester    string         `gorm:"column:semester"`
+	CourseID    int            `gorm:"column:course_id;index;uniqueIndex:uniq_offered_courses_course_semester"`
+	Semester    string         `gorm:"column:semester;uniqueIndex:uniq_offered_courses_course_semester"`
 	Language    string         `gorm:"column:language"`
 	TargetYears pq.StringArray `gorm:"column:target_years;type:text[]"`
 	Categories  pq.StringArray `gorm:"column:categories;type:text[]"`

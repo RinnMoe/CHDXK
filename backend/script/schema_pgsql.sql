@@ -74,6 +74,7 @@ CREATE TABLE IF NOT EXISTS offered_courses
             ON DELETE CASCADE
 );
 
+CREATE UNIQUE INDEX uniq_offered_courses_course_semester ON offered_courses (course_id, semester);
 CREATE INDEX idx_offered_courses_course_semester ON offered_courses (course_id, semester DESC, id DESC);
 CREATE INDEX idx_offered_courses_teacher_ids ON offered_courses USING GIN (teacher_ids);
 
