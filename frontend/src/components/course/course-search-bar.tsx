@@ -26,7 +26,7 @@ export function CourseSearchBar() {
 
   return (
     <Input
-      placeholder="搜索课程、代码或教师..."
+      placeholder="搜索课程名、课程号或教师名..."
       value={value}
       onChange={(e) => setValue(e.target.value)}
     />

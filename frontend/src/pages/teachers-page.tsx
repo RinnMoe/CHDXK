@@ -32,7 +32,7 @@ function TeacherSearchInput({
 
   return (
     <Input
-      placeholder="搜索教师、工号或拼音..."
+      placeholder="搜索教师姓名、拼音或工号..."
       value={searchValue}
       onChange={(e) => setSearchValue(e.target.value)}
     />
@@ -84,7 +84,7 @@ export function TeachersPage() {
           <div>
             <h1 className="text-2xl font-bold">教师</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              搜索和浏览所有教师
+              浏览和搜索所有教师
             </p>
           </div>
 
