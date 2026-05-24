@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom"
 import { TitleBadge } from "@/components/ui/title-badge"
+import { displayTeacherTitle } from "@/lib/utils"
 import type { TeacherDTO } from "@/api/teacher"
 
 interface TeacherCardProps {
@@ -7,6 +8,8 @@ interface TeacherCardProps {
 }
 
 export function TeacherCard({ teacher }: TeacherCardProps) {
+  const teacherTitle = displayTeacherTitle(teacher.title)
+
   return (
     <Link
       to={`/teacher/${teacher.id}`}
@@ -17,7 +20,7 @@ export function TeacherCard({ teacher }: TeacherCardProps) {
           <span className="shrink-0 font-mono text-sm text-muted-foreground">
             {teacher.code}
           </span>
-          {teacher.title && <TitleBadge>{teacher.title}</TitleBadge>}
+          {teacherTitle && <TitleBadge>{teacherTitle}</TitleBadge>}
         </div>
         <div className="leading-tight font-semibold">{teacher.name}</div>
         <div className="text-sm text-muted-foreground">

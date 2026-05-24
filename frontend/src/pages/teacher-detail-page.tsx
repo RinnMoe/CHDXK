@@ -1,23 +1,48 @@
 import { useParams, Link } from "react-router-dom"
 import { RiArrowLeftLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { TitleBadge } from "@/components/ui/title-badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CourseCard } from "@/components/course/course-card"
 import { PaginationComponent } from "@/components/common/pagination"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
+import { displayTeacherTitle } from "@/lib/utils"
 import { useSearchParams } from "react-router-dom"
 import { useTeacher, useTeacherCourses } from "@/hooks/use-teacher"
+
+const ALL = "__all__"
+type CourseSort = "rating_count" | "rating_avg"
 
 export function TeacherDetailPage() {
   const { teacherID } = useParams<{ teacherID: string }>()
   const id = Number(teacherID)
   const [searchParams, setSearchParams] = useSearchParams()
   const page = Number(searchParams.get("page") ?? "1")
+  const orderByParam = searchParams.get("order_by")
+  const orderBy: CourseSort | undefined =
+    orderByParam === "rating_count" || orderByParam === "rating_avg"
+      ? orderByParam
+      : undefined
   const { data: teacher, isLoading: isTeacherLoading } = useTeacher(id)
-  const { data, isLoading } = useTeacherCourses(id, { page, page_size: 20 })
+  const { data, isLoading } = useTeacherCourses(id, {
+    order_by: orderBy,
+    page,
+    page_size: 20,
+  })
+  const teacherTitle = displayTeacherTitle(teacher?.title)
+
+  function updateCourseSort(value: string) {
+    const next = new URLSearchParams(searchParams)
+    if (value === ALL) {
+      next.delete("order_by")
+    } else {
+      next.set("order_by", value)
+    }
+    next.delete("page")
+    setSearchParams(next)
+  }
 
   function handlePageChange(p: number) {
     const next = new URLSearchParams(searchParams)
@@ -49,16 +74,16 @@ export function TeacherDetailPage() {
               </>
             ) : teacher ? (
               <>
-                <div className="font-mono text-sm text-muted-foreground">
-                  {teacher.code}
+                <div className="flex flex-wrap items-center gap-1.5 font-mono text-sm text-muted-foreground">
+                  <span>{teacher.code}</span>
+                  {teacherTitle && <TitleBadge>{teacherTitle}</TitleBadge>}
                 </div>
                 <h1 className="text-3xl font-bold">{teacher.name}</h1>
-                <div className="flex flex-wrap gap-2">
-                  {teacher.title && <TitleBadge>{teacher.title}</TitleBadge>}
-                  {teacher.department && (
-                    <Badge variant="outline">{teacher.department}</Badge>
-                  )}
-                </div>
+                {teacher.department && (
+                  <div className="text-sm text-muted-foreground">
+                    {teacher.department}
+                  </div>
+                )}
               </>
             ) : (
               <>
@@ -71,13 +96,27 @@ export function TeacherDetailPage() {
           </header>
 
           <section>
-            <div className="mb-3 flex items-baseline justify-between">
-              <h2 className="text-lg font-semibold">开设课程</h2>
-              {data && (
-                <span className="text-sm text-muted-foreground">
-                  共 {data.total} 门
-                </span>
-              )}
+            <div className="mb-3 space-y-3">
+              <div className="flex items-baseline justify-between">
+                <h2 className="text-lg font-semibold">开设课程</h2>
+                {data && (
+                  <span className="text-sm text-muted-foreground">
+                    共 {data.total} 门
+                  </span>
+                )}
+              </div>
+              <div>
+                <Tabs
+                  value={searchParams.get("order_by") ?? ALL}
+                  onValueChange={updateCourseSort}
+                >
+                  <TabsList>
+                    <TabsTrigger value={ALL}>默认</TabsTrigger>
+                    <TabsTrigger value="rating_count">点评数量</TabsTrigger>
+                    <TabsTrigger value="rating_avg">平均评分</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
             </div>
 
             {isLoading ? (
