@@ -86,12 +86,20 @@ function applyCourseFilter(url: URL) {
     )
 
   if (orderBy === "rating_avg") {
-    list.sort((a, b) =>
-      ascend ? a.rating.avg - b.rating.avg : b.rating.avg - a.rating.avg
+    list.sort(
+      (a, b) =>
+        b.rating.avg - a.rating.avg ||
+        b.rating.count - a.rating.count ||
+        a.code.localeCompare(b.code)
     )
   } else if (orderBy === "rating_count") {
-    list.sort((a, b) =>
-      ascend ? a.rating.count - b.rating.count : b.rating.count - a.rating.count
+    list.sort(
+      (a, b) =>
+        (ascend
+          ? a.rating.count - b.rating.count
+          : b.rating.count - a.rating.count) ||
+        b.rating.avg - a.rating.avg ||
+        a.code.localeCompare(b.code)
     )
   }
   return list

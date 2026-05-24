@@ -98,9 +98,15 @@ func (r *CourseRepository) applySort(db *gorm.DB, f course.CourseFilter) *gorm.D
 	desc := !f.Ascend
 	switch f.OrderBy {
 	case "rating_count":
-		return db.Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_count"}, Desc: desc})
+		return db.
+			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_count"}, Desc: desc}).
+			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_avg"}, Desc: true}).
+			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "code"}})
 	case "rating_avg":
-		return db.Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_avg"}, Desc: desc})
+		return db.
+			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_avg"}, Desc: true}).
+			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_count"}, Desc: true}).
+			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "code"}})
 	default:
 		return db.
 			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "code"}}).
