@@ -2,7 +2,9 @@ package web
 
 import (
 	"net/http"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 
@@ -14,6 +16,29 @@ import (
 
 func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engine {
 	g := gin.Default()
+	g.Use(cors.New(cors.Config{
+		AllowOrigins: []string{
+			"http://localhost:5173",
+			"http://127.0.0.1:5173",
+		},
+		AllowMethods: []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodDelete,
+			http.MethodOptions,
+		},
+		AllowHeaders: []string{
+			"Authorization",
+			"Content-Type",
+			"X-CSRF-Token",
+		},
+		ExposeHeaders: []string{
+			"X-CSRF-Token",
+		},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	store, err := middleware.NewSessionStore(conf.Redis, conf.Session)
 	if err != nil {

@@ -102,6 +102,10 @@ func Load(configPath string) (AppConfig, error) {
 }
 
 func setDefaults(v *viper.Viper) {
+	setSectionDefaults(v, "session", map[string]any{
+		"max_age": middleware.DefaultSessionConfig.MaxAge,
+		"secure":  middleware.DefaultSessionConfig.Secure,
+	})
 	setSectionDefaults(v, "stats", map[string]any{
 		"daily_cron":        stat.DefaultConfig.DailyCron,
 		"scheduler_enabled": stat.DefaultConfig.SchedulerEnabled,

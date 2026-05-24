@@ -24,6 +24,11 @@ type SessionConfig struct {
 	Secure bool   `mapstructure:"secure"`  // HTTPS only
 }
 
+var DefaultSessionConfig = SessionConfig{
+	MaxAge: 2592000,
+	Secure: false,
+}
+
 func NewSessionStore(redisConf persistence.RedisConfig, sessionConf SessionConfig) (sessions.Store, error) {
 	store, err := redis.NewStoreWithDB(10, "tcp", redisConf.Addr, redisConf.Username, redisConf.Password, fmt.Sprintf("%d", redisConf.DB), []byte(sessionConf.Secret))
 	if err != nil {

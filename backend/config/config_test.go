@@ -12,7 +12,6 @@ func TestLoadMergesSectionDefaults(t *testing.T) {
 	contents := []byte(`
 session:
   secret: "replace-with-at-least-32-random-characters"
-  max_age: 604800
 auth:
   registration:
     code_interval: "2m"
@@ -43,6 +42,12 @@ review:
 	}
 	if conf.Auth.Login.Lockout != 15*time.Minute {
 		t.Fatalf("auth default lockout = %s, want %s", conf.Auth.Login.Lockout, 15*time.Minute)
+	}
+	if conf.Session.MaxAge != 2592000 {
+		t.Fatalf("session default max age = %d, want 2592000", conf.Session.MaxAge)
+	}
+	if conf.Session.Secure {
+		t.Fatal("session default secure = true, want false")
 	}
 	if conf.Review.FrequencyPolicy.Window != 2*time.Hour {
 		t.Fatalf("review override window = %s, want %s", conf.Review.FrequencyPolicy.Window, 2*time.Hour)
