@@ -28,6 +28,23 @@ auth:
   username_salt: "SALT"
   verification_code_interval: 60
   verification_code_ttl: 600
+  verification_code_length: 6
+  max_login_attempts: 5
+  login_lockout_duration: 900
+  password_hash_iterations: 720000
+  password_salt_length: 12
+
+review:
+  frequency_window_seconds: 3600
+  frequency_max_reviews: 10
+  similarity_ratio: 0.7
+  max_daily_votes: 50
+
+api_key:
+  max_user_keys: 20
+
+admin:
+  default_suspend_days: 30
 
 point:
   transfer_fee_rate_bps: 250
@@ -44,6 +61,7 @@ asynq:
 stats:
   daily_cron: "10 0 * * *"
   scheduler_enabled: true
+  timezone: "Asia/Shanghai"
 
 smtp:
   host: "smtp.example.com"

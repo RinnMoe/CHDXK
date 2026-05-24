@@ -2,13 +2,16 @@ package application
 
 import (
 	"context"
-	"time"
 
 	"jcourse/internal/domain/account"
 	"jcourse/internal/domain/auth"
 )
 
-type AccountCommandConfig = account.RegistrationConfig
+type AccountCommandConfig struct {
+	Registration  account.RegistrationConfig
+	PasswordReset account.PasswordResetConfig
+	Login         account.LoginConfig
+}
 
 type AccountCommandService struct {
 	registration    *account.RegistrationService
@@ -26,15 +29,12 @@ func NewAccountCommandService(
 	hasher account.PasswordHasher,
 	usernames account.UsernameDeriver,
 	config AccountCommandConfig,
-	resetConfig account.PasswordResetConfig,
 	loginAttempts account.LoginAttemptRepository,
-	maxLoginAttempts int,
-	loginLockout time.Duration,
 ) *AccountCommandService {
 	return &AccountCommandService{
-		registration:    account.NewRegistrationService(accountRepo, codes, sender, hasher, usernames, config),
-		login:           account.NewLoginService(accountRepo, hasher, loginAttempts, usernames, maxLoginAttempts, loginLockout),
-		passwordReset:   account.NewPasswordResetService(accountRepo, resetCodes, sender, hasher, usernames, resetConfig),
+		registration:    account.NewRegistrationService(accountRepo, codes, sender, hasher, usernames, config.Registration),
+		login:           account.NewLoginService(accountRepo, hasher, loginAttempts, usernames, config.Login),
+		passwordReset:   account.NewPasswordResetService(accountRepo, resetCodes, sender, hasher, usernames, config.PasswordReset),
 		authUserService: authUserService,
 	}
 }

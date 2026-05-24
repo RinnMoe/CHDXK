@@ -9,11 +9,18 @@ import (
 )
 
 const (
-	ApiKeyRoleSystem   = "system"
-	ApiKeyRoleUser     = "user"
-	MaxUserApiKeyCount = 20
-	apiKeyPrefix       = "jc_"
+	ApiKeyRoleSystem = "system"
+	ApiKeyRoleUser   = "user"
+	apiKeyPrefix     = "jc_"
 )
+
+type ApiKeyConfig struct {
+	MaxUserKeys int
+}
+
+func DefaultApiKeyConfig() ApiKeyConfig {
+	return ApiKeyConfig{MaxUserKeys: 20}
+}
 
 type ApiKey struct {
 	ID         int
@@ -35,11 +42,15 @@ type ApiKeyRepository interface {
 }
 
 type ApiKeyService struct {
-	repo ApiKeyRepository
+	repo   ApiKeyRepository
+	config ApiKeyConfig
 }
 
-func NewApiKeyService(repo ApiKeyRepository) *ApiKeyService {
-	return &ApiKeyService{repo: repo}
+func NewApiKeyService(repo ApiKeyRepository, config ApiKeyConfig) *ApiKeyService {
+	if config.MaxUserKeys <= 0 {
+		config.MaxUserKeys = DefaultApiKeyConfig().MaxUserKeys
+	}
+	return &ApiKeyService{repo: repo, config: config}
 }
 
 func NewUserApiKey(name string, userID int, now time.Time) (*ApiKey, error) {
@@ -116,7 +127,7 @@ func (s *ApiKeyService) CreateUserKey(ctx context.Context, userID int, name stri
 	if err != nil {
 		return nil, err
 	}
-	if count >= MaxUserApiKeyCount {
+	if count >= s.config.MaxUserKeys {
 		return nil, ErrApiKeyLimitExceeded
 	}
 	if err := s.repo.Create(ctx, apiKey); err != nil {

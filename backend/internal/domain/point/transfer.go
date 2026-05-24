@@ -31,6 +31,10 @@ type TransferFeeConfig struct {
 	MinFee  int
 }
 
+func DefaultTransferFeeConfig() TransferFeeConfig {
+	return TransferFeeConfig{RateBps: 250, MinFee: 1}
+}
+
 type UserRef struct {
 	ID       int
 	Username string

@@ -18,6 +18,18 @@ const (
 	djangoSaltLength             = 12
 )
 
+type PasswordHashConfig struct {
+	Iterations int
+	SaltLength int
+}
+
+func DefaultPasswordHashConfig() PasswordHashConfig {
+	return PasswordHashConfig{
+		Iterations: djangoPBKDF2SHA256Iterations,
+		SaltLength: djangoSaltLength,
+	}
+}
+
 type PasswordHasher interface {
 	Hash(password string) (string, error)
 	Verify(password, encoded string) bool
@@ -25,17 +37,22 @@ type PasswordHasher interface {
 
 type DjangoPBKDF2SHA256PasswordHasher struct {
 	Iterations int
+	SaltLength int
 }
 
-func NewDjangoPBKDF2SHA256PasswordHasher(iterations int) *DjangoPBKDF2SHA256PasswordHasher {
-	if iterations <= 0 {
-		iterations = djangoPBKDF2SHA256Iterations
+func NewDjangoPBKDF2SHA256PasswordHasher(config PasswordHashConfig) *DjangoPBKDF2SHA256PasswordHasher {
+	defaults := DefaultPasswordHashConfig()
+	if config.Iterations <= 0 {
+		config.Iterations = defaults.Iterations
 	}
-	return &DjangoPBKDF2SHA256PasswordHasher{Iterations: iterations}
+	if config.SaltLength <= 0 {
+		config.SaltLength = defaults.SaltLength
+	}
+	return &DjangoPBKDF2SHA256PasswordHasher{Iterations: config.Iterations, SaltLength: config.SaltLength}
 }
 
 func (h *DjangoPBKDF2SHA256PasswordHasher) Hash(password string) (string, error) {
-	salt, err := randomString(djangoSaltLength)
+	salt, err := randomString(h.SaltLength)
 	if err != nil {
 		return "", err
 	}

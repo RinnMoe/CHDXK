@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"jcourse/internal/domain/stat"
@@ -16,6 +17,8 @@ type SiteDailyStatListFilter struct {
 	PageSize  int    `form:"page_size"`
 }
 
+type SiteStatsConfig = stat.Config
+
 type SiteStatsCommandService struct {
 	daily *stat.DailyStatService
 }
@@ -23,8 +26,9 @@ type SiteStatsCommandService struct {
 func NewSiteStatsCommandService(
 	collector stat.DailyStatCollector,
 	repo stat.DailyStatCommandRepository,
+	config SiteStatsConfig,
 ) *SiteStatsCommandService {
-	return &SiteStatsCommandService{daily: stat.NewDailyStatService(collector, repo, mustStatsLocation())}
+	return &SiteStatsCommandService{daily: stat.NewDailyStatService(collector, repo, mustStatsLocation(config))}
 }
 
 func (s *SiteStatsCommandService) CollectDailyByDateString(ctx context.Context, statDate string) (*SiteDailyStatDTO, error) {
@@ -50,8 +54,8 @@ type SiteStatsQueryService struct {
 	calendar stat.Calendar
 }
 
-func NewSiteStatsQueryService(query stat.DailyStatQuery) *SiteStatsQueryService {
-	return &SiteStatsQueryService{query: query, calendar: stat.NewCalendar(mustStatsLocation())}
+func NewSiteStatsQueryService(query stat.DailyStatQuery, config SiteStatsConfig) *SiteStatsQueryService {
+	return &SiteStatsQueryService{query: query, calendar: stat.NewCalendar(mustStatsLocation(config))}
 }
 
 func (s *SiteStatsQueryService) GetByDateString(ctx context.Context, dateStr string) (*SiteDailyStatDTO, error) {
@@ -99,8 +103,11 @@ func (s *SiteStatsQueryService) ListDaily(ctx context.Context, f SiteDailyStatLi
 	}, nil
 }
 
-func mustStatsLocation() *time.Location {
-	loc, err := time.LoadLocation("Asia/Shanghai")
+func mustStatsLocation(config SiteStatsConfig) *time.Location {
+	if strings.TrimSpace(config.Timezone) == "" {
+		config.Timezone = stat.DefaultConfig().Timezone
+	}
+	loc, err := time.LoadLocation(config.Timezone)
 	if err != nil {
 		panic(err)
 	}

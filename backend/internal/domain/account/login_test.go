@@ -8,7 +8,7 @@ import (
 )
 
 func TestLoginService_LoginLockedAfterMaxAttempts(t *testing.T) {
-	hasher := NewDjangoPBKDF2SHA256PasswordHasher(1)
+	hasher := NewDjangoPBKDF2SHA256PasswordHasher(PasswordHashConfig{Iterations: 1})
 	password, _ := hasher.Hash("secret")
 	username := mustUsernameFromEmail(t, "alice@example.edu")
 	repo := &lockFakeUserRepo{
@@ -17,7 +17,7 @@ func TestLoginService_LoginLockedAfterMaxAttempts(t *testing.T) {
 		},
 	}
 	attempts := &lockFakeAttempts{counts: map[string]int{"alice@example.edu": 5}}
-	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver(), 5, 15*time.Minute)
+	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver(), LoginConfig{MaxAttempts: 5, Lockout: 15 * time.Minute})
 
 	_, err := svc.Login(context.Background(), "alice@example.edu", "secret")
 	if !errors.Is(err, ErrLoginLocked) {
@@ -26,7 +26,7 @@ func TestLoginService_LoginLockedAfterMaxAttempts(t *testing.T) {
 }
 
 func TestLoginService_LoginNotLockedWhenBelowMax(t *testing.T) {
-	hasher := NewDjangoPBKDF2SHA256PasswordHasher(1)
+	hasher := NewDjangoPBKDF2SHA256PasswordHasher(PasswordHashConfig{Iterations: 1})
 	password, _ := hasher.Hash("secret")
 	username := mustUsernameFromEmail(t, "alice@example.edu")
 	repo := &lockFakeUserRepo{
@@ -35,7 +35,7 @@ func TestLoginService_LoginNotLockedWhenBelowMax(t *testing.T) {
 		},
 	}
 	attempts := &lockFakeAttempts{counts: map[string]int{"alice@example.edu": 4}}
-	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver(), 5, 15*time.Minute)
+	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver(), LoginConfig{MaxAttempts: 5, Lockout: 15 * time.Minute})
 
 	u, err := svc.Login(context.Background(), "alice@example.edu", "secret")
 	if err != nil {
@@ -47,7 +47,7 @@ func TestLoginService_LoginNotLockedWhenBelowMax(t *testing.T) {
 }
 
 func TestLoginService_FailedLoginIncrementsAttempts(t *testing.T) {
-	hasher := NewDjangoPBKDF2SHA256PasswordHasher(1)
+	hasher := NewDjangoPBKDF2SHA256PasswordHasher(PasswordHashConfig{Iterations: 1})
 	password, _ := hasher.Hash("secret")
 	username := mustUsernameFromEmail(t, "alice@example.edu")
 	repo := &lockFakeUserRepo{
@@ -56,7 +56,7 @@ func TestLoginService_FailedLoginIncrementsAttempts(t *testing.T) {
 		},
 	}
 	attempts := &lockFakeAttempts{counts: map[string]int{}}
-	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver(), 5, 15*time.Minute)
+	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver(), LoginConfig{MaxAttempts: 5, Lockout: 15 * time.Minute})
 
 	_, err := svc.Login(context.Background(), "alice@example.edu", "wrong")
 	if !errors.Is(err, ErrInvalidCredentials) {
@@ -68,7 +68,7 @@ func TestLoginService_FailedLoginIncrementsAttempts(t *testing.T) {
 }
 
 func TestLoginService_SuccessfulLoginResetsAttempts(t *testing.T) {
-	hasher := NewDjangoPBKDF2SHA256PasswordHasher(1)
+	hasher := NewDjangoPBKDF2SHA256PasswordHasher(PasswordHashConfig{Iterations: 1})
 	password, _ := hasher.Hash("secret")
 	username := mustUsernameFromEmail(t, "alice@example.edu")
 	repo := &lockFakeUserRepo{
@@ -77,7 +77,7 @@ func TestLoginService_SuccessfulLoginResetsAttempts(t *testing.T) {
 		},
 	}
 	attempts := &lockFakeAttempts{counts: map[string]int{"alice@example.edu": 3}}
-	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver(), 5, 15*time.Minute)
+	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver(), LoginConfig{MaxAttempts: 5, Lockout: 15 * time.Minute})
 
 	_, err := svc.Login(context.Background(), "alice@example.edu", "secret")
 	if err != nil {
@@ -88,8 +88,8 @@ func TestLoginService_SuccessfulLoginResetsAttempts(t *testing.T) {
 	}
 }
 
-func TestLoginService_NoLockoutWhenMaxAttemptsZero(t *testing.T) {
-	hasher := NewDjangoPBKDF2SHA256PasswordHasher(1)
+func TestLoginService_DefaultConfigAppliesLockout(t *testing.T) {
+	hasher := NewDjangoPBKDF2SHA256PasswordHasher(PasswordHashConfig{Iterations: 1})
 	password, _ := hasher.Hash("secret")
 	username := mustUsernameFromEmail(t, "alice@example.edu")
 	repo := &lockFakeUserRepo{
@@ -98,19 +98,16 @@ func TestLoginService_NoLockoutWhenMaxAttemptsZero(t *testing.T) {
 		},
 	}
 	attempts := &lockFakeAttempts{counts: map[string]int{"alice@example.edu": 999}}
-	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver(), 0, 15*time.Minute)
+	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver(), LoginConfig{})
 
-	u, err := svc.Login(context.Background(), "alice@example.edu", "secret")
-	if err != nil {
-		t.Fatalf("Login: %v", err)
-	}
-	if u.ID != 1 {
-		t.Fatalf("Login ID = %d, want 1", u.ID)
+	_, err := svc.Login(context.Background(), "alice@example.edu", "secret")
+	if !errors.Is(err, ErrLoginLocked) {
+		t.Fatalf("Login error = %v, want ErrLoginLocked", err)
 	}
 }
 
 func TestLoginService_LockoutTriggersOnNthFailure(t *testing.T) {
-	hasher := NewDjangoPBKDF2SHA256PasswordHasher(1)
+	hasher := NewDjangoPBKDF2SHA256PasswordHasher(PasswordHashConfig{Iterations: 1})
 	username := mustUsernameFromEmail(t, "alice@example.edu")
 	repo := &lockFakeUserRepo{
 		users: map[string]*Account{
@@ -118,7 +115,7 @@ func TestLoginService_LockoutTriggersOnNthFailure(t *testing.T) {
 		},
 	}
 	attempts := &lockFakeAttempts{counts: map[string]int{}}
-	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver(), 3, 15*time.Minute)
+	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver(), LoginConfig{MaxAttempts: 3, Lockout: 15 * time.Minute})
 	ctx := context.Background()
 
 	for i := 1; i <= 3; i++ {

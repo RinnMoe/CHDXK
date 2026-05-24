@@ -23,6 +23,15 @@ type AdminUserQueryService struct {
 
 type AdminUserCommandService struct {
 	userRepo auth.UserRepository
+	config   AdminUserCommandConfig
+}
+
+type AdminUserCommandConfig struct {
+	DefaultSuspendDays int
+}
+
+func DefaultAdminUserCommandConfig() AdminUserCommandConfig {
+	return AdminUserCommandConfig{DefaultSuspendDays: auth.DefaultAdminConfig().DefaultSuspendDays}
 }
 
 type AdminUserDTO struct {
@@ -45,8 +54,11 @@ func NewAdminUserQueryService(
 	return &AdminUserQueryService{accountRepo: accountRepo, userRepo: userRepo, usernames: usernames}
 }
 
-func NewAdminUserCommandService(userRepo auth.UserRepository) *AdminUserCommandService {
-	return &AdminUserCommandService{userRepo: userRepo}
+func NewAdminUserCommandService(userRepo auth.UserRepository, config AdminUserCommandConfig) *AdminUserCommandService {
+	if config.DefaultSuspendDays <= 0 {
+		config.DefaultSuspendDays = DefaultAdminUserCommandConfig().DefaultSuspendDays
+	}
+	return &AdminUserCommandService{userRepo: userRepo, config: config}
 }
 
 func (s *AdminUserQueryService) FindByEmail(ctx context.Context, email string) (*AdminUserDTO, error) {
@@ -115,7 +127,7 @@ func (s *AdminUserCommandService) SuspendUserForDays(ctx context.Context, actorU
 		return ErrCannotSuspendAdmin
 	}
 	if days <= 0 {
-		days = 30
+		days = s.config.DefaultSuspendDays
 	}
 
 	u.Suspend(time.Duration(days) * 24 * time.Hour)

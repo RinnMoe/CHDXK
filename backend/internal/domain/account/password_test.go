@@ -3,7 +3,7 @@ package account
 import "testing"
 
 func TestDjangoPBKDF2SHA256PasswordHasher_VerifyDjangoHash(t *testing.T) {
-	h := NewDjangoPBKDF2SHA256PasswordHasher(1)
+	h := NewDjangoPBKDF2SHA256PasswordHasher(PasswordHashConfig{Iterations: 1})
 	encoded := "pbkdf2_sha256$260000$seasalt$ftMWvEdczZQK5azuap2CQYKRjHLa1wOuMrfMiYEswYQ="
 
 	if !h.Verify("password", encoded) {
@@ -15,7 +15,7 @@ func TestDjangoPBKDF2SHA256PasswordHasher_VerifyDjangoHash(t *testing.T) {
 }
 
 func TestDjangoPBKDF2SHA256PasswordHasher_Hash(t *testing.T) {
-	h := NewDjangoPBKDF2SHA256PasswordHasher(1)
+	h := NewDjangoPBKDF2SHA256PasswordHasher(PasswordHashConfig{Iterations: 1})
 	encoded, err := h.Hash("secret")
 	if err != nil {
 		t.Fatalf("Hash: %v", err)

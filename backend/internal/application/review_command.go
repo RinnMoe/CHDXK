@@ -12,6 +12,11 @@ import (
 
 type CourseHotScoreConfig = course.HotScoreConfig
 
+type ReviewCommandConfig struct {
+	HotScores CourseHotScoreConfig
+	Vote      review.VoteConfig
+}
+
 type ReviewCommandService struct {
 	reviewService *review.Service
 	voteService   *review.VoteService
@@ -25,15 +30,15 @@ func NewReviewCommandService(
 	reviewRepo review.ReviewRepository,
 	voteRepo review.VoteRepository,
 	hotRepo course.HotCourseRepository,
-	hotScores CourseHotScoreConfig,
+	config ReviewCommandConfig,
 	policies []review.CreatePolicy,
 ) *ReviewCommandService {
 	return &ReviewCommandService{
 		reviewService: review.NewService(courseRepo, reviewRepo, policies),
-		voteService:   review.NewVoteService(reviewRepo, voteRepo),
+		voteService:   review.NewVoteService(reviewRepo, voteRepo, config.Vote),
 		reviewRepo:    reviewRepo,
 		hotRepo:       hotRepo,
-		hotScores:     hotScores,
+		hotScores:     config.HotScores,
 	}
 }
 

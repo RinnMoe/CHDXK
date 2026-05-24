@@ -8,6 +8,22 @@ import (
 
 const DateLayout = "2006-01-02"
 
+const DefaultTimezoneName = "Asia/Shanghai"
+
+type Config struct {
+	DailyCron        string
+	SchedulerEnabled bool
+	Timezone         string
+}
+
+func DefaultConfig() Config {
+	return Config{
+		DailyCron:        "10 0 * * *",
+		SchedulerEnabled: true,
+		Timezone:         DefaultTimezoneName,
+	}
+}
+
 var ErrInvalidDateRange = errors.New("invalid date range")
 
 const (

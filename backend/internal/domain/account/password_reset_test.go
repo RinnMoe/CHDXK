@@ -14,7 +14,7 @@ func TestPasswordResetService_SendResetCodeSuccess(t *testing.T) {
 	})
 	codes := newResetFakeCodeRepo()
 	sender := &resetFakeSender{}
-	hasher := NewDjangoPBKDF2SHA256PasswordHasher(1)
+	hasher := NewDjangoPBKDF2SHA256PasswordHasher(PasswordHashConfig{Iterations: 1})
 	svc := NewPasswordResetService(repo, codes, sender, hasher, testUsernameDeriver(), PasswordResetConfig{
 		CodeInterval: time.Minute,
 		CodeTTL:      10 * time.Minute,
@@ -62,7 +62,7 @@ func TestPasswordResetService_SendResetCodeRateLimit(t *testing.T) {
 }
 
 func TestPasswordResetService_ResetPasswordSuccess(t *testing.T) {
-	hasher := NewDjangoPBKDF2SHA256PasswordHasher(1)
+	hasher := NewDjangoPBKDF2SHA256PasswordHasher(PasswordHashConfig{Iterations: 1})
 	oldHash, err := hasher.Hash("oldpass")
 	if err != nil {
 		t.Fatalf("Hash: %v", err)
@@ -97,7 +97,7 @@ func TestPasswordResetService_ResetPasswordRejectsInvalidCode(t *testing.T) {
 	codes.saved["alice@example.edu"] = VerificationCode{
 		Email: "alice@example.edu", Code: "123456", ExpiresAt: time.Now().Add(10 * time.Minute),
 	}
-	svc := NewPasswordResetService(repo, codes, &resetFakeSender{}, NewDjangoPBKDF2SHA256PasswordHasher(1), testUsernameDeriver(), PasswordResetConfig{})
+	svc := NewPasswordResetService(repo, codes, &resetFakeSender{}, NewDjangoPBKDF2SHA256PasswordHasher(PasswordHashConfig{Iterations: 1}), testUsernameDeriver(), PasswordResetConfig{})
 
 	err := svc.ResetPassword(context.Background(), "alice@example.edu", "000000", "newpass")
 	if !errors.Is(err, ErrVerificationCodeInvalid) {
@@ -123,7 +123,7 @@ func TestPasswordResetService_ResetPasswordRejectsUnknownUser(t *testing.T) {
 	codes.saved["nobody@example.edu"] = VerificationCode{
 		Email: "nobody@example.edu", Code: "123456", ExpiresAt: time.Now().Add(10 * time.Minute),
 	}
-	svc := NewPasswordResetService(newResetFakeUserRepo(nil), codes, &resetFakeSender{}, NewDjangoPBKDF2SHA256PasswordHasher(1), testUsernameDeriver(), PasswordResetConfig{})
+	svc := NewPasswordResetService(newResetFakeUserRepo(nil), codes, &resetFakeSender{}, NewDjangoPBKDF2SHA256PasswordHasher(PasswordHashConfig{Iterations: 1}), testUsernameDeriver(), PasswordResetConfig{})
 
 	err := svc.ResetPassword(context.Background(), "nobody@example.edu", "123456", "newpass")
 	if !errors.Is(err, ErrUserNotFound) {

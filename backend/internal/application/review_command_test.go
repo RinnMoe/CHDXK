@@ -91,6 +91,10 @@ func (r *fakeCommandVoteRepo) FindByReviewAndUser(ctx context.Context, reviewID,
 	return &copy, nil
 }
 
+func (r *fakeCommandVoteRepo) FindByReviewsAndUser(ctx context.Context, reviewIDs []int, userID int) (map[int]review.Vote, error) {
+	return map[int]review.Vote{}, nil
+}
+
 func (r *fakeCommandVoteRepo) CountTodayByUser(ctx context.Context, userID int) (int64, error) {
 	return r.todayCount, nil
 }
@@ -128,10 +132,13 @@ func newReviewCommandTestService(reviewRepo *fakeCommandReviewRepo, voteRepo *fa
 		reviewRepo,
 		voteRepo,
 		hotRepo,
-		application.CourseHotScoreConfig{
-			ReviewCreateScore: 5,
-			ReviewUpdateScore: 2,
-			ReviewVoteScore:   1,
+		application.ReviewCommandConfig{
+			HotScores: application.CourseHotScoreConfig{
+				ReviewCreateScore: 5,
+				ReviewUpdateScore: 2,
+				ReviewVoteScore:   1,
+			},
+			Vote: review.DefaultVoteConfig(),
 		},
 		nil,
 	)

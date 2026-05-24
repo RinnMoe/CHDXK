@@ -151,13 +151,10 @@ func TestAccountCommandService_LoginLockedAfterMaxAttempts(t *testing.T) {
 		newFakeCodeRepo(),
 		newFakeCodeRepo(),
 		&fakeCodeSender{},
-		account.NewDjangoPBKDF2SHA256PasswordHasher(1),
+		account.NewDjangoPBKDF2SHA256PasswordHasher(account.PasswordHashConfig{Iterations: 1}),
 		testUsernameDeriver(),
-		application.AccountCommandConfig{EmailWhitelist: []string{"@example.edu"}, CodeInterval: time.Minute, CodeTTL: 10 * time.Minute},
-		account.PasswordResetConfig{CodeInterval: time.Minute, CodeTTL: 10 * time.Minute},
+		testAccountCommandConfig(5),
 		attempts,
-		5,
-		15*time.Minute,
 	)
 
 	_, err := svc.Login(context.Background(), application.LoginCommand{Email: "alice@example.edu", Password: "secret"})
@@ -232,13 +229,10 @@ func TestAccountCommandService_LoginFailedIncrementsAndLocks(t *testing.T) {
 		newFakeCodeRepo(),
 		newFakeCodeRepo(),
 		&fakeCodeSender{},
-		account.NewDjangoPBKDF2SHA256PasswordHasher(1),
+		account.NewDjangoPBKDF2SHA256PasswordHasher(account.PasswordHashConfig{Iterations: 1}),
 		testUsernameDeriver(),
-		application.AccountCommandConfig{EmailWhitelist: []string{"@example.edu"}, CodeInterval: time.Minute, CodeTTL: 10 * time.Minute},
-		account.PasswordResetConfig{CodeInterval: time.Minute, CodeTTL: 10 * time.Minute},
+		testAccountCommandConfig(3),
 		attempts,
-		3,
-		15*time.Minute,
 	)
 	ctx := context.Background()
 
@@ -263,23 +257,40 @@ func newAccountService(accountRepo *fakeAccountRepo, userRepo *fakeAuthUserRepo,
 		codes,
 		newFakeCodeRepo(),
 		sender,
-		account.NewDjangoPBKDF2SHA256PasswordHasher(1),
+		account.NewDjangoPBKDF2SHA256PasswordHasher(account.PasswordHashConfig{Iterations: 1}),
 		testUsernameDeriver(),
-		application.AccountCommandConfig{EmailWhitelist: []string{"@example.edu"}, CodeInterval: time.Minute, CodeTTL: 10 * time.Minute},
-		account.PasswordResetConfig{CodeInterval: time.Minute, CodeTTL: 10 * time.Minute},
+		testAccountCommandConfig(5),
 		&fakeLoginAttemptRepo{},
-		5,
-		15*time.Minute,
 	)
 }
 
 func mustHash(t *testing.T, password string) string {
 	t.Helper()
-	hash, err := account.NewDjangoPBKDF2SHA256PasswordHasher(1).Hash(password)
+	hash, err := account.NewDjangoPBKDF2SHA256PasswordHasher(account.PasswordHashConfig{Iterations: 1}).Hash(password)
 	if err != nil {
 		t.Fatalf("Hash: %v", err)
 	}
 	return hash
+}
+
+func testAccountCommandConfig(maxLoginAttempts int) application.AccountCommandConfig {
+	return application.AccountCommandConfig{
+		Registration: account.RegistrationConfig{
+			EmailWhitelist: []string{"@example.edu"},
+			CodeInterval:   time.Minute,
+			CodeTTL:        10 * time.Minute,
+			CodeLength:     6,
+		},
+		PasswordReset: account.PasswordResetConfig{
+			CodeInterval: time.Minute,
+			CodeTTL:      10 * time.Minute,
+			CodeLength:   6,
+		},
+		Login: account.LoginConfig{
+			MaxAttempts: maxLoginAttempts,
+			Lockout:     15 * time.Minute,
+		},
+	}
 }
 
 type fakeAccountRepo struct {

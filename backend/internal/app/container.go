@@ -10,6 +10,7 @@ import (
 	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/review/policy"
+	"jcourse/internal/domain/stat"
 	"jcourse/internal/infrastructure/email"
 	"jcourse/internal/infrastructure/persistence"
 	"jcourse/internal/infrastructure/repository"
@@ -60,7 +61,11 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 
 	reviewQuery := application.NewReviewQueryService(reviewRepo, voteRepo, notificationRepo)
 
-	freqPolicy := policy.NewFrequencyPolicy(reviewRepo, policy.DefaultFrequencyPolicyConfig())
+	freqPolicy := policy.NewFrequencyPolicy(reviewRepo, policy.FrequencyPolicyConfig{
+		Window:          time.Duration(conf.Review.FrequencyWindowSeconds) * time.Second,
+		MaxReviews:      conf.Review.FrequencyMaxReviews,
+		SimilarityRatio: conf.Review.SimilarityRatio,
+	})
 	safetyPolicy := policy.NewSafetyPolicy(nil)
 
 	reviewCommand := application.NewReviewCommandService(
@@ -68,10 +73,13 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		reviewRepo,
 		voteRepo,
 		courseHotRepo,
-		application.CourseHotScoreConfig{
-			ReviewCreateScore: conf.CourseHot.ReviewCreateScore,
-			ReviewUpdateScore: conf.CourseHot.ReviewUpdateScore,
-			ReviewVoteScore:   conf.CourseHot.ReviewVoteScore,
+		application.ReviewCommandConfig{
+			HotScores: application.CourseHotScoreConfig{
+				ReviewCreateScore: conf.CourseHot.ReviewCreateScore,
+				ReviewUpdateScore: conf.CourseHot.ReviewUpdateScore,
+				ReviewVoteScore:   conf.CourseHot.ReviewVoteScore,
+			},
+			Vote: review.VoteConfig{MaxDailyVotes: conf.Review.MaxDailyVotes},
 		},
 		[]review.CreatePolicy{freqPolicy, safetyPolicy},
 	)
@@ -87,34 +95,44 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		RateBps: conf.Point.TransferFeeRateBps,
 		MinFee:  conf.Point.TransferMinFee,
 	}))
-	siteStatsQuery := application.NewSiteStatsQueryService(statRepo)
-	siteStatsCommand := application.NewSiteStatsCommandService(statRepo, statRepo)
+	statsConfig := stat.Config{Timezone: conf.Stats.Timezone}
+	siteStatsQuery := application.NewSiteStatsQueryService(statRepo, statsConfig)
+	siteStatsCommand := application.NewSiteStatsCommandService(statRepo, statRepo, statsConfig)
 	currentUserService := auth.NewCurrentUserService(userRepo)
 	accountQuery := application.NewAccountQueryService(accountRepo)
 	adminUserQuery := application.NewAdminUserQueryService(accountRepo, userRepo, usernameDeriver)
-	adminUserCommand := application.NewAdminUserCommandService(userRepo)
+	adminUserCommand := application.NewAdminUserCommandService(userRepo, application.AdminUserCommandConfig{DefaultSuspendDays: conf.Admin.DefaultSuspendDays})
 	accountCommand := application.NewAccountCommandService(
 		accountRepo,
 		currentUserService,
 		verificationRepo,
 		resetCodeRepo,
 		email.NewSMTPVerificationCodeSender(conf.SMTP),
-		account.NewDjangoPBKDF2SHA256PasswordHasher(0),
+		account.NewDjangoPBKDF2SHA256PasswordHasher(account.PasswordHashConfig{
+			Iterations: conf.Auth.PasswordHashIterations,
+			SaltLength: conf.Auth.PasswordSaltLength,
+		}),
 		usernameDeriver,
 		application.AccountCommandConfig{
-			EmailWhitelist: conf.Auth.EmailWhitelist,
-			CodeInterval:   time.Duration(conf.Auth.VerificationCodeInterval) * time.Second,
-			CodeTTL:        time.Duration(conf.Auth.VerificationCodeTTL) * time.Second,
-		},
-		account.PasswordResetConfig{
-			CodeInterval: time.Duration(conf.Auth.VerificationCodeInterval) * time.Second,
-			CodeTTL:      time.Duration(conf.Auth.VerificationCodeTTL) * time.Second,
+			Registration: account.RegistrationConfig{
+				EmailWhitelist: conf.Auth.EmailWhitelist,
+				CodeInterval:   time.Duration(conf.Auth.VerificationCodeInterval) * time.Second,
+				CodeTTL:        time.Duration(conf.Auth.VerificationCodeTTL) * time.Second,
+				CodeLength:     conf.Auth.VerificationCodeLength,
+			},
+			PasswordReset: account.PasswordResetConfig{
+				CodeInterval: time.Duration(conf.Auth.VerificationCodeInterval) * time.Second,
+				CodeTTL:      time.Duration(conf.Auth.VerificationCodeTTL) * time.Second,
+				CodeLength:   conf.Auth.VerificationCodeLength,
+			},
+			Login: account.LoginConfig{
+				MaxAttempts: conf.Auth.MaxLoginAttempts,
+				Lockout:     time.Duration(conf.Auth.LoginLockoutDuration) * time.Second,
+			},
 		},
 		loginAttemptRepo,
-		conf.Auth.MaxLoginAttempts,
-		time.Duration(conf.Auth.LoginLockoutDuration)*time.Second,
 	)
-	apiKeySvc := auth.NewApiKeyService(apiKeyRepo)
+	apiKeySvc := auth.NewApiKeyService(apiKeyRepo, auth.ApiKeyConfig{MaxUserKeys: conf.APIKey.MaxUserKeys})
 	apiKeyQuery := application.NewApiKeyQueryService(apiKeySvc)
 	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc)
 

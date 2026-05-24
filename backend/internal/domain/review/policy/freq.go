@@ -37,6 +37,16 @@ type FrequencyPolicy struct {
 }
 
 func NewFrequencyPolicy(query review.ReviewQuery, config FrequencyPolicyConfig) *FrequencyPolicy {
+	defaults := DefaultFrequencyPolicyConfig()
+	if config.Window <= 0 {
+		config.Window = defaults.Window
+	}
+	if config.MaxReviews <= 0 {
+		config.MaxReviews = defaults.MaxReviews
+	}
+	if config.SimilarityRatio <= 0 {
+		config.SimilarityRatio = defaults.SimilarityRatio
+	}
 	return &FrequencyPolicy{query: query, config: config}
 }
 

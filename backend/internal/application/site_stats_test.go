@@ -21,7 +21,7 @@ func TestSiteStatsCommandService_CollectDailyByDateString(t *testing.T) {
 		stat.MetricNewDislikeCount:     1,
 	}}
 	repo := &fakeDailyStatCommandRepository{}
-	svc := application.NewSiteStatsCommandService(collector, repo)
+	svc := application.NewSiteStatsCommandService(collector, repo, stat.DefaultConfig())
 
 	got, err := svc.CollectDailyByDateString(context.Background(), "2026-05-20")
 	if err != nil {
@@ -54,7 +54,7 @@ func TestSiteStatsQueryService_ListDaily(t *testing.T) {
 		},
 		total: 2,
 	}
-	svc := application.NewSiteStatsQueryService(query)
+	svc := application.NewSiteStatsQueryService(query, stat.DefaultConfig())
 
 	got, err := svc.ListDaily(context.Background(), application.SiteDailyStatListFilter{
 		StartDate: "2026-05-01",
@@ -78,7 +78,7 @@ func TestSiteStatsQueryService_ListDaily(t *testing.T) {
 }
 
 func TestSiteStatsQueryService_ListDaily_InvalidRange(t *testing.T) {
-	svc := application.NewSiteStatsQueryService(&fakeDailyStatQuery{})
+	svc := application.NewSiteStatsQueryService(&fakeDailyStatQuery{}, stat.DefaultConfig())
 	_, err := svc.ListDaily(context.Background(), application.SiteDailyStatListFilter{
 		StartDate: "2026-05-20",
 		EndDate:   "2026-05-01",

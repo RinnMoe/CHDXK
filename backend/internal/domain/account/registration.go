@@ -11,6 +11,15 @@ type RegistrationConfig struct {
 	EmailWhitelist []string
 	CodeInterval   time.Duration
 	CodeTTL        time.Duration
+	CodeLength     int
+}
+
+func DefaultRegistrationConfig() RegistrationConfig {
+	return RegistrationConfig{
+		CodeInterval: time.Minute,
+		CodeTTL:      10 * time.Minute,
+		CodeLength:   6,
+	}
 }
 
 type RegistrationService struct {
@@ -31,11 +40,15 @@ func NewRegistrationService(
 	usernames UsernameDeriver,
 	config RegistrationConfig,
 ) *RegistrationService {
+	defaults := DefaultRegistrationConfig()
 	if config.CodeInterval <= 0 {
-		config.CodeInterval = time.Minute
+		config.CodeInterval = defaults.CodeInterval
 	}
 	if config.CodeTTL <= 0 {
-		config.CodeTTL = 10 * time.Minute
+		config.CodeTTL = defaults.CodeTTL
+	}
+	if config.CodeLength <= 0 {
+		config.CodeLength = defaults.CodeLength
 	}
 	return &RegistrationService{
 		userRepo:  userRepo,
@@ -73,7 +86,7 @@ func (s *RegistrationService) SendRegisterCode(ctx context.Context, email string
 		return fmt.Errorf("%w: retry after %s", ErrVerificationTooSoon, wait.Round(time.Second))
 	}
 
-	code, err := numericCode(6)
+	code, err := numericCode(s.config.CodeLength)
 	if err != nil {
 		return err
 	}

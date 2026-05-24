@@ -6,13 +6,24 @@ import (
 	"time"
 )
 
+type LoginConfig struct {
+	MaxAttempts int
+	Lockout     time.Duration
+}
+
+func DefaultLoginConfig() LoginConfig {
+	return LoginConfig{
+		MaxAttempts: 5,
+		Lockout:     15 * time.Minute,
+	}
+}
+
 type LoginService struct {
 	accountRepo AccountRepository
 	hasher      PasswordHasher
 	attempts    LoginAttemptRepository
 	usernames   UsernameDeriver
-	maxAttempts int
-	lockout     time.Duration
+	config      LoginConfig
 }
 
 func NewLoginService(
@@ -20,16 +31,21 @@ func NewLoginService(
 	hasher PasswordHasher,
 	attempts LoginAttemptRepository,
 	usernames UsernameDeriver,
-	maxAttempts int,
-	lockout time.Duration,
+	config LoginConfig,
 ) *LoginService {
+	defaults := DefaultLoginConfig()
+	if config.MaxAttempts <= 0 {
+		config.MaxAttempts = defaults.MaxAttempts
+	}
+	if config.Lockout <= 0 {
+		config.Lockout = defaults.Lockout
+	}
 	return &LoginService{
 		accountRepo: userRepo,
 		hasher:      hasher,
 		attempts:    attempts,
 		usernames:   usernames,
-		maxAttempts: maxAttempts,
-		lockout:     lockout,
+		config:      config,
 	}
 }
 
@@ -61,14 +77,14 @@ func (s *LoginService) MarkLogin(ctx context.Context, accountID int) error {
 }
 
 func (s *LoginService) isLocked(ctx context.Context, email string) bool {
-	if s.maxAttempts <= 0 {
+	if s.config.MaxAttempts <= 0 {
 		return false
 	}
 	count, err := s.attempts.Get(ctx, email)
 	if err != nil {
 		return false
 	}
-	return count >= s.maxAttempts
+	return count >= s.config.MaxAttempts
 }
 
 func (s *LoginService) recordFailure(ctx context.Context, email string) error {
@@ -76,8 +92,8 @@ func (s *LoginService) recordFailure(ctx context.Context, email string) error {
 	if err != nil {
 		return err
 	}
-	if count >= s.maxAttempts && s.lockout > 0 {
-		return fmt.Errorf("%w: locked for %s", ErrLoginLocked, s.lockout.Round(time.Minute))
+	if count >= s.config.MaxAttempts && s.config.Lockout > 0 {
+		return fmt.Errorf("%w: locked for %s", ErrLoginLocked, s.config.Lockout.Round(time.Minute))
 	}
 	return nil
 }
