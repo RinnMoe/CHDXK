@@ -33,7 +33,7 @@ interface ReviewFormProps {
 
 const SCORE_MAX_LENGTH = 10
 const CONTENT_MIN_LENGTH = 4
-const CONTENT_MAX_LENGTH = 9691
+const CONTENT_MAX_LENGTH = 9681
 const DEFAULT_REVIEW_TEMPLATE = `课程内容：
 
 上课自由度：
@@ -250,7 +250,7 @@ export function ReviewForm({
                     onBlur={field.handleBlur}
                     maxLength={CONTENT_MAX_LENGTH}
                     rows={10}
-                    className="resize-y font-mono text-sm"
+                    className="resize-y font-sans text-sm"
                   />
                 </div>
                 <div className="space-y-1">

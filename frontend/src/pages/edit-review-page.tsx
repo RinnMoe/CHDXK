@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
+import { CourseHeaderMeta } from "@/components/course/course-header-meta"
 import { ReviewForm } from "@/components/review/review-form"
 import { useCourseDetail } from "@/hooks/use-course"
 import { useReview, useUpdateReview } from "@/hooks/use-review"
@@ -39,6 +40,8 @@ export function EditReviewPage() {
     )
   }
 
+  const displayCourse = course ?? review.course
+
   return (
     <>
       <PageTitle>编辑点评</PageTitle>
@@ -50,28 +53,10 @@ export function EditReviewPage() {
           </Link>
         </Button>
 
-        <Card>
-          <CardHeader>
+        <Card className="shadow-none ring-0">
+          <CardHeader className="gap-4">
             <CardTitle>编辑点评</CardTitle>
-            {review.course && (
-              <div className="space-y-0.5 text-sm text-muted-foreground">
-                <div>
-                  <span className="font-mono">{review.course.code}</span>
-                  <span className="mx-1">·</span>
-                  <span className="font-medium text-foreground">
-                    {review.course.name}
-                  </span>
-                </div>
-                <div>
-                  主讲教师：{review.course.main_teacher.name}
-                  {review.course.main_teacher.title && (
-                    <span className="ml-1">
-                      ({review.course.main_teacher.title})
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
+            {displayCourse && <CourseHeaderMeta course={displayCourse} />}
           </CardHeader>
           <CardContent>
             <ReviewForm

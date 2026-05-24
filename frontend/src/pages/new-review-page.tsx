@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
+import { CourseHeaderMeta } from "@/components/course/course-header-meta"
 import { ReviewForm } from "@/components/review/review-form"
 import { useCourseDetail } from "@/hooks/use-course"
 import { useCreateReview } from "@/hooks/use-review"
@@ -34,26 +35,10 @@ export function NewReviewPage() {
           </Link>
         </Button>
 
-        <Card>
-          <CardHeader>
+        <Card className="shadow-none ring-0">
+          <CardHeader className="gap-4">
             <CardTitle>写点评</CardTitle>
-            {course && (
-              <div className="space-y-0.5 text-sm text-muted-foreground">
-                <div>
-                  <span className="font-mono">{course.code}</span>
-                  <span className="mx-1">·</span>
-                  <span className="font-medium text-foreground">
-                    {course.name}
-                  </span>
-                </div>
-                <div>
-                  主讲教师：{course.main_teacher.name}
-                  {course.main_teacher.title && (
-                    <span className="ml-1">({course.main_teacher.title})</span>
-                  )}
-                </div>
-              </div>
-            )}
+            {course && <CourseHeaderMeta course={course} />}
           </CardHeader>
           <CardContent>
             <ReviewForm

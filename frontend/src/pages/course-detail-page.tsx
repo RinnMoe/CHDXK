@@ -4,7 +4,6 @@ import { RiArrowLeftLine, RiAddLine, RiMailLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { TitleBadge } from "@/components/ui/title-badge"
 import {
   CourseCompactCard,
   SameCodeCourseCard,
@@ -14,6 +13,7 @@ import {
   CourseBadges,
   CourseSemesterBadge,
 } from "@/components/course/course-badges"
+import { CourseHeaderMeta } from "@/components/course/course-header-meta"
 import { CourseNotificationControl } from "@/components/course/course-notification-control"
 import { CourseEnrollmentDialog } from "@/components/course/course-enrollment-dialog"
 import { CourseReviewTrendDialog } from "@/components/course/course-review-trend-dialog"
@@ -192,25 +192,7 @@ export function CourseDetailPage() {
             className={cn("space-y-6", hasRelatedCourses && "lg:col-span-2")}
           >
             <div className="space-y-6">
-              <header className="space-y-2">
-                <h1 className="text-3xl font-bold">
-                  <span>{course.name}</span>{" "}
-                  <span className="font-mono text-sm font-normal whitespace-nowrap text-muted-foreground">
-                    {course.code}
-                  </span>
-                </h1>
-                <div className="inline-flex items-baseline gap-1.5">
-                  <Link
-                    to={`/teacher/${course.main_teacher.id}`}
-                    className="text-lg font-semibold text-primary hover:underline"
-                  >
-                    {course.main_teacher.name}
-                  </Link>
-                  {course.main_teacher.title && (
-                    <TitleBadge>{course.main_teacher.title}</TitleBadge>
-                  )}
-                </div>
-              </header>
+              <CourseHeaderMeta course={course} />
 
               <div className="space-y-6 md:grid md:grid-cols-[minmax(0,1fr)_minmax(18rem,min(24rem,50%))] md:items-start md:gap-6 md:space-y-0">
                 <div className="ml-2 space-y-6 sm:ml-3 md:ml-4">
