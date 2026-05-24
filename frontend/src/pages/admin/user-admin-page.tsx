@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react"
+import { useState } from "react"
 import { Navigate, useSearchParams } from "react-router-dom"
 import { RiLockLine, RiLockUnlockLine, RiSearchLine } from "@remixicon/react"
 import { PageShell } from "@/components/layout/page-shell"
@@ -41,6 +41,11 @@ import { useUserReviews } from "@/hooks/use-review"
 import { formatDateTime, formatNullableDateTime } from "@/lib/date"
 
 const reviewPageSize = 20
+
+type FormSubmitEvent = {
+  preventDefault(): void
+  currentTarget: HTMLFormElement
+}
 
 function getErrorMessage(error: unknown) {
   if (error instanceof Error) return error.message
@@ -85,7 +90,7 @@ export function UserAdminPage() {
   const grantAdminMutation = useGrantAdminUser()
   const revokeAdminMutation = useRevokeAdminUser()
 
-  function handleSearch(event: FormEvent<HTMLFormElement>) {
+  function handleSearch(event: FormSubmitEvent) {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
     const nextEmail = String(formData.get("email") ?? "")
@@ -112,7 +117,7 @@ export function UserAdminPage() {
     await clearSuspensionMutation.mutateAsync(selectedUser.id)
   }
 
-  async function confirmSuspension(event: FormEvent<HTMLFormElement>) {
+  async function confirmSuspension(event: FormSubmitEvent) {
     event.preventDefault()
     if (!selectedUser) return
 

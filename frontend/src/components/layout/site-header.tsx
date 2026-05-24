@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useLayoutEffect, useRef, useState } from "react"
-import { RiArrowDownSLine, RiMenuLine, RiSearchLine } from "@remixicon/react"
+import { RiMenuLine, RiSearchLine } from "@remixicon/react"
 import { UserMenu } from "@/components/auth/user-menu"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
@@ -25,7 +25,13 @@ import {
   SheetClose,
 } from "@/components/ui/sheet"
 
-const navItems = [
+type NavLinkItem = {
+  to: string
+  label: string
+  match: (p: string) => boolean
+}
+
+const navItems: NavLinkItem[] = [
   { to: "/", label: "首页", match: (p: string) => p === "/" },
   {
     to: "/course",
@@ -49,14 +55,18 @@ const navItems = [
   },
 ]
 
-const adminNavItem = {
-  label: "管理",
-  match: (p: string) => p.startsWith("/admin"),
-}
-
-const adminLinks = [
-  { to: "/admin/user", label: "用户管理" },
-  { to: "/admin/site-stat", label: "站点统计" },
+const adminNavItems: NavLinkItem[] = [
+  {
+    to: "/admin/user",
+    label: "管理",
+    match: (p: string) => p === "/admin/user" || p.startsWith("/admin/user/"),
+  },
+  {
+    to: "/admin/site-stat",
+    label: "统计",
+    match: (p: string) =>
+      p === "/admin/site-stat" || p.startsWith("/admin/site-stat/"),
+  },
 ]
 
 const searchTargets = [
@@ -132,8 +142,8 @@ export function SiteHeader() {
   const { user } = useAuth()
   const [open, setOpen] = useState(false)
   const navRef = useRef<HTMLElement>(null)
-  const visibleNavItems =
-    user?.role === "admin" ? [...navItems, adminNavItem] : navItems
+  const visibleNavItems: NavLinkItem[] =
+    user?.role === "admin" ? [...navItems, ...adminNavItems] : navItems
   const activeIndex = visibleNavItems.findIndex((item) => item.match(pathname))
   const [navIndicator, setNavIndicator] = useState({
     left: 0,
@@ -183,40 +193,6 @@ export function SiteHeader() {
           />
           {visibleNavItems.map((item) => {
             const active = item.match(pathname)
-            if (item === adminNavItem) {
-              return (
-                <div
-                  key={item.label}
-                  data-nav-item
-                  className="group relative flex items-center"
-                >
-                  <button
-                    type="button"
-                    className={
-                      active
-                        ? "flex items-center gap-1 font-medium text-primary transition-colors dark:text-primary"
-                        : "flex items-center gap-1 text-foreground transition-colors hover:text-primary"
-                    }
-                  >
-                    {item.label}
-                    <RiArrowDownSLine className="size-4 transition-transform group-hover:rotate-180" />
-                  </button>
-                  <div className="invisible absolute top-full left-0 z-50 min-w-32 pt-2 opacity-0 transition-[opacity,visibility] duration-100 group-hover:visible group-hover:opacity-100">
-                    <div className="rounded-md bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10">
-                      {adminLinks.map((link) => (
-                        <Link
-                          key={link.to}
-                          to={link.to}
-                          className="flex items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors hover:bg-accent hover:text-accent-foreground"
-                        >
-                          {link.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )
-            }
             return (
               <Link
                 key={item.to}
@@ -253,22 +229,6 @@ export function SiteHeader() {
               <nav className="flex flex-col gap-1 px-4">
                 {visibleNavItems.map((item) => {
                   const active = item.match(pathname)
-                  if (item === adminNavItem) {
-                    return adminLinks.map((link) => (
-                      <SheetClose asChild key={link.to}>
-                        <Link
-                          to={link.to}
-                          className={
-                            pathname === link.to
-                              ? "rounded-md bg-primary/10 px-3 py-2 font-medium text-primary dark:bg-primary/18 dark:text-primary"
-                              : "rounded-md px-3 py-2 text-foreground transition-colors hover:bg-accent hover:text-primary"
-                          }
-                        >
-                          {link.label}
-                        </Link>
-                      </SheetClose>
-                    ))
-                  }
                   return (
                     <SheetClose asChild key={item.to}>
                       <Link

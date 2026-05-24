@@ -78,11 +78,11 @@ function applyCourseFilter(url: URL) {
   if (language) list = list.filter((c) => c.language === language)
   if (categories.length > 0)
     list = list.filter((c) =>
-      c.categories.some((cat) => categories.includes(cat))
+      c.categories?.some((cat) => categories.includes(cat))
     )
   if (targetYears.length > 0)
     list = list.filter((c) =>
-      c.target_years.some((y) => targetYears.includes(y))
+      c.target_years?.some((y) => targetYears.includes(y))
     )
 
   if (orderBy === "rating_avg") {

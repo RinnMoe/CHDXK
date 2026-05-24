@@ -1,5 +1,5 @@
 import type { ReviewDTO } from "@/api/review"
-import { mockCourses } from "./course"
+import { mockCourses } from "./courses"
 
 const SCORES = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "未公布"]
 const SEMESTERS = ["2025-2026-1", "2024-2025-2", "2024-2025-1", "2023-2024-2"]
