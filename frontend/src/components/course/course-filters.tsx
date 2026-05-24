@@ -137,7 +137,7 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
         className="w-full"
         onClick={() => {
           const next = new URLSearchParams()
-          const q = searchParams.get("q")
+          const q = searchParams.get("q")?.trim()
           if (q) next.set("q", q)
           setSearchParams(next)
         }}

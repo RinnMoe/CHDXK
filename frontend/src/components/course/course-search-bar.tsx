@@ -7,15 +7,16 @@ const SEARCH_DEBOUNCE_MS = 250
 
 export function CourseSearchBar() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [value, setValue] = useState(searchParams.get("q") ?? "")
+  const [value, setValue] = useState((searchParams.get("q") ?? "").trim())
   const [debouncedValue] = useDebounce(value, SEARCH_DEBOUNCE_MS)
 
   useEffect(() => {
-    const current = searchParams.get("q") ?? ""
-    if (debouncedValue === current) return
+    const nextQ = debouncedValue.trim()
+    const current = (searchParams.get("q") ?? "").trim()
+    if (nextQ === current) return
     const next = new URLSearchParams(searchParams)
-    if (debouncedValue) {
-      next.set("q", debouncedValue)
+    if (nextQ) {
+      next.set("q", nextQ)
     } else {
       next.delete("q")
     }

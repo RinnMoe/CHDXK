@@ -42,7 +42,7 @@ function ReviewSearchInput({
 export function ReviewsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1)
-  const q = searchParams.get("q") ?? ""
+  const q = (searchParams.get("q") ?? "").trim()
   const { data, isLoading } = useReviews({
     q: q || undefined,
     page,
@@ -50,11 +50,12 @@ export function ReviewsPage() {
   })
 
   function handleSearchChange(value: string) {
-    if (value === q) return
+    const nextQ = value.trim()
+    if (nextQ === q) return
 
     const next = new URLSearchParams(searchParams)
-    if (value) {
-      next.set("q", value)
+    if (nextQ) {
+      next.set("q", nextQ)
     } else {
       next.delete("q")
     }

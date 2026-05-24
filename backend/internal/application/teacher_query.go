@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"jcourse/internal/domain/teacher"
 )
@@ -35,10 +36,11 @@ func (s *TeacherQueryService) GetTeacher(ctx context.Context, teacherID int) (*T
 }
 
 func (s *TeacherQueryService) ListTeachers(ctx context.Context, f TeacherListFilter) (*PaginatedResult[TeacherDTO], error) {
+	q := strings.TrimSpace(f.Q)
 	filter := teacher.TeacherFilter{
 		Department: f.Department,
 		Title:      f.Title,
-		Q:          f.Q,
+		Q:          q,
 		Page:       f.Page,
 		PageSize:   f.PageSize,
 	}

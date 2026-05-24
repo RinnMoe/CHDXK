@@ -15,18 +15,9 @@ func TestTeacherRepository_FindBy(t *testing.T) {
 
 	cleanTables(t, db, "teachers")
 
-	t1 := repository.TeacherEntity{Code: "T001", Name: "张三", Department: "计算机学院", Title: "教授", Pinyin: "zhangsan", PinyinAbbr: "zs"}
-	t2 := repository.TeacherEntity{Code: "T002", Name: "李四", Department: "数学学院", Title: "副教授", Pinyin: "lisi", PinyinAbbr: "ls"}
-	t3 := repository.TeacherEntity{Code: "T003", Name: "王五", Department: "计算机学院", Title: "讲师", Pinyin: "wangwu", PinyinAbbr: "ww"}
-
-	for _, e := range []repository.TeacherEntity{t1, t2, t3} {
-		if err := db.Create(&e).Error; err != nil {
-			t.Fatalf("seed teacher: %v", err)
-		}
-	}
-	if err := repository.RefreshTeacherSearchVectors(db); err != nil {
-		t.Fatalf("refresh teacher search vectors: %v", err)
-	}
+	seedTeacherRaw(t, db, "T001", "张三", "计算机学院", "教授")
+	seedTeacherRaw(t, db, "T002", "李四", "数学学院", "副教授")
+	seedTeacherRaw(t, db, "T003", "王五", "计算机学院", "讲师")
 
 	t.Run("list all", func(t *testing.T) {
 		results, total, err := repo.FindBy(ctx, teacher.TeacherFilter{})
@@ -69,8 +60,8 @@ func TestTeacherRepository_FindBy(t *testing.T) {
 		}
 	})
 
-	t.Run("filter by pinyin", func(t *testing.T) {
-		results, total, err := repo.FindBy(ctx, teacher.TeacherFilter{Pinyin: "zhangsan"})
+	t.Run("search by q compact pinyin", func(t *testing.T) {
+		results, total, err := repo.FindBy(ctx, teacher.TeacherFilter{Q: "zhangsan"})
 		if err != nil {
 			t.Fatalf("FindBy: %v", err)
 		}
@@ -79,6 +70,19 @@ func TestTeacherRepository_FindBy(t *testing.T) {
 		}
 		if results[0].Name != "张三" {
 			t.Errorf("Name: got %q, want 张三", results[0].Name)
+		}
+	})
+
+	t.Run("search by q spaced pinyin", func(t *testing.T) {
+		results, total, err := repo.FindBy(ctx, teacher.TeacherFilter{Q: "zhang san"})
+		if err != nil {
+			t.Fatalf("FindBy: %v", err)
+		}
+		if total != 1 {
+			t.Errorf("total: got %d, want 1", total)
+		}
+		if len(results) == 0 || results[0].Name != "张三" {
+			t.Errorf("Name: got %v, want 张三", results)
 		}
 	})
 
@@ -150,18 +154,9 @@ func TestTeacherRepository_FindBy_DefaultSortByCode(t *testing.T) {
 
 	cleanTables(t, db, "teachers")
 
-	for _, e := range []repository.TeacherEntity{
-		{Code: "T300", Name: "后排序老师", Department: "测试学院", Title: "讲师", Pinyin: "houpaixulaoshi", PinyinAbbr: "hpxls"},
-		{Code: "T100", Name: "先排序老师", Department: "测试学院", Title: "讲师", Pinyin: "xianpaixulaoshi", PinyinAbbr: "xpxls"},
-		{Code: "T200", Name: "中间排序老师", Department: "测试学院", Title: "讲师", Pinyin: "zhongjianpaixulaoshi", PinyinAbbr: "zjpxls"},
-	} {
-		if err := db.Create(&e).Error; err != nil {
-			t.Fatalf("seed teacher: %v", err)
-		}
-	}
-	if err := repository.RefreshTeacherSearchVectors(db); err != nil {
-		t.Fatalf("refresh teacher search vectors: %v", err)
-	}
+	seedTeacherRaw(t, db, "T300", "后排序老师", "测试学院", "讲师")
+	seedTeacherRaw(t, db, "T100", "先排序老师", "测试学院", "讲师")
+	seedTeacherRaw(t, db, "T200", "中间排序老师", "测试学院", "讲师")
 
 	results, total, err := repo.FindBy(ctx, teacher.TeacherFilter{})
 	if err != nil {
@@ -182,15 +177,9 @@ func TestTeacherRepository_GetFilters(t *testing.T) {
 
 	cleanTables(t, db, "teachers")
 
-	for _, e := range []repository.TeacherEntity{
-		{Code: "T001", Name: "张三", Department: "计算机学院", Title: "教授", Pinyin: "zhangsan", PinyinAbbr: "zs"},
-		{Code: "T002", Name: "李四", Department: "数学学院", Title: "副教授", Pinyin: "lisi", PinyinAbbr: "ls"},
-		{Code: "T003", Name: "王五", Department: "计算机学院", Title: "讲师", Pinyin: "wangwu", PinyinAbbr: "ww"},
-	} {
-		if err := db.Create(&e).Error; err != nil {
-			t.Fatalf("seed teacher: %v", err)
-		}
-	}
+	seedTeacherRaw(t, db, "T001", "张三", "计算机学院", "教授")
+	seedTeacherRaw(t, db, "T002", "李四", "数学学院", "副教授")
+	seedTeacherRaw(t, db, "T003", "王五", "计算机学院", "讲师")
 
 	filters, err := repo.GetFilters(ctx)
 	if err != nil {

@@ -16,7 +16,7 @@ export function CoursesPage() {
     const departments = searchParams.getAll("department")
     const credits = searchParams.getAll("credit").map(Number).filter(Boolean)
     return {
-      q: searchParams.get("q") ?? undefined,
+      q: searchParams.get("q")?.trim() || undefined,
       department: departments[0] ?? undefined,
       language: searchParams.get("language") ?? undefined,
       categories: categories.length > 0 ? categories : undefined,

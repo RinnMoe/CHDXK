@@ -15,9 +15,7 @@ type TeacherEntity struct {
 	Department string `gorm:"column:department;index"`
 	Title      string `gorm:"column:title"`
 
-	Pinyin       string `gorm:"column:pinyin;index"`
-	PinyinAbbr   string `gorm:"column:pinyin_abbr;index"`
-	SearchVector string `gorm:"column:search_vector;type:tsvector;index:,type:gin;<-:false"`
+	SearchVector string `gorm:"column:search_vector;type:tsvector;index:,type:gin"`
 
 	LastSemester string `gorm:"column:last_semester"`
 

@@ -12,8 +12,9 @@ import (
 )
 
 type TeacherRepository struct {
-	db    *gorm.DB
-	cache *redis.Client
+	db           *gorm.DB
+	cache        *redis.Client
+	searchConfig string
 }
 
 func NewTeacherRepository(db *gorm.DB, cache ...*redis.Client) *TeacherRepository {
@@ -21,7 +22,7 @@ func NewTeacherRepository(db *gorm.DB, cache ...*redis.Client) *TeacherRepositor
 	if len(cache) > 0 {
 		client = cache[0]
 	}
-	return &TeacherRepository{db: db, cache: client}
+	return &TeacherRepository{db: db, cache: client, searchConfig: SearchConfig(db)}
 }
 
 func newTeacherViewFromEntity(e *TeacherEntity) teacher.TeacherView {
@@ -31,8 +32,6 @@ func newTeacherViewFromEntity(e *TeacherEntity) teacher.TeacherView {
 		Name:       e.Name,
 		Department: e.Department,
 		Title:      e.Title,
-		Pinyin:     e.Pinyin,
-		PinyinAbbr: e.PinyinAbbr,
 	}
 }
 
@@ -49,16 +48,13 @@ func (r *TeacherRepository) FindBy(ctx context.Context, filter teacher.TeacherFi
 		db = db.Where("title = ?", filter.Title)
 	}
 	if filter.Q != "" {
-		db = applySearchVectorFilter(db, "search_vector", filter.Q)
+		db = applySearchVectorFilter(db, r.searchConfig, "search_vector", filter.Q)
 	}
 	if filter.Code != "" {
 		db = db.Where("LOWER(code) = LOWER(?)", filter.Code)
 	}
 	if filter.Name != "" {
 		db = db.Where("name = ?", filter.Name)
-	}
-	if filter.Pinyin != "" {
-		db = db.Where("pinyin = ?", filter.Pinyin)
 	}
 
 	var total int64

@@ -10,8 +10,6 @@ CREATE TABLE IF NOT EXISTS teachers
     name          TEXT        NOT NULL,
     department    TEXT        NOT NULL,
     title         TEXT        NOT NULL,
-    pinyin        TEXT        NOT NULL,
-    pinyin_abbr   TEXT        NOT NULL,
     search_vector TSVECTOR    NOT NULL DEFAULT '',
     last_semester TEXT        NOT NULL DEFAULT '',
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),

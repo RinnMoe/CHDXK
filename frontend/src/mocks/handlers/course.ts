@@ -58,7 +58,7 @@ function paginate<T>(items: T[], page: number, pageSize: number) {
 }
 
 function applyCourseFilter(url: URL) {
-  const q = (url.searchParams.get("q") ?? "").toLowerCase()
+  const q = (url.searchParams.get("q") ?? "").trim().toLowerCase()
   const department = url.searchParams.get("department") ?? ""
   const language = url.searchParams.get("language") ?? ""
   const categories = url.searchParams.getAll("categories")

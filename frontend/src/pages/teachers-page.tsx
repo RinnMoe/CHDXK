@@ -44,7 +44,7 @@ export function TeachersPage() {
   const page = Number(searchParams.get("page") ?? "1")
   const department = searchParams.get("department") ?? ""
   const title = searchParams.get("title") ?? ""
-  const q = searchParams.get("q") ?? ""
+  const q = (searchParams.get("q") ?? "").trim()
 
   const filter = {
     department: department || undefined,
@@ -65,8 +65,9 @@ export function TeachersPage() {
   }
 
   function handleSearchChange(value: string) {
-    if (value === q) return
-    update("q", value)
+    const nextQ = value.trim()
+    if (nextQ === q) return
+    update("q", nextQ)
   }
 
   function handlePageChange(p: number) {

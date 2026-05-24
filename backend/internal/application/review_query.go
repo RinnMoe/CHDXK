@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"strings"
 
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
@@ -68,9 +69,10 @@ func (s *ReviewQueryService) GetReviewsByCourse(ctx context.Context, courseID in
 	if orderBy == "" {
 		orderBy = f.Order
 	}
+	q := strings.TrimSpace(f.Q)
 	reviewFilter := review.ReviewFilter{
 		CourseID: courseID,
-		Q:        f.Q,
+		Q:        q,
 		Semester: f.Semester,
 		Rating:   f.Rating,
 		OrderBy:  orderBy,
@@ -101,10 +103,11 @@ func (s *ReviewQueryService) GetReviewsByUser(ctx context.Context, userID int, u
 	if orderBy == "" {
 		orderBy = f.Order
 	}
+	q := strings.TrimSpace(f.Q)
 	reviewFilter := review.ReviewFilter{
 		UserID:     userID,
 		WithCourse: true,
-		Q:          f.Q,
+		Q:          q,
 		Semester:   f.Semester,
 		Rating:     f.Rating,
 		OrderBy:    orderBy,
@@ -135,9 +138,10 @@ func (s *ReviewQueryService) GetReviews(ctx context.Context, user *auth.User, f 
 	if orderBy == "" {
 		orderBy = f.Order
 	}
+	q := strings.TrimSpace(f.Q)
 
 	reviewFilter := review.ReviewFilter{
-		Q:          f.Q,
+		Q:          q,
 		Semester:   f.Semester,
 		Rating:     f.Rating,
 		OrderBy:    orderBy,
@@ -192,9 +196,10 @@ func (s *ReviewQueryService) GetFollowedReviews(ctx context.Context, userID int,
 	if orderBy == "" {
 		orderBy = f.Order
 	}
+	q := strings.TrimSpace(f.Q)
 	reviewFilter := review.ReviewFilter{
 		CourseIDs:  followed,
-		Q:          f.Q,
+		Q:          q,
 		Semester:   f.Semester,
 		Rating:     f.Rating,
 		OrderBy:    orderBy,

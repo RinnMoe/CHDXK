@@ -61,19 +61,13 @@ func TestCourseRepository_FindBy(t *testing.T) {
 	cleanTables(t, db, "courses", "teachers", "reviews")
 
 	t1 := seedTeacher(t, db)
-	t2 := repository.TeacherEntity{Code: "T002", Name: "李老师", Department: "数学学院", Title: "副教授", Pinyin: "lilaoshi", PinyinAbbr: "lls"}
-	if err := db.Create(&t2).Error; err != nil {
-		t.Fatalf("seed teacher t2: %v", err)
-	}
+	t2 := seedTeacherRaw(t, db, "T002", "李老师", "数学学院", "副教授")
 
 	c1 := seedCourseRaw(t, db, "CS101", "数据结构", 3.0, "计算机学院", t1.ID, "zh", []string{"核心课"}, []string{"2021"})
 	seedCourseRaw(t, db, "CS102", "算法设计", 3.0, "计算机学院", t1.ID, "en", []string{"选修课"}, []string{"2022"})
 	seedCourseRaw(t, db, "MA101", "高等数学", 4.0, "数学学院", t2.ID, "zh", []string{"核心课"}, []string{"2021", "2022"})
 	if err := db.Model(&repository.CourseEntity{}).Where("id = ?", c1.ID).Update("rating_count", 1).Error; err != nil {
 		t.Fatalf("mark course reviewed: %v", err)
-	}
-	if err := repository.RefreshTeacherSearchVectors(db); err != nil {
-		t.Fatalf("refresh teacher search vectors: %v", err)
 	}
 	if err := repository.RefreshCourseSearchVectors(db); err != nil {
 		t.Fatalf("refresh course search vectors: %v", err)
@@ -338,10 +332,7 @@ func TestCourseRepository_FindBy_DefaultSortByCode(t *testing.T) {
 	cleanTables(t, db, "courses", "teachers", "reviews")
 
 	teacher := seedTeacher(t, db)
-	otherTeacher := repository.TeacherEntity{Code: "T999", Name: "排序老师", Department: "测试学院", Title: "讲师", Pinyin: "paixulaoshi", PinyinAbbr: "pxls"}
-	if err := db.Create(&otherTeacher).Error; err != nil {
-		t.Fatalf("seed other teacher: %v", err)
-	}
+	otherTeacher := seedTeacherRaw(t, db, "T999", "排序老师", "测试学院", "讲师")
 
 	seedCourseRaw(t, db, "ZZ200", "后插入课程", 3.0, "测试学院", teacher.ID, "zh", []string{"核心课"}, []string{"2024"})
 	seedCourseRaw(t, db, "AA100", "先排序课程", 3.0, "测试学院", otherTeacher.ID, "zh", []string{"核心课"}, []string{"2024"})
@@ -443,10 +434,7 @@ func TestCourseRepository_FindOfferedCourses(t *testing.T) {
 	teacher := seedTeacher(t, db)
 	courseEntity := seedCourse(t, db, teacher.ID)
 
-	t2 := repository.TeacherEntity{Code: "T002", Name: "李老师", Department: "计算机学院", Title: "副教授", Pinyin: "lilaoshi", PinyinAbbr: "lls"}
-	if err := db.Create(&t2).Error; err != nil {
-		t.Fatalf("seed teacher t2: %v", err)
-	}
+	t2 := seedTeacherRaw(t, db, "T002", "李老师", "计算机学院", "副教授")
 
 	oc1 := seedOfferedCourseRaw(t, db, courseEntity.ID, "2023-2024-1", "zh", []string{"核心课"}, []string{"2021"})
 	oc2 := seedOfferedCourseRaw(t, db, courseEntity.ID, "2024-2025-1", "en", []string{"选修课"}, []string{"2022"})
@@ -476,10 +464,7 @@ func TestCourseRepository_GetFilters(t *testing.T) {
 	cleanTables(t, db, "courses", "teachers")
 
 	t1 := seedTeacher(t, db)
-	t2 := repository.TeacherEntity{Code: "T002", Name: "李老师", Department: "数学学院", Title: "副教授", Pinyin: "lilaoshi", PinyinAbbr: "lls"}
-	if err := db.Create(&t2).Error; err != nil {
-		t.Fatalf("seed teacher t2: %v", err)
-	}
+	t2 := seedTeacherRaw(t, db, "T002", "李老师", "数学学院", "副教授")
 
 	seedCourseRaw(t, db, "CS101", "数据结构", 3.0, "计算机学院", t1.ID, "zh", []string{"核心课"}, []string{"2021"})
 	seedCourseRaw(t, db, "CS102", "算法设计", 3.0, "计算机学院", t1.ID, "en", []string{"选修课"}, []string{"2022"})

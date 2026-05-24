@@ -33,11 +33,13 @@ export interface TeacherListFilter {
 function buildQuery(filter: Record<string, unknown>): string {
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(filter)) {
-    if (value === undefined || value === null || value === "") continue
+    if (value === undefined || value === null) continue
+    const normalized = key === "q" && typeof value === "string" ? value.trim() : value
+    if (normalized === "") continue
     if (Array.isArray(value)) {
       for (const v of value) params.append(key, String(v))
     } else {
-      params.append(key, String(value))
+      params.append(key, String(normalized))
     }
   }
   const q = params.toString()

@@ -94,8 +94,9 @@ func newReviewView(e *ReviewEntity) review.ReviewView {
 }
 
 type ReviewRepository struct {
-	db    *gorm.DB
-	cache *redis.Client
+	db           *gorm.DB
+	cache        *redis.Client
+	searchConfig string
 }
 
 func (r2 *ReviewRepository) deleteReviewCache(ctx context.Context, reviewID, courseID int) {
@@ -257,7 +258,7 @@ func (r2 *ReviewRepository) applyFilter(db *gorm.DB, filter review.ReviewFilter)
 		db = db.Where("reviews.user_id = ?", filter.UserID)
 	}
 	if filter.Q != "" {
-		db = applySearchVectorFilter(db, "reviews.search_vector", filter.Q)
+		db = applySearchVectorFilter(db, r2.searchConfig, "reviews.search_vector", filter.Q)
 	}
 	if filter.Semester != "" {
 		db = db.Where("reviews.semester = ?", filter.Semester)
@@ -276,7 +277,7 @@ func (r2 *ReviewRepository) applySort(db *gorm.DB, filter review.ReviewFilter) *
 	if searchQuery(filter.Q) != "" && filter.OrderBy == "" {
 		db = db.Order(clause.Expr{
 			SQL:  searchRankOrder("reviews.search_vector", filter.Q),
-			Vars: []interface{}{searchConfig(db), searchQuery(filter.Q)},
+			Vars: []interface{}{r2.searchConfig, searchQuery(filter.Q)},
 		})
 	}
 	order := clause.OrderByColumn{Column: clause.Column{Table: "reviews", Name: "id"}, Desc: desc}
@@ -317,7 +318,7 @@ func (r2 *ReviewRepository) Create(ctx context.Context, r *review.Review) error 
 		if err := gorm.G[ReviewEntity](tx).Create(ctx, &e); err != nil {
 			return err
 		}
-		if err := refreshReviewSearchVector(tx, e.ID); err != nil {
+		if err := refreshReviewSearchVector(tx, r2.searchConfig, e.ID); err != nil {
 			return err
 		}
 		return r2.updateCourseStats(tx, r.CourseID)
@@ -338,7 +339,7 @@ func (r2 *ReviewRepository) Update(ctx context.Context, r *review.Review, rv rev
 		if _, err := gorm.G[ReviewEntity](tx).Where("id = ?", e.ID).Updates(ctx, e); err != nil {
 			return err
 		}
-		if err := refreshReviewSearchVector(tx, e.ID); err != nil {
+		if err := refreshReviewSearchVector(tx, r2.searchConfig, e.ID); err != nil {
 			return err
 		}
 		if err := gorm.G[ReviewRevisionEntity](tx).Create(ctx, &rr); err != nil {
@@ -401,7 +402,7 @@ func NewReviewRepository(db *gorm.DB, cache ...*redis.Client) *ReviewRepository 
 	if len(cache) > 0 {
 		client = cache[0]
 	}
-	return &ReviewRepository{db: db, cache: client}
+	return &ReviewRepository{db: db, cache: client, searchConfig: SearchConfig(db)}
 }
 
 var _ review.ReviewRepository = (*ReviewRepository)(nil)

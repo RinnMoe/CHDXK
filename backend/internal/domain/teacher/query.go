@@ -1,6 +1,11 @@
 package teacher
 
-import "context"
+import (
+	"context"
+	"strings"
+
+	pinyin "github.com/mozillazg/go-pinyin"
+)
 
 type FilterItem struct {
 	Name  string `json:"name"`
@@ -14,7 +19,6 @@ type TeacherFilter struct {
 	Q          string
 	Code       string
 	Name       string
-	Pinyin     string
 	Page       int
 	PageSize   int
 }
@@ -26,8 +30,38 @@ type TeacherView struct {
 	Name       string
 	Department string
 	Title      string
-	Pinyin     string
-	PinyinAbbr string
+}
+
+func NewSearchName(name string) string {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return ""
+	}
+
+	normalArgs := pinyin.NewArgs()
+	normalArgs.Style = pinyin.Normal
+	normal := pinyin.LazyPinyin(name, normalArgs)
+	spaced := strings.Join(normal, " ")
+	compact := strings.Join(normal, "")
+
+	abbrArgs := pinyin.NewArgs()
+	abbrArgs.Style = pinyin.FirstLetter
+	abbr := strings.Join(pinyin.LazyPinyin(name, abbrArgs), "")
+
+	parts := make([]string, 0, 4)
+	seen := make(map[string]struct{}, 4)
+	for _, part := range []string{name, spaced, compact, abbr} {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		if _, ok := seen[part]; ok {
+			continue
+		}
+		seen[part] = struct{}{}
+		parts = append(parts, part)
+	}
+	return strings.Join(parts, " ")
 }
 
 type TeacherFilters struct {

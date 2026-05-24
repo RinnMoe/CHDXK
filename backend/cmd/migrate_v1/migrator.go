@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/lib/pq"
-	pinyin "github.com/mozillazg/go-pinyin"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -16,6 +15,7 @@ import (
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/stat"
+	teacherdomain "jcourse/internal/domain/teacher"
 	"jcourse/internal/infrastructure/repository"
 )
 
@@ -93,6 +93,7 @@ func (m *Migrator) migrateTeachers(ctx *migrationContext) error {
 	log.Println("Migrating teachers...")
 
 	now := time.Now()
+	config := repository.SearchConfig(ctx.target)
 	total := 0
 	lastID := m.checkpoint.StageLastID(stage)
 	if lastID > 0 {
@@ -107,27 +108,26 @@ func (m *Migrator) migrateTeachers(ctx *migrationContext) error {
 			break
 		}
 
-		batch := make([]repository.TeacherEntity, 0, len(rows))
+		batch := make([]teacherUpsertRow, 0, len(rows))
 		for _, row := range rows {
 			code := strings.TrimSpace(nullStringValue(row.TID))
 			if code == "" {
 				return fmt.Errorf("legacy teacher %d has empty tid", row.ID)
 			}
-			fullPy, abbrPy := generatePinyin(row.Name)
-			batch = append(batch, repository.TeacherEntity{
+			searchName := teacherdomain.NewSearchName(row.Name)
+			batch = append(batch, teacherUpsertRow{
 				ID:           row.ID,
 				Code:         code,
 				Name:         row.Name,
 				Department:   legacyDepartmentName(row.Department),
 				Title:        nullStringValue(row.Title),
-				Pinyin:       fullPy,
-				PinyinAbbr:   abbrPy,
+				SearchName:   searchName,
 				LastSemester: legacySemesterName(row.LastSemester),
 				CreatedAt:    now,
 				UpdatedAt:    now,
 			})
 		}
-		if err := upsertTeachers(ctx.target, batch); err != nil {
+		if err := upsertTeachers(ctx.target, config, batch); err != nil {
 			return err
 		}
 		total += len(rows)
@@ -683,11 +683,37 @@ func queryLegacyCourseNotifications(db *gorm.DB, lastID int) ([]legacyCourseNoti
 	return rows, err
 }
 
-func upsertTeachers(db *gorm.DB, batch []repository.TeacherEntity) error {
+type teacherUpsertRow struct {
+	ID           int
+	Code         string
+	Name         string
+	Department   string
+	Title        string
+	SearchName   string
+	LastSemester string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
+func upsertTeachers(db *gorm.DB, config string, batch []teacherUpsertRow) error {
+	rows := make([]map[string]interface{}, 0, len(batch))
+	for _, teacher := range batch {
+		rows = append(rows, map[string]interface{}{
+			"id":            teacher.ID,
+			"code":          teacher.Code,
+			"name":          teacher.Name,
+			"department":    teacher.Department,
+			"title":         teacher.Title,
+			"search_vector": repository.TeacherSearchVectorExpr(config, teacher.Code, teacher.SearchName),
+			"last_semester": teacher.LastSemester,
+			"created_at":    teacher.CreatedAt,
+			"updated_at":    teacher.UpdatedAt,
+		})
+	}
 	return db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
 		DoNothing: true,
-	}).Create(&batch).Error
+	}).Model(&repository.TeacherEntity{}).Create(&rows).Error
 }
 
 func upsertCourses(db *gorm.DB, batch []repository.CourseEntity) error {
@@ -759,9 +785,6 @@ func (m *Migrator) refreshDerivedData() error {
 			rating_count = (SELECT COUNT(*) FROM reviews AS r WHERE r.course_id = c.id),
 			rating_avg = (SELECT COALESCE(AVG(rating), 0) FROM reviews AS r WHERE r.course_id = c.id)
 	`).Error; err != nil {
-		return err
-	}
-	if err := repository.RefreshTeacherSearchVectors(db); err != nil {
 		return err
 	}
 	if err := repository.RefreshCourseSearchVectors(db); err != nil {
@@ -1198,18 +1221,6 @@ func legacyTeacherIDs(teachers []legacyTeacher) []int64 {
 		ids = append(ids, int64(teacher.ID))
 	}
 	return ids
-}
-
-func generatePinyin(name string) (string, string) {
-	a := pinyin.NewArgs()
-	a.Style = pinyin.Normal
-	py := pinyin.LazyPinyin(name, a)
-	full := strings.Join(py, " ")
-
-	a.Style = pinyin.FirstLetter
-	abbrPy := pinyin.LazyPinyin(name, a)
-	abbr := strings.Join(abbrPy, "")
-	return full, abbr
 }
 
 func userLastSeen(row legacyUser, fallback time.Time) time.Time {

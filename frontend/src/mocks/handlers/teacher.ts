@@ -24,7 +24,7 @@ export const teacherHandlers = [
     const url = new URL(request.url)
     const department = url.searchParams.get("department") ?? ""
     const title = url.searchParams.get("title") ?? ""
-    const q = (url.searchParams.get("q") ?? "").toLowerCase()
+    const q = (url.searchParams.get("q") ?? "").trim().toLowerCase()
     const page = Number(url.searchParams.get("page") ?? "1")
     const pageSize = Number(url.searchParams.get("page_size") ?? "20")
 

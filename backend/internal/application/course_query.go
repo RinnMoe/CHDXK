@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"jcourse/internal/domain/auth"
@@ -68,8 +69,9 @@ func (s *CourseQueryService) GetCourseFilters(ctx context.Context) (*course.Cour
 }
 
 func (s *CourseQueryService) ListCourses(ctx context.Context, f CourseListFilter) (*PaginatedResult[CourseListItemDTO], error) {
+	q := strings.TrimSpace(f.Q)
 	filter := course.CourseFilter{
-		Q:           f.Q,
+		Q:           q,
 		Department:  f.Department,
 		Language:    f.Language,
 		Categories:  f.Categories,
@@ -246,9 +248,10 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 }
 
 func (s *CourseQueryService) ListTeacherCourses(ctx context.Context, teacherID int, f CourseListFilter) (*PaginatedResult[CourseListItemDTO], error) {
+	q := strings.TrimSpace(f.Q)
 	filter := course.CourseFilter{
 		TeacherID:   teacherID,
-		Q:           f.Q,
+		Q:           q,
 		Department:  f.Department,
 		Language:    f.Language,
 		Categories:  f.Categories,

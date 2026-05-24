@@ -30,8 +30,9 @@ func newCourseDomain(e *CourseEntity) course.Course {
 }
 
 type CourseRepository struct {
-	db    *gorm.DB
-	cache *redis.Client
+	db           *gorm.DB
+	cache        *redis.Client
+	searchConfig string
 }
 
 func NewCourseRepository(db *gorm.DB, cache ...*redis.Client) *CourseRepository {
@@ -39,7 +40,7 @@ func NewCourseRepository(db *gorm.DB, cache ...*redis.Client) *CourseRepository 
 	if len(cache) > 0 {
 		client = cache[0]
 	}
-	return &CourseRepository{db: db, cache: client}
+	return &CourseRepository{db: db, cache: client, searchConfig: SearchConfig(db)}
 }
 
 func (r *CourseRepository) baseCourseQuery(ctx context.Context) *gorm.DB {
@@ -57,7 +58,7 @@ func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm
 		db = db.Where("courses.id != ?", f.ExcludeID)
 	}
 	if f.Q != "" {
-		db = applySearchVectorFilter(db, "courses.search_vector", f.Q)
+		db = applySearchVectorFilter(db, r.searchConfig, "courses.search_vector", f.Q)
 	}
 	if f.Code != "" {
 		db = db.Where("LOWER(courses.code) = LOWER(?)", f.Code)

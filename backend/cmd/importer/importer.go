@@ -2,14 +2,13 @@ package main
 
 import (
 	"log"
-	"strings"
 	"time"
 
 	"github.com/lib/pq"
-	pinyin "github.com/mozillazg/go-pinyin"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
+	teacherdomain "jcourse/internal/domain/teacher"
 	"jcourse/internal/infrastructure/repository"
 )
 
@@ -45,11 +44,6 @@ func (imp *Importer) Run(rows []CSVRow) error {
 		log.Println("  Semester already imported, skipping offered courses.")
 	} else {
 		imp.createOfferedCourses(rows, teacherIDMap, courseIDMap)
-	}
-
-	log.Println("Refreshing teacher search vectors...")
-	if err := repository.RefreshTeacherSearchVectors(imp.db); err != nil {
-		return err
 	}
 
 	log.Println("Refreshing course search vectors...")
@@ -92,24 +86,15 @@ func collectUnique(rows []CSVRow) (
 	return
 }
 
-func generatePinyin(name string) (string, string) {
-	a := pinyin.NewArgs()
-	a.Style = pinyin.Normal
-	py := pinyin.LazyPinyin(name, a)
-	full := strings.Join(py, " ")
-
-	a.Style = pinyin.FirstLetter
-	abbrPy := pinyin.LazyPinyin(name, a)
-	abbr := strings.Join(abbrPy, "")
-	return full, abbr
-}
-
 func (imp *Importer) upsertTeachers(teachers map[string]TeacherInfo) {
+	config := repository.SearchConfig(imp.db)
 	onConflict := clause.OnConflict{
 		Columns: []clause.Column{{Name: "code"}},
 		DoUpdates: clause.Assignments(map[string]interface{}{
+			"name":          clause.Column{Table: "excluded", Name: "name"},
 			"department":    clause.Column{Table: "excluded", Name: "department"},
 			"title":         clause.Column{Table: "excluded", Name: "title"},
+			"search_vector": clause.Column{Table: "excluded", Name: "search_vector"},
 			"last_semester": clause.Column{Table: "excluded", Name: "last_semester"},
 			"updated_at":    clause.Column{Table: "excluded", Name: "updated_at"},
 		}),
@@ -120,23 +105,23 @@ func (imp *Importer) upsertTeachers(teachers map[string]TeacherInfo) {
 		},
 	}
 
-	var batch []repository.TeacherEntity
+	var batch []map[string]interface{}
 	count := 0
 	for code, info := range teachers {
-		fullPy, abbrPy := generatePinyin(info.Name)
-		batch = append(batch, repository.TeacherEntity{
-			Code:         code,
-			Name:         info.Name,
-			Department:   info.Department,
-			Title:        info.Title,
-			Pinyin:       fullPy,
-			PinyinAbbr:   abbrPy,
-			LastSemester: imp.semester,
-			CreatedAt:    time.Now(),
-			UpdatedAt:    time.Now(),
+		now := time.Now()
+		searchName := teacherdomain.NewSearchName(info.Name)
+		batch = append(batch, map[string]interface{}{
+			"code":          code,
+			"name":          info.Name,
+			"department":    info.Department,
+			"title":         info.Title,
+			"search_vector": repository.TeacherSearchVectorExpr(config, code, searchName),
+			"last_semester": imp.semester,
+			"created_at":    now,
+			"updated_at":    now,
 		})
 		if len(batch) >= batchSize {
-			imp.db.Clauses(onConflict).Create(&batch)
+			imp.db.Model(&repository.TeacherEntity{}).Clauses(onConflict).Create(&batch)
 			batch = batch[:0]
 		}
 		count++
@@ -145,7 +130,7 @@ func (imp *Importer) upsertTeachers(teachers map[string]TeacherInfo) {
 		}
 	}
 	if len(batch) > 0 {
-		imp.db.Clauses(onConflict).Create(&batch)
+		imp.db.Model(&repository.TeacherEntity{}).Clauses(onConflict).Create(&batch)
 	}
 	log.Printf("  Teachers: %d processed", count)
 }

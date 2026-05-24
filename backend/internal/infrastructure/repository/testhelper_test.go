@@ -12,6 +12,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
+	teacherdomain "jcourse/internal/domain/teacher"
 	"jcourse/internal/infrastructure/repository"
 )
 
@@ -117,22 +118,38 @@ func cleanTables(t *testing.T, db *gorm.DB, tables ...string) {
 	}
 }
 
-func seedTeacher(t *testing.T, db *gorm.DB) repository.TeacherEntity {
+func seedTeacherRaw(t *testing.T, db *gorm.DB, code, name, department, title string) repository.TeacherEntity {
 	t.Helper()
+	now := time.Now()
 	e := repository.TeacherEntity{
-		Code:       "T001",
-		Name:       "张三",
-		Department: "计算机学院",
-		Title:      "教授",
-		Pinyin:     "zhangsan",
-		PinyinAbbr: "zs",
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+		Code:       code,
+		Name:       name,
+		Department: department,
+		Title:      title,
+		CreatedAt:  now,
+		UpdatedAt:  now,
 	}
-	if err := db.Create(&e).Error; err != nil {
+	config := repository.SearchConfig(db)
+	if err := db.Model(&repository.TeacherEntity{}).Create(map[string]interface{}{
+		"code":          e.Code,
+		"name":          e.Name,
+		"department":    e.Department,
+		"title":         e.Title,
+		"search_vector": repository.TeacherSearchVectorExpr(config, e.Code, teacherdomain.NewSearchName(e.Name)),
+		"created_at":    e.CreatedAt,
+		"updated_at":    e.UpdatedAt,
+	}).Error; err != nil {
 		t.Fatalf("seed teacher: %v", err)
 	}
+	if err := db.Where("code = ?", code).Take(&e).Error; err != nil {
+		t.Fatalf("load seeded teacher: %v", err)
+	}
 	return e
+}
+
+func seedTeacher(t *testing.T, db *gorm.DB) repository.TeacherEntity {
+	t.Helper()
+	return seedTeacherRaw(t, db, "T001", "张三", "计算机学院", "教授")
 }
 
 func seedCourse(t *testing.T, db *gorm.DB, teacherID int) repository.CourseEntity {
