@@ -79,6 +79,18 @@ type legacyUser struct {
 	LastSeenAt   sql.NullTime
 }
 
+type legacyCourseNotificationLevel struct {
+	ID                int
+	UserID            sql.NullInt64
+	CourseID          sql.NullInt64
+	NotificationLevel int
+	ModifiedAt        time.Time
+}
+
+func (legacyCourseNotificationLevel) TableName() string {
+	return "jcourse_api_coursenotificationlevel"
+}
+
 type legacyReview struct {
 	ID              int
 	UserID          int

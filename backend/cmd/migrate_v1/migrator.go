@@ -57,6 +57,9 @@ func (m *Migrator) Run() error {
 	if err := m.migrateVotes(ctx); err != nil {
 		return fmt.Errorf("migrate votes: %w", err)
 	}
+	if err := m.migrateCourseNotifications(ctx); err != nil {
+		return fmt.Errorf("migrate course notifications: %w", err)
+	}
 	if err := m.refreshDerivedData(); err != nil {
 		return fmt.Errorf("refresh derived data: %w", err)
 	}
@@ -236,7 +239,7 @@ func (m *Migrator) migrateUsers(ctx *migrationContext) error {
 				Username:     row.Username,
 				Email:        sql.NullString{},
 				Role:         userRole(row),
-				PasswordHash: row.PasswordHash,
+				PasswordHash: migratePasswordHash(row.PasswordHash),
 				CreatedAt:    createdAt,
 				LastSeenAt:   userLastSeen(row, createdAt),
 				SuspendedAt:  nil,
@@ -490,6 +493,60 @@ func (m *Migrator) migrateReviewRevisions(ctx *migrationContext) error {
 	return nil
 }
 
+func (m *Migrator) migrateCourseNotifications(ctx *migrationContext) error {
+	const stage = "course_notifications"
+	if m.checkpoint.StageDone(stage) {
+		log.Println("Migrating course notifications... already done, skipping")
+		return nil
+	}
+	log.Println("Migrating course notifications...")
+
+	total := 0
+	lastID := m.checkpoint.StageLastID(stage)
+	if lastID > 0 {
+		log.Printf("  Resuming course notifications after legacy id %d", lastID)
+	}
+	for {
+		rows, err := queryLegacyCourseNotifications(m.source, lastID)
+		if err != nil {
+			return err
+		}
+		if len(rows) == 0 {
+			break
+		}
+
+		batch := make([]repository.CourseNotificationEntity, 0, len(rows))
+		for _, row := range rows {
+			if !row.UserID.Valid || !row.CourseID.Valid {
+				continue
+			}
+			batch = append(batch, repository.CourseNotificationEntity{
+				UserID:    int(row.UserID.Int64),
+				CourseID:  int(row.CourseID.Int64),
+				Level:     row.NotificationLevel,
+				CreatedAt: row.ModifiedAt,
+				UpdatedAt: row.ModifiedAt,
+			})
+		}
+		if len(batch) > 0 {
+			if err := upsertCourseNotifications(ctx.target, batch); err != nil {
+				return err
+			}
+		}
+		total += len(rows)
+		lastID = rows[len(rows)-1].ID
+		if err := m.checkpoint.MarkProgress(stage, lastID); err != nil {
+			return err
+		}
+		log.Printf("  Course notifications: %d migrated...", total)
+	}
+	if err := m.checkpoint.MarkDone(stage); err != nil {
+		return err
+	}
+	log.Printf("  Course notifications: %d migrated", total)
+	return nil
+}
+
 func queryLegacyTeachers(db *gorm.DB, lastID int) ([]legacyTeacher, error) {
 	var rows []legacyTeacher
 	err := db.
@@ -605,6 +662,18 @@ func queryLegacyUserPoints(db *gorm.DB, lastID int) ([]legacyUserPoint, error) {
 	return rows, err
 }
 
+func queryLegacyCourseNotifications(db *gorm.DB, lastID int) ([]legacyCourseNotificationLevel, error) {
+	var rows []legacyCourseNotificationLevel
+	err := db.Raw(`
+		SELECT id, user_id, course_id, notification_level, modified_at
+		FROM jcourse_api_coursenotificationlevel
+		WHERE id > ? AND notification_level IN (1, 2)
+		ORDER BY id
+		LIMIT ?
+	`, lastID, batchSize).Scan(&rows).Error
+	return rows, err
+}
+
 func upsertTeachers(db *gorm.DB, batch []repository.TeacherEntity) error {
 	return db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
@@ -650,6 +719,13 @@ func upsertVotes(db *gorm.DB, batch []repository.ReviewVoteEntity) error {
 func upsertUserPoints(db *gorm.DB, batch []repository.UserPointRecordEntity) error {
 	return db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
+		DoNothing: true,
+	}).Create(&batch).Error
+}
+
+func upsertCourseNotifications(db *gorm.DB, batch []repository.CourseNotificationEntity) error {
+	return db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}, {Name: "course_id"}},
 		DoNothing: true,
 	}).Create(&batch).Error
 }
@@ -719,6 +795,14 @@ func userRole(row legacyUser) string {
 		return auth.RoleAdmin
 	}
 	return auth.RoleUser
+}
+
+func migratePasswordHash(hash string) string {
+	hash = strings.TrimSpace(hash)
+	if hash == "" || strings.HasPrefix(hash, "!") {
+		return ""
+	}
+	return hash
 }
 
 func legacyDepartmentName(department *legacyDepartment) string {
