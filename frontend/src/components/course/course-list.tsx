@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import { CourseCard } from "./course-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { CourseListItemDTO } from "@/api/course"
@@ -5,6 +6,7 @@ import type { CourseListItemDTO } from "@/api/course"
 interface CourseListProps {
   courses: CourseListItemDTO[]
   isLoading?: boolean
+  renderAction?: (course: CourseListItemDTO) => ReactNode
 }
 
 function CourseCardSkeleton() {
@@ -29,7 +31,11 @@ function CourseCardSkeleton() {
   )
 }
 
-export function CourseList({ courses, isLoading }: CourseListProps) {
+export function CourseList({
+  courses,
+  isLoading,
+  renderAction,
+}: CourseListProps) {
   if (isLoading) {
     return (
       <div className="border-t">
@@ -70,7 +76,11 @@ export function CourseList({ courses, isLoading }: CourseListProps) {
   return (
     <div className="border-t">
       {courses.map((course) => (
-        <CourseCard key={course.id} course={course} />
+        <CourseCard
+          key={course.id}
+          course={course}
+          action={renderAction?.(course)}
+        />
       ))}
     </div>
   )

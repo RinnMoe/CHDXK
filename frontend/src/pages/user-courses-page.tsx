@@ -1,5 +1,16 @@
 import { Link, useSearchParams } from "react-router-dom"
-import { RiMessage3Line } from "@remixicon/react"
+import { RiDeleteBinLine, RiMessage3Line } from "@remixicon/react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -19,6 +30,7 @@ import {
   useCourseEnrollments,
   useFollowedCourses,
   useIgnoredCourses,
+  useSetNotificationLevel,
 } from "@/hooks/use-course"
 
 const PAGE_SIZE = 20
@@ -42,6 +54,7 @@ export function UserCoursesPage() {
     !!user && view === "followed"
   )
   const ignoredCourses = useIgnoredCourses(filter, !!user && view === "ignored")
+  const notificationMutation = useSetNotificationLevel()
   const enrolledItems = enrolledCourses.data ?? []
   const enrollmentSemesters = [
     ...new Set(enrolledItems.map((item) => item.semester)),
@@ -78,6 +91,42 @@ export function UserCoursesPage() {
     next.set("type", "enrolled")
     next.set("page", "1")
     setSearchParams(next)
+  }
+
+  function renderNotificationDeleteAction(
+    course: NonNullable<typeof activeCourseQuery.data>["items"][number]
+  ) {
+    const recordName = view === "followed" ? "关注记录" : "屏蔽记录"
+
+    return (
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="outline" size="sm">
+            <RiDeleteBinLine />
+            删除
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>删除{recordName}</AlertDialogTitle>
+            <AlertDialogDescription>
+              删除 {course.name} 的{recordName}。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() =>
+                notificationMutation.mutate({ courseID: course.id, level: 0 })
+              }
+            >
+              删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    )
   }
 
   return (
@@ -170,6 +219,7 @@ export function UserCoursesPage() {
                   ? followedCourses.isLoading
                   : ignoredCourses.isLoading)
               }
+              renderAction={renderNotificationDeleteAction}
             />
           )}
 
