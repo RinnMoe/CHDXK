@@ -50,7 +50,7 @@ func (ctrl *ApiKeyController) CreateMyApiKey(c *gin.Context) {
 
 	key, err := ctrl.command.CreateMyApiKey(c.Request.Context(), u.ID, cmd)
 	if err != nil {
-		if errors.Is(err, auth.ErrApiKeyNameRequired) {
+		if errors.Is(err, auth.ErrApiKeyNameRequired) || errors.Is(err, auth.ErrApiKeyLimitExceeded) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

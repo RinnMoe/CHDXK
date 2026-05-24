@@ -9,9 +9,10 @@ import (
 )
 
 const (
-	ApiKeyRoleSystem = "system"
-	ApiKeyRoleUser   = "user"
-	apiKeyPrefix     = "jc_"
+	ApiKeyRoleSystem   = "system"
+	ApiKeyRoleUser     = "user"
+	MaxUserApiKeyCount = 20
+	apiKeyPrefix       = "jc_"
 )
 
 type ApiKey struct {
@@ -27,6 +28,7 @@ type ApiKey struct {
 type ApiKeyRepository interface {
 	FindByKey(ctx context.Context, key string) (*ApiKey, error)
 	ListByUser(ctx context.Context, userID int) ([]ApiKey, error)
+	CountByUser(ctx context.Context, userID int) (int, error)
 	Create(ctx context.Context, apiKey *ApiKey) error
 	DeleteByUser(ctx context.Context, id int, userID int) (bool, error)
 	TouchLastUsed(ctx context.Context, id int, at time.Time) error
@@ -108,6 +110,14 @@ func (s *ApiKeyService) CreateUserKey(ctx context.Context, userID int, name stri
 	apiKey, err := NewUserApiKey(name, userID, time.Now())
 	if err != nil {
 		return nil, err
+	}
+
+	count, err := s.repo.CountByUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if count >= MaxUserApiKeyCount {
+		return nil, ErrApiKeyLimitExceeded
 	}
 	if err := s.repo.Create(ctx, apiKey); err != nil {
 		return nil, err

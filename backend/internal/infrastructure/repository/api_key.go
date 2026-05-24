@@ -80,6 +80,17 @@ func (r *ApiKeyRepository) ListByUser(ctx context.Context, userID int) ([]auth.A
 	return keys, nil
 }
 
+func (r *ApiKeyRepository) CountByUser(ctx context.Context, userID int) (int, error) {
+	var count int64
+	if err := r.db.WithContext(ctx).
+		Model(&ApiKeyEntity{}).
+		Where("role = ? AND user_id = ?", auth.ApiKeyRoleUser, userID).
+		Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return int(count), nil
+}
+
 func (r *ApiKeyRepository) Create(ctx context.Context, apiKey *auth.ApiKey) error {
 	e := newApiKeyEntity(apiKey)
 	if err := r.db.WithContext(ctx).Create(&e).Error; err != nil {

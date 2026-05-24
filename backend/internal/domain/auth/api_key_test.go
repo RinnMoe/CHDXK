@@ -71,6 +71,7 @@ func TestApiKeyRoleHelpers(t *testing.T) {
 type apiKeyServiceFakeRepo struct {
 	key       *ApiKey
 	keys      []ApiKey
+	count     int
 	created   *ApiKey
 	deleted   bool
 	touched   bool
@@ -78,6 +79,7 @@ type apiKeyServiceFakeRepo struct {
 	deleteID  int
 	deleteUID int
 	findErr   error
+	countErr  error
 	createErr error
 	deleteErr error
 	touchErr  error
@@ -96,6 +98,13 @@ func (r *apiKeyServiceFakeRepo) FindByKey(_ context.Context, key string) (*ApiKe
 
 func (r *apiKeyServiceFakeRepo) ListByUser(_ context.Context, _ int) ([]ApiKey, error) {
 	return r.keys, nil
+}
+
+func (r *apiKeyServiceFakeRepo) CountByUser(_ context.Context, _ int) (int, error) {
+	if r.countErr != nil {
+		return 0, r.countErr
+	}
+	return r.count, nil
 }
 
 func (r *apiKeyServiceFakeRepo) Create(_ context.Context, apiKey *ApiKey) error {
@@ -146,7 +155,7 @@ func TestApiKeyService_MarkKeyUsedTouchesLastUsed(t *testing.T) {
 }
 
 func TestApiKeyService_CreateUserKey(t *testing.T) {
-	repo := &apiKeyServiceFakeRepo{}
+	repo := &apiKeyServiceFakeRepo{count: MaxUserApiKeyCount - 1}
 	svc := NewApiKeyService(repo)
 	got, err := svc.CreateUserKey(context.Background(), 8, " local ")
 	if err != nil {
@@ -160,6 +169,18 @@ func TestApiKeyService_CreateUserKey(t *testing.T) {
 	}
 	if got.Name != "local" {
 		t.Fatalf("Name = %q, want %q", got.Name, "local")
+	}
+}
+
+func TestApiKeyService_CreateUserKeyRejectsLimit(t *testing.T) {
+	repo := &apiKeyServiceFakeRepo{count: MaxUserApiKeyCount}
+	svc := NewApiKeyService(repo)
+	_, err := svc.CreateUserKey(context.Background(), 8, " local ")
+	if !errors.Is(err, ErrApiKeyLimitExceeded) {
+		t.Fatalf("CreateUserKey error = %v, want ErrApiKeyLimitExceeded", err)
+	}
+	if repo.created != nil {
+		t.Fatalf("created key = %+v, want nil", repo.created)
 	}
 }
 

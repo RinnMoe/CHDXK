@@ -36,6 +36,10 @@ func (r *fakeApiKeyRepo) ListByUser(_ context.Context, _ int) ([]auth.ApiKey, er
 	return nil, nil
 }
 
+func (r *fakeApiKeyRepo) CountByUser(_ context.Context, _ int) (int, error) {
+	return 0, nil
+}
+
 func (r *fakeApiKeyRepo) Create(_ context.Context, _ *auth.ApiKey) error {
 	return nil
 }
