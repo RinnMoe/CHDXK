@@ -103,7 +103,7 @@ func (s *SiteStatsQueryService) ListDaily(ctx context.Context, f SiteDailyStatLi
 
 func mustStatsLocation(config stat.Config) *time.Location {
 	if strings.TrimSpace(config.Timezone) == "" {
-		config.Timezone = stat.DefaultConfig().Timezone
+		config.Timezone = stat.DefaultConfig.Timezone
 	}
 	loc, err := time.LoadLocation(config.Timezone)
 	if err != nil {

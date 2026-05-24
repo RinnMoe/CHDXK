@@ -6,11 +6,15 @@ import (
 
 	"github.com/hibiken/asynq"
 
-	"jcourse/config"
 	domaintask "jcourse/internal/domain/task"
+	"jcourse/internal/infrastructure/persistence"
 )
 
-func redisOpt(conf config.RedisConfig) asynq.RedisConnOpt {
+type Config struct {
+	Concurrency int `mapstructure:"concurrency"`
+}
+
+func redisOpt(conf persistence.RedisConfig) asynq.RedisConnOpt {
 	return asynq.RedisClientOpt{
 		Addr:     conf.Addr,
 		Username: conf.Username,
@@ -23,7 +27,7 @@ type asynqEnqueuer struct {
 	client *asynq.Client
 }
 
-func NewClient(conf config.RedisConfig) *asynq.Client {
+func NewClient(conf persistence.RedisConfig) *asynq.Client {
 	return asynq.NewClient(redisOpt(conf))
 }
 
@@ -42,18 +46,18 @@ func (e *asynqEnqueuer) Enqueue(ctx context.Context, t domaintask.Task, opts ...
 	return err
 }
 
-func NewServer(conf config.AppConfig) *asynq.Server {
-	concurrency := conf.Asynq.Concurrency
+func NewServer(redisConf persistence.RedisConfig, conf Config) *asynq.Server {
+	concurrency := conf.Concurrency
 	if concurrency <= 0 {
 		concurrency = 10
 	}
-	return asynq.NewServer(redisOpt(conf.Redis), asynq.Config{
+	return asynq.NewServer(redisOpt(redisConf), asynq.Config{
 		Concurrency: concurrency,
 	})
 }
 
-func NewScheduler(conf config.AppConfig, loc *time.Location) *asynq.Scheduler {
-	return asynq.NewScheduler(redisOpt(conf.Redis), &asynq.SchedulerOpts{Location: loc})
+func NewScheduler(redisConf persistence.RedisConfig, loc *time.Location) *asynq.Scheduler {
+	return asynq.NewScheduler(redisOpt(redisConf), &asynq.SchedulerOpts{Location: loc})
 }
 
 func RegisterScheduledTask(s *asynq.Scheduler, cronspec string, t domaintask.Task, opts ...domaintask.EnqueueOption) (string, error) {

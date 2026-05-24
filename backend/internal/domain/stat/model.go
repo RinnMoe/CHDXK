@@ -16,12 +16,10 @@ type Config struct {
 	Timezone         string
 }
 
-func DefaultConfig() Config {
-	return Config{
-		DailyCron:        "10 0 * * *",
-		SchedulerEnabled: true,
-		Timezone:         DefaultTimezoneName,
-	}
+var DefaultConfig = Config{
+	DailyCron:        "10 0 * * *",
+	SchedulerEnabled: true,
+	Timezone:         DefaultTimezoneName,
 }
 
 var ErrInvalidDateRange = errors.New("invalid date range")

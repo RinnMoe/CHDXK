@@ -14,9 +14,7 @@ type AdminConfig struct {
 	DefaultSuspendDays int
 }
 
-func DefaultAdminConfig() AdminConfig {
-	return AdminConfig{DefaultSuspendDays: 30}
-}
+var DefaultAdminConfig = AdminConfig{DefaultSuspendDays: 30}
 
 type User struct {
 	ID          int

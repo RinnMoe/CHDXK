@@ -1,17 +1,13 @@
 package app
 
 import (
-	"time"
-
 	"jcourse/config"
 	"jcourse/internal/application"
 	"jcourse/internal/domain/account"
 	"jcourse/internal/domain/auth"
-	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/review/policy"
-	"jcourse/internal/domain/stat"
 	"jcourse/internal/infrastructure/email"
 	"jcourse/internal/infrastructure/persistence"
 	"jcourse/internal/infrastructure/repository"
@@ -57,16 +53,12 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	courseHotRepo := repository.NewGormCourseHotRepository(db, redisClient)
 	verificationRepo := repository.NewVerificationCodeRepository(redisClient)
 	resetCodeRepo := repository.NewVerificationCodeRepositoryWithPrefix(redisClient, "reset")
-	loginAttemptRepo := repository.NewLoginAttemptRepository(redisClient, time.Duration(conf.Auth.LoginLockoutDuration)*time.Second)
-	usernameDeriver := account.NewBLAKE2bUsernameDeriver(conf.Auth.UsernameSalt)
+	loginAttemptRepo := repository.NewLoginAttemptRepository(redisClient, conf.Auth.Login.Lockout)
+	usernameDeriver := account.NewBLAKE2bUsernameDeriver(conf.Auth.UsernameDeriver)
 
 	reviewQuery := application.NewReviewQueryService(reviewRepo, voteRepo, notificationRepo)
 
-	freqPolicy := policy.NewFrequencyPolicy(reviewRepo, policy.FrequencyPolicyConfig{
-		Window:          time.Duration(conf.Review.FrequencyWindowSeconds) * time.Second,
-		MaxReviews:      conf.Review.FrequencyMaxReviews,
-		SimilarityRatio: conf.Review.SimilarityRatio,
-	})
+	freqPolicy := policy.NewFrequencyPolicy(reviewRepo, conf.Review.FrequencyPolicy)
 	safetyPolicy := policy.NewSafetyPolicy(nil)
 
 	reviewCommand := application.NewReviewCommandService(
@@ -74,37 +66,24 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		reviewRepo,
 		voteRepo,
 		courseHotRepo,
-		application.ReviewCommandConfig{
-			HotScores: course.HotScoreConfig{
-				ReviewCreateScore: conf.CourseHot.ReviewCreateScore,
-				ReviewUpdateScore: conf.CourseHot.ReviewUpdateScore,
-				ReviewVoteScore:   conf.CourseHot.ReviewVoteScore,
-			},
-			Vote: review.VoteConfig{MaxDailyVotes: conf.Review.MaxDailyVotes},
-		},
+		conf.Review.Command,
 		[]review.CreatePolicy{freqPolicy, safetyPolicy},
 	)
 	courseQuery := application.NewCourseQueryService(courseRepo, teacherRepo, reviewRepo, notificationRepo, courseHotRepo)
 	courseCommand := application.NewCourseCommandService(courseRepo, notificationRepo)
 	teacherQuery := application.NewTeacherQueryService(teacherRepo)
 	announcementQuery := application.NewAnnouncementQueryService(announcementRepo)
-	transferService := point.NewTransferService(point.TransferFeeConfig{
-		RateBps: conf.Point.TransferFeeRateBps,
-		MinFee:  conf.Point.TransferMinFee,
-	})
+	transferService := point.NewTransferService(conf.Point)
 	pointQuery := application.NewPointQueryService(pointRepo, accountRepo, transferService, usernameDeriver)
 	pointCommand := application.NewPointCommandService(accountRepo, pointRepo, transferService)
-	statsConfig := stat.Config{Timezone: conf.Stats.Timezone}
+	statsConfig := conf.Stats
 	siteStatsQuery := application.NewSiteStatsQueryService(statRepo, statsConfig)
 	siteStatsCommand := application.NewSiteStatsCommandService(statRepo, statRepo, statsConfig)
 	currentUserService := auth.NewCurrentUserService(userRepo)
 	accountQuery := application.NewAccountQueryService(accountRepo)
 	adminUserQuery := application.NewAdminUserQueryService(accountRepo, userRepo, usernameDeriver)
-	adminUserCommand := application.NewAdminUserCommandService(userRepo, application.AdminUserCommandConfig{DefaultSuspendDays: conf.Admin.DefaultSuspendDays})
-	hasher := account.NewDjangoPBKDF2SHA256PasswordHasher(account.PasswordHashConfig{
-		Iterations: conf.Auth.PasswordHashIterations,
-		SaltLength: conf.Auth.PasswordSaltLength,
-	})
+	adminUserCommand := application.NewAdminUserCommandService(userRepo, conf.Admin)
+	hasher := account.NewDjangoPBKDF2SHA256PasswordHasher(conf.Auth.PasswordHash)
 	verificationSender := email.NewSMTPVerificationCodeSender(conf.SMTP)
 	registrationService := account.NewRegistrationService(
 		accountRepo,
@@ -112,22 +91,14 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		verificationSender,
 		hasher,
 		usernameDeriver,
-		account.RegistrationConfig{
-			EmailWhitelist: conf.Auth.EmailWhitelist,
-			CodeInterval:   time.Duration(conf.Auth.VerificationCodeInterval) * time.Second,
-			CodeTTL:        time.Duration(conf.Auth.VerificationCodeTTL) * time.Second,
-			CodeLength:     conf.Auth.VerificationCodeLength,
-		},
+		conf.Auth.Registration,
 	)
 	loginService := account.NewLoginService(
 		accountRepo,
 		hasher,
 		loginAttemptRepo,
 		usernameDeriver,
-		account.LoginConfig{
-			MaxAttempts: conf.Auth.MaxLoginAttempts,
-			Lockout:     time.Duration(conf.Auth.LoginLockoutDuration) * time.Second,
-		},
+		conf.Auth.Login,
 	)
 	passwordResetService := account.NewPasswordResetService(
 		accountRepo,
@@ -135,11 +106,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		verificationSender,
 		hasher,
 		usernameDeriver,
-		account.PasswordResetConfig{
-			CodeInterval: time.Duration(conf.Auth.VerificationCodeInterval) * time.Second,
-			CodeTTL:      time.Duration(conf.Auth.VerificationCodeTTL) * time.Second,
-			CodeLength:   conf.Auth.VerificationCodeLength,
-		},
+		conf.Auth.PasswordReset,
 	)
 	accountCommand := application.NewAccountCommandService(
 		registrationService,
@@ -147,7 +114,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		passwordResetService,
 		currentUserService,
 	)
-	apiKeySvc := auth.NewApiKeyService(apiKeyRepo, auth.ApiKeyConfig{MaxUserKeys: conf.APIKey.MaxUserKeys})
+	apiKeySvc := auth.NewApiKeyService(apiKeyRepo, conf.APIKey)
 	apiKeyQuery := application.NewApiKeyQueryService(apiKeySvc)
 	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc)
 

@@ -6,16 +6,23 @@ import (
 
 	"gopkg.in/gomail.v2"
 
-	"jcourse/config"
 	"jcourse/internal/domain/account"
 )
+
+type SMTPConfig struct {
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+	From     string `mapstructure:"from"`
+}
 
 type SMTPVerificationCodeSender struct {
 	dialer *gomail.Dialer
 	from   string
 }
 
-func NewSMTPVerificationCodeSender(conf config.SMTPConfig) *SMTPVerificationCodeSender {
+func NewSMTPVerificationCodeSender(conf SMTPConfig) *SMTPVerificationCodeSender {
 	return &SMTPVerificationCodeSender{
 		dialer: gomail.NewDialer(conf.Host, conf.Port, conf.Username, conf.Password),
 		from:   conf.From,

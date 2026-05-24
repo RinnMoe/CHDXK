@@ -133,7 +133,7 @@ func (r *apiKeyServiceFakeRepo) TouchLastUsed(_ context.Context, _ int, _ time.T
 
 func TestApiKeyService_ValidateKeyReturnsKey(t *testing.T) {
 	repo := &apiKeyServiceFakeRepo{key: &ApiKey{ID: 1, Key: "k1", Role: ApiKeyRoleSystem}}
-	svc := NewApiKeyService(repo, DefaultApiKeyConfig())
+	svc := NewApiKeyService(repo, DefaultApiKeyConfig)
 	got, err := svc.ValidateKey(context.Background(), "k1")
 	if err != nil {
 		t.Fatalf("ValidateKey: %v", err)
@@ -145,7 +145,7 @@ func TestApiKeyService_ValidateKeyReturnsKey(t *testing.T) {
 
 func TestApiKeyService_MarkKeyUsedTouchesLastUsed(t *testing.T) {
 	repo := &apiKeyServiceFakeRepo{}
-	svc := NewApiKeyService(repo, DefaultApiKeyConfig())
+	svc := NewApiKeyService(repo, DefaultApiKeyConfig)
 	if err := svc.MarkKeyUsed(context.Background(), 1); err != nil {
 		t.Fatalf("MarkKeyUsed: %v", err)
 	}
@@ -155,8 +155,8 @@ func TestApiKeyService_MarkKeyUsedTouchesLastUsed(t *testing.T) {
 }
 
 func TestApiKeyService_CreateUserKey(t *testing.T) {
-	repo := &apiKeyServiceFakeRepo{count: DefaultApiKeyConfig().MaxUserKeys - 1}
-	svc := NewApiKeyService(repo, DefaultApiKeyConfig())
+	repo := &apiKeyServiceFakeRepo{count: DefaultApiKeyConfig.MaxUserKeys - 1}
+	svc := NewApiKeyService(repo, DefaultApiKeyConfig)
 	got, err := svc.CreateUserKey(context.Background(), 8, " local ")
 	if err != nil {
 		t.Fatalf("CreateUserKey: %v", err)
@@ -173,8 +173,8 @@ func TestApiKeyService_CreateUserKey(t *testing.T) {
 }
 
 func TestApiKeyService_CreateUserKeyRejectsLimit(t *testing.T) {
-	repo := &apiKeyServiceFakeRepo{count: DefaultApiKeyConfig().MaxUserKeys}
-	svc := NewApiKeyService(repo, DefaultApiKeyConfig())
+	repo := &apiKeyServiceFakeRepo{count: DefaultApiKeyConfig.MaxUserKeys}
+	svc := NewApiKeyService(repo, DefaultApiKeyConfig)
 	_, err := svc.CreateUserKey(context.Background(), 8, " local ")
 	if !errors.Is(err, ErrApiKeyLimitExceeded) {
 		t.Fatalf("CreateUserKey error = %v, want ErrApiKeyLimitExceeded", err)
@@ -186,7 +186,7 @@ func TestApiKeyService_CreateUserKeyRejectsLimit(t *testing.T) {
 
 func TestApiKeyService_DeleteUserKey(t *testing.T) {
 	repo := &apiKeyServiceFakeRepo{deleteOK: true}
-	svc := NewApiKeyService(repo, DefaultApiKeyConfig())
+	svc := NewApiKeyService(repo, DefaultApiKeyConfig)
 	if err := svc.DeleteUserKey(context.Background(), 8, 11); err != nil {
 		t.Fatalf("DeleteUserKey: %v", err)
 	}
@@ -197,7 +197,7 @@ func TestApiKeyService_DeleteUserKey(t *testing.T) {
 
 func TestApiKeyService_DeleteUserKeyMissing(t *testing.T) {
 	repo := &apiKeyServiceFakeRepo{deleteOK: false}
-	svc := NewApiKeyService(repo, DefaultApiKeyConfig())
+	svc := NewApiKeyService(repo, DefaultApiKeyConfig)
 	err := svc.DeleteUserKey(context.Background(), 8, 11)
 	if !errors.Is(err, ErrApiKeyNotFound) {
 		t.Fatalf("DeleteUserKey error = %v, want ErrApiKeyNotFound", err)

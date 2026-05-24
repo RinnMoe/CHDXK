@@ -14,12 +14,10 @@ type RegistrationConfig struct {
 	CodeLength     int
 }
 
-func DefaultRegistrationConfig() RegistrationConfig {
-	return RegistrationConfig{
-		CodeInterval: time.Minute,
-		CodeTTL:      10 * time.Minute,
-		CodeLength:   6,
-	}
+var DefaultRegistrationConfig = RegistrationConfig{
+	CodeInterval: time.Minute,
+	CodeTTL:      10 * time.Minute,
+	CodeLength:   6,
 }
 
 type RegistrationService struct {
@@ -40,7 +38,7 @@ func NewRegistrationService(
 	usernames UsernameDeriver,
 	config RegistrationConfig,
 ) *RegistrationService {
-	defaults := DefaultRegistrationConfig()
+	defaults := DefaultRegistrationConfig
 	if config.CodeInterval <= 0 {
 		config.CodeInterval = defaults.CodeInterval
 	}

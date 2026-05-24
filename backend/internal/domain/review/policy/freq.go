@@ -23,12 +23,10 @@ type FrequencyPolicyConfig struct {
 	SimilarityRatio float64
 }
 
-func DefaultFrequencyPolicyConfig() FrequencyPolicyConfig {
-	return FrequencyPolicyConfig{
-		Window:          time.Hour,
-		MaxReviews:      10,
-		SimilarityRatio: 0.7,
-	}
+var DefaultFrequencyPolicyConfig = FrequencyPolicyConfig{
+	Window:          time.Hour,
+	MaxReviews:      10,
+	SimilarityRatio: 0.7,
 }
 
 type FrequencyPolicy struct {
@@ -37,7 +35,7 @@ type FrequencyPolicy struct {
 }
 
 func NewFrequencyPolicy(query review.ReviewQuery, config FrequencyPolicyConfig) *FrequencyPolicy {
-	defaults := DefaultFrequencyPolicyConfig()
+	defaults := DefaultFrequencyPolicyConfig
 	if config.Window <= 0 {
 		config.Window = defaults.Window
 	}

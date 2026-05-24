@@ -50,7 +50,7 @@ func main() {
 	domaintask.SetEnqueuer(infratask.NewEnqueuer(client))
 
 	statsLoc := mustLoadStatsLocation()
-	scheduler := infratask.NewScheduler(conf, statsLoc)
+	scheduler := infratask.NewScheduler(conf.Redis, statsLoc)
 	defer scheduler.Shutdown()
 	if conf.Stats.SchedulerEnabled && conf.Stats.DailyCron != "" {
 		if _, err := infratask.RegisterScheduledTask(
@@ -65,7 +65,7 @@ func main() {
 		}
 	}
 
-	server := infratask.NewServer(conf)
+	server := infratask.NewServer(conf.Redis, conf.Asynq)
 	mux := async.NewMux(container)
 
 	fmt.Println("task worker starting...")

@@ -11,11 +11,9 @@ type LoginConfig struct {
 	Lockout     time.Duration
 }
 
-func DefaultLoginConfig() LoginConfig {
-	return LoginConfig{
-		MaxAttempts: 5,
-		Lockout:     15 * time.Minute,
-	}
+var DefaultLoginConfig = LoginConfig{
+	MaxAttempts: 5,
+	Lockout:     15 * time.Minute,
 }
 
 type LoginService struct {
@@ -33,7 +31,7 @@ func NewLoginService(
 	usernames UsernameDeriver,
 	config LoginConfig,
 ) *LoginService {
-	defaults := DefaultLoginConfig()
+	defaults := DefaultLoginConfig
 	if config.MaxAttempts <= 0 {
 		config.MaxAttempts = defaults.MaxAttempts
 	}

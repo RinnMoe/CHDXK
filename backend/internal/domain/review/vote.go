@@ -15,9 +15,7 @@ type VoteConfig struct {
 	MaxDailyVotes int
 }
 
-func DefaultVoteConfig() VoteConfig {
-	return VoteConfig{MaxDailyVotes: 50}
-}
+var DefaultVoteConfig = VoteConfig{MaxDailyVotes: 50}
 
 type Vote struct {
 	ReviewID  int
@@ -44,7 +42,7 @@ type VoteService struct {
 
 func NewVoteService(reviewRepo ReviewRepository, voteRepo VoteRepository, config VoteConfig) *VoteService {
 	if config.MaxDailyVotes <= 0 {
-		config.MaxDailyVotes = DefaultVoteConfig().MaxDailyVotes
+		config.MaxDailyVotes = DefaultVoteConfig.MaxDailyVotes
 	}
 	return &VoteService{reviewRepo: reviewRepo, voteRepo: voteRepo, config: config}
 }

@@ -138,7 +138,7 @@ func newReviewCommandTestService(reviewRepo *fakeCommandReviewRepo, voteRepo *fa
 				ReviewUpdateScore: 2,
 				ReviewVoteScore:   1,
 			},
-			Vote: review.DefaultVoteConfig(),
+			Vote: review.DefaultVoteConfig,
 		},
 		nil,
 	)

@@ -23,11 +23,9 @@ type PasswordHashConfig struct {
 	SaltLength int
 }
 
-func DefaultPasswordHashConfig() PasswordHashConfig {
-	return PasswordHashConfig{
-		Iterations: djangoPBKDF2SHA256Iterations,
-		SaltLength: djangoSaltLength,
-	}
+var DefaultPasswordHashConfig = PasswordHashConfig{
+	Iterations: djangoPBKDF2SHA256Iterations,
+	SaltLength: djangoSaltLength,
 }
 
 type PasswordHasher interface {
@@ -41,7 +39,7 @@ type DjangoPBKDF2SHA256PasswordHasher struct {
 }
 
 func NewDjangoPBKDF2SHA256PasswordHasher(config PasswordHashConfig) *DjangoPBKDF2SHA256PasswordHasher {
-	defaults := DefaultPasswordHashConfig()
+	defaults := DefaultPasswordHashConfig
 	if config.Iterations <= 0 {
 		config.Iterations = defaults.Iterations
 	}

@@ -15,12 +15,16 @@ type UsernameDeriver interface {
 	UsernameFromEmail(email string) (string, error)
 }
 
+type UsernameDeriverConfig struct {
+	Salt string
+}
+
 type BLAKE2bUsernameDeriver struct {
 	salt string
 }
 
-func NewBLAKE2bUsernameDeriver(salt string) *BLAKE2bUsernameDeriver {
-	return &BLAKE2bUsernameDeriver{salt: salt}
+func NewBLAKE2bUsernameDeriver(config UsernameDeriverConfig) *BLAKE2bUsernameDeriver {
+	return &BLAKE2bUsernameDeriver{salt: config.Salt}
 }
 
 func NewEmailWhitelist(entries []string) EmailWhitelist {

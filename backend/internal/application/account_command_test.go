@@ -333,7 +333,7 @@ func accountUsernameFromEmail(email string) string {
 }
 
 func testUsernameDeriver() account.UsernameDeriver {
-	return account.NewBLAKE2bUsernameDeriver("SALT")
+	return account.NewBLAKE2bUsernameDeriver(account.UsernameDeriverConfig{Salt: "SALT"})
 }
 
 func (r *fakeAccountRepo) Create(_ context.Context, acct *account.Account) error {

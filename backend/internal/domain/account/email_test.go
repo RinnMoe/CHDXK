@@ -22,7 +22,7 @@ func TestEmailWhitelist_AllowsExactAndDomain(t *testing.T) {
 }
 
 func TestUsernameFromEmail(t *testing.T) {
-	deriver := NewBLAKE2bUsernameDeriver("SALT")
+	deriver := NewBLAKE2bUsernameDeriver(UsernameDeriverConfig{Salt: "SALT"})
 	got, err := deriver.UsernameFromEmail("Alice@Example.EDU")
 	if err != nil {
 		t.Fatalf("UsernameFromEmail: %v", err)

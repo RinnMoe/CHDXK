@@ -112,7 +112,7 @@ func newPointControllerCommand() *application.PointCommandService {
 }
 
 func testPointUsernameDeriver() account.UsernameDeriver {
-	return account.NewBLAKE2bUsernameDeriver("SALT")
+	return account.NewBLAKE2bUsernameDeriver(account.UsernameDeriverConfig{Salt: "SALT"})
 }
 
 type pointControllerFakeAccountRepo struct {

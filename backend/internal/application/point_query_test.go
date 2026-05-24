@@ -20,7 +20,7 @@ func TestPointQueryService_GetUserPoints(t *testing.T) {
 		},
 		recordTotal: 2,
 	}
-	svc := application.NewPointQueryService(repo, &fakeAccountRepoForQuery{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), account.NewBLAKE2bUsernameDeriver("SALT"))
+	svc := application.NewPointQueryService(repo, &fakeAccountRepoForQuery{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), account.NewBLAKE2bUsernameDeriver(account.UsernameDeriverConfig{Salt: "SALT"}))
 
 	result, err := svc.GetUserPoints(context.Background(), 7, application.PointRecordListFilter{Page: 1, PageSize: 20})
 	if err != nil {
@@ -42,7 +42,7 @@ func TestPointQueryService_GetUserPoints(t *testing.T) {
 
 func TestPointQueryService_PreviewTransfer(t *testing.T) {
 	repo := &fakePointQuery{total: 500}
-	svc := application.NewPointQueryService(repo, &fakeAccountRepoForQuery{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), account.NewBLAKE2bUsernameDeriver("SALT"))
+	svc := application.NewPointQueryService(repo, &fakeAccountRepoForQuery{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), account.NewBLAKE2bUsernameDeriver(account.UsernameDeriverConfig{Salt: "SALT"}))
 
 	got, err := svc.PreviewTransfer(context.Background(), 7, application.PreviewTransferParams{Amount: 100, FeePayer: point.FeePayerRecipient})
 	if err != nil {

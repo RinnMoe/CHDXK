@@ -4,11 +4,16 @@ import (
 	"context"
 
 	"github.com/redis/go-redis/v9"
-
-	"jcourse/config"
 )
 
-func NewRedisClient(conf config.RedisConfig) *redis.Client {
+type RedisConfig struct {
+	Addr     string `mapstructure:"addr"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+	DB       int    `mapstructure:"db"`
+}
+
+func NewRedisClient(conf RedisConfig) *redis.Client {
 	client := redis.NewClient(&redis.Options{
 		Addr:     conf.Addr,
 		Username: conf.Username,

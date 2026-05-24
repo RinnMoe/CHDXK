@@ -18,9 +18,7 @@ type ApiKeyConfig struct {
 	MaxUserKeys int
 }
 
-func DefaultApiKeyConfig() ApiKeyConfig {
-	return ApiKeyConfig{MaxUserKeys: 20}
-}
+var DefaultApiKeyConfig = ApiKeyConfig{MaxUserKeys: 20}
 
 type ApiKey struct {
 	ID         int
@@ -48,7 +46,7 @@ type ApiKeyService struct {
 
 func NewApiKeyService(repo ApiKeyRepository, config ApiKeyConfig) *ApiKeyService {
 	if config.MaxUserKeys <= 0 {
-		config.MaxUserKeys = DefaultApiKeyConfig().MaxUserKeys
+		config.MaxUserKeys = DefaultApiKeyConfig.MaxUserKeys
 	}
 	return &ApiKeyService{repo: repo, config: config}
 }

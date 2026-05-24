@@ -58,7 +58,7 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 
 	validKey := "test-api-key-123"
 	repo := &fakeApiKeyRepo{key: validKey, apiKey: &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleSystem, UserID: 0}}
-	svc := auth.NewApiKeyService(repo, auth.DefaultApiKeyConfig())
+	svc := auth.NewApiKeyService(repo, auth.DefaultApiKeyConfig)
 
 	handler := middleware.SystemAPIKeyAuth(svc)
 
@@ -149,7 +149,7 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 func TestSystemAPIKeyAuth_RepoError(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	svc := auth.NewApiKeyService(&fakeApiKeyRepo{err: errors.New("db down")}, auth.DefaultApiKeyConfig())
+	svc := auth.NewApiKeyService(&fakeApiKeyRepo{err: errors.New("db down")}, auth.DefaultApiKeyConfig)
 	handler := middleware.SystemAPIKeyAuth(svc)
 
 	r := gin.New()

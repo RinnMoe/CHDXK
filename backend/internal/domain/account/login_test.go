@@ -179,7 +179,7 @@ func mustUsernameFromEmail(t *testing.T, email string) string {
 }
 
 func testUsernameDeriver() UsernameDeriver {
-	return NewBLAKE2bUsernameDeriver("SALT")
+	return NewBLAKE2bUsernameDeriver(UsernameDeriverConfig{Salt: "SALT"})
 }
 
 type lockFakeAttempts struct {

@@ -73,7 +73,7 @@ internal/
 - **Config**: `AppConfig` with `Server`, `Postgres`, `Redis`, `Session`, `Auth`, `Point`, `Asynq`, `SMTP` sections; env override via `JCOURSE_` prefix.
 - **Auth**: email/password registration with verification codes (Redis-backed, configurable TTL/interval). Passwords use Django-compatible PBKDF2-SHA256 hashing. Sessions stored in Redis via `gin-contrib/sessions`. Email domains restricted via `Auth.EmailWhitelist`. Password reset flow uses verification codes. Login lockout tracks failed attempts via `login_attempt` repository.
 - **API keys**: external clients authenticate via `APIKeyAuth` middleware for `/api/ext/*` routes.
-- **Points & transfers**: users have a point balance; transfers between users charge a fee computed as `max(amount * RateBps / 10000, MinFee)`. Configured via `Point.TransferFeeRateBps` and `Point.TransferMinFee`.
+- **Points & transfers**: users have a point balance; transfers between users charge a fee computed as `max(amount * RateBps / 10000, MinFee)`. Configured via `point.transfer_fee_rate_bps` and `point.transfer_min_fee`.
 - **Async tasks**: `domain/task` defines `Task` and `Enqueuer` interfaces and a package-level `Enqueue` function backed by a global enqueuer (set via `task.SetEnqueuer`). `infrastructure/task` provides the asynq-backed implementation. `interface/async` builds the asynq `ServeMux` and registers handlers. The API process injects the enqueuer at startup; `cmd/taskworker` runs the asynq server with graceful shutdown on SIGINT/SIGTERM.
 
 ### Routes (all under `/api`)

@@ -13,12 +13,10 @@ type PasswordResetConfig struct {
 	CodeLength   int
 }
 
-func DefaultPasswordResetConfig() PasswordResetConfig {
-	return PasswordResetConfig{
-		CodeInterval: time.Minute,
-		CodeTTL:      10 * time.Minute,
-		CodeLength:   6,
-	}
+var DefaultPasswordResetConfig = PasswordResetConfig{
+	CodeInterval: time.Minute,
+	CodeTTL:      10 * time.Minute,
+	CodeLength:   6,
 }
 
 type PasswordResetService struct {
@@ -38,7 +36,7 @@ func NewPasswordResetService(
 	usernames UsernameDeriver,
 	config PasswordResetConfig,
 ) *PasswordResetService {
-	defaults := DefaultPasswordResetConfig()
+	defaults := DefaultPasswordResetConfig
 	if config.CodeInterval <= 0 {
 		config.CodeInterval = defaults.CodeInterval
 	}

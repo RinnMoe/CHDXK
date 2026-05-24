@@ -30,9 +30,7 @@ type AdminUserCommandConfig struct {
 	DefaultSuspendDays int
 }
 
-func DefaultAdminUserCommandConfig() AdminUserCommandConfig {
-	return AdminUserCommandConfig{DefaultSuspendDays: auth.DefaultAdminConfig().DefaultSuspendDays}
-}
+var DefaultAdminUserCommandConfig = AdminUserCommandConfig{DefaultSuspendDays: auth.DefaultAdminConfig.DefaultSuspendDays}
 
 type AdminUserDTO struct {
 	ID          int        `json:"id"`
@@ -56,7 +54,7 @@ func NewAdminUserQueryService(
 
 func NewAdminUserCommandService(userRepo auth.UserRepository, config AdminUserCommandConfig) *AdminUserCommandService {
 	if config.DefaultSuspendDays <= 0 {
-		config.DefaultSuspendDays = DefaultAdminUserCommandConfig().DefaultSuspendDays
+		config.DefaultSuspendDays = DefaultAdminUserCommandConfig.DefaultSuspendDays
 	}
 	return &AdminUserCommandService{userRepo: userRepo, config: config}
 }
