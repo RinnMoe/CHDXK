@@ -7,7 +7,7 @@ export function FaqPage() {
     <>
       <PageTitle>常见问题</PageTitle>
       <PageShell>
-        <div className="mx-auto max-w-3xl space-y-6">
+        <div className="space-y-6">
           <div>
             <h1 className="text-2xl font-bold">常见问题</h1>
             <p className="mt-2 text-sm text-muted-foreground">
