@@ -6,6 +6,7 @@ import { PaginationComponent } from "@/components/common/pagination"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { useCourseFilters, useCourses } from "@/hooks/use-course"
+import { cn } from "@/lib/utils"
 
 export function CoursesPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -61,7 +62,12 @@ export function CoursesPage() {
               </div>
             )}
 
-            <div className="min-w-0 flex-1 space-y-4">
+            <div
+              className={cn(
+                "min-w-0 flex-1 space-y-4",
+                filters && "lg:border-l lg:pl-6"
+              )}
+            >
               {data && (
                 <div className="text-sm text-muted-foreground">
                   共 {data.total} 门课程

@@ -8,6 +8,7 @@ import { TeacherList } from "@/components/teacher/teacher-list"
 import { PaginationComponent } from "@/components/common/pagination"
 import { Input } from "@/components/ui/input"
 import { useTeacherFilters, useTeachers } from "@/hooks/use-teacher"
+import { cn } from "@/lib/utils"
 
 const TEACHER_SEARCH_DEBOUNCE_MS = 250
 
@@ -101,7 +102,12 @@ export function TeachersPage() {
               </div>
             )}
 
-            <div className="min-w-0 flex-1 space-y-4">
+            <div
+              className={cn(
+                "min-w-0 flex-1 space-y-4",
+                filters && "lg:border-l lg:pl-6"
+              )}
+            >
               {data && (
                 <p className="text-sm text-muted-foreground">
                   共 {data.total} 位教师

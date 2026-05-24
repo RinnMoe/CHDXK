@@ -314,11 +314,13 @@ export function CourseDetailPage() {
                   </div>
                 </div>
 
-                <Card className="md:self-start">
-                  <CardContent className="py-0">
-                    <RatingDistribution rating={course.rating} />
-                  </CardContent>
-                </Card>
+                <div className="md:self-start md:border-l md:pl-6">
+                  <Card className="shadow-none ring-0">
+                    <CardContent className="py-0">
+                      <RatingDistribution rating={course.rating} />
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             </div>
 
@@ -402,7 +404,7 @@ export function CourseDetailPage() {
           </div>
 
           {hasRelatedCourses && (
-            <aside className="space-y-6">
+            <aside className="space-y-6 lg:border-l lg:pl-6">
               {course.same_code_courses.length > 0 && (
                 <section>
                   <h2 className="mb-3 text-lg font-semibold">

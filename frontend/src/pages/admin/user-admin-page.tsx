@@ -397,7 +397,7 @@ export function UserAdminPage() {
               ) : null}
             </div>
 
-            <section className="space-y-3">
+            <section className="space-y-3 xl:border-l xl:pl-6">
               <div className="flex items-center justify-between gap-4">
                 <h2 className="text-lg font-medium">当前管理员</h2>
                 {adminsQuery.data ? (
