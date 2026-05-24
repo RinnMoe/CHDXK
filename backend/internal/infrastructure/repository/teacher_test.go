@@ -143,6 +143,38 @@ func TestTeacherRepository_FindBy(t *testing.T) {
 	})
 }
 
+func TestTeacherRepository_FindBy_DefaultSortByCode(t *testing.T) {
+	db := newTestDB(t)
+	repo := repository.NewTeacherRepository(db)
+	ctx := context.Background()
+
+	cleanTables(t, db, "teachers")
+
+	for _, e := range []repository.TeacherEntity{
+		{Code: "T300", Name: "后排序老师", Department: "测试学院", Title: "讲师", Pinyin: "houpaixulaoshi", PinyinAbbr: "hpxls"},
+		{Code: "T100", Name: "先排序老师", Department: "测试学院", Title: "讲师", Pinyin: "xianpaixulaoshi", PinyinAbbr: "xpxls"},
+		{Code: "T200", Name: "中间排序老师", Department: "测试学院", Title: "讲师", Pinyin: "zhongjianpaixulaoshi", PinyinAbbr: "zjpxls"},
+	} {
+		if err := db.Create(&e).Error; err != nil {
+			t.Fatalf("seed teacher: %v", err)
+		}
+	}
+	if err := repository.RefreshTeacherSearchVectors(db); err != nil {
+		t.Fatalf("refresh teacher search vectors: %v", err)
+	}
+
+	results, total, err := repo.FindBy(ctx, teacher.TeacherFilter{})
+	if err != nil {
+		t.Fatalf("FindBy: %v", err)
+	}
+	if total != 3 {
+		t.Fatalf("total: got %d, want 3", total)
+	}
+	if got := []string{results[0].Code, results[1].Code, results[2].Code}; got[0] != "T100" || got[1] != "T200" || got[2] != "T300" {
+		t.Fatalf("codes: got %v, want [T100 T200 T300]", got)
+	}
+}
+
 func TestTeacherRepository_GetFilters(t *testing.T) {
 	db := newTestDB(t)
 	repo := repository.NewTeacherRepository(db)

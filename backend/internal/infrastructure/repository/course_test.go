@@ -330,6 +330,38 @@ func TestCourseRepository_FindBy(t *testing.T) {
 	})
 }
 
+func TestCourseRepository_FindBy_DefaultSortByCode(t *testing.T) {
+	db := newTestDB(t)
+	repo := repository.NewCourseRepository(db)
+	ctx := context.Background()
+
+	cleanTables(t, db, "courses", "teachers", "reviews")
+
+	teacher := seedTeacher(t, db)
+	otherTeacher := repository.TeacherEntity{Code: "T999", Name: "排序老师", Department: "测试学院", Title: "讲师", Pinyin: "paixulaoshi", PinyinAbbr: "pxls"}
+	if err := db.Create(&otherTeacher).Error; err != nil {
+		t.Fatalf("seed other teacher: %v", err)
+	}
+
+	seedCourseRaw(t, db, "ZZ200", "后插入课程", 3.0, "测试学院", teacher.ID, "zh", []string{"核心课"}, []string{"2024"})
+	seedCourseRaw(t, db, "AA100", "先排序课程", 3.0, "测试学院", otherTeacher.ID, "zh", []string{"核心课"}, []string{"2024"})
+	seedCourseRaw(t, db, "MM150", "中间排序课程", 3.0, "测试学院", teacher.ID, "zh", []string{"核心课"}, []string{"2024"})
+	if err := repository.RefreshCourseSearchVectors(db); err != nil {
+		t.Fatalf("refresh course search vectors: %v", err)
+	}
+
+	results, total, err := repo.FindBy(ctx, course.CourseFilter{})
+	if err != nil {
+		t.Fatalf("FindBy: %v", err)
+	}
+	if total != 3 {
+		t.Fatalf("total: got %d, want 3", total)
+	}
+	if got := []string{results[0].Code, results[1].Code, results[2].Code}; got[0] != "AA100" || got[1] != "MM150" || got[2] != "ZZ200" {
+		t.Fatalf("codes: got %v, want [AA100 MM150 ZZ200]", got)
+	}
+}
+
 func TestCourseRepository_GetDetail(t *testing.T) {
 	db := newTestDB(t)
 	courseRepo := repository.NewCourseRepository(db)

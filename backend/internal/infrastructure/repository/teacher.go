@@ -47,13 +47,9 @@ func (r *TeacherRepository) FindBy(ctx context.Context, filter teacher.TeacherFi
 		return nil, 0, err
 	}
 
-	if searchQuery(filter.Q) != "" {
-		db = db.Order(clause.Expr{
-			SQL:  searchRankOrder("search_vector", filter.Q),
-			Vars: []interface{}{searchConfig(db), searchQuery(filter.Q)},
-		})
-	}
-	db = db.Order("id DESC")
+	db = db.
+		Order(clause.OrderByColumn{Column: clause.Column{Name: "code"}}).
+		Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}})
 
 	if filter.Page > 0 && filter.PageSize > 0 {
 		offset := (filter.Page - 1) * filter.PageSize

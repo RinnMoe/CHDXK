@@ -88,23 +88,16 @@ func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm
 
 func (r *CourseRepository) applySort(db *gorm.DB, f course.CourseFilter) *gorm.DB {
 	desc := !f.Ascend
-	if searchQuery(f.Q) != "" && f.OrderBy == "" {
-		db = db.Order(clause.Expr{
-			SQL:  searchRankOrder("courses.search_vector", f.Q),
-			Vars: []interface{}{searchConfig(db), searchQuery(f.Q)},
-		})
-	}
-	order := clause.OrderByColumn{
-		Column: clause.Column{Table: "courses", Name: "id"},
-		Desc:   desc,
-	}
 	switch f.OrderBy {
 	case "rating_count":
-		order = clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_count"}, Desc: desc}
+		return db.Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_count"}, Desc: desc})
 	case "rating_avg":
-		order = clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_avg"}, Desc: desc}
+		return db.Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_avg"}, Desc: desc})
+	default:
+		return db.
+			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "code"}}).
+			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "id"}})
 	}
-	return db.Order(order)
 }
 
 func (r *CourseRepository) applyPagination(db *gorm.DB, f course.CourseFilter) *gorm.DB {
