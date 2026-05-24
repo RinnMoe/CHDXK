@@ -9,6 +9,7 @@ import {
   SameCodeCourseCard,
 } from "@/components/course/course-compact-card"
 import {
+  CourseBadge,
   CourseBadges,
   CourseSemesterBadge,
 } from "@/components/course/course-badges"
@@ -207,10 +208,29 @@ export function CourseDetailPage() {
 
               <div className="space-y-6 md:grid md:grid-cols-[minmax(0,1fr)_minmax(18rem,min(24rem,50%))] md:items-start md:gap-6 md:space-y-0">
                 <div className="ml-2 space-y-6 sm:ml-3 md:ml-4">
+                  <CourseBadges
+                    credit={course.credit}
+                    language={course.language}
+                    categories={course.categories}
+                  />
+
                   <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                     <span>开课单位</span>
                     <span className="font-medium">{course.department}</span>
                   </div>
+
+                  {course.target_years && course.target_years.length > 0 && (
+                    <section className="flex flex-wrap items-center gap-2 text-sm">
+                      <h2 className="text-sm text-muted-foreground">
+                        面向年级
+                      </h2>
+                      {course.target_years.map((targetYear) => (
+                        <CourseBadge key={targetYear} kind="targetYear">
+                          {targetYear}
+                        </CourseBadge>
+                      ))}
+                    </section>
+                  )}
 
                   {teacherGroup.length > 1 && (
                     <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm text-muted-foreground">
@@ -231,13 +251,6 @@ export function CourseDetailPage() {
                       ))}
                     </div>
                   )}
-
-                  <CourseBadges
-                    credit={course.credit}
-                    language={course.language}
-                    categories={course.categories}
-                    targetYears={course.target_years}
-                  />
 
                   {courseSemesters.length > 0 && (
                     <section className="flex flex-wrap items-center gap-2 text-sm">
