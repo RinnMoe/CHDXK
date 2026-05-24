@@ -8,7 +8,10 @@ import {
   CourseCompactCard,
   SameCodeCourseCard,
 } from "@/components/course/course-compact-card"
-import { CourseBadge, CourseBadges } from "@/components/course/course-badges"
+import {
+  CourseBadges,
+  CourseSemesterBadge,
+} from "@/components/course/course-badges"
 import { CourseNotificationControl } from "@/components/course/course-notification-control"
 import { CourseReviewTrendDialog } from "@/components/course/course-review-trend-dialog"
 import { RatingDistribution } from "@/components/course/rating-distribution"
@@ -235,13 +238,7 @@ export function CourseDetailPage() {
                     <section className="flex flex-wrap items-center gap-2 text-sm">
                       <h2 className="text-sm text-muted-foreground">开课学期</h2>
                       {courseSemesters.map((semester) => (
-                        <CourseBadge
-                          key={semester}
-                          kind="targetYear"
-                          className="font-mono font-medium"
-                        >
-                          {semester}
-                        </CourseBadge>
+                        <CourseSemesterBadge key={semester} semester={semester} />
                       ))}
                     </section>
                   )}

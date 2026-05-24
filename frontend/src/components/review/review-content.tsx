@@ -1,3 +1,4 @@
+import { CourseSemesterBadge } from "@/components/course/course-badges"
 import { Badge } from "@/components/ui/badge"
 import { RatingStars } from "./rating-stars"
 import { SafeMarkdown } from "./safe-markdown"
@@ -19,11 +20,7 @@ export function ReviewContent({
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
         <RatingStars value={rating} readOnly size="sm" />
-        {semester && (
-          <Badge variant="outline" className="font-mono">
-            {semester}
-          </Badge>
-        )}
+        {semester && <CourseSemesterBadge semester={semester} />}
         {score && <Badge variant="secondary">{score}</Badge>}
       </div>
 

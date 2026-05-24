@@ -41,6 +41,22 @@ export function CourseBadge({ kind, children, className }: CourseBadgeProps) {
   )
 }
 
+interface CourseSemesterBadgeProps {
+  semester: string
+  className?: string
+}
+
+export function CourseSemesterBadge({
+  semester,
+  className,
+}: CourseSemesterBadgeProps) {
+  return (
+    <CourseBadge kind="targetYear" className={cn("font-mono font-medium", className)}>
+      {semester}
+    </CourseBadge>
+  )
+}
+
 export function CourseBadges({
   credit,
   language,
