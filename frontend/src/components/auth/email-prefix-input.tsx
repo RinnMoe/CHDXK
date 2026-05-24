@@ -7,6 +7,7 @@ interface EmailPrefixInputProps {
   label: string
   value: string
   onChange: (value: string) => void
+  onBlur?: () => void
   autoComplete?: string
 }
 
@@ -15,6 +16,7 @@ export function EmailPrefixInput({
   label,
   value,
   onChange,
+  onBlur,
   autoComplete = "username",
 }: EmailPrefixInputProps) {
   return (
@@ -28,6 +30,7 @@ export function EmailPrefixInput({
           placeholder="your"
           value={value}
           onChange={(e) => onChange(normalizeAuthEmailPrefix(e.target.value))}
+          onBlur={onBlur}
           autoComplete={autoComplete}
           className="rounded-r-none"
         />

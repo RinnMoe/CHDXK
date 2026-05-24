@@ -68,6 +68,7 @@ interface CodeInputProps {
   email: string
   code: string
   onCodeChange: (v: string) => void
+  onBlur?: () => void
   onSend: (email: string) => Promise<void>
   disabled?: boolean
 }
@@ -78,6 +79,7 @@ export function CodeInputWithButton({
   email,
   code,
   onCodeChange,
+  onBlur,
   onSend,
   disabled,
 }: CodeInputProps) {
@@ -90,6 +92,7 @@ export function CodeInputWithButton({
           placeholder="6 位验证码"
           value={code}
           onChange={(e) => onCodeChange(e.target.value)}
+          onBlur={onBlur}
           inputMode="numeric"
           maxLength={6}
           autoComplete="one-time-code"

@@ -13,6 +13,9 @@ export function normalizeAuthEmailPrefix(value: string) {
 }
 
 export function validateAuthPassword(password: string) {
+  if (/\s/.test(password)) {
+    return "密码不能包含空白字符"
+  }
   if (password.length < authPasswordPolicy.minLength) {
     return `密码至少 ${authPasswordPolicy.minLength} 位`
   }
