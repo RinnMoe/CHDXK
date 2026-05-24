@@ -133,7 +133,7 @@ func newReviewCommandTestService(reviewRepo *fakeCommandReviewRepo, voteRepo *fa
 		voteRepo,
 		hotRepo,
 		application.ReviewCommandConfig{
-			HotScores: application.CourseHotScoreConfig{
+			HotScores: course.HotScoreConfig{
 				ReviewCreateScore: 5,
 				ReviewUpdateScore: 2,
 				ReviewVoteScore:   1,

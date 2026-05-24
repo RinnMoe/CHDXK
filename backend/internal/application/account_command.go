@@ -7,12 +7,6 @@ import (
 	"jcourse/internal/domain/auth"
 )
 
-type AccountCommandConfig struct {
-	Registration  account.RegistrationConfig
-	PasswordReset account.PasswordResetConfig
-	Login         account.LoginConfig
-}
-
 type AccountCommandService struct {
 	registration    *account.RegistrationService
 	login           *account.LoginService
@@ -21,20 +15,15 @@ type AccountCommandService struct {
 }
 
 func NewAccountCommandService(
-	accountRepo account.AccountRepository,
+	registration *account.RegistrationService,
+	login *account.LoginService,
+	passwordReset *account.PasswordResetService,
 	authUserService *auth.AuthUserService,
-	codes account.VerificationCodeRepository,
-	resetCodes account.VerificationCodeRepository,
-	sender account.VerificationCodeSender,
-	hasher account.PasswordHasher,
-	usernames account.UsernameDeriver,
-	config AccountCommandConfig,
-	loginAttempts account.LoginAttemptRepository,
 ) *AccountCommandService {
 	return &AccountCommandService{
-		registration:    account.NewRegistrationService(accountRepo, codes, sender, hasher, usernames, config.Registration),
-		login:           account.NewLoginService(accountRepo, hasher, loginAttempts, usernames, config.Login),
-		passwordReset:   account.NewPasswordResetService(accountRepo, resetCodes, sender, hasher, usernames, config.PasswordReset),
+		registration:    registration,
+		login:           login,
+		passwordReset:   passwordReset,
 		authUserService: authUserService,
 	}
 }

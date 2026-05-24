@@ -10,10 +10,8 @@ import (
 	"jcourse/internal/domain/review"
 )
 
-type CourseHotScoreConfig = course.HotScoreConfig
-
 type ReviewCommandConfig struct {
-	HotScores CourseHotScoreConfig
+	HotScores course.HotScoreConfig
 	Vote      review.VoteConfig
 }
 
@@ -22,7 +20,7 @@ type ReviewCommandService struct {
 	voteService   *review.VoteService
 	reviewRepo    review.ReviewRepository
 	hotRepo       course.HotCourseRepository
-	hotScores     CourseHotScoreConfig
+	hotScores     course.HotScoreConfig
 }
 
 func NewReviewCommandService(

@@ -145,17 +145,7 @@ func TestAccountCommandService_LoginLockedAfterMaxAttempts(t *testing.T) {
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
 	attempts := &fakeLoginAttemptRepo{counts: map[string]int{"alice@example.edu": 5}}
-	svc := application.NewAccountCommandService(
-		accountRepo,
-		auth.NewCurrentUserService(userRepo),
-		newFakeCodeRepo(),
-		newFakeCodeRepo(),
-		&fakeCodeSender{},
-		account.NewDjangoPBKDF2SHA256PasswordHasher(account.PasswordHashConfig{Iterations: 1}),
-		testUsernameDeriver(),
-		testAccountCommandConfig(5),
-		attempts,
-	)
+	svc := newAccountServiceWithAttempts(accountRepo, userRepo, newFakeCodeRepo(), newFakeCodeRepo(), &fakeCodeSender{}, 5, attempts)
 
 	_, err := svc.Login(context.Background(), application.LoginCommand{Email: "alice@example.edu", Password: "secret"})
 	if !errors.Is(err, account.ErrLoginLocked) {
@@ -223,17 +213,7 @@ func TestAccountCommandService_LoginFailedIncrementsAndLocks(t *testing.T) {
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
 	attempts := &fakeLoginAttemptRepo{counts: map[string]int{}}
-	svc := application.NewAccountCommandService(
-		accountRepo,
-		auth.NewCurrentUserService(userRepo),
-		newFakeCodeRepo(),
-		newFakeCodeRepo(),
-		&fakeCodeSender{},
-		account.NewDjangoPBKDF2SHA256PasswordHasher(account.PasswordHashConfig{Iterations: 1}),
-		testUsernameDeriver(),
-		testAccountCommandConfig(3),
-		attempts,
-	)
+	svc := newAccountServiceWithAttempts(accountRepo, userRepo, newFakeCodeRepo(), newFakeCodeRepo(), &fakeCodeSender{}, 3, attempts)
 	ctx := context.Background()
 
 	for i := 1; i <= 3; i++ {
@@ -250,17 +230,26 @@ func TestAccountCommandService_LoginFailedIncrementsAndLocks(t *testing.T) {
 }
 
 func newAccountService(accountRepo *fakeAccountRepo, userRepo *fakeAuthUserRepo, codes *fakeCodeRepo, sender *fakeCodeSender) *application.AccountCommandService {
+	return newAccountServiceWithAttempts(accountRepo, userRepo, codes, newFakeCodeRepo(), sender, 5, &fakeLoginAttemptRepo{})
+}
+
+func newAccountServiceWithAttempts(
+	accountRepo *fakeAccountRepo,
+	userRepo *fakeAuthUserRepo,
+	registerCodes *fakeCodeRepo,
+	resetCodes *fakeCodeRepo,
+	sender *fakeCodeSender,
+	maxLoginAttempts int,
+	attempts account.LoginAttemptRepository,
+) *application.AccountCommandService {
 	accountRepo.userRepo = userRepo
+	hasher := account.NewDjangoPBKDF2SHA256PasswordHasher(account.PasswordHashConfig{Iterations: 1})
+	usernames := testUsernameDeriver()
 	return application.NewAccountCommandService(
-		accountRepo,
+		account.NewRegistrationService(accountRepo, registerCodes, sender, hasher, usernames, testRegistrationConfig()),
+		account.NewLoginService(accountRepo, hasher, attempts, usernames, testLoginConfig(maxLoginAttempts)),
+		account.NewPasswordResetService(accountRepo, resetCodes, sender, hasher, usernames, testPasswordResetConfig()),
 		auth.NewCurrentUserService(userRepo),
-		codes,
-		newFakeCodeRepo(),
-		sender,
-		account.NewDjangoPBKDF2SHA256PasswordHasher(account.PasswordHashConfig{Iterations: 1}),
-		testUsernameDeriver(),
-		testAccountCommandConfig(5),
-		&fakeLoginAttemptRepo{},
 	)
 }
 
@@ -273,23 +262,27 @@ func mustHash(t *testing.T, password string) string {
 	return hash
 }
 
-func testAccountCommandConfig(maxLoginAttempts int) application.AccountCommandConfig {
-	return application.AccountCommandConfig{
-		Registration: account.RegistrationConfig{
-			EmailWhitelist: []string{"@example.edu"},
-			CodeInterval:   time.Minute,
-			CodeTTL:        10 * time.Minute,
-			CodeLength:     6,
-		},
-		PasswordReset: account.PasswordResetConfig{
-			CodeInterval: time.Minute,
-			CodeTTL:      10 * time.Minute,
-			CodeLength:   6,
-		},
-		Login: account.LoginConfig{
-			MaxAttempts: maxLoginAttempts,
-			Lockout:     15 * time.Minute,
-		},
+func testRegistrationConfig() account.RegistrationConfig {
+	return account.RegistrationConfig{
+		EmailWhitelist: []string{"@example.edu"},
+		CodeInterval:   time.Minute,
+		CodeTTL:        10 * time.Minute,
+		CodeLength:     6,
+	}
+}
+
+func testPasswordResetConfig() account.PasswordResetConfig {
+	return account.PasswordResetConfig{
+		CodeInterval: time.Minute,
+		CodeTTL:      10 * time.Minute,
+		CodeLength:   6,
+	}
+}
+
+func testLoginConfig(maxLoginAttempts int) account.LoginConfig {
+	return account.LoginConfig{
+		MaxAttempts: maxLoginAttempts,
+		Lockout:     15 * time.Minute,
 	}
 }
 

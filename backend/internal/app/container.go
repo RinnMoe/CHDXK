@@ -7,6 +7,7 @@ import (
 	"jcourse/internal/application"
 	"jcourse/internal/domain/account"
 	"jcourse/internal/domain/auth"
+	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/review/policy"
@@ -74,7 +75,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		voteRepo,
 		courseHotRepo,
 		application.ReviewCommandConfig{
-			HotScores: application.CourseHotScoreConfig{
+			HotScores: course.HotScoreConfig{
 				ReviewCreateScore: conf.CourseHot.ReviewCreateScore,
 				ReviewUpdateScore: conf.CourseHot.ReviewUpdateScore,
 				ReviewVoteScore:   conf.CourseHot.ReviewVoteScore,
@@ -87,14 +88,12 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	courseCommand := application.NewCourseCommandService(courseRepo, notificationRepo)
 	teacherQuery := application.NewTeacherQueryService(teacherRepo)
 	announcementQuery := application.NewAnnouncementQueryService(announcementRepo)
-	pointQuery := application.NewPointQueryService(pointRepo, accountRepo, point.NewTransferService(point.TransferFeeConfig{
+	transferService := point.NewTransferService(point.TransferFeeConfig{
 		RateBps: conf.Point.TransferFeeRateBps,
 		MinFee:  conf.Point.TransferMinFee,
-	}), usernameDeriver)
-	pointCommand := application.NewPointCommandService(accountRepo, pointRepo, point.NewTransferService(point.TransferFeeConfig{
-		RateBps: conf.Point.TransferFeeRateBps,
-		MinFee:  conf.Point.TransferMinFee,
-	}))
+	})
+	pointQuery := application.NewPointQueryService(pointRepo, accountRepo, transferService, usernameDeriver)
+	pointCommand := application.NewPointCommandService(accountRepo, pointRepo, transferService)
 	statsConfig := stat.Config{Timezone: conf.Stats.Timezone}
 	siteStatsQuery := application.NewSiteStatsQueryService(statRepo, statsConfig)
 	siteStatsCommand := application.NewSiteStatsCommandService(statRepo, statRepo, statsConfig)
@@ -102,35 +101,51 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	accountQuery := application.NewAccountQueryService(accountRepo)
 	adminUserQuery := application.NewAdminUserQueryService(accountRepo, userRepo, usernameDeriver)
 	adminUserCommand := application.NewAdminUserCommandService(userRepo, application.AdminUserCommandConfig{DefaultSuspendDays: conf.Admin.DefaultSuspendDays})
-	accountCommand := application.NewAccountCommandService(
+	hasher := account.NewDjangoPBKDF2SHA256PasswordHasher(account.PasswordHashConfig{
+		Iterations: conf.Auth.PasswordHashIterations,
+		SaltLength: conf.Auth.PasswordSaltLength,
+	})
+	verificationSender := email.NewSMTPVerificationCodeSender(conf.SMTP)
+	registrationService := account.NewRegistrationService(
 		accountRepo,
-		currentUserService,
 		verificationRepo,
-		resetCodeRepo,
-		email.NewSMTPVerificationCodeSender(conf.SMTP),
-		account.NewDjangoPBKDF2SHA256PasswordHasher(account.PasswordHashConfig{
-			Iterations: conf.Auth.PasswordHashIterations,
-			SaltLength: conf.Auth.PasswordSaltLength,
-		}),
+		verificationSender,
+		hasher,
 		usernameDeriver,
-		application.AccountCommandConfig{
-			Registration: account.RegistrationConfig{
-				EmailWhitelist: conf.Auth.EmailWhitelist,
-				CodeInterval:   time.Duration(conf.Auth.VerificationCodeInterval) * time.Second,
-				CodeTTL:        time.Duration(conf.Auth.VerificationCodeTTL) * time.Second,
-				CodeLength:     conf.Auth.VerificationCodeLength,
-			},
-			PasswordReset: account.PasswordResetConfig{
-				CodeInterval: time.Duration(conf.Auth.VerificationCodeInterval) * time.Second,
-				CodeTTL:      time.Duration(conf.Auth.VerificationCodeTTL) * time.Second,
-				CodeLength:   conf.Auth.VerificationCodeLength,
-			},
-			Login: account.LoginConfig{
-				MaxAttempts: conf.Auth.MaxLoginAttempts,
-				Lockout:     time.Duration(conf.Auth.LoginLockoutDuration) * time.Second,
-			},
+		account.RegistrationConfig{
+			EmailWhitelist: conf.Auth.EmailWhitelist,
+			CodeInterval:   time.Duration(conf.Auth.VerificationCodeInterval) * time.Second,
+			CodeTTL:        time.Duration(conf.Auth.VerificationCodeTTL) * time.Second,
+			CodeLength:     conf.Auth.VerificationCodeLength,
 		},
+	)
+	loginService := account.NewLoginService(
+		accountRepo,
+		hasher,
 		loginAttemptRepo,
+		usernameDeriver,
+		account.LoginConfig{
+			MaxAttempts: conf.Auth.MaxLoginAttempts,
+			Lockout:     time.Duration(conf.Auth.LoginLockoutDuration) * time.Second,
+		},
+	)
+	passwordResetService := account.NewPasswordResetService(
+		accountRepo,
+		resetCodeRepo,
+		verificationSender,
+		hasher,
+		usernameDeriver,
+		account.PasswordResetConfig{
+			CodeInterval: time.Duration(conf.Auth.VerificationCodeInterval) * time.Second,
+			CodeTTL:      time.Duration(conf.Auth.VerificationCodeTTL) * time.Second,
+			CodeLength:   conf.Auth.VerificationCodeLength,
+		},
+	)
+	accountCommand := application.NewAccountCommandService(
+		registrationService,
+		loginService,
+		passwordResetService,
+		currentUserService,
 	)
 	apiKeySvc := auth.NewApiKeyService(apiKeyRepo, auth.ApiKeyConfig{MaxUserKeys: conf.APIKey.MaxUserKeys})
 	apiKeyQuery := application.NewApiKeyQueryService(apiKeySvc)

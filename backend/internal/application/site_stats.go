@@ -17,8 +17,6 @@ type SiteDailyStatListFilter struct {
 	PageSize  int    `form:"page_size"`
 }
 
-type SiteStatsConfig = stat.Config
-
 type SiteStatsCommandService struct {
 	daily *stat.DailyStatService
 }
@@ -26,7 +24,7 @@ type SiteStatsCommandService struct {
 func NewSiteStatsCommandService(
 	collector stat.DailyStatCollector,
 	repo stat.DailyStatCommandRepository,
-	config SiteStatsConfig,
+	config stat.Config,
 ) *SiteStatsCommandService {
 	return &SiteStatsCommandService{daily: stat.NewDailyStatService(collector, repo, mustStatsLocation(config))}
 }
@@ -54,7 +52,7 @@ type SiteStatsQueryService struct {
 	calendar stat.Calendar
 }
 
-func NewSiteStatsQueryService(query stat.DailyStatQuery, config SiteStatsConfig) *SiteStatsQueryService {
+func NewSiteStatsQueryService(query stat.DailyStatQuery, config stat.Config) *SiteStatsQueryService {
 	return &SiteStatsQueryService{query: query, calendar: stat.NewCalendar(mustStatsLocation(config))}
 }
 
@@ -103,7 +101,7 @@ func (s *SiteStatsQueryService) ListDaily(ctx context.Context, f SiteDailyStatLi
 	}, nil
 }
 
-func mustStatsLocation(config SiteStatsConfig) *time.Location {
+func mustStatsLocation(config stat.Config) *time.Location {
 	if strings.TrimSpace(config.Timezone) == "" {
 		config.Timezone = stat.DefaultConfig().Timezone
 	}
