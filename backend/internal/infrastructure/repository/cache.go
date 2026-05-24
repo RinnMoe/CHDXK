@@ -11,12 +11,16 @@ import (
 
 const repositoryCacheTTL = 30 * time.Minute
 
-func cacheKey(domain string, parts ...any) string {
+func redisKey(domain string, parts ...any) string {
 	key := "jcourse:" + domain
 	for _, part := range parts {
 		key += ":" + fmt.Sprint(part)
 	}
 	return key
+}
+
+func cacheKey(domain string, parts ...any) string {
+	return redisKey(domain, parts...)
 }
 
 func cacheGetJSON[T any](ctx context.Context, client *redis.Client, key string) (*T, bool) {

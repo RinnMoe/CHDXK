@@ -75,11 +75,11 @@ func (r *VerificationCodeRepository) Delete(ctx context.Context, email string) e
 }
 
 func (r *VerificationCodeRepository) codeKey(email string) string {
-	return "auth:" + r.keyPrefix + "_code:" + strings.ToLower(email)
+	return redisKey("auth", r.keyPrefix, "code", strings.ToLower(email))
 }
 
 func (r *VerificationCodeRepository) cooldownKey(email string) string {
-	return "auth:" + r.keyPrefix + "_code_cooldown:" + strings.ToLower(email)
+	return redisKey("auth", r.keyPrefix, "code_cooldown", strings.ToLower(email))
 }
 
 var _ account.VerificationCodeRepository = (*VerificationCodeRepository)(nil)

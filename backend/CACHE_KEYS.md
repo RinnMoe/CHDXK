@@ -1,12 +1,14 @@
-# Backend Cache Keys
+# Backend Redis Keys
 
-This document lists Redis keys used by the backend. Repository JSON caches use the shared `cacheKey` helper and follow:
+This document lists app-owned Redis keys used by the backend. Keys should follow:
 
 ```text
-jcourse:{domain}:{entity_id_or_scope...}
+jcourse:{domain}:{part...}
 ```
 
-Repository JSON caches are best-effort and use the default TTL of 30 minutes.
+Repository code should build keys with the local `redisKey` helper in `internal/infrastructure/repository/cache.go`; cache keys continue to go through `cacheKey`, which delegates to the same helper. Repository JSON caches are best-effort and use the default TTL of 30 minutes.
+
+Redis keys owned internally by third-party libraries can have library-defined formats. The session store is configured with the `jcourse:session:` prefix; Asynq keys are managed by Asynq.
 
 ## Repository JSON Caches
 
@@ -36,14 +38,13 @@ Repository JSON caches are best-effort and use the default TTL of 30 minutes.
 
 ## Other Redis Keys
 
-These keys predate the repository JSON cache helper and keep their existing prefixes and data structures.
-
 | Key pattern | Owner | Data structure | TTL |
 | --- | --- | --- | --- |
-| `auth:{prefix}_code:{lower_email}` | `VerificationCodeRepository.Save/Get/Delete` | String `{code}|{expires_at_unix}` | Verification code TTL from auth config |
-| `auth:{prefix}_code_cooldown:{lower_email}` | `VerificationCodeRepository.ReserveSend` | String marker | Send interval from auth config |
-| `auth:login_attempts:{lower_email}` | `LoginAttemptRepository` | Integer counter | Login lockout duration from auth config, set when counter is first created |
-| `course:hot:week:{period_key}` | `CourseHotRepository` | Redis sorted set, member is course ID, score is hot score | No TTL currently set |
-| `course:hot:month:{period_key}` | `CourseHotRepository` | Redis sorted set, member is course ID, score is hot score | No TTL currently set |
+| `jcourse:auth:{prefix}:code:{lower_email}` | `VerificationCodeRepository.Save/Get/Delete` | String `{code}|{expires_at_unix}` | Verification code TTL from auth config |
+| `jcourse:auth:{prefix}:code_cooldown:{lower_email}` | `VerificationCodeRepository.ReserveSend` | String marker | Send interval from auth config |
+| `jcourse:auth:login_attempts:{lower_email}` | `LoginAttemptRepository` | Integer counter | Login lockout duration from auth config, set when counter is first created |
+| `jcourse:course:hot:week:{period_key}` | `CourseHotRepository` | Redis sorted set, member is course ID, score is hot score | No TTL currently set |
+| `jcourse:course:hot:month:{period_key}` | `CourseHotRepository` | Redis sorted set, member is course ID, score is hot score | No TTL currently set |
+| `jcourse:session:{session_id}` | Gin session Redis store | Serialized session payload | Session max age from session config |
 
 `VerificationCodeRepository` currently uses `register` and `reset` as prefixes.

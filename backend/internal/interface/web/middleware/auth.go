@@ -17,11 +17,15 @@ import (
 const (
 	sessionKeyUserID    = "user_id"
 	sessionKeyCSRFToken = "csrf_token"
+	sessionRedisPrefix  = "jcourse:session:"
 )
 
 func NewSessionStore(redisConf config.RedisConfig, sessionConf config.SessionConfig) (sessions.Store, error) {
 	store, err := redis.NewStoreWithDB(10, "tcp", redisConf.Addr, redisConf.Username, redisConf.Password, fmt.Sprintf("%d", redisConf.DB), []byte(sessionConf.Secret))
 	if err != nil {
+		return nil, err
+	}
+	if err := redis.SetKeyPrefix(store, sessionRedisPrefix); err != nil {
 		return nil, err
 	}
 	store.Options(sessions.Options{

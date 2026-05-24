@@ -13,8 +13,6 @@ import (
 	"jcourse/internal/domain/course"
 )
 
-const courseHotKeyPrefix = "course:hot"
-
 const DefaultHotCourseLocationName = "Asia/Shanghai"
 
 func DefaultHotCourseLocation() (*time.Location, error) {
@@ -76,9 +74,9 @@ func (r *CourseHotRepository) Top(ctx context.Context, period course.HotCoursePe
 func (r *CourseHotRepository) key(period course.HotCoursePeriod, at time.Time) string {
 	switch period {
 	case course.HotCoursePeriodMonth:
-		return courseHotKeyPrefix + ":month:" + HotCoursePeriodKey(course.HotCoursePeriodMonth, at, r.loc)
+		return redisKey("course", "hot", "month", HotCoursePeriodKey(course.HotCoursePeriodMonth, at, r.loc))
 	default:
-		return courseHotKeyPrefix + ":week:" + HotCoursePeriodKey(course.HotCoursePeriodWeek, at, r.loc)
+		return redisKey("course", "hot", "week", HotCoursePeriodKey(course.HotCoursePeriodWeek, at, r.loc))
 	}
 }
 

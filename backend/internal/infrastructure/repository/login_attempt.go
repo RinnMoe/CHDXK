@@ -47,7 +47,7 @@ func (r *LoginAttemptRepository) Reset(ctx context.Context, email string) error 
 }
 
 func (r *LoginAttemptRepository) key(email string) string {
-	return "auth:login_attempts:" + strings.ToLower(email)
+	return redisKey("auth", "login_attempts", strings.ToLower(email))
 }
 
 var _ account.LoginAttemptRepository = (*LoginAttemptRepository)(nil)
