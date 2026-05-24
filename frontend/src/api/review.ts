@@ -1,8 +1,7 @@
 import type { PaginatedResult } from "./types"
 import type { CourseListItemDTO } from "./course"
 import { apiClient } from "./client"
-
-const BASE = "/api"
+import { BASE_URL } from "./constants"
 
 export const VoteLike = 1
 export const VoteDislike = -1
@@ -93,29 +92,29 @@ function buildQuery(filter: Record<string, unknown>): string {
 export function listReviews(
   filter: ReviewListFilter = {}
 ): Promise<PaginatedResult<ReviewDTO>> {
-  return apiClient(`${BASE}/review${buildQuery(filter)}`)
+  return apiClient(`${BASE_URL}/review${buildQuery(filter)}`)
 }
 
 export function listFollowedReviews(
   filter: ReviewListFilter = {}
 ): Promise<PaginatedResult<ReviewDTO>> {
-  return apiClient(`${BASE}/review/followed${buildQuery(filter)}`)
+  return apiClient(`${BASE_URL}/review/followed${buildQuery(filter)}`)
 }
 
 export function getReview(reviewID: number): Promise<ReviewDTO> {
-  return apiClient(`${BASE}/review/${reviewID}`)
+  return apiClient(`${BASE_URL}/review/${reviewID}`)
 }
 
 export function listReviewRevisions(
   reviewID: number
 ): Promise<ReviewRevisionDTO[]> {
-  return apiClient(`${BASE}/review/${reviewID}/revisions`)
+  return apiClient(`${BASE_URL}/review/${reviewID}/revision`)
 }
 
 export function createReview(
   cmd: CreateReviewCommand
 ): Promise<{ message: string }> {
-  return apiClient(`${BASE}/review/`, {
+  return apiClient(`${BASE_URL}/review/`, {
     method: "POST",
     body: JSON.stringify(cmd),
   })
@@ -125,7 +124,7 @@ export function updateReview(
   reviewID: number,
   cmd: UpdateReviewCommand
 ): Promise<{ message: string }> {
-  return apiClient(`${BASE}/review/${reviewID}`, {
+  return apiClient(`${BASE_URL}/review/${reviewID}`, {
     method: "PUT",
     body: JSON.stringify(cmd),
   })
@@ -135,14 +134,14 @@ export function updateReviewModeratorRemark(
   reviewID: number,
   cmd: UpdateReviewModeratorRemarkCommand
 ): Promise<{ message: string }> {
-  return apiClient(`${BASE}/review/${reviewID}/moderator-remark`, {
+  return apiClient(`${BASE_URL}/review/${reviewID}/moderator-remark`, {
     method: "PUT",
     body: JSON.stringify(cmd),
   })
 }
 
 export function deleteReview(reviewID: number): Promise<{ message: string }> {
-  return apiClient(`${BASE}/review/${reviewID}`, {
+  return apiClient(`${BASE_URL}/review/${reviewID}`, {
     method: "DELETE",
   })
 }
@@ -151,7 +150,7 @@ export function voteReview(
   reviewID: number,
   voteType: VoteType
 ): Promise<{ message: string }> {
-  return apiClient(`${BASE}/review/${reviewID}/vote`, {
+  return apiClient(`${BASE_URL}/review/${reviewID}/vote`, {
     method: "POST",
     body: JSON.stringify({ vote_type: voteType }),
   })
@@ -161,5 +160,5 @@ export function listUserReviews(
   userID: number,
   filter: ReviewListFilter = {}
 ): Promise<PaginatedResult<ReviewDTO>> {
-  return apiClient(`${BASE}/user/${userID}/reviews${buildQuery(filter)}`)
+  return apiClient(`${BASE_URL}/user/${userID}/review${buildQuery(filter)}`)
 }

@@ -27,31 +27,31 @@ import {
 const navItems = [
   { to: "/", label: "首页", match: (p: string) => p === "/" },
   {
-    to: "/courses",
+    to: "/course",
     label: "课程",
-    match: (p: string) => p === "/courses" || /^\/courses\/\d+(?:\/|$)/.test(p),
+    match: (p: string) => p === "/course" || /^\/course\/\d+(?:\/|$)/.test(p),
   },
   {
-    to: "/teachers",
+    to: "/teacher",
     label: "教师",
-    match: (p: string) => p.startsWith("/teachers"),
+    match: (p: string) => p.startsWith("/teacher"),
   },
   {
-    to: "/reviews",
+    to: "/review",
     label: "点评",
-    match: (p: string) => p.startsWith("/reviews"),
+    match: (p: string) => p.startsWith("/review"),
   },
   {
-    to: "/courses/hot",
+    to: "/course/hot",
     label: "热门",
-    match: (p: string) => p === "/courses/hot",
+    match: (p: string) => p === "/course/hot",
   },
 ]
 
 const searchTargets = [
-  { label: "课程", path: "/courses" },
-  { label: "教师", path: "/teachers" },
-  { label: "点评", path: "/reviews" },
+  { label: "课程", path: "/course" },
+  { label: "教师", path: "/teacher" },
+  { label: "点评", path: "/review" },
 ]
 
 function HeaderSearch() {

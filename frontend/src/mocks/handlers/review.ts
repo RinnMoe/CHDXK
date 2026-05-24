@@ -100,7 +100,7 @@ export const reviewHandlers = [
     return HttpResponse.json(paginate(list, page, pageSize))
   }),
 
-  http.get("/api/review/:reviewID/revisions", async ({ params }) => {
+  http.get("/api/review/:reviewID/revision", async ({ params }) => {
     await randomDelay()
     if (!isCurrentUserAdmin()) {
       return HttpResponse.json({ error: "forbidden" }, { status: 403 })
@@ -176,7 +176,7 @@ export const reviewHandlers = [
     return HttpResponse.json({ message: "ok" })
   }),
 
-  http.get("/api/user/:userID/reviews", async ({ params, request }) => {
+  http.get("/api/user/:userID/review", async ({ params, request }) => {
     await randomDelay()
     const userID = Number(params.userID)
     const url = new URL(request.url)

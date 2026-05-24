@@ -15,7 +15,7 @@ function requireAdmin() {
 }
 
 export const siteStatsHandlers = [
-  http.get("/api/site-stats/daily/:date", async ({ params }) => {
+  http.get("/api/site-stat/daily/:date", async ({ params }) => {
     await randomDelay()
     const guard = requireAdmin()
     if (guard) return guard
@@ -24,7 +24,7 @@ export const siteStatsHandlers = [
     return HttpResponse.json(stat)
   }),
 
-  http.get("/api/site-stats/daily", async ({ request }) => {
+  http.get("/api/site-stat/daily", async ({ request }) => {
     await randomDelay()
     const guard = requireAdmin()
     if (guard) return guard

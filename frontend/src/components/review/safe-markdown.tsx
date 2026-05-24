@@ -35,7 +35,7 @@ function replaceReviewReferences(value: string) {
 
     nodes.push({
       type: "link",
-      url: `/reviews/${reviewID}`,
+      url: `/review/${reviewID}`,
       title: null,
       children: [{ type: "text", value: `#${reviewID}` }],
     })
@@ -85,7 +85,7 @@ function remarkReviewReferences() {
 
 const markdownComponents: Components = {
   a({ href, children, title }) {
-    if (href?.startsWith("/reviews/")) {
+    if (href?.startsWith("/review/")) {
       return (
         <Link to={href} title={title}>
           {children}

@@ -9,7 +9,7 @@ import { mockSession } from "../fixtures/auth"
 import { randomDelay } from "../utils"
 
 export const apiKeyHandlers = [
-  http.get("/api/api-keys/", async () => {
+  http.get("/api/api-key/", async () => {
     await randomDelay()
     if (!mockSession.userID) {
       return HttpResponse.json({ error: "unauthorized" }, { status: 401 })
@@ -17,7 +17,7 @@ export const apiKeyHandlers = [
     return HttpResponse.json(listMockUserApiKeys(mockSession.userID))
   }),
 
-  http.post("/api/api-keys/", async ({ request }) => {
+  http.post("/api/api-key/", async ({ request }) => {
     await randomDelay()
     if (!mockSession.userID) {
       return HttpResponse.json({ error: "unauthorized" }, { status: 401 })
@@ -35,7 +35,7 @@ export const apiKeyHandlers = [
     })
   }),
 
-  http.delete("/api/api-keys/:apiKeyID", async ({ params }) => {
+  http.delete("/api/api-key/:apiKeyID", async ({ params }) => {
     await randomDelay()
     if (!mockSession.userID) {
       return HttpResponse.json({ error: "unauthorized" }, { status: 401 })

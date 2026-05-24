@@ -1,6 +1,5 @@
 import { apiClient } from "./client"
-
-const BASE = "/api"
+import { BASE_URL } from "./constants"
 
 export interface AnnouncementDTO {
   id: number
@@ -11,5 +10,5 @@ export interface AnnouncementDTO {
 }
 
 export function listAnnouncements(): Promise<AnnouncementDTO[]> {
-  return apiClient(`${BASE}/announcement/`)
+  return apiClient(`${BASE_URL}/announcement/`)
 }

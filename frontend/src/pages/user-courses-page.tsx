@@ -55,7 +55,7 @@ export function UserCoursesPage() {
               </p>
             </div>
             <Button asChild size="sm" variant="outline">
-              <Link to="/reviews/followed">
+              <Link to="/review/followed">
                 <RiMessage3Line data-icon="inline-start" />
                 关注动态
               </Link>

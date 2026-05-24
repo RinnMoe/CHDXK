@@ -18,7 +18,7 @@ export function ReviewDetailPage() {
         <PageTitle>点评</PageTitle>
         <PageShell>
           <Button asChild variant="ghost" size="sm" className="mb-4">
-            <Link to="/reviews">
+            <Link to="/review">
               <RiArrowLeftLine data-icon="inline-start" />
               返回
             </Link>
@@ -40,7 +40,7 @@ export function ReviewDetailPage() {
           <div className="py-16 text-center">
             <p className="text-muted-foreground">点评不存在</p>
             <Button asChild variant="link" className="mt-4">
-              <Link to="/reviews">返回点评列表</Link>
+              <Link to="/review">返回点评列表</Link>
             </Button>
           </div>
         </PageShell>
@@ -53,7 +53,7 @@ export function ReviewDetailPage() {
       <PageTitle>点评</PageTitle>
       <PageShell>
         <Button asChild variant="ghost" size="sm" className="mb-4">
-          <Link to="/reviews">
+          <Link to="/review">
             <RiArrowLeftLine data-icon="inline-start" />
             返回点评列表
           </Link>

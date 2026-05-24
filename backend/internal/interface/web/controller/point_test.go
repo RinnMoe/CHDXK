@@ -39,7 +39,7 @@ func TestPointController_GetUserPointsAuth(t *testing.T) {
 			cmd := newPointControllerCommand()
 			ctrl := controller.NewPointController(application.NewPointQueryService(repo, &pointControllerFakeAccountRepo{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), testPointUsernameDeriver()), cmd)
 			r := gin.New()
-			r.GET("/api/user/:userID/points", func(c *gin.Context) {
+			r.GET("/api/user/:userID/point", func(c *gin.Context) {
 				if tt.current != nil {
 					c.Request = c.Request.WithContext(auth.WithUser(c.Request.Context(), tt.current))
 				}
@@ -47,7 +47,7 @@ func TestPointController_GetUserPointsAuth(t *testing.T) {
 			})
 
 			w := httptest.NewRecorder()
-			req := httptest.NewRequest(http.MethodGet, "/api/user/"+tt.targetID+"/points?page=1&page_size=20", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/user/"+tt.targetID+"/point?page=1&page_size=20", nil)
 			r.ServeHTTP(w, req)
 
 			if w.Code != tt.wantStatus {
@@ -62,17 +62,17 @@ func TestPointController_PreviewAndCreateTransfer(t *testing.T) {
 	command := newPointControllerCommand()
 	ctrl := controller.NewPointController(application.NewPointQueryService(&pointControllerFakeQuery{}, &pointControllerFakeAccountRepo{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), testPointUsernameDeriver()), command)
 	r := gin.New()
-	r.POST("/api/point/transfers/preview", func(c *gin.Context) {
+	r.POST("/api/point/transfer/preview", func(c *gin.Context) {
 		c.Request = c.Request.WithContext(auth.WithUser(c.Request.Context(), &auth.User{ID: 1, Role: auth.RoleUser}))
 		ctrl.PreviewTransfer(c)
 	})
-	r.POST("/api/point/transfers", func(c *gin.Context) {
+	r.POST("/api/point/transfer", func(c *gin.Context) {
 		c.Request = c.Request.WithContext(auth.WithUser(c.Request.Context(), &auth.User{ID: 1, Role: auth.RoleUser}))
 		ctrl.CreateTransfer(c)
 	})
 
 	body := `{"recipient_username":"bob@example.edu","amount":100,"fee_payer":"sender"}`
-	previewReq := httptest.NewRequest(http.MethodPost, "/api/point/transfers/preview", strings.NewReader(body))
+	previewReq := httptest.NewRequest(http.MethodPost, "/api/point/transfer/preview", strings.NewReader(body))
 	previewReq.Header.Set("Content-Type", "application/json")
 	previewW := httptest.NewRecorder()
 	r.ServeHTTP(previewW, previewReq)
@@ -80,7 +80,7 @@ func TestPointController_PreviewAndCreateTransfer(t *testing.T) {
 		t.Fatalf("preview status = %d, want 200", previewW.Code)
 	}
 
-	createReq := httptest.NewRequest(http.MethodPost, "/api/point/transfers", strings.NewReader(body))
+	createReq := httptest.NewRequest(http.MethodPost, "/api/point/transfer", strings.NewReader(body))
 	createReq.Header.Set("Content-Type", "application/json")
 	createW := httptest.NewRecorder()
 	r.ServeHTTP(createW, createReq)
@@ -169,11 +169,11 @@ func TestPointController_GetPointsByEmail(t *testing.T) {
 	)
 
 	r := gin.New()
-	r.GET("/api/ext/points", ctrl.GetPointsByEmail)
+	r.GET("/api/ext/point", ctrl.GetPointsByEmail)
 
 	t.Run("missing email", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodGet, "/api/ext/points", nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/ext/point", nil)
 		r.ServeHTTP(w, req)
 
 		if w.Code != http.StatusBadRequest {
@@ -183,7 +183,7 @@ func TestPointController_GetPointsByEmail(t *testing.T) {
 
 	t.Run("user not found", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodGet, "/api/ext/points?email=unknown@example.edu", nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/ext/point?email=unknown@example.edu", nil)
 		r.ServeHTTP(w, req)
 
 		if w.Code != http.StatusNotFound {
@@ -193,7 +193,7 @@ func TestPointController_GetPointsByEmail(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodGet, "/api/ext/points?email="+email, nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/ext/point?email="+email, nil)
 		r.ServeHTTP(w, req)
 
 		if w.Code != http.StatusOK {

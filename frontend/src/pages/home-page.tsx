@@ -20,7 +20,7 @@ export function HomePage() {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">最新点评</h2>
               <Link
-                to="/reviews"
+                to="/review"
                 className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
                 查看更多
@@ -37,7 +37,7 @@ export function HomePage() {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">热门课程</h2>
               <Link
-                to="/courses/hot"
+                to="/course/hot"
                 className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
                 查看更多

@@ -1,6 +1,5 @@
 import { apiClient } from "./client"
-
-const BASE = "/api"
+import { BASE_URL } from "./constants"
 
 export interface AuthUserDTO {
   id: number
@@ -35,7 +34,7 @@ export interface ResetPasswordCommand {
 }
 
 export function getCurrentUser(): Promise<AuthUserDTO | null> {
-  return apiClient<AuthUserDTO | null>(`${BASE}/auth/me`).catch((err) => {
+  return apiClient<AuthUserDTO | null>(`${BASE_URL}/auth/me`).catch((err) => {
     if (
       err &&
       typeof err === "object" &&
@@ -51,28 +50,28 @@ export function getCurrentUser(): Promise<AuthUserDTO | null> {
 export function sendRegisterCode(
   cmd: SendRegisterCodeCommand
 ): Promise<{ message: string }> {
-  return apiClient(`${BASE}/auth/register/code`, {
+  return apiClient(`${BASE_URL}/auth/register/code`, {
     method: "POST",
     body: JSON.stringify(cmd),
   })
 }
 
 export function register(cmd: RegisterCommand): Promise<AuthUserDTO> {
-  return apiClient(`${BASE}/auth/register`, {
+  return apiClient(`${BASE_URL}/auth/register`, {
     method: "POST",
     body: JSON.stringify(cmd),
   })
 }
 
 export function login(cmd: LoginCommand): Promise<AuthUserDTO> {
-  return apiClient(`${BASE}/auth/login`, {
+  return apiClient(`${BASE_URL}/auth/login`, {
     method: "POST",
     body: JSON.stringify(cmd),
   })
 }
 
 export function logout(): Promise<{ message: string }> {
-  return apiClient(`${BASE}/auth/logout`, {
+  return apiClient(`${BASE_URL}/auth/logout`, {
     method: "POST",
   })
 }
@@ -80,7 +79,7 @@ export function logout(): Promise<{ message: string }> {
 export function sendResetCode(
   cmd: SendResetCodeCommand
 ): Promise<{ message: string }> {
-  return apiClient(`${BASE}/auth/password-reset/code`, {
+  return apiClient(`${BASE_URL}/auth/password-reset/code`, {
     method: "POST",
     body: JSON.stringify(cmd),
   })
@@ -89,7 +88,7 @@ export function sendResetCode(
 export function resetPassword(
   cmd: ResetPasswordCommand
 ): Promise<{ message: string }> {
-  return apiClient(`${BASE}/auth/password-reset`, {
+  return apiClient(`${BASE_URL}/auth/password-reset`, {
     method: "POST",
     body: JSON.stringify(cmd),
   })

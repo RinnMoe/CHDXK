@@ -57,20 +57,20 @@ export function UserMenu() {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link to={`/reviews/mine`}>我的点评</Link>
+            <Link to={`/review/mine`}>我的点评</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to="/courses/mine">我的课程</Link>
+            <Link to="/course/mine">我的课程</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to="/points">积分</Link>
+            <Link to="/point">积分</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to="/api-keys">API Keys</Link>
+            <Link to="/api-key">API Keys</Link>
           </DropdownMenuItem>
           {user.role === "admin" && (
             <DropdownMenuItem asChild>
-              <Link to="/admin/site-stats">站点统计</Link>
+              <Link to="/admin/site-stat">站点统计</Link>
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />

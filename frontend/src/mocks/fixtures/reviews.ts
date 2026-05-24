@@ -1,5 +1,5 @@
 import type { ReviewDTO } from "@/api/review"
-import { mockCourses } from "./courses"
+import { mockCourses } from "./course"
 
 const SCORES = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "未公布"]
 const SEMESTERS = ["2025-2026-1", "2024-2025-2", "2024-2025-1", "2023-2024-2"]
@@ -146,7 +146,7 @@ mockReviews[0] = {
   rating: 5,
   content: `这条 mock 用来检查点评引用链接渲染效果：#2 和 #3 应该会变成可点击的点评链接。
 
-普通 Markdown 链接仍保持原样：[课程详情](/courses/${mockReviews[0].course_id})。
+普通 Markdown 链接仍保持原样：[课程详情](/course/${mockReviews[0].course_id})。
 
 代码里的引用不应该被改写：
 

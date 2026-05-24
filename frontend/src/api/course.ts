@@ -7,8 +7,7 @@ import type {
 export type { RatingInfoDTO } from "./types"
 import type { ReviewDTO, ReviewListFilter } from "./review"
 import { apiClient } from "./client"
-
-const BASE = "/api"
+import { BASE_URL } from "./constants"
 
 export interface CourseFilters {
   credits?: FilterItem[]
@@ -115,43 +114,43 @@ function buildQuery(filter: Record<string, unknown>): string {
 }
 
 export function getCourseFilters(): Promise<CourseFilters> {
-  return apiClient(`${BASE}/course/filters`)
+  return apiClient(`${BASE_URL}/course/filter`)
 }
 
 export function listCourses(
   filter: CourseListFilter = {}
 ): Promise<PaginatedResult<CourseListItemDTO>> {
-  return apiClient(`${BASE}/course/${buildQuery(filter)}`)
+  return apiClient(`${BASE_URL}/course/${buildQuery(filter)}`)
 }
 
 export function getCourseDetail(courseID: number): Promise<CourseDetailDTO> {
-  return apiClient(`${BASE}/course/${courseID}`)
+  return apiClient(`${BASE_URL}/course/${courseID}`)
 }
 
 export function listCourseReviews(
   courseID: number,
   filter: ReviewListFilter = {}
 ): Promise<PaginatedResult<ReviewDTO>> {
-  return apiClient(`${BASE}/course/${courseID}/review${buildQuery(filter)}`)
+  return apiClient(`${BASE_URL}/course/${courseID}/review${buildQuery(filter)}`)
 }
 
 export function getCourseReviewFilters(
   courseID: number
 ): Promise<CourseReviewFilters> {
-  return apiClient(`${BASE}/course/${courseID}/review/filters`)
+  return apiClient(`${BASE_URL}/course/${courseID}/review/filter`)
 }
 
 export function getCourseReviewTrend(
   courseID: number
 ): Promise<CourseReviewTrendItemDTO[]> {
-  return apiClient(`${BASE}/course/${courseID}/review/trend`)
+  return apiClient(`${BASE_URL}/course/${courseID}/review/trend`)
 }
 
 export function setNotificationLevel(
   courseID: number,
   level: CourseNotificationLevel
 ): Promise<{ message: string }> {
-  return apiClient(`${BASE}/course/${courseID}/notification`, {
+  return apiClient(`${BASE_URL}/course/${courseID}/notification`, {
     method: "POST",
     body: JSON.stringify({ level }),
   })
@@ -160,13 +159,13 @@ export function setNotificationLevel(
 export function listFollowedCourses(
   filter: CourseListFilter = {}
 ): Promise<PaginatedResult<CourseListItemDTO>> {
-  return apiClient(`${BASE}/course/followed${buildQuery(filter)}`)
+  return apiClient(`${BASE_URL}/course/followed${buildQuery(filter)}`)
 }
 
 export function listIgnoredCourses(
   filter: CourseListFilter = {}
 ): Promise<PaginatedResult<CourseListItemDTO>> {
-  return apiClient(`${BASE}/course/ignored${buildQuery(filter)}`)
+  return apiClient(`${BASE_URL}/course/ignored${buildQuery(filter)}`)
 }
 
 export function listHotCourses(
@@ -175,5 +174,5 @@ export function listHotCourses(
 ): Promise<HotCourseListDTO> {
   const params = new URLSearchParams({ period })
   if (limit !== undefined) params.set("limit", String(limit))
-  return apiClient(`${BASE}/course/hot?${params}`)
+  return apiClient(`${BASE_URL}/course/hot?${params}`)
 }

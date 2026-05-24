@@ -42,7 +42,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 
 	extGroup := apiGroup.Group("/ext", middleware.SystemAPIKeyAuth(container.ApiKeySvc))
 	{
-		extGroup.GET("/points", pointController.GetPointsByEmail)
+		extGroup.GET("/point", pointController.GetPointsByEmail)
 	}
 
 	apiGroup.Use(middleware.Auth(container.AuthUserService))
@@ -54,29 +54,29 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	}
 	courseGroup := apiGroup.Group("/course")
 	{
-		courseGroup.GET("/filters", courseController.GetCourseFilters)
+		courseGroup.GET("/filter", courseController.GetCourseFilters)
 		courseGroup.GET("/hot", courseController.ListHotCourses)
 		courseGroup.GET("/", courseController.ListCourses)
 		courseGroup.GET("/followed", courseController.ListFollowedCourses)
 		courseGroup.GET("/ignored", courseController.ListIgnoredCourses)
 		courseGroup.GET("/:courseID", courseController.GetCourse)
-		courseGroup.GET("/:courseID/review/filters", reviewController.GetCourseReviewFilters)
+		courseGroup.GET("/:courseID/review/filter", reviewController.GetCourseReviewFilters)
 		courseGroup.GET("/:courseID/review/trend", reviewController.GetCourseReviewTrend)
 		courseGroup.GET("/:courseID/review", reviewController.ListCourseReviews)
 		courseGroup.POST("/:courseID/notification", courseController.SetNotificationLevel)
 	}
 	teacherGroup := apiGroup.Group("/teacher")
 	{
-		teacherGroup.GET("/filters", teacherController.GetTeacherFilters)
+		teacherGroup.GET("/filter", teacherController.GetTeacherFilters)
 		teacherGroup.GET("/", teacherController.ListTeachers)
 		teacherGroup.GET("/:teacherID", teacherController.GetTeacher)
-		teacherGroup.GET("/:teacherID/courses", teacherController.ListTeacherCourses)
+		teacherGroup.GET("/:teacherID/course", teacherController.ListTeacherCourses)
 	}
 	reviewGroup := apiGroup.Group("/review")
 	{
 		reviewGroup.GET("", reviewController.ListReviews)
 		reviewGroup.GET("/followed", reviewController.ListFollowedReviews)
-		reviewGroup.GET("/:reviewID/revisions", middleware.Admin(), reviewController.ListReviewRevisions)
+		reviewGroup.GET("/:reviewID/revision", middleware.Admin(), reviewController.ListReviewRevisions)
 		reviewGroup.GET("/:reviewID", reviewController.GetReview)
 		reviewGroup.POST("/", reviewController.CreateReview)
 		reviewGroup.POST("/:reviewID/vote", reviewController.VoteReview)
@@ -86,10 +86,10 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	}
 	userGroup := apiGroup.Group("/user")
 	{
-		userGroup.GET("/:userID/points", pointController.GetUserPoints)
-		userGroup.GET("/:userID/reviews", reviewController.ListUserReviews)
+		userGroup.GET("/:userID/point", pointController.GetUserPoints)
+		userGroup.GET("/:userID/review", reviewController.ListUserReviews)
 	}
-	apiKeyGroup := apiGroup.Group("/api-keys")
+	apiKeyGroup := apiGroup.Group("/api-key")
 	{
 		apiKeyGroup.GET("/", apiKeyController.ListMyApiKeys)
 		apiKeyGroup.POST("/", apiKeyController.CreateMyApiKey)
@@ -97,10 +97,10 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	}
 	pointGroup := apiGroup.Group("/point")
 	{
-		pointGroup.POST("/transfers/preview", pointController.PreviewTransfer)
-		pointGroup.POST("/transfers", pointController.CreateTransfer)
+		pointGroup.POST("/transfer/preview", pointController.PreviewTransfer)
+		pointGroup.POST("/transfer", pointController.CreateTransfer)
 	}
-	siteStatsGroup := apiGroup.Group("/site-stats", middleware.Admin())
+	siteStatsGroup := apiGroup.Group("/site-stat", middleware.Admin())
 	{
 		siteStatsGroup.GET("/daily/:date", siteStatsController.GetByDate)
 		siteStatsGroup.GET("/daily", siteStatsController.ListDaily)

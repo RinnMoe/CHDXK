@@ -1,7 +1,6 @@
 import type { PaginatedResult } from "./types"
 import { apiClient } from "./client"
-
-const BASE = "/api"
+import { BASE_URL } from "./constants"
 
 export type FeePayer = "sender" | "recipient"
 
@@ -72,13 +71,13 @@ export function getUserPoints(
   userID: number,
   filter: PointRecordListFilter = {}
 ): Promise<PointSummaryDTO> {
-  return apiClient(`${BASE}/user/${userID}/points${buildQuery(filter)}`)
+  return apiClient(`${BASE_URL}/user/${userID}/point${buildQuery(filter)}`)
 }
 
 export function previewTransfer(
   params: PreviewTransferParams
 ): Promise<PointTransferPreviewDTO> {
-  return apiClient(`${BASE}/point/transfers/preview`, {
+  return apiClient(`${BASE_URL}/point/transfer/preview`, {
     method: "POST",
     body: JSON.stringify(params),
   })
@@ -87,7 +86,7 @@ export function previewTransfer(
 export function createTransfer(
   cmd: CreatePointTransferCommand
 ): Promise<PointTransferDTO> {
-  return apiClient(`${BASE}/point/transfers`, {
+  return apiClient(`${BASE_URL}/point/transfer`, {
     method: "POST",
     body: JSON.stringify(cmd),
   })

@@ -160,7 +160,7 @@ function makeReviewTrend(list: ReviewDTO[]): CourseReviewTrendItemDTO[] {
 }
 
 export const courseHandlers = [
-  http.get("/api/course/filters", async () => {
+  http.get("/api/course/filter", async () => {
     await randomDelay()
     return HttpResponse.json(filters)
   }),
@@ -244,7 +244,7 @@ export const courseHandlers = [
     return HttpResponse.json(paginate(reviews, page, pageSize))
   }),
 
-  http.get("/api/course/:courseID/review/filters", async ({ params }) => {
+  http.get("/api/course/:courseID/review/filter", async ({ params }) => {
     await randomDelay()
     const id = Number(params.courseID)
     const reviews = mockReviews.filter((r) => r.course_id === id)

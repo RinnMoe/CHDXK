@@ -14,7 +14,7 @@ function paginate<T>(items: T[], page: number, pageSize: number) {
 }
 
 export const teacherHandlers = [
-  http.get("/api/teacher/filters", async () => {
+  http.get("/api/teacher/filter", async () => {
     await randomDelay()
     return HttpResponse.json(makeTeacherFilters())
   }),
@@ -52,7 +52,7 @@ export const teacherHandlers = [
     return HttpResponse.json(teacher)
   }),
 
-  http.get("/api/teacher/:teacherID/courses", async ({ params, request }) => {
+  http.get("/api/teacher/:teacherID/course", async ({ params, request }) => {
     await randomDelay()
     const teacherID = Number(params.teacherID)
     const url = new URL(request.url)

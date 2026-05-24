@@ -10,7 +10,7 @@ interface CourseCardProps {
 export function CourseCard({ course }: CourseCardProps) {
   return (
     <Link
-      to={`/courses/${course.id}`}
+      to={`/course/${course.id}`}
       className="block border-b px-4 py-3 transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
     >
       <div className="flex min-w-0 items-center gap-2">

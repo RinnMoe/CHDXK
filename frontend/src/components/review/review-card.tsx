@@ -52,7 +52,7 @@ interface ReviewCardProps {
 }
 
 function getReviewUrl(reviewID: number) {
-  const path = `/reviews/${reviewID}`
+  const path = `/review/${reviewID}`
   if (typeof window === "undefined") return path
   return new URL(path, window.location.origin).toString()
 }
@@ -311,7 +311,7 @@ export function ReviewCard({
       <div className="space-y-2">
         {showCourse && review.course && (
           <Link
-            to={`/courses/${review.course.id}`}
+            to={`/course/${review.course.id}`}
             className="-m-2 mb-2 flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-muted/50"
           >
             <span className="font-mono text-sm text-muted-foreground">
@@ -328,7 +328,7 @@ export function ReviewCard({
 
         <div className="flex items-center gap-2">
           <Link
-            to={`/reviews/${review.id}`}
+            to={`/review/${review.id}`}
             className="font-mono text-sm text-muted-foreground hover:text-foreground"
           >
             #{review.id}
@@ -377,7 +377,7 @@ export function ReviewCard({
                 aria-label="修改点评"
                 title="修改点评"
               >
-                <Link to={`/reviews/${review.id}/edit`}>
+                <Link to={`/review/${review.id}/edit`}>
                   <RiEditLine className="size-4" />
                 </Link>
               </Button>

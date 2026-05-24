@@ -9,7 +9,7 @@ interface TeacherCardProps {
 export function TeacherCard({ teacher }: TeacherCardProps) {
   return (
     <Link
-      to={`/teachers/${teacher.id}`}
+      to={`/teacher/${teacher.id}`}
       className="block border-b px-4 py-3 transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
     >
       <div className="space-y-1">

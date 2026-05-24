@@ -1,8 +1,7 @@
 import type { PaginatedResult } from "./types"
 import type { CourseListItemDTO } from "./course"
 import { apiClient } from "./client"
-
-const BASE = "/api"
+import { BASE_URL } from "./constants"
 
 export interface FilterItem {
   name: string
@@ -46,22 +45,22 @@ function buildQuery(filter: Record<string, unknown>): string {
 }
 
 export function getTeacherFilters(): Promise<TeacherFilters> {
-  return apiClient(`${BASE}/teacher/filters`)
+  return apiClient(`${BASE_URL}/teacher/filter`)
 }
 
 export function listTeachers(
   filter: TeacherListFilter = {}
 ): Promise<PaginatedResult<TeacherDTO>> {
-  return apiClient(`${BASE}/teacher/${buildQuery(filter)}`)
+  return apiClient(`${BASE_URL}/teacher/${buildQuery(filter)}`)
 }
 
 export function getTeacher(teacherID: number): Promise<TeacherDTO> {
-  return apiClient(`${BASE}/teacher/${teacherID}`)
+  return apiClient(`${BASE_URL}/teacher/${teacherID}`)
 }
 
 export function listTeacherCourses(
   teacherID: number,
   filter: Record<string, unknown> = {}
 ): Promise<PaginatedResult<CourseListItemDTO>> {
-  return apiClient(`${BASE}/teacher/${teacherID}/courses${buildQuery(filter)}`)
+  return apiClient(`${BASE_URL}/teacher/${teacherID}/course${buildQuery(filter)}`)
 }

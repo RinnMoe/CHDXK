@@ -30,7 +30,7 @@ export function TeacherDetailPage() {
       <PageTitle>{teacher?.name ?? "教师"}</PageTitle>
       <PageShell>
         <Button asChild variant="ghost" size="sm" className="mb-4">
-          <Link to="/teachers">
+          <Link to="/teacher">
             <RiArrowLeftLine data-icon="inline-start" />
             返回教师列表
           </Link>

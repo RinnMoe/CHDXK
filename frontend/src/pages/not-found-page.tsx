@@ -21,7 +21,7 @@ export function NotFoundPage() {
               <Link to="/">返回首页</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link to="/courses">浏览课程</Link>
+              <Link to="/course">浏览课程</Link>
             </Button>
           </div>
         </div>

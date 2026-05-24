@@ -41,7 +41,7 @@ function buildFeedbackMailto(course: CourseDetailDTO) {
   const courseURL =
     typeof window === "undefined"
       ? ""
-      : `${window.location.origin}/courses/${course.id}`
+      : `${window.location.origin}/course/${course.id}`
   const teacherNames =
     course.teacher_group && course.teacher_group.length > 0
       ? course.teacher_group.map((teacher) => teacher.name).join(" / ")
@@ -138,7 +138,7 @@ export function CourseDetailPage() {
           <div className="py-16 text-center">
             <p className="text-muted-foreground">课程不存在</p>
             <Button asChild variant="link" className="mt-4">
-              <Link to="/courses">返回课程列表</Link>
+              <Link to="/course">返回课程列表</Link>
             </Button>
           </div>
         </PageShell>
@@ -162,7 +162,7 @@ export function CourseDetailPage() {
       <PageTitle>{course.name}</PageTitle>
       <PageShell>
         <Button asChild variant="ghost" size="sm" className="mb-4">
-          <Link to="/courses">
+          <Link to="/course">
             <RiArrowLeftLine data-icon="inline-start" />
             返回课程列表
           </Link>
@@ -187,7 +187,7 @@ export function CourseDetailPage() {
                 </h1>
                 <div className="inline-flex items-baseline gap-1.5">
                   <Link
-                    to={`/teachers/${course.main_teacher.id}`}
+                    to={`/teacher/${course.main_teacher.id}`}
                     className="text-lg font-semibold text-primary hover:underline"
                   >
                     {course.main_teacher.name}
@@ -215,7 +215,7 @@ export function CourseDetailPage() {
                         >
                           {index > 0 && <span className="mr-2">/</span>}
                           <Link
-                            to={`/teachers/${teacher.id}`}
+                            to={`/teacher/${teacher.id}`}
                             className="font-medium hover:text-primary hover:underline"
                           >
                             {teacher.name}
@@ -300,7 +300,7 @@ export function CourseDetailPage() {
                   />
                   {!course.my_review && (
                     <Button asChild size="sm">
-                      <Link to={`/courses/${course.id}/review/new`}>
+                      <Link to={`/course/${course.id}/review/new`}>
                         <RiAddLine data-icon="inline-start" />
                         写点评
                       </Link>

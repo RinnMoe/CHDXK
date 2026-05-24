@@ -44,7 +44,7 @@ function calcPreview(
 }
 
 export const pointHandlers = [
-  http.get("/api/user/:userID/points", async ({ params, request }) => {
+  http.get("/api/user/:userID/point", async ({ params, request }) => {
     await randomDelay()
     if (!mockSession.userID) {
       return HttpResponse.json({ error: "unauthorized" }, { status: 401 })
@@ -74,7 +74,7 @@ export const pointHandlers = [
     })
   }),
 
-  http.post("/api/point/transfers/preview", async ({ request }) => {
+  http.post("/api/point/transfer/preview", async ({ request }) => {
     await randomDelay()
     if (!mockSession.userID) {
       return HttpResponse.json({ error: "unauthorized" }, { status: 401 })
@@ -90,7 +90,7 @@ export const pointHandlers = [
     return HttpResponse.json(preview)
   }),
 
-  http.post("/api/point/transfers", async ({ request }) => {
+  http.post("/api/point/transfer", async ({ request }) => {
     await randomDelay()
     if (!mockSession.userID) {
       return HttpResponse.json({ error: "unauthorized" }, { status: 401 })

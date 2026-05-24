@@ -19,7 +19,7 @@ export function NewReviewPage() {
 
   async function handleSubmit(cmd: CreateReviewCommand | UpdateReviewCommand) {
     await mutateAsync(cmd as CreateReviewCommand)
-    navigate(`/courses/${id}`)
+    navigate(`/course/${id}`)
   }
 
   return (
@@ -27,7 +27,7 @@ export function NewReviewPage() {
       <PageTitle>写点评</PageTitle>
       <PageShell>
         <Button asChild variant="ghost" size="sm" className="mb-4">
-          <Link to={`/courses/${id}`}>
+          <Link to={`/course/${id}`}>
             <RiArrowLeftLine data-icon="inline-start" />
             返回课程
           </Link>
@@ -59,7 +59,7 @@ export function NewReviewPage() {
               courseID={id}
               semesters={semesters}
               onSubmit={handleSubmit}
-              onCancel={() => navigate(`/courses/${id}`)}
+              onCancel={() => navigate(`/course/${id}`)}
               isSubmitting={isPending}
             />
           </CardContent>

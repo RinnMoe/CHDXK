@@ -21,7 +21,7 @@ export function EditReviewPage() {
 
   async function handleSubmit(cmd: CreateReviewCommand | UpdateReviewCommand) {
     await mutateAsync({ reviewID: id, cmd: cmd as UpdateReviewCommand })
-    navigate(`/reviews/${id}`)
+    navigate(`/review/${id}`)
   }
 
   if (isLoading || !review) {
@@ -43,7 +43,7 @@ export function EditReviewPage() {
       <PageTitle>编辑点评</PageTitle>
       <PageShell>
         <Button asChild variant="ghost" size="sm" className="mb-4">
-          <Link to={`/reviews/${id}`}>
+          <Link to={`/review/${id}`}>
             <RiArrowLeftLine data-icon="inline-start" />
             返回点评
           </Link>
@@ -77,7 +77,7 @@ export function EditReviewPage() {
               initialReview={review}
               semesters={semesters}
               onSubmit={handleSubmit}
-              onCancel={() => navigate(`/reviews/${id}`)}
+              onCancel={() => navigate(`/review/${id}`)}
               isSubmitting={isPending}
             />
           </CardContent>

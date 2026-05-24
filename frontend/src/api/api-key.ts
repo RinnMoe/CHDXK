@@ -1,6 +1,5 @@
 import { apiClient } from "./client"
-
-const BASE = "/api/api-keys"
+import { BASE_URL } from "./constants"
 
 export interface ApiKeyDTO {
   id: number
@@ -18,18 +17,18 @@ export interface CreateApiKeyCommand {
 }
 
 export function listApiKeys(): Promise<ApiKeyDTO[]> {
-  return apiClient<ApiKeyDTO[]>(`${BASE}/`)
+  return apiClient<ApiKeyDTO[]>(`${BASE_URL}/api-key/`)
 }
 
 export function createApiKey(cmd: CreateApiKeyCommand): Promise<ApiKeyDTO> {
-  return apiClient<ApiKeyDTO>(`${BASE}/`, {
+  return apiClient<ApiKeyDTO>(`${BASE_URL}/api-key/`, {
     method: "POST",
     body: JSON.stringify(cmd),
   })
 }
 
 export function deleteApiKey(id: number): Promise<void> {
-  return apiClient<void>(`${BASE}/${id}`, {
+  return apiClient<void>(`${BASE_URL}/api-key/${id}`, {
     method: "DELETE",
   })
 }
