@@ -38,8 +38,8 @@ export interface CourseListItemDTO {
   credit: number
   department: string
   language: string
-  target_years: string[]
-  categories: string[]
+  target_years?: string[]
+  categories?: string[]
   main_teacher: TeacherDTO
   rating: RatingInfoDTO
 }
@@ -47,8 +47,8 @@ export interface CourseListItemDTO {
 export interface OfferedCourseDTO {
   semester: string
   language: string
-  target_years: string[]
-  categories: string[]
+  target_years?: string[]
+  categories?: string[]
 }
 
 export interface CourseDetailDTO {
@@ -59,8 +59,8 @@ export interface CourseDetailDTO {
   department: string
   last_semester: string
   language: string
-  target_years: string[]
-  categories: string[]
+  target_years?: string[]
+  categories?: string[]
   main_teacher: TeacherDTO
   teacher_group?: TeacherDTO[]
   offered_courses: OfferedCourseDTO[]
