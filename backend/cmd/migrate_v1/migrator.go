@@ -9,10 +9,12 @@ import (
 
 	"github.com/lib/pq"
 	pinyin "github.com/mozillazg/go-pinyin"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
 	"jcourse/internal/domain/auth"
+	"jcourse/internal/domain/stat"
 	"jcourse/internal/infrastructure/repository"
 )
 
@@ -65,6 +67,9 @@ func (m *Migrator) Run() error {
 	}
 	if err := m.resetSequences(); err != nil {
 		return fmt.Errorf("reset sequences: %w", err)
+	}
+	if err := m.backfillSiteDailyStats(); err != nil {
+		return fmt.Errorf("backfill site daily stats: %w", err)
 	}
 
 	log.Println("V1 data migration complete.")
@@ -778,6 +783,256 @@ func (m *Migrator) resetSequences() error {
 		}
 	}
 	return m.checkpoint.MarkDone(stage)
+}
+
+func (m *Migrator) backfillSiteDailyStats() error {
+	const stage = "site_daily_stats"
+	if m.checkpoint.StageDone(stage) {
+		log.Println("Backfilling site daily stats... already done, skipping")
+		return nil
+	}
+	log.Println("Backfilling site daily stats...")
+
+	loc, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		return fmt.Errorf("load stats location: %w", err)
+	}
+	calendar := stat.NewCalendar(loc)
+
+	startDate, endDate, err := m.siteDailyStatsDateRange(calendar, loc)
+	if err != nil {
+		return err
+	}
+	if startDate.IsZero() {
+		log.Println("  Site daily stats: no source data, skipping")
+		return m.checkpoint.MarkDone(stage)
+	}
+
+	if lastDate := m.checkpoint.StageLastDate(stage); lastDate != "" {
+		resumeDate, err := calendar.ParseDate(lastDate)
+		if err != nil {
+			return fmt.Errorf("parse site daily stats checkpoint date: %w", err)
+		}
+		startDate = resumeDate.AddDate(0, 0, 1)
+		log.Printf("  Resuming site daily stats after %s", lastDate)
+	}
+	if startDate.After(endDate) {
+		return m.checkpoint.MarkDone(stage)
+	}
+
+	endExclusive := endDate.AddDate(0, 0, 1)
+	locName := loc.String()
+
+	userNewCounts, err := m.dailyCountByDate(
+		`SELECT TO_CHAR((created_at AT TIME ZONE ?)::date, 'YYYY-MM-DD') AS stat_date, COUNT(*) AS count
+		 FROM users
+		 WHERE created_at >= ? AND created_at < ?
+		 GROUP BY 1
+		 ORDER BY 1`, locName, startDate, endExclusive,
+	)
+	if err != nil {
+		return fmt.Errorf("load site daily user counts: %w", err)
+	}
+	userActiveCounts, err := m.dailyCountByDate(
+		`SELECT TO_CHAR((last_seen_at AT TIME ZONE ?)::date, 'YYYY-MM-DD') AS stat_date, COUNT(*) AS count
+		 FROM users
+		 WHERE last_seen_at >= ? AND last_seen_at < ?
+		 GROUP BY 1
+		 ORDER BY 1`, locName, startDate, endExclusive,
+	)
+	if err != nil {
+		return fmt.Errorf("load site daily active user counts: %w", err)
+	}
+	reviewNewCounts, err := m.dailyCountByDate(
+		`SELECT TO_CHAR((created_at AT TIME ZONE ?)::date, 'YYYY-MM-DD') AS stat_date, COUNT(*) AS count
+		 FROM reviews
+		 WHERE created_at >= ? AND created_at < ?
+		 GROUP BY 1
+		 ORDER BY 1`, locName, startDate, endExclusive,
+	)
+	if err != nil {
+		return fmt.Errorf("load site daily review counts: %w", err)
+	}
+	reviewAuthorCounts, err := m.dailyCountByDate(
+		`SELECT TO_CHAR((created_at AT TIME ZONE ?)::date, 'YYYY-MM-DD') AS stat_date, COUNT(DISTINCT user_id) AS count
+		 FROM reviews
+		 WHERE created_at >= ? AND created_at < ?
+		 GROUP BY 1
+		 ORDER BY 1`, locName, startDate, endExclusive,
+	)
+	if err != nil {
+		return fmt.Errorf("load site daily review author counts: %w", err)
+	}
+	firstReviewCourseCounts, err := m.dailyCountByDate(
+		`SELECT stat_date, COUNT(*) AS count
+		 FROM (
+			SELECT TO_CHAR((MIN(created_at) AT TIME ZONE ?)::date, 'YYYY-MM-DD') AS stat_date
+			FROM reviews
+			GROUP BY course_id
+		 ) AS course_first_reviews
+		 WHERE stat_date >= ? AND stat_date <= ?
+		 GROUP BY stat_date
+		 ORDER BY stat_date`, locName, startDate.Format(stat.DateLayout), endDate.Format(stat.DateLayout),
+	)
+	if err != nil {
+		return fmt.Errorf("load site daily reviewed course counts: %w", err)
+	}
+	newLikeCounts, err := m.dailyCountByDate(
+		`SELECT TO_CHAR((updated_at AT TIME ZONE ?)::date, 'YYYY-MM-DD') AS stat_date, COUNT(*) AS count
+		 FROM review_votes
+		 WHERE updated_at >= ? AND updated_at < ? AND vote_type = 1
+		 GROUP BY 1
+		 ORDER BY 1`, locName, startDate, endExclusive,
+	)
+	if err != nil {
+		return fmt.Errorf("load site daily like counts: %w", err)
+	}
+	newDislikeCounts, err := m.dailyCountByDate(
+		`SELECT TO_CHAR((updated_at AT TIME ZONE ?)::date, 'YYYY-MM-DD') AS stat_date, COUNT(*) AS count
+		 FROM review_votes
+		 WHERE updated_at >= ? AND updated_at < ? AND vote_type = -1
+		 GROUP BY 1
+		 ORDER BY 1`, locName, startDate, endExclusive,
+	)
+	if err != nil {
+		return fmt.Errorf("load site daily dislike counts: %w", err)
+	}
+
+	totalUsers, totalReviews, reviewedCourses, err := m.siteDailyStatsTotalsBefore(startDate)
+	if err != nil {
+		return err
+	}
+
+	now := time.Now().In(loc)
+	for date := startDate; !date.After(endDate); date = date.AddDate(0, 0, 1) {
+		dateKey := date.Format(stat.DateLayout)
+		totalUsers += userNewCounts[dateKey]
+		totalReviews += reviewNewCounts[dateKey]
+		reviewedCourses += firstReviewCourseCounts[dateKey]
+
+		entity := repository.SiteDailyStatEntity{
+			StatDate: date,
+			Metrics: datatypes.JSONMap{
+				stat.MetricTotalUserCount:      totalUsers,
+				stat.MetricTotalReviewCount:    totalReviews,
+				stat.MetricActiveUserCount:     userActiveCounts[dateKey],
+				stat.MetricNewUserCount:        userNewCounts[dateKey],
+				stat.MetricNewReviewCount:      reviewNewCounts[dateKey],
+				stat.MetricReviewAuthorCount:   reviewAuthorCounts[dateKey],
+				stat.MetricReviewedCourseTotal: reviewedCourses,
+				stat.MetricNewLikeCount:        newLikeCounts[dateKey],
+				stat.MetricNewDislikeCount:     newDislikeCounts[dateKey],
+			},
+			GeneratedAt: now,
+			CreatedAt:   now,
+			UpdatedAt:   now,
+		}
+		if err := m.target.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "stat_date"}},
+			DoNothing: true,
+		}).Create(&entity).Error; err != nil {
+			return fmt.Errorf("insert site daily stat %s: %w", dateKey, err)
+		}
+		if err := m.checkpoint.MarkDateProgress(stage, dateKey); err != nil {
+			return fmt.Errorf("save site daily stats checkpoint: %w", err)
+		}
+		log.Printf("  Site daily stats: %s", dateKey)
+	}
+
+	if err := m.checkpoint.MarkDone(stage); err != nil {
+		return err
+	}
+	log.Printf("  Site daily stats: %d days backfilled", int(endDate.Sub(startDate).Hours()/24)+1)
+	return nil
+}
+
+func (m *Migrator) siteDailyStatsDateRange(calendar stat.Calendar, loc *time.Location) (time.Time, time.Time, error) {
+	startDate, err := m.firstDateForTable(`SELECT TO_CHAR(MIN(created_at AT TIME ZONE ?), 'YYYY-MM-DD') AS stat_date FROM users`, loc)
+	if err != nil {
+		return time.Time{}, time.Time{}, fmt.Errorf("load first user date: %w", err)
+	}
+	reviewDate, err := m.firstDateForTable(`SELECT TO_CHAR(MIN(created_at AT TIME ZONE ?), 'YYYY-MM-DD') AS stat_date FROM reviews`, loc)
+	if err != nil {
+		return time.Time{}, time.Time{}, fmt.Errorf("load first review date: %w", err)
+	}
+
+	if startDate.IsZero() {
+		startDate = reviewDate
+	} else if !reviewDate.IsZero() && reviewDate.Before(startDate) {
+		startDate = reviewDate
+	}
+	if startDate.IsZero() {
+		return time.Time{}, time.Time{}, nil
+	}
+
+	endDate := calendar.DateOnly(time.Now().In(loc))
+	return startDate, endDate, nil
+}
+
+func (m *Migrator) siteDailyStatsTotalsBefore(date time.Time) (int64, int64, int64, error) {
+	var totalUsers int64
+	if err := m.target.Raw(`SELECT COUNT(*) FROM users WHERE created_at < ?`, date).Scan(&totalUsers).Error; err != nil {
+		return 0, 0, 0, fmt.Errorf("load previous total user count: %w", err)
+	}
+
+	var totalReviews int64
+	if err := m.target.Raw(`SELECT COUNT(*) FROM reviews WHERE created_at < ?`, date).Scan(&totalReviews).Error; err != nil {
+		return 0, 0, 0, fmt.Errorf("load previous total review count: %w", err)
+	}
+
+	var reviewedCourses int64
+	if err := m.target.Raw(`
+		SELECT COUNT(*)
+		FROM (
+			SELECT course_id
+			FROM reviews
+			GROUP BY course_id
+			HAVING MIN(created_at) < ?
+		) AS reviewed_courses
+	`, date).Scan(&reviewedCourses).Error; err != nil {
+		return 0, 0, 0, fmt.Errorf("load previous reviewed course count: %w", err)
+	}
+
+	return totalUsers, totalReviews, reviewedCourses, nil
+}
+
+type dateCountRow struct {
+	StatDate string `gorm:"column:stat_date"`
+	Count    int64  `gorm:"column:count"`
+}
+
+type dateValueRow struct {
+	StatDate sql.NullString `gorm:"column:stat_date"`
+}
+
+func (m *Migrator) firstDateForTable(query string, loc *time.Location) (time.Time, error) {
+	var row dateValueRow
+	if err := m.target.Raw(query, loc.String()).Scan(&row).Error; err != nil {
+		return time.Time{}, err
+	}
+	if !row.StatDate.Valid || row.StatDate.String == "" {
+		return time.Time{}, nil
+	}
+	date, err := time.ParseInLocation(stat.DateLayout, row.StatDate.String, loc)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return date, nil
+}
+
+func (m *Migrator) dailyCountByDate(query string, args ...any) (map[string]int64, error) {
+	var rows []dateCountRow
+	if err := m.target.Raw(query, args...).Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+	result := make(map[string]int64, len(rows))
+	for _, row := range rows {
+		if row.StatDate == "" {
+			continue
+		}
+		result[row.StatDate] = row.Count
+	}
+	return result, nil
 }
 
 func resetSequence(db *gorm.DB, table, column string) error {

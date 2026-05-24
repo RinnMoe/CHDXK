@@ -16,7 +16,8 @@ type migrationCheckpoint struct {
 }
 
 type checkpointStage struct {
-	LastID    int       `json:"last_id"`
+	LastID    int       `json:"last_id,omitempty"`
+	LastDate  string    `json:"last_date,omitempty"`
 	Done      bool      `json:"done"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -53,6 +54,11 @@ func (c *migrationCheckpoint) StageDone(name string) bool {
 	return stage.Done
 }
 
+func (c *migrationCheckpoint) StageLastDate(name string) string {
+	stage := c.Stages[name]
+	return stage.LastDate
+}
+
 func (c *migrationCheckpoint) MarkProgress(name string, lastID int) error {
 	return c.updateStage(name, checkpointStage{LastID: lastID})
 }
@@ -60,6 +66,12 @@ func (c *migrationCheckpoint) MarkProgress(name string, lastID int) error {
 func (c *migrationCheckpoint) MarkDone(name string) error {
 	stage := c.Stages[name]
 	stage.Done = true
+	return c.updateStage(name, stage)
+}
+
+func (c *migrationCheckpoint) MarkDateProgress(name string, date string) error {
+	stage := c.Stages[name]
+	stage.LastDate = date
 	return c.updateStage(name, stage)
 }
 
