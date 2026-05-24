@@ -114,6 +114,18 @@ CREATE INDEX idx_course_enrollments_user_created
 CREATE INDEX idx_course_enrollments_course_semester
     ON course_enrollments (course_id, semester, created_at DESC, id DESC);
 
+CREATE TABLE IF NOT EXISTS user_settings
+(
+    user_id          INTEGER     PRIMARY KEY,
+    current_semester TEXT        NOT NULL DEFAULT '',
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT fk_user_settings_user
+        FOREIGN KEY (user_id) REFERENCES users (id)
+            ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS api_keys
 (
     id           SERIAL PRIMARY KEY,

@@ -29,6 +29,10 @@ func (r *fakeCommandCourseRepo) OfferedCourseExists(ctx context.Context, courseI
 	return ok, nil
 }
 
+func (r *fakeCommandCourseRepo) OfferedSemesterExists(ctx context.Context, semester string) (bool, error) {
+	return false, nil
+}
+
 type fakeCommandReviewRepo struct {
 	nextID  int
 	reviews map[int]*review.Review

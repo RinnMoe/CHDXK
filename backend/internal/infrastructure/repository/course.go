@@ -131,6 +131,21 @@ func (r *CourseRepository) OfferedCourseExists(ctx context.Context, courseID int
 	return exists, nil
 }
 
+func (r *CourseRepository) OfferedSemesterExists(ctx context.Context, semester string) (bool, error) {
+	key := cacheKey("course", "offered", "semester", semester)
+	if cached, ok := cacheGetJSON[bool](ctx, r.cache, key); ok {
+		return *cached, nil
+	}
+
+	count, err := gorm.G[OfferedCourseEntity](r.db).Where("semester = ?", semester).Count(ctx, "id")
+	if err != nil {
+		return false, err
+	}
+	exists := count > 0
+	cacheSetJSON(ctx, r.cache, key, exists)
+	return exists, nil
+}
+
 func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int) ([]course.OfferedCourseView, error) {
 	entities, err := gorm.G[OfferedCourseEntity](r.db).
 		Where("course_id = ?", courseID).
@@ -296,12 +311,22 @@ func (r *CourseRepository) GetFilters(ctx context.Context) (*course.CourseFilter
 		return nil, err
 	}
 
+	var semesters []course.FilterItem
+	if err := r.db.WithContext(ctx).Model(&OfferedCourseEntity{}).
+		Select("semester AS name, COUNT(DISTINCT course_id) AS count").
+		Where("semester != ''").
+		Group("semester").Order("semester DESC").
+		Scan(&semesters).Error; err != nil {
+		return nil, err
+	}
+
 	filters := &course.CourseFilters{
 		Credits:     credits,
 		Departments: departments,
 		Categories:  categories,
 		TargetYears: targetYears,
 		Languages:   languages,
+		Semesters:   semesters,
 	}
 	cacheSetJSON(ctx, r.cache, key, filters)
 	return filters, nil

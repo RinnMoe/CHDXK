@@ -68,6 +68,9 @@ export function UserMenu() {
           <DropdownMenuItem asChild>
             <Link to="/api-key">API Keys</Link>
           </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/settings">设置</Link>
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut}>
             退出登录

@@ -81,6 +81,10 @@ const ApiKeysPage = lazyNamedPage(
   () => import("@/pages/api-keys-page"),
   "ApiKeysPage"
 )
+const UserSettingsPage = lazyNamedPage(
+  () => import("@/pages/user-settings-page"),
+  "UserSettingsPage"
+)
 const SiteStatsPage = lazyNamedPage(
   () => import("@/pages/admin/site-stats-page"),
   "SiteStatsPage"
@@ -126,6 +130,7 @@ export const router = createBrowserRouter([
           { path: "/teacher/:teacherID", element: <TeacherDetailPage /> },
           { path: "/point", element: <UserPointsPage /> },
           { path: "/api-key", element: <ApiKeysPage /> },
+          { path: "/settings", element: <UserSettingsPage /> },
           { path: "/admin/user", element: <UserAdminPage /> },
           { path: "/admin/site-stat", element: <SiteStatsPage /> },
           { path: "/about", element: <AboutPage /> },

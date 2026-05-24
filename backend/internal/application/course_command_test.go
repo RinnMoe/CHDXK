@@ -63,6 +63,10 @@ func (r *fakeCourseRepo) OfferedCourseExists(ctx context.Context, courseID int, 
 	return ok, nil
 }
 
+func (r *fakeCourseRepo) OfferedSemesterExists(ctx context.Context, semester string) (bool, error) {
+	return false, nil
+}
+
 func TestCourseCommandService_SetNotificationLevel_Success(t *testing.T) {
 	courseRepo := newFakeCourseRepo()
 	courseRepo.courses[1] = &course.Course{ID: 1, Code: "CS101", Name: "数据结构"}

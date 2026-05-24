@@ -16,6 +16,7 @@ import (
 type fakeCourseQuery struct {
 	details map[int]*course.CourseDetailView
 	views   map[int]course.CourseView
+	filters *course.CourseFilters
 }
 
 type fakeHotCourseRepo struct {
@@ -125,6 +126,9 @@ func (q *fakeCourseQuery) FindOfferedCourses(ctx context.Context, courseID int) 
 }
 
 func (q *fakeCourseQuery) GetFilters(ctx context.Context) (*course.CourseFilters, error) {
+	if q.filters != nil {
+		return q.filters, nil
+	}
 	return &course.CourseFilters{}, nil
 }
 

@@ -467,8 +467,11 @@ func TestCourseRepository_GetFilters(t *testing.T) {
 	t2 := seedTeacherRaw(t, db, "T002", "李老师", "数学学院", "副教授")
 
 	seedCourseRaw(t, db, "CS101", "数据结构", 3.0, "计算机学院", t1.ID, "zh", []string{"核心课"}, []string{"2021"})
-	seedCourseRaw(t, db, "CS102", "算法设计", 3.0, "计算机学院", t1.ID, "en", []string{"选修课"}, []string{"2022"})
-	seedCourseRaw(t, db, "MA101", "高等数学", 4.0, "数学学院", t2.ID, "zh", []string{"核心课"}, []string{"2021", "2022"})
+	c2 := seedCourseRaw(t, db, "CS102", "算法设计", 3.0, "计算机学院", t1.ID, "en", []string{"选修课"}, []string{"2022"})
+	c3 := seedCourseRaw(t, db, "MA101", "高等数学", 4.0, "数学学院", t2.ID, "zh", []string{"核心课"}, []string{"2021", "2022"})
+	seedOfferedCourseRaw(t, db, c2.ID, "2024-2025-2", "zh", nil, nil)
+	seedOfferedCourseRaw(t, db, c3.ID, "2024-2025-2", "zh", nil, nil)
+	seedOfferedCourseRaw(t, db, c3.ID, "2025-2026-1", "zh", nil, nil)
 
 	filters, err := repo.GetFilters(ctx)
 	if err != nil {
@@ -522,6 +525,18 @@ func TestCourseRepository_GetFilters(t *testing.T) {
 			t.Errorf("target_year 2022: got %+v", filters.TargetYears[1])
 		}
 	})
+
+	t.Run("semesters", func(t *testing.T) {
+		if len(filters.Semesters) != 2 {
+			t.Fatalf("semesters count: got %d, want 2", len(filters.Semesters))
+		}
+		if filters.Semesters[0].Name != "2025-2026-1" || filters.Semesters[0].Count != 1 {
+			t.Errorf("semester 2025-2026-1: got %+v, want count=1", filters.Semesters[0])
+		}
+		if filters.Semesters[1].Name != "2024-2025-2" || filters.Semesters[1].Count != 2 {
+			t.Errorf("semester 2024-2025-2: got %+v, want count=2", filters.Semesters[1])
+		}
+	})
 }
 
 func TestCourseRepository_OfferedCourseExists(t *testing.T) {
@@ -547,6 +562,34 @@ func TestCourseRepository_OfferedCourseExists(t *testing.T) {
 	exists, err = repo.OfferedCourseExists(ctx, courseEntity.ID, "2020-2021-1")
 	if err != nil {
 		t.Fatalf("OfferedCourseExists for missing: %v", err)
+	}
+	if exists {
+		t.Error("expected exists=false for missing semester")
+	}
+}
+
+func TestCourseRepository_OfferedSemesterExists(t *testing.T) {
+	db := newTestDB(t)
+	repo := repository.NewCourseRepository(db)
+	ctx := context.Background()
+
+	cleanTables(t, db, "offered_courses", "courses", "teachers")
+
+	teacher := seedTeacher(t, db)
+	courseEntity := seedCourse(t, db, teacher.ID)
+	seedOfferedCourseRaw(t, db, courseEntity.ID, "2024-2025-1", "zh", nil, nil)
+
+	exists, err := repo.OfferedSemesterExists(ctx, "2024-2025-1")
+	if err != nil {
+		t.Fatalf("OfferedSemesterExists: %v", err)
+	}
+	if !exists {
+		t.Error("expected exists=true")
+	}
+
+	exists, err = repo.OfferedSemesterExists(ctx, "2020-2021-1")
+	if err != nil {
+		t.Fatalf("OfferedSemesterExists for missing: %v", err)
 	}
 	if exists {
 		t.Error("expected exists=false for missing semester")

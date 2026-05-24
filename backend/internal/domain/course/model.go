@@ -23,4 +23,5 @@ type Course struct {
 type CourseRepository interface {
 	Get(ctx context.Context, courseID int) (*Course, error)
 	OfferedCourseExists(ctx context.Context, courseID int, semester string) (bool, error)
+	OfferedSemesterExists(ctx context.Context, semester string) (bool, error)
 }

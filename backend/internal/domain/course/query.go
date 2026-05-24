@@ -74,6 +74,7 @@ type CourseFilters struct {
 	Categories  []FilterItem `json:"categories"`
 	TargetYears []FilterItem `json:"target_years"`
 	Languages   []FilterItem `json:"languages"`
+	Semesters   []FilterItem `json:"semesters"`
 }
 
 // Read model interface

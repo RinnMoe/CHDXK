@@ -34,6 +34,8 @@ type ServiceContainer struct {
 	ApiKeySvc               *auth.ApiKeyService
 	ApiKeyQuery             *application.ApiKeyQueryService
 	ApiKeyCommand           *application.ApiKeyCommandService
+	UserSettingsQuery       *application.UserSettingsQueryService
+	UserSettingsCommand     *application.UserSettingsCommandService
 }
 
 func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
@@ -51,6 +53,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	pointRepo := repository.NewPointRepository(db, redisClient)
 	accountRepo := repository.NewAccountRepository(db, redisClient)
 	userRepo := repository.NewUserRepository(db, redisClient)
+	userSettingsRepo := repository.NewUserSettingsRepository(db, redisClient)
 	apiKeyRepo := repository.NewApiKeyRepository(db)
 	statRepo := repository.NewSiteDailyStatRepository(db, redisClient)
 	courseHotRepo := repository.NewGormCourseHotRepository(db, redisClient)
@@ -122,6 +125,8 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	apiKeySvc := auth.NewApiKeyService(apiKeyRepo, conf.APIKey)
 	apiKeyQuery := application.NewApiKeyQueryService(apiKeySvc)
 	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc)
+	userSettingsQuery := application.NewUserSettingsQueryService(userSettingsRepo, courseRepo, courseRepo)
+	userSettingsCommand := application.NewUserSettingsCommandService(userSettingsRepo, courseRepo)
 
 	return &ServiceContainer{
 		ReviewQuery:             reviewQuery,
@@ -144,5 +149,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		ApiKeySvc:               apiKeySvc,
 		ApiKeyQuery:             apiKeyQuery,
 		ApiKeyCommand:           apiKeyCommand,
+		UserSettingsQuery:       userSettingsQuery,
+		UserSettingsCommand:     userSettingsCommand,
 	}
 }

@@ -39,6 +39,12 @@ const LANGUAGES = ["中文", "英文", "双语"]
 
 const CREDITS = [1, 2, 3, 4]
 
+export const MOCK_COURSE_SEMESTERS = [
+  "2025-2026-1",
+  "2024-2025-2",
+  "2024-2025-1",
+]
+
 const TEACHER_NAMES = [
   "张伟",
   "王芳",
@@ -307,5 +313,6 @@ export function makeCourseFilters(): CourseFilters {
     categories: counts(CATEGORIES),
     target_years: counts(TARGET_YEARS),
     languages: counts(["中文", "英文", "双语"]),
+    semesters: counts(MOCK_COURSE_SEMESTERS),
   }
 }

@@ -56,6 +56,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	pointController := controller.NewPointController(container.PointQuery, container.PointCommand)
 	accountController := controller.NewAccountController(container.AccountCommand, container.AccountQuery)
 	apiKeyController := controller.NewApiKeyController(container.ApiKeyQuery, container.ApiKeyCommand)
+	userSettingsController := controller.NewUserSettingsController(container.UserSettingsQuery, container.UserSettingsCommand)
 	siteStatsController := controller.NewSiteStatsController(container.SiteStatsQuery)
 	announcementController := controller.NewAnnouncementController(container.AnnouncementQuery)
 	adminUserController := controller.NewAdminUserController(container.AdminUserQuery, container.AdminUserCommand)
@@ -120,6 +121,8 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	}
 	userGroup := apiGroup.Group("/user")
 	{
+		userGroup.GET("/settings", userSettingsController.GetMySettings)
+		userGroup.PUT("/settings", userSettingsController.UpdateMySettings)
 		userGroup.GET("/:userID/point", pointController.GetUserPoints)
 		userGroup.GET("/:userID/review", reviewController.ListUserReviews)
 	}
