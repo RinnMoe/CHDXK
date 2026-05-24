@@ -84,7 +84,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	adminUserQuery := application.NewAdminUserQueryService(accountRepo, userRepo, usernameDeriver)
 	adminUserCommand := application.NewAdminUserCommandService(userRepo, conf.Admin)
 	hasher := account.NewDjangoPBKDF2SHA256PasswordHasher(conf.Auth.PasswordHash)
-	verificationSender := email.NewSMTPVerificationCodeSender(conf.SMTP)
+	verificationSender := email.NewSMTPSender(conf.SMTP)
 	registrationService := account.NewRegistrationService(
 		accountRepo,
 		verificationRepo,

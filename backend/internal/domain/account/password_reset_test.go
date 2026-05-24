@@ -23,11 +23,15 @@ func TestPasswordResetService_SendResetCodeSuccess(t *testing.T) {
 	if err := svc.SendResetCode(context.Background(), "alice@example.edu"); err != nil {
 		t.Fatalf("SendResetCode: %v", err)
 	}
-	if sender.email != "alice@example.edu" {
-		t.Fatalf("sender email = %q, want alice@example.edu", sender.email)
+	if sender.email.To != "alice@example.edu" {
+		t.Fatalf("sender email.To = %q, want alice@example.edu", sender.email.To)
 	}
-	if len(sender.code) != 6 {
-		t.Fatalf("sender code = %q, want 6 digits", sender.code)
+	if sender.email.Subject != VerificationCodeEmailSubject {
+		t.Fatalf("sender email.Subject = %q, want %q", sender.email.Subject, VerificationCodeEmailSubject)
+	}
+	saved := codes.saved["alice@example.edu"]
+	if len(saved.Code) != 6 {
+		t.Fatalf("saved code = %q, want 6 digits", saved.Code)
 	}
 }
 
@@ -213,12 +217,10 @@ func (r *resetFakeCodeRepo) Delete(_ context.Context, email string) error {
 }
 
 type resetFakeSender struct {
-	email string
-	code  string
+	email Email
 }
 
-func (s *resetFakeSender) SendVerificationCode(_ context.Context, email string, code string) error {
+func (s *resetFakeSender) SendEmail(_ context.Context, email Email) error {
 	s.email = email
-	s.code = code
 	return nil
 }

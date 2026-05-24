@@ -7,15 +7,15 @@ import (
 	"jcourse/internal/domain/account"
 )
 
-type LogVerificationCodeSender struct{}
+type LogSender struct{}
 
-func NewLogVerificationCodeSender() *LogVerificationCodeSender {
-	return &LogVerificationCodeSender{}
+func NewLogSender() *LogSender {
+	return &LogSender{}
 }
 
-func (s *LogVerificationCodeSender) SendVerificationCode(_ context.Context, email string, code string) error {
-	log.Printf("verification code for %s: %s", email, code)
+func (s *LogSender) SendEmail(_ context.Context, email account.Email) error {
+	log.Printf("email to %s, subject: %s, body: %s", email.To, email.Subject, email.Body)
 	return nil
 }
 
-var _ account.VerificationCodeSender = (*LogVerificationCodeSender)(nil)
+var _ account.EmailSender = (*LogSender)(nil)

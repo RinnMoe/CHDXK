@@ -17,29 +17,29 @@ type SMTPConfig struct {
 	From     string `mapstructure:"from"`
 }
 
-type SMTPVerificationCodeSender struct {
+type SMTPSender struct {
 	dialer *gomail.Dialer
 	from   string
 }
 
-func NewSMTPVerificationCodeSender(conf SMTPConfig) *SMTPVerificationCodeSender {
-	return &SMTPVerificationCodeSender{
+func NewSMTPSender(conf SMTPConfig) *SMTPSender {
+	return &SMTPSender{
 		dialer: gomail.NewDialer(conf.Host, conf.Port, conf.Username, conf.Password),
 		from:   conf.From,
 	}
 }
 
-func (s *SMTPVerificationCodeSender) SendVerificationCode(_ context.Context, email string, code string) error {
+func (s *SMTPSender) SendEmail(_ context.Context, email account.Email) error {
 	m := gomail.NewMessage()
 	m.SetHeader("From", s.from)
-	m.SetHeader("To", email)
-	m.SetHeader("Subject", "Your verification code")
-	m.SetBody("text/plain", fmt.Sprintf("Your verification code is: %s", code))
+	m.SetHeader("To", email.To)
+	m.SetHeader("Subject", email.Subject)
+	m.SetBody("text/plain", email.Body)
 
 	if err := s.dialer.DialAndSend(m); err != nil {
-		return fmt.Errorf("send verification email: %w", err)
+		return fmt.Errorf("send email: %w", err)
 	}
 	return nil
 }
 
-var _ account.VerificationCodeSender = (*SMTPVerificationCodeSender)(nil)
+var _ account.EmailSender = (*SMTPSender)(nil)

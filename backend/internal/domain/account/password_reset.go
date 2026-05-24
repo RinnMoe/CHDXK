@@ -22,7 +22,7 @@ var DefaultPasswordResetConfig = PasswordResetConfig{
 type PasswordResetService struct {
 	userRepo  AccountRepository
 	codes     VerificationCodeRepository
-	sender    VerificationCodeSender
+	sender    EmailSender
 	hasher    PasswordHasher
 	usernames UsernameDeriver
 	config    PasswordResetConfig
@@ -31,7 +31,7 @@ type PasswordResetService struct {
 func NewPasswordResetService(
 	userRepo AccountRepository,
 	codes VerificationCodeRepository,
-	sender VerificationCodeSender,
+	sender EmailSender,
 	hasher PasswordHasher,
 	usernames UsernameDeriver,
 	config PasswordResetConfig,
@@ -90,7 +90,11 @@ func (s *PasswordResetService) SendResetCode(ctx context.Context, email string) 
 	}, s.config.CodeTTL); err != nil {
 		return err
 	}
-	return s.sender.SendVerificationCode(ctx, normalized, code)
+	mail, err := NewVerificationCodeEmail(normalized, code, s.config.CodeTTL)
+	if err != nil {
+		return err
+	}
+	return s.sender.SendEmail(ctx, mail)
 }
 
 func (s *PasswordResetService) ResetPassword(ctx context.Context, email, code, newPassword string) error {

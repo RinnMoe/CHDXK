@@ -40,14 +40,15 @@ func TestAccountCommandService_SendRegisterCodeRejectsEmailOutsideWhitelist(t *t
 func TestAccountCommandService_RegisterAndLogin(t *testing.T) {
 	accountRepo := newFakeAccountRepo(nil)
 	userRepo := newFakeAuthUserRepo(nil)
+	codes := newFakeCodeRepo()
 	sender := &fakeCodeSender{}
-	svc := newAccountService(accountRepo, userRepo, newFakeCodeRepo(), sender)
+	svc := newAccountService(accountRepo, userRepo, codes, sender)
 	ctx := context.Background()
 
 	if err := svc.SendRegisterCode(ctx, application.SendRegisterCodeCommand{Email: "alice@example.edu"}); err != nil {
 		t.Fatalf("SendRegisterCode: %v", err)
 	}
-	registered, err := svc.Register(ctx, application.RegisterCommand{Email: "Alice@Example.EDU", Code: sender.code, Password: "secret"})
+	registered, err := svc.Register(ctx, application.RegisterCommand{Email: "Alice@Example.EDU", Code: codes.saved["alice@example.edu"].Code, Password: "secret"})
 	if err != nil {
 		t.Fatalf("Register: %v", err)
 	}
@@ -159,18 +160,19 @@ func TestAccountCommandService_SendResetCodeAndResetPassword(t *testing.T) {
 		"alice@example.edu": {ID: 1, Username: username, PasswordHash: mustHash(t, "oldpass")},
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
+	codes := newFakeCodeRepo()
 	sender := &fakeCodeSender{}
-	svc := newAccountService(accountRepo, userRepo, newFakeCodeRepo(), sender)
+	svc := newAccountServiceWithAttempts(accountRepo, userRepo, newFakeCodeRepo(), codes, sender, 5, &fakeLoginAttemptRepo{})
 	ctx := context.Background()
 
 	if err := svc.SendResetCode(ctx, application.SendResetCodeCommand{Email: "alice@example.edu"}); err != nil {
 		t.Fatalf("SendResetCode: %v", err)
 	}
-	if sender.email != "alice@example.edu" {
-		t.Fatalf("sender email = %q, want alice@example.edu", sender.email)
+	if sender.email.To != "alice@example.edu" {
+		t.Fatalf("sender email.To = %q, want alice@example.edu", sender.email.To)
 	}
 
-	if err := svc.ResetPassword(ctx, application.ResetPasswordCommand{Email: "alice@example.edu", Code: sender.code, NewPassword: "newpass"}); err != nil {
+	if err := svc.ResetPassword(ctx, application.ResetPasswordCommand{Email: "alice@example.edu", Code: codes.saved["alice@example.edu"].Code, NewPassword: "newpass"}); err != nil {
 		t.Fatalf("ResetPassword: %v", err)
 	}
 
@@ -471,13 +473,11 @@ func (r *fakeCodeRepo) Delete(_ context.Context, email string) error {
 }
 
 type fakeCodeSender struct {
-	email string
-	code  string
+	email account.Email
 }
 
-func (s *fakeCodeSender) SendVerificationCode(_ context.Context, email string, code string) error {
+func (s *fakeCodeSender) SendEmail(_ context.Context, email account.Email) error {
 	s.email = email
-	s.code = code
 	return nil
 }
 

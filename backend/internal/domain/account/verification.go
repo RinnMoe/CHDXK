@@ -26,7 +26,3 @@ type VerificationCodeRepository interface {
 	Get(ctx context.Context, email string) (*VerificationCode, error)
 	Delete(ctx context.Context, email string) error
 }
-
-type VerificationCodeSender interface {
-	SendVerificationCode(ctx context.Context, email string, code string) error
-}

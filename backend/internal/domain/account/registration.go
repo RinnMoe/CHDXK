@@ -23,7 +23,7 @@ var DefaultRegistrationConfig = RegistrationConfig{
 type RegistrationService struct {
 	userRepo  AccountRepository
 	codes     VerificationCodeRepository
-	sender    VerificationCodeSender
+	sender    EmailSender
 	hasher    PasswordHasher
 	usernames UsernameDeriver
 	whitelist EmailWhitelist
@@ -33,7 +33,7 @@ type RegistrationService struct {
 func NewRegistrationService(
 	userRepo AccountRepository,
 	codes VerificationCodeRepository,
-	sender VerificationCodeSender,
+	sender EmailSender,
 	hasher PasswordHasher,
 	usernames UsernameDeriver,
 	config RegistrationConfig,
@@ -95,7 +95,11 @@ func (s *RegistrationService) SendRegisterCode(ctx context.Context, email string
 	}, s.config.CodeTTL); err != nil {
 		return err
 	}
-	return s.sender.SendVerificationCode(ctx, normalized, code)
+	mail, err := NewVerificationCodeEmail(normalized, code, s.config.CodeTTL)
+	if err != nil {
+		return err
+	}
+	return s.sender.SendEmail(ctx, mail)
 }
 
 func (s *RegistrationService) Register(ctx context.Context, email, code, password string) (*Account, error) {
