@@ -42,6 +42,11 @@ func (imp *Importer) Run(rows []CSVRow) error {
 	log.Println("Creating offered courses...")
 	imp.upsertOfferedCourses(rows, teacherIDMap, courseIDMap)
 
+	log.Println("Syncing course languages from last offered courses...")
+	if err := imp.syncCourseLanguagesFromLastOfferings(); err != nil {
+		return err
+	}
+
 	log.Println("Refreshing course search vectors...")
 	if err := repository.RefreshCourseSearchVectors(imp.db); err != nil {
 		return err
@@ -192,6 +197,22 @@ func (imp *Importer) resolveCourseIDs() map[string]int {
 	}
 	log.Printf("  Resolved %d course IDs", len(m))
 	return m
+}
+
+func (imp *Importer) syncCourseLanguagesFromLastOfferings() error {
+	result := imp.db.Exec(`
+		UPDATE courses AS c
+		SET language = oc.language
+		FROM offered_courses AS oc
+		WHERE oc.course_id = c.id
+		  AND oc.semester = c.last_semester
+		  AND c.language IS DISTINCT FROM oc.language
+	`)
+	if result.Error != nil {
+		return result.Error
+	}
+	log.Printf("  Course languages synced: %d updated", result.RowsAffected)
+	return nil
 }
 
 type courseAgg struct {
