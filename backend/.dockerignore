@@ -1,0 +1,6 @@
+.git
+.claude
+data
+tmp
+*.log
+coverage.out

@@ -1,0 +1,7 @@
+.git
+.claude
+.pnpm-store
+dist
+node_modules
+coverage
+*.log
