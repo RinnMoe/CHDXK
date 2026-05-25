@@ -10,7 +10,7 @@ import (
 
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
-	domainemail "jcourse/internal/domain/email"
+	"jcourse/internal/domain/email"
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/review/policy"
 	"jcourse/internal/domain/task"
@@ -236,10 +236,10 @@ func assertSuspendTask(t *testing.T, taskItem task.Task, userID int, duration ti
 
 func assertEmailTask(t *testing.T, taskItem task.Task, to string, userID string, courseCode string) {
 	t.Helper()
-	if got := taskItem.Type(); got != domainemail.TaskTypeSendEmail {
-		t.Fatalf("task type = %q, want %q", got, domainemail.TaskTypeSendEmail)
+	if got := taskItem.Type(); got != email.TaskTypeSendEmail {
+		t.Fatalf("task type = %q, want %q", got, email.TaskTypeSendEmail)
 	}
-	var payload domainemail.SendEmailPayload
+	var payload email.SendEmailPayload
 	if err := json.Unmarshal(taskItem.Payload(), &payload); err != nil {
 		t.Fatalf("unmarshal email payload: %v", err)
 	}

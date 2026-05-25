@@ -16,10 +16,10 @@ import (
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/review/policy"
 	"jcourse/internal/domain/stat"
-	"jcourse/internal/infrastructure/email"
 	"jcourse/internal/infrastructure/moderation"
 	"jcourse/internal/infrastructure/persistence"
-	infratask "jcourse/internal/infrastructure/task"
+	"jcourse/internal/infrastructure/smtp"
+	"jcourse/internal/infrastructure/task"
 	"jcourse/internal/interface/web/middleware"
 )
 
@@ -33,9 +33,9 @@ type AppConfig struct {
 	APIKey   auth.ApiKeyConfig                  `mapstructure:"api_key"`
 	Admin    application.AdminUserCommandConfig `mapstructure:"admin"`
 	Point    point.TransferFeeConfig            `mapstructure:"point"`
-	Asynq    infratask.Config                   `mapstructure:"asynq"`
+	Asynq    task.Config                        `mapstructure:"asynq"`
 	Stats    stat.Config                        `mapstructure:"stats"`
-	SMTP     email.SMTPConfig                   `mapstructure:"smtp"`
+	SMTP     smtp.SMTPConfig                    `mapstructure:"smtp"`
 	JAccount JAccountConfig                     `mapstructure:"jaccount"`
 }
 

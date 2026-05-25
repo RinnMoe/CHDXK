@@ -10,7 +10,7 @@ import (
 
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
-	domainemail "jcourse/internal/domain/email"
+	"jcourse/internal/domain/email"
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/task"
 )
@@ -124,7 +124,7 @@ func (p *FrequencyPolicy) CanCreate(ctx context.Context, u *auth.User, c *course
 func (p *FrequencyPolicy) enqueueSuspensionTasks(ctx context.Context, userID int, c *course.Course, reason error) {
 	_ = task.Enqueue(ctx, auth.NewSuspendUserTask(userID, p.config.SuspendDuration))
 	for _, to := range p.config.AdminEmails {
-		_ = task.Enqueue(ctx, domainemail.NewSendEmailTask(
+		_ = task.Enqueue(ctx, email.NewSendEmailTask(
 			spamSuspensionEmailType,
 			to,
 			spamSuspensionEmailSubject,

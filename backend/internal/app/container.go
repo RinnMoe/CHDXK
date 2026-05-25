@@ -5,15 +5,15 @@ import (
 	"jcourse/internal/application"
 	"jcourse/internal/domain/account"
 	"jcourse/internal/domain/auth"
-	domainemail "jcourse/internal/domain/email"
+	"jcourse/internal/domain/email"
 	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/review/policy"
-	"jcourse/internal/infrastructure/email"
 	"jcourse/internal/infrastructure/jaccount"
 	"jcourse/internal/infrastructure/moderation"
 	"jcourse/internal/infrastructure/persistence"
 	"jcourse/internal/infrastructure/repository"
+	"jcourse/internal/infrastructure/smtp"
 )
 
 type ServiceContainer struct {
@@ -43,7 +43,7 @@ type ServiceContainer struct {
 	ApiKeyCommand           *application.ApiKeyCommandService
 	UserSettingsQuery       *application.UserSettingsQueryService
 	UserSettingsCommand     *application.UserSettingsCommandService
-	EmailService            *domainemail.Service
+	EmailService            *email.Service
 }
 
 func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
@@ -104,12 +104,12 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	adminUserQuery := application.NewAdminUserQueryService(accountRepo, userRepo, usernameDeriver)
 	adminUserCommand := application.NewAdminUserCommandService(userRepo, conf.Admin)
 	hasher := account.NewDjangoPBKDF2SHA256PasswordHasher(conf.Auth.PasswordHash)
-	verificationSender := email.NewSMTPSender(conf.SMTP)
-	emailService := domainemail.NewService(verificationSender)
+	smtpSender := smtp.NewSMTPSender(conf.SMTP)
+	emailService := email.NewService(smtpSender)
 	registrationService := account.NewRegistrationService(
 		accountRepo,
 		verificationRepo,
-		verificationSender,
+		smtpSender,
 		hasher,
 		usernameDeriver,
 		conf.Auth.Registration,
@@ -124,7 +124,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	passwordResetService := account.NewPasswordResetService(
 		accountRepo,
 		resetCodeRepo,
-		verificationSender,
+		smtpSender,
 		hasher,
 		usernameDeriver,
 		conf.Auth.PasswordReset,
