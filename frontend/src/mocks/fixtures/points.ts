@@ -17,12 +17,12 @@ const REASONS: {
   { reason: "daily_login", description: "每日登录奖励", amount: 1 },
   {
     reason: "transfer_in",
-    description: "收到 demo@sjtu.edu.cn 的转账",
+    description: "积分转入",
     amount: 20,
   },
   {
     reason: "transfer_out",
-    description: "转账给 admin@sjtu.edu.cn",
+    description: "积分转出",
     amount: -10,
   },
 ]

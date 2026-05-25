@@ -66,8 +66,8 @@ func TestTransferService_NewTransfer(t *testing.T) {
 	now := time.Now()
 
 	transfer, senderRecord, recipientRecord, err := svc.NewTransfer(
-		UserRef{ID: 1, Username: "alice@example.edu"},
-		UserRef{ID: 2, Username: "bob@example.edu"},
+		1,
+		2,
 		100,
 		FeePayerSender,
 		now,
@@ -78,10 +78,10 @@ func TestTransferService_NewTransfer(t *testing.T) {
 	if transfer.SenderDelta != -102 || transfer.RecipientDelta != 100 || transfer.Fee != 2 {
 		t.Fatalf("transfer = %+v", transfer)
 	}
-	if senderRecord.UserID != 1 || senderRecord.Reason != RecordReasonTransferOut || senderRecord.Amount != -102 || senderRecord.Description != "转账给 bob@example.edu" {
+	if senderRecord.UserID != 1 || senderRecord.Reason != RecordReasonTransferOut || senderRecord.Amount != -102 || senderRecord.Description != "积分转出" {
 		t.Fatalf("sender record = %+v", senderRecord)
 	}
-	if recipientRecord.UserID != 2 || recipientRecord.Reason != RecordReasonTransferIn || recipientRecord.Amount != 100 || recipientRecord.Description != "收到 alice@example.edu 的转账" {
+	if recipientRecord.UserID != 2 || recipientRecord.Reason != RecordReasonTransferIn || recipientRecord.Amount != 100 || recipientRecord.Description != "积分转入" {
 		t.Fatalf("recipient record = %+v", recipientRecord)
 	}
 }

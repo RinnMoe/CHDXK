@@ -20,22 +20,24 @@ var (
 )
 
 type CreatePointTransferCommand struct {
-	RecipientUsername string         `json:"recipient_username"`
-	Amount            int            `json:"amount"`
-	FeePayer          point.FeePayer `json:"fee_payer"`
+	RecipientEmail string         `json:"recipient_email"`
+	Amount         int            `json:"amount"`
+	FeePayer       point.FeePayer `json:"fee_payer"`
 }
 
 type PointCommandService struct {
 	accountRepo     account.AccountRepository
 	transferRepo    point.TransferRepository
 	transferService *point.TransferService
+	usernames       account.UsernameDeriver
 }
 
-func NewPointCommandService(accountRepo account.AccountRepository, transferRepo point.TransferRepository, transferService *point.TransferService) *PointCommandService {
+func NewPointCommandService(accountRepo account.AccountRepository, transferRepo point.TransferRepository, transferService *point.TransferService, usernames account.UsernameDeriver) *PointCommandService {
 	return &PointCommandService{
 		accountRepo:     accountRepo,
 		transferRepo:    transferRepo,
 		transferService: transferService,
+		usernames:       usernames,
 	}
 }
 
@@ -48,7 +50,12 @@ func (s *PointCommandService) CreateTransfer(ctx context.Context, sender *auth.U
 		return nil, ErrPointTransferRecipientNotFound
 	}
 
-	recipient, err := s.accountRepo.FindByUsername(ctx, strings.TrimSpace(cmd.RecipientUsername))
+	recipientUsername, err := s.usernames.UsernameFromEmail(strings.TrimSpace(cmd.RecipientEmail))
+	if err != nil {
+		return nil, err
+	}
+
+	recipient, err := s.accountRepo.FindByUsername(ctx, recipientUsername)
 	if err != nil {
 		return nil, err
 	}
@@ -58,8 +65,8 @@ func (s *PointCommandService) CreateTransfer(ctx context.Context, sender *auth.U
 
 	now := time.Now()
 	transfer, senderRecord, recipientRecord, err := s.transferService.NewTransfer(
-		point.UserRef{ID: sender.ID, Username: senderAccount.Username},
-		point.UserRef{ID: recipient.ID, Username: recipient.Username},
+		sender.ID,
+		recipient.ID,
 		cmd.Amount,
 		cmd.FeePayer,
 		now,

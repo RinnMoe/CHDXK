@@ -1,13 +1,13 @@
 import type { PointRecordDTO } from "@/api/point"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { formatDateTime } from "@/lib/date"
-
-const REASON_LABELS: Record<string, string> = {
-  review_create: "发表点评",
-  review_vote: "点评点赞",
-  daily_login: "每日登录",
-  transfer_in: "转账收入",
-  transfer_out: "转账支出",
-}
 
 export function PointRecordList({ records }: { records: PointRecordDTO[] }) {
   if (records.length === 0) {
@@ -18,36 +18,37 @@ export function PointRecordList({ records }: { records: PointRecordDTO[] }) {
     )
   }
   return (
-    <div className="divide-y rounded-md border">
-      {records.map((r, i) => (
-        <div
-          key={i}
-          className="flex items-start justify-between gap-4 px-4 py-3"
-        >
-          <div className="min-w-0 space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-foreground">
-                {REASON_LABELS[r.reason] ?? r.reason}
-              </span>
-              <span className="text-sm text-muted-foreground">
+    <div className="space-y-3">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>描述</TableHead>
+            <TableHead className="w-24 text-right">积分</TableHead>
+            <TableHead className="text-right">时间</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {records.map((r, i) => (
+            <TableRow key={`${r.created_at}-${i}`}>
+              <TableCell className="font-medium">
+                {r.description}
+              </TableCell>
+              <TableCell
+                className={
+                  r.amount >= 0
+                    ? "text-right font-medium text-green-600"
+                    : "text-right font-medium text-destructive"
+                }
+              >
+                {r.amount >= 0 ? `+${r.amount}` : r.amount}
+              </TableCell>
+              <TableCell className="text-right text-muted-foreground">
                 {formatDateTime(r.created_at)}
-              </span>
-            </div>
-            <p className="truncate text-sm font-normal text-muted-foreground">
-              {r.description}
-            </p>
-          </div>
-          <span
-            className={
-              r.amount >= 0
-                ? "shrink-0 font-medium text-green-600"
-                : "shrink-0 font-medium text-destructive"
-            }
-          >
-            {r.amount >= 0 ? `+${r.amount}` : r.amount}
-          </span>
-        </div>
-      ))}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   )
 }

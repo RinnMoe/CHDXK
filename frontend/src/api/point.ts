@@ -41,7 +41,7 @@ export interface PointTransferPreviewDTO {
 }
 
 export interface CreatePointTransferCommand {
-  recipient_username: string
+  recipient_email: string
   amount: number
   fee_payer: FeePayer
 }

@@ -91,7 +91,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	announcementQuery := application.NewAnnouncementQueryService(announcementRepo)
 	transferService := point.NewTransferService(conf.Point)
 	pointQuery := application.NewPointQueryService(pointRepo, accountRepo, transferService, usernameDeriver)
-	pointCommand := application.NewPointCommandService(accountRepo, pointRepo, transferService)
+	pointCommand := application.NewPointCommandService(accountRepo, pointRepo, transferService, usernameDeriver)
 	statsConfig := conf.Stats
 	siteStatsQuery := application.NewSiteStatsQueryService(statRepo, statsConfig)
 	siteStatsCommand := application.NewSiteStatsCommandService(statRepo, statRepo, statsConfig)

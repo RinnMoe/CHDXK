@@ -37,6 +37,22 @@ export function UserPointsPage() {
       <PageTitle>我的积分</PageTitle>
       <PageShell>
         <div className="space-y-6">
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold">我的积分</h1>
+            <p className="text-sm text-muted-foreground">
+              积分可在合作网站兑换使用，目前支持
+              <a
+                href="https://share.dyweb.sjtu.cn"
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-foreground underline underline-offset-4"
+              >
+                传承·交大
+              </a>
+              。
+            </p>
+          </div>
+
           <Card>
             <CardHeader>
               <CardTitle>我的积分</CardTitle>

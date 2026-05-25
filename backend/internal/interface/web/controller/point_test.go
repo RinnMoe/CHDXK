@@ -71,7 +71,7 @@ func TestPointController_PreviewAndCreateTransfer(t *testing.T) {
 		ctrl.CreateTransfer(c)
 	})
 
-	body := `{"recipient_username":"bob@example.edu","amount":100,"fee_payer":"sender"}`
+	body := `{"recipient_email":"bob@example.edu","amount":100,"fee_payer":"sender"}`
 	previewReq := httptest.NewRequest(http.MethodPost, "/api/point/transfer/preview", strings.NewReader(body))
 	previewReq.Header.Set("Content-Type", "application/json")
 	previewW := httptest.NewRecorder()
@@ -100,14 +100,19 @@ func (q *pointControllerFakeQuery) FindRecordsByUser(_ context.Context, filter p
 }
 
 func newPointControllerCommand() *application.PointCommandService {
+	bobUsername, err := testPointUsernameDeriver().UsernameFromEmail("bob@example.edu")
+	if err != nil {
+		panic(err)
+	}
 	return application.NewPointCommandService(
 		&pointControllerFakeAccountRepo{accountsByID: map[int]*account.Account{
 			1: {ID: 1, Username: "alice@example.edu", Email: "alice@example.edu"},
 		}, accountsByUsername: map[string]*account.Account{
-			"bob@example.edu": {ID: 2, Username: "bob@example.edu", Email: "bob@example.edu"},
+			bobUsername: {ID: 2, Username: bobUsername, Email: "bob@example.edu"},
 		}},
 		&pointControllerFakeTransferRepo{},
 		point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}),
+		testPointUsernameDeriver(),
 	)
 }
 

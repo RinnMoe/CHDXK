@@ -101,7 +101,7 @@ export const pointHandlers = [
     }
     const cmd = (await request.json()) as CreatePointTransferCommand
     const recipient = mockUsers.find(
-      (u) => u.username === cmd.recipient_username
+      (u) => u.email.toLowerCase() === cmd.recipient_email.trim().toLowerCase()
     )
     if (!recipient) {
       return HttpResponse.json(
@@ -134,13 +134,13 @@ export const pointHandlers = [
     pushMockPointRecord(sender.id, {
       reason: "transfer_out",
       amount: -preview.sender_debit,
-      description: `转账给 ${recipient.email}`,
+      description: "积分转出",
       created_at: now,
     })
     pushMockPointRecord(recipient.id, {
       reason: "transfer_in",
       amount: preview.recipient_credit,
-      description: `收到 ${sender.email} 的转账`,
+      description: "积分转入",
       created_at: now,
     })
 

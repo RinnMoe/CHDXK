@@ -58,8 +58,9 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
 
   async function handleSubmit() {
     setError(null)
-    if (!recipient) {
-      setError("请输入收款人用户名")
+    const recipientEmail = recipient.trim()
+    if (!recipientEmail) {
+      setError("请输入收款人邮箱")
       return
     }
     const num = Number(amount)
@@ -73,7 +74,7 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
     }
     try {
       await transferMutation.mutateAsync({
-        recipient_username: recipient,
+        recipient_email: recipientEmail,
         amount: num,
         fee_payer: feePayer,
       })
@@ -108,10 +109,11 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="recipient">收款人用户名</Label>
+        <Label htmlFor="recipient">收款人邮箱</Label>
         <Input
           id="recipient"
-          placeholder="输入用户名"
+          type="email"
+          placeholder="输入邮箱"
           value={recipient}
           onChange={(e) => setRecipient(e.target.value)}
         />
@@ -194,7 +196,7 @@ export function TransferForm({ onSuccess }: TransferFormProps) {
         disabled={
           isLoading ||
           !activePreview ||
-          !recipient ||
+          !recipient.trim() ||
           insufficientBalance ||
           amountExceedsBalance
         }

@@ -103,8 +103,8 @@ func TestPointRepository_CreateTransfer(t *testing.T) {
 		RecipientDelta:  100,
 		CreatedAt:       now,
 	}
-	senderRecord := point.Record{UserID: sender.ID, Reason: point.RecordReasonTransferOut, Amount: -102, Description: "转账给 recipient", CreatedAt: now}
-	recipientRecord := point.Record{UserID: recipient.ID, Reason: point.RecordReasonTransferIn, Amount: 100, Description: "收到 sender 的转账", CreatedAt: now}
+	senderRecord := point.Record{UserID: sender.ID, Reason: point.RecordReasonTransferOut, Amount: -102, Description: "积分转出", CreatedAt: now}
+	recipientRecord := point.Record{UserID: recipient.ID, Reason: point.RecordReasonTransferIn, Amount: 100, Description: "积分转入", CreatedAt: now}
 
 	if err := repo.CreateTransfer(ctx, &transfer, senderRecord, recipientRecord); err != nil {
 		t.Fatalf("CreateTransfer: %v", err)
@@ -154,8 +154,8 @@ func TestPointRepository_CreateTransferRejectsInsufficientBalance(t *testing.T) 
 		CreatedAt:       time.Now(),
 	}
 	err := repo.CreateTransfer(ctx, &transfer,
-		point.Record{UserID: sender.ID, Reason: point.RecordReasonTransferOut, Amount: -102, Description: "转账给 recipient", CreatedAt: time.Now()},
-		point.Record{UserID: recipient.ID, Reason: point.RecordReasonTransferIn, Amount: 100, Description: "收到 sender 的转账", CreatedAt: time.Now()},
+		point.Record{UserID: sender.ID, Reason: point.RecordReasonTransferOut, Amount: -102, Description: "积分转出", CreatedAt: time.Now()},
+		point.Record{UserID: recipient.ID, Reason: point.RecordReasonTransferIn, Amount: 100, Description: "积分转入", CreatedAt: time.Now()},
 	)
 	if !errors.Is(err, point.ErrInsufficientBalance) {
 		t.Fatalf("CreateTransfer error = %v, want ErrInsufficientBalance", err)

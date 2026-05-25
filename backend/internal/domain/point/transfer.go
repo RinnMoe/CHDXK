@@ -3,7 +3,6 @@ package point
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 )
@@ -32,11 +31,6 @@ type TransferFeeConfig struct {
 }
 
 var DefaultTransferFeeConfig = TransferFeeConfig{RateBps: 250, MinFee: 1}
-
-type UserRef struct {
-	ID       int
-	Username string
-}
 
 type TransferPreview struct {
 	Amount          int
@@ -89,9 +83,8 @@ func (s *TransferService) Preview(amount int, feePayer FeePayer) (*TransferPrevi
 		RecipientCredit: recipientCredit,
 	}, nil
 }
-
-func (s *TransferService) NewTransfer(sender UserRef, recipient UserRef, amount int, feePayer FeePayer, now time.Time) (*Transfer, Record, Record, error) {
-	if sender.ID == recipient.ID {
+func (s *TransferService) NewTransfer(senderUserID int, recipientUserID int, amount int, feePayer FeePayer, now time.Time) (*Transfer, Record, Record, error) {
+	if senderUserID == recipientUserID {
 		return nil, Record{}, Record{}, ErrTransferSelf
 	}
 	preview, err := s.Preview(amount, feePayer)
@@ -100,8 +93,8 @@ func (s *TransferService) NewTransfer(sender UserRef, recipient UserRef, amount 
 	}
 
 	transfer := &Transfer{
-		SenderUserID:    sender.ID,
-		RecipientUserID: recipient.ID,
+		SenderUserID:    senderUserID,
+		RecipientUserID: recipientUserID,
 		Amount:          preview.Amount,
 		Fee:             preview.Fee,
 		FeePayer:        preview.FeePayer,
@@ -111,17 +104,17 @@ func (s *TransferService) NewTransfer(sender UserRef, recipient UserRef, amount 
 	}
 
 	senderRecord := Record{
-		UserID:      sender.ID,
+		UserID:      senderUserID,
 		Reason:      RecordReasonTransferOut,
 		Amount:      transfer.SenderDelta,
-		Description: fmt.Sprintf("转账给 %s", recipient.Username),
+		Description: "积分转出",
 		CreatedAt:   now,
 	}
 	recipientRecord := Record{
-		UserID:      recipient.ID,
+		UserID:      recipientUserID,
 		Reason:      RecordReasonTransferIn,
 		Amount:      transfer.RecipientDelta,
-		Description: fmt.Sprintf("收到 %s 的转账", sender.Username),
+		Description: "积分转入",
 		CreatedAt:   now,
 	}
 

@@ -19,9 +19,9 @@ func TestPointCommandService_CreateTransferSenderPaysFee(t *testing.T) {
 	svc := newPointCommandService(accountRepo, transferRepo)
 
 	got, err := svc.CreateTransfer(context.Background(), sender, application.CreatePointTransferCommand{
-		RecipientUsername: "bob@example.edu",
-		Amount:            100,
-		FeePayer:          point.FeePayerSender,
+		RecipientEmail: "bob@example.edu",
+		Amount:         100,
+		FeePayer:       point.FeePayerSender,
 	})
 	if err != nil {
 		t.Fatalf("CreateTransfer: %v", err)
@@ -48,11 +48,11 @@ func TestPointCommandService_CreateTransferRejectsInvalidCases(t *testing.T) {
 		cmd  application.CreatePointTransferCommand
 		want error
 	}{
-		{name: "amount", cmd: application.CreatePointTransferCommand{RecipientUsername: "bob@example.edu", Amount: 0, FeePayer: point.FeePayerSender}, want: application.ErrPointTransferInvalidAmount},
-		{name: "fee payer", cmd: application.CreatePointTransferCommand{RecipientUsername: "bob@example.edu", Amount: 10, FeePayer: "bad"}, want: application.ErrPointTransferInvalidFeePayer},
-		{name: "self", cmd: application.CreatePointTransferCommand{RecipientUsername: "alice@example.edu", Amount: 10, FeePayer: point.FeePayerSender}, want: application.ErrPointTransferSelf},
-		{name: "missing recipient", cmd: application.CreatePointTransferCommand{RecipientUsername: "nobody@example.edu", Amount: 10, FeePayer: point.FeePayerSender}, want: application.ErrPointTransferRecipientNotFound},
-		{name: "too small", cmd: application.CreatePointTransferCommand{RecipientUsername: "bob@example.edu", Amount: 1, FeePayer: point.FeePayerRecipient}, want: application.ErrPointTransferRecipientAmountSmall},
+		{name: "amount", cmd: application.CreatePointTransferCommand{RecipientEmail: "bob@example.edu", Amount: 0, FeePayer: point.FeePayerSender}, want: application.ErrPointTransferInvalidAmount},
+		{name: "fee payer", cmd: application.CreatePointTransferCommand{RecipientEmail: "bob@example.edu", Amount: 10, FeePayer: "bad"}, want: application.ErrPointTransferInvalidFeePayer},
+		{name: "self", cmd: application.CreatePointTransferCommand{RecipientEmail: "alice@example.edu", Amount: 10, FeePayer: point.FeePayerSender}, want: application.ErrPointTransferSelf},
+		{name: "missing recipient", cmd: application.CreatePointTransferCommand{RecipientEmail: "nobody@example.edu", Amount: 10, FeePayer: point.FeePayerSender}, want: application.ErrPointTransferRecipientNotFound},
+		{name: "too small", cmd: application.CreatePointTransferCommand{RecipientEmail: "bob@example.edu", Amount: 1, FeePayer: point.FeePayerRecipient}, want: application.ErrPointTransferRecipientAmountSmall},
 	}
 
 	for _, tt := range tests {
@@ -66,15 +66,23 @@ func TestPointCommandService_CreateTransferRejectsInvalidCases(t *testing.T) {
 }
 
 func newPointCommandService(accountRepo *account.MockAccountRepository, transferRepo point.TransferRepository) *application.PointCommandService {
-	return application.NewPointCommandService(accountRepo, transferRepo, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}))
+	return application.NewPointCommandService(accountRepo, transferRepo, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), testPointUsernameDeriver())
 }
 
 func seedFakePointAccount(repo *account.MockAccountRepository, id int, email string) *auth.User {
-	acct := &account.Account{ID: id, Username: email, Email: email}
-	repo.PutAccount(email, acct)
+	username, err := testPointUsernameDeriver().UsernameFromEmail(email)
+	if err != nil {
+		panic(err)
+	}
+	acct := &account.Account{ID: id, Username: username, Email: email}
+	repo.PutAccount("", acct)
 	return &auth.User{ID: id, Role: auth.RoleUser}
 }
 
 func newFakePointAccountRepo() *account.MockAccountRepository {
 	return account.NewMockAccountRepository(nil)
+}
+
+func testPointUsernameDeriver() account.UsernameDeriver {
+	return account.NewBLAKE2bUsernameDeriver(account.UsernameDeriverConfig{Salt: "SALT"})
 }
