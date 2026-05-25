@@ -2,6 +2,7 @@ package application_test
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/review"
+	"jcourse/internal/domain/task"
 )
 
 type fakeCommandCourseRepo struct {
@@ -127,7 +129,16 @@ func (r *fakeHotScoreRepo) Top(ctx context.Context, period course.HotCoursePerio
 	return nil, nil
 }
 
-func newReviewCommandTestService(reviewRepo *fakeCommandReviewRepo, voteRepo *fakeCommandVoteRepo, hotRepo *fakeHotScoreRepo) *application.ReviewCommandService {
+type fakeReviewCommandEnqueuer struct {
+	tasks []task.Task
+}
+
+func (f *fakeReviewCommandEnqueuer) Enqueue(ctx context.Context, t task.Task, opts ...task.EnqueueOption) error {
+	f.tasks = append(f.tasks, t)
+	return nil
+}
+
+func newReviewCommandTestService(reviewRepo *fakeCommandReviewRepo, voteRepo *fakeCommandVoteRepo) *application.ReviewCommandService {
 	courseRepo := &fakeCommandCourseRepo{courses: map[int]*course.Course{
 		1: &course.Course{ID: 1},
 	}}
@@ -135,7 +146,6 @@ func newReviewCommandTestService(reviewRepo *fakeCommandReviewRepo, voteRepo *fa
 		courseRepo,
 		reviewRepo,
 		voteRepo,
-		hotRepo,
 		application.ReviewCommandConfig{
 			HotScores: course.HotScoreConfig{
 				ReviewCreateScore: 5,
@@ -148,10 +158,12 @@ func newReviewCommandTestService(reviewRepo *fakeCommandReviewRepo, voteRepo *fa
 	)
 }
 
-func TestReviewCommandService_CreateReviewRecordsHotScore(t *testing.T) {
+func TestReviewCommandService_CreateReviewEnqueuesHotCourseActivity(t *testing.T) {
 	reviewRepo := newFakeCommandReviewRepo()
-	hotRepo := &fakeHotScoreRepo{}
-	svc := newReviewCommandTestService(reviewRepo, &fakeCommandVoteRepo{}, hotRepo)
+	enqueuer := &fakeReviewCommandEnqueuer{}
+	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
+	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
+	svc := newReviewCommandTestService(reviewRepo, &fakeCommandVoteRepo{})
 
 	err := svc.CreateReview(context.Background(), &auth.User{ID: 10}, &application.CreateReviewCommand{
 		CourseID: 1,
@@ -162,16 +174,29 @@ func TestReviewCommandService_CreateReviewRecordsHotScore(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateReview: %v", err)
 	}
-	if len(hotRepo.calls) != 1 || hotRepo.calls[0].CourseID != 1 || hotRepo.calls[0].Score != 5 {
-		t.Fatalf("hot calls = %+v, want course=1 score=5", hotRepo.calls)
+	if len(enqueuer.tasks) != 1 {
+		t.Fatalf("tasks = %d, want 1", len(enqueuer.tasks))
+	}
+	if got := enqueuer.tasks[0].Type(); got != course.TaskTypeRecordHotCourseActivity {
+		t.Fatalf("task type = %q, want %q", got, course.TaskTypeRecordHotCourseActivity)
+	}
+	var payload course.RecordHotCourseActivityPayload
+	if err := json.Unmarshal(enqueuer.tasks[0].Payload(), &payload); err != nil {
+		t.Fatalf("unmarshal payload: %v", err)
+	}
+	want := course.RecordHotCourseActivityPayload{UserID: 10, Activity: course.HotCourseActivityReviewCreate, CourseID: 1}
+	if payload != want {
+		t.Fatalf("payload = %+v, want %+v", payload, want)
 	}
 }
 
-func TestReviewCommandService_UpdateReviewRecordsHotScore(t *testing.T) {
+func TestReviewCommandService_UpdateReviewEnqueuesHotCourseActivity(t *testing.T) {
 	reviewRepo := newFakeCommandReviewRepo()
 	reviewRepo.reviews[1] = &review.Review{ID: 1, CourseID: 1, UserID: 10, Semester: "2025-2026-1", Rating: 4, Content: "old"}
-	hotRepo := &fakeHotScoreRepo{}
-	svc := newReviewCommandTestService(reviewRepo, &fakeCommandVoteRepo{}, hotRepo)
+	enqueuer := &fakeReviewCommandEnqueuer{}
+	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
+	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
+	svc := newReviewCommandTestService(reviewRepo, &fakeCommandVoteRepo{})
 
 	err := svc.UpdateReview(context.Background(), &auth.User{ID: 10}, &application.UpdateReviewCommand{
 		ReviewID: 1,
@@ -182,15 +207,23 @@ func TestReviewCommandService_UpdateReviewRecordsHotScore(t *testing.T) {
 	if err != nil {
 		t.Fatalf("UpdateReview: %v", err)
 	}
-	if len(hotRepo.calls) != 1 || hotRepo.calls[0].CourseID != 1 || hotRepo.calls[0].Score != 2 {
-		t.Fatalf("hot calls = %+v, want course=1 score=2", hotRepo.calls)
+	if len(enqueuer.tasks) != 1 {
+		t.Fatalf("tasks = %d, want 1", len(enqueuer.tasks))
+	}
+	var payload course.RecordHotCourseActivityPayload
+	if err := json.Unmarshal(enqueuer.tasks[0].Payload(), &payload); err != nil {
+		t.Fatalf("unmarshal payload: %v", err)
+	}
+	want := course.RecordHotCourseActivityPayload{UserID: 10, Activity: course.HotCourseActivityReviewUpdate, CourseID: 1}
+	if payload != want {
+		t.Fatalf("payload = %+v, want %+v", payload, want)
 	}
 }
 
 func TestReviewCommandService_UpdateModeratorRemarkRequiresAdmin(t *testing.T) {
 	reviewRepo := newFakeCommandReviewRepo()
 	reviewRepo.reviews[1] = &review.Review{ID: 1, CourseID: 1, UserID: 10, Semester: "2025-2026-1", Rating: 4, Content: "old"}
-	svc := newReviewCommandTestService(reviewRepo, &fakeCommandVoteRepo{}, &fakeHotScoreRepo{})
+	svc := newReviewCommandTestService(reviewRepo, &fakeCommandVoteRepo{})
 
 	err := svc.UpdateModeratorRemark(context.Background(), &auth.User{ID: 10, Role: auth.RoleUser}, 1, &application.UpdateReviewModeratorRemarkCommand{
 		ModeratorRemark: "需要补充依据",
@@ -214,20 +247,51 @@ func TestReviewCommandService_VoteReviewRecordsOnlyChangedVote(t *testing.T) {
 	reviewRepo := newFakeCommandReviewRepo()
 	reviewRepo.reviews[1] = &review.Review{ID: 1, CourseID: 1, UserID: 20, Semester: "2025-2026-1", Rating: 4, Content: "ok"}
 	voteRepo := &fakeCommandVoteRepo{existing: &review.Vote{ReviewID: 1, UserID: 10, VoteType: review.VoteLike}}
-	hotRepo := &fakeHotScoreRepo{}
-	svc := newReviewCommandTestService(reviewRepo, voteRepo, hotRepo)
+	enqueuer := &fakeReviewCommandEnqueuer{}
+	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
+	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
+	svc := newReviewCommandTestService(reviewRepo, voteRepo)
 
 	if err := svc.VoteReview(context.Background(), 10, 1, review.VoteLike); err != nil {
 		t.Fatalf("VoteReview duplicate: %v", err)
 	}
-	if len(hotRepo.calls) != 0 {
-		t.Fatalf("duplicate vote hot calls = %+v, want none", hotRepo.calls)
+	if len(enqueuer.tasks) != 0 {
+		t.Fatalf("duplicate vote tasks = %d, want none", len(enqueuer.tasks))
 	}
 
 	if err := svc.VoteReview(context.Background(), 10, 1, review.VoteDislike); err != nil {
 		t.Fatalf("VoteReview changed: %v", err)
 	}
-	if len(hotRepo.calls) != 1 || hotRepo.calls[0].CourseID != 1 || hotRepo.calls[0].Score != 1 {
-		t.Fatalf("changed vote hot calls = %+v, want course=1 score=1", hotRepo.calls)
+	if len(enqueuer.tasks) != 1 {
+		t.Fatalf("changed vote tasks = %d, want 1", len(enqueuer.tasks))
+	}
+	var payload course.RecordHotCourseActivityPayload
+	if err := json.Unmarshal(enqueuer.tasks[0].Payload(), &payload); err != nil {
+		t.Fatalf("unmarshal payload: %v", err)
+	}
+	want := course.RecordHotCourseActivityPayload{UserID: 10, Activity: course.HotCourseActivityReviewVote, CourseID: 1}
+	if payload != want {
+		t.Fatalf("payload = %+v, want %+v", payload, want)
+	}
+}
+
+func TestCourseHotCommandService_RecordActivityUsesConfiguredScore(t *testing.T) {
+	hotRepo := &fakeHotScoreRepo{}
+	svc := application.NewCourseHotCommandService(hotRepo, course.HotScoreConfig{
+		ReviewCreateScore: 5,
+		ReviewUpdateScore: 2,
+		ReviewVoteScore:   1,
+	})
+
+	err := svc.RecordActivity(context.Background(), course.RecordHotCourseActivityPayload{
+		UserID:   10,
+		Activity: course.HotCourseActivityReviewUpdate,
+		CourseID: 1,
+	})
+	if err != nil {
+		t.Fatalf("RecordActivity: %v", err)
+	}
+	if len(hotRepo.calls) != 1 || hotRepo.calls[0].CourseID != 1 || hotRepo.calls[0].Score != 2 {
+		t.Fatalf("hot calls = %+v, want course=1 score=2", hotRepo.calls)
 	}
 }

@@ -17,6 +17,7 @@ import (
 type ServiceContainer struct {
 	ReviewQuery             *application.ReviewQueryService
 	ReviewCommand           *application.ReviewCommandService
+	CourseHotCommand        *application.CourseHotCommandService
 	CourseQuery             *application.CourseQueryService
 	CourseCommand           *application.CourseCommandService
 	CourseEnrollmentQuery   *application.CourseEnrollmentQueryService
@@ -73,10 +74,10 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		courseRepo,
 		reviewRepo,
 		voteRepo,
-		courseHotRepo,
 		conf.Review.Command,
 		[]review.CreatePolicy{freqPolicy, safetyPolicy},
 	)
+	courseHotCommand := application.NewCourseHotCommandService(courseHotRepo, conf.Review.Command.HotScores)
 	courseQuery := application.NewCourseQueryService(courseRepo, teacherRepo, reviewRepo, notificationRepo, courseEnrollmentRepo, courseHotRepo)
 	courseCommand := application.NewCourseCommandService(courseRepo, notificationRepo)
 	jaccountClient := jaccount.NewOAuthClient(conf.JAccount)
@@ -135,6 +136,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	return &ServiceContainer{
 		ReviewQuery:             reviewQuery,
 		ReviewCommand:           reviewCommand,
+		CourseHotCommand:        courseHotCommand,
 		CourseQuery:             courseQuery,
 		CourseCommand:           courseCommand,
 		CourseEnrollmentQuery:   courseEnrollmentQuery,

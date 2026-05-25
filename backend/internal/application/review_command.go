@@ -8,6 +8,7 @@ import (
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/review"
+	"jcourse/internal/domain/task"
 )
 
 type ReviewCommandConfig struct {
@@ -19,15 +20,12 @@ type ReviewCommandService struct {
 	reviewService *review.Service
 	voteService   *review.VoteService
 	reviewRepo    review.ReviewRepository
-	hotRepo       course.HotCourseRepository
-	hotScores     course.HotScoreConfig
 }
 
 func NewReviewCommandService(
 	courseRepo course.CourseRepository,
 	reviewRepo review.ReviewRepository,
 	voteRepo review.VoteRepository,
-	hotRepo course.HotCourseRepository,
 	config ReviewCommandConfig,
 	policies []review.CreatePolicy,
 ) *ReviewCommandService {
@@ -35,8 +33,6 @@ func NewReviewCommandService(
 		reviewService: review.NewService(courseRepo, reviewRepo, policies),
 		voteService:   review.NewVoteService(reviewRepo, voteRepo, config.Vote),
 		reviewRepo:    reviewRepo,
-		hotRepo:       hotRepo,
-		hotScores:     config.HotScores,
 	}
 }
 
@@ -54,7 +50,7 @@ func (s *ReviewCommandService) CreateReview(ctx context.Context, u *auth.User, c
 	if err != nil {
 		return err
 	}
-	s.recordHotCourseScore(ctx, cmd.CourseID, s.hotScores.ReviewCreateScore, now)
+	s.enqueueHotCourseActivity(ctx, u.ID, course.HotCourseActivityReviewCreate, cmd.CourseID)
 	return nil
 }
 
@@ -79,7 +75,7 @@ func (s *ReviewCommandService) UpdateReview(ctx context.Context, u *auth.User, c
 	if err != nil {
 		return err
 	}
-	s.recordHotCourseScore(ctx, existing.CourseID, s.hotScores.ReviewUpdateScore, now)
+	s.enqueueHotCourseActivity(ctx, u.ID, course.HotCourseActivityReviewUpdate, existing.CourseID)
 	return nil
 }
 
@@ -101,16 +97,13 @@ func (s *ReviewCommandService) VoteReview(ctx context.Context, userID int, revie
 		return err
 	}
 	if result != nil && result.Changed {
-		s.recordHotCourseScore(ctx, result.CourseID, s.hotScores.ReviewVoteScore, now)
+		s.enqueueHotCourseActivity(ctx, userID, course.HotCourseActivityReviewVote, result.CourseID)
 	}
 	return nil
 }
 
-func (s *ReviewCommandService) recordHotCourseScore(ctx context.Context, courseID int, score int64, at time.Time) {
-	if s.hotRepo == nil || score == 0 {
-		return
-	}
-	if err := s.hotRepo.AddScore(ctx, courseID, score, at); err != nil {
-		log.Printf("record hot course score: %v", err)
+func (s *ReviewCommandService) enqueueHotCourseActivity(ctx context.Context, userID int, activity course.HotCourseActivity, courseID int) {
+	if err := task.Enqueue(ctx, course.NewRecordHotCourseActivityTask(userID, activity, courseID)); err != nil {
+		log.Printf("enqueue hot course activity: %v", err)
 	}
 }
