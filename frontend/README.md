@@ -9,6 +9,7 @@
 - React Router
 - TanStack Query
 - Tailwind CSS + shadcn/ui 风格组件
+- PWA（manifest 与 service worker）
 - MSW 本地 mock
 - Vitest、ESLint、Prettier
 
@@ -72,6 +73,22 @@ VITE_ENABLE_MOCKS=true pnpm dev
 ```
 
 mock 入口在 `src/main.tsx`，handlers 和 fixtures 位于 `src/mocks`。MSW worker 文件位于 `public/mockServiceWorker.js`。
+
+## PWA
+
+PWA 能力通过 `vite-plugin-pwa` 在生产构建中生成：
+
+- manifest、缓存策略和图标配置在 `vite.config.ts`。
+- service worker 注册入口在 `src/main.tsx`，仅生产环境启用，避免和开发模式的 MSW worker 冲突。
+- 图标资源位于 `public/pwa-icon.svg`、`public/pwa-192x192.png` 和 `public/pwa-512x512.png`。
+- 静态构建产物会被预缓存，`/api` 请求保持网络直连，不缓存用户数据。
+
+本地验证 PWA 需要使用生产预览：
+
+```bash
+pnpm build
+pnpm preview
+```
 
 ## 常用命令
 

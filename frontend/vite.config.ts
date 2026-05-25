@@ -2,6 +2,10 @@ import path from "path"
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
+import { VitePWA } from "vite-plugin-pwa"
+
+const appName = "SJTU选课社区"
+const appDescription = "课程检索、教师检索与课程点评社区"
 
 const reactPackages = new Set([
   "@tanstack/react-query",
@@ -40,7 +44,58 @@ function isNodePackage(id: string, packages: Set<string>) {
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    VitePWA({
+      registerType: "autoUpdate",
+      injectRegister: null,
+      includeAssets: ["pwa-icon.svg", "pwa-192x192.png", "pwa-512x512.png"],
+      manifest: {
+        name: appName,
+        short_name: "选课社区",
+        description: appDescription,
+        start_url: "/",
+        scope: "/",
+        display: "standalone",
+        theme_color: "#0f766e",
+        background_color: "#f8fafc",
+        lang: "zh-CN",
+        icons: [
+          {
+            src: "/pwa-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
+          {
+            src: "/pwa-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+          },
+          {
+            src: "/pwa-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
+          },
+        ],
+      },
+      workbox: {
+        cleanupOutdatedCaches: true,
+        globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
+        navigateFallback: "/index.html",
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith("/api/"),
+            handler: "NetworkOnly",
+            options: {
+              cacheName: "api-network-only",
+            },
+          },
+        ],
+      },
+    }),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -72,7 +127,6 @@ export default defineConfig({
               name: "vendor-charts",
               test: (id) => isNodePackage(id, chartPackages),
               priority: 20,
-              maxSize: 240 * 1024,
             },
             {
               name: "vendor-ui",
