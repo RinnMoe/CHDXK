@@ -160,7 +160,6 @@ func setDefaults(v *viper.Viper) {
 		"max_reviews":      policy.DefaultFrequencyPolicyConfig.MaxReviews,
 		"similarity_ratio": policy.DefaultFrequencyPolicyConfig.SimilarityRatio,
 		"suspend_duration": policy.DefaultFrequencyPolicyConfig.SuspendDuration.String(),
-		"admin_emails":     policy.DefaultFrequencyPolicyConfig.AdminEmails,
 	})
 	setSectionDefaults(v, "review.safety_policy", map[string]any{
 		"enabled":         moderation.DefaultAliyunGreenConfig.Enabled,
@@ -168,8 +167,8 @@ func setDefaults(v *viper.Viper) {
 		"endpoint":        moderation.DefaultAliyunGreenConfig.Endpoint,
 		"service":         moderation.DefaultAliyunGreenConfig.Service,
 		"sensitive_level": moderation.DefaultAliyunGreenConfig.SensitiveLevel,
-		"connect_timeout": moderation.DefaultAliyunGreenConfig.ConnectTimeout.String(),
-		"read_timeout":    moderation.DefaultAliyunGreenConfig.ReadTimeout.String(),
+		"connect_timeout": moderation.DefaultAliyunGreenConfig.ConnectTimeout,
+		"read_timeout":    moderation.DefaultAliyunGreenConfig.ReadTimeout,
 	})
 	setSectionDefaults(v, "review.command.hot_scores", map[string]any{
 		"review_create_score": course.DefaultHotScoreConfig.ReviewCreateScore,
@@ -179,6 +178,7 @@ func setDefaults(v *viper.Viper) {
 	setSectionDefaults(v, "review.command.vote", map[string]any{
 		"max_daily_votes": review.DefaultVoteConfig.MaxDailyVotes,
 	})
+	v.SetDefault("review.command.frequency_violation_admin_emails", []string{})
 	setSectionDefaults(v, "api_key", map[string]any{
 		"max_user_keys":     auth.DefaultApiKeyConfig.MaxUserKeys,
 		"snowflake_node_id": auth.DefaultApiKeyConfig.SnowflakeNodeID,

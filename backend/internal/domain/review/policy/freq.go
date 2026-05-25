@@ -3,16 +3,13 @@ package policy
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/agnivade/levenshtein"
 
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
-	"jcourse/internal/domain/email"
 	"jcourse/internal/domain/review"
-	"jcourse/internal/domain/task"
 )
 
 var (
@@ -25,7 +22,6 @@ type FrequencyPolicyConfig struct {
 	MaxReviews      int
 	SimilarityRatio float64
 	SuspendDuration time.Duration
-	AdminEmails     []string
 }
 
 var DefaultFrequencyPolicyConfig = FrequencyPolicyConfig{
@@ -34,26 +30,6 @@ var DefaultFrequencyPolicyConfig = FrequencyPolicyConfig{
 	SimilarityRatio: 0.85,
 	SuspendDuration: 90 * 24 * time.Hour,
 }
-
-const (
-	spamSuspensionEmailType     = "account_banned"
-	spamSuspensionEmailSubject  = "选课社区用户封禁通知"
-	spamSuspensionEmailTemplate = `选课社区用户封禁通知
-
-管理员您好：
-
-系统检测到用户触发点评频率策略，已创建封禁任务。
-
-用户 ID：{{.UserID}}
-课程代码：{{.CourseCode}}
-封禁时长：{{.Duration}}
-原因：{{.Reason}}
-
-请在后台查看用户和点评记录。
-
-选课社区
-`
-)
 
 type FrequencyPolicy struct {
 	query  review.ReviewQuery
@@ -109,47 +85,23 @@ func (p *FrequencyPolicy) CanCreate(ctx context.Context, u *auth.User, c *course
 	}
 
 	if sameCourseCodeAll {
-		p.enqueueSuspensionTasks(ctx, u.ID, c, ErrSameCourseSpam)
-		return ErrSameCourseSpam
+		return p.newViolation(r, c, ErrSameCourseSpam)
 	}
 
 	if similarCount*2 > len(recent) {
-		p.enqueueSuspensionTasks(ctx, u.ID, c, ErrSimilarContentDetected)
-		return ErrSimilarContentDetected
+		return p.newViolation(r, c, ErrSimilarContentDetected)
 	}
 
 	return nil
 }
 
-func (p *FrequencyPolicy) enqueueSuspensionTasks(ctx context.Context, userID int, c *course.Course, reason error) {
-	_ = task.Enqueue(ctx, auth.NewSuspendUserTask(userID, p.config.SuspendDuration))
-	for _, to := range p.config.AdminEmails {
-		_ = task.Enqueue(ctx, email.NewSendEmailTask(
-			spamSuspensionEmailType,
-			to,
-			spamSuspensionEmailSubject,
-			spamSuspensionEmailTemplate,
-			map[string]string{
-				"UserID":     fmt.Sprint(userID),
-				"CourseCode": c.Code,
-				"Duration":   formatSuspensionDuration(p.config.SuspendDuration),
-				"Reason":     reason.Error(),
-			},
-		))
+func (p *FrequencyPolicy) newViolation(r *review.Review, c *course.Course, reason error) error {
+	return &review.FrequencyViolation{
+		Reason:          reason,
+		Review:          r,
+		Course:          c,
+		SuspendDuration: p.config.SuspendDuration,
 	}
-}
-
-func formatSuspensionDuration(d time.Duration) string {
-	if d <= 0 {
-		return "一段时间"
-	}
-	if d%(24*time.Hour) == 0 {
-		return fmt.Sprintf("%d 天", int(d/(24*time.Hour)))
-	}
-	if d%time.Hour == 0 {
-		return fmt.Sprintf("%d 小时", int(d/time.Hour))
-	}
-	return d.String()
 }
 
 func reviewCourseMatches(r review.ReviewView, c *course.Course) bool {

@@ -74,7 +74,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	reviewQuery := application.NewReviewQueryService(reviewRepo, voteRepo, notificationRepo)
 
 	freqPolicy := policy.NewFrequencyPolicy(reviewRepo, conf.Review.FrequencyPolicy)
-	moderator := newReviewContentModerator(conf.Review.SafetyPolicy)
+	moderator, _ := moderation.NewAliyunGreenModerator(conf.Review.SafetyPolicy)
 	safetyPolicy := policy.NewSafetyPolicy(moderator)
 
 	reviewCommand := application.NewReviewCommandService(
@@ -171,15 +171,4 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		UserSettingsCommand:     userSettingsCommand,
 		EmailService:            emailService,
 	}
-}
-
-func newReviewContentModerator(conf moderation.AliyunGreenConfig) policy.ContentModerator {
-	if !conf.Enabled {
-		return nil
-	}
-	moderator, err := moderation.NewAliyunGreenModerator(conf)
-	if err != nil {
-		panic(err)
-	}
-	return moderator
 }

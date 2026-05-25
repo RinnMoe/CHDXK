@@ -2,7 +2,6 @@ package policy_test
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"strings"
 	"testing"
@@ -10,10 +9,8 @@ import (
 
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
-	"jcourse/internal/domain/email"
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/review/policy"
-	"jcourse/internal/domain/task"
 )
 
 type fakeReviewQuery struct {
@@ -72,9 +69,6 @@ func TestFrequencyPolicy_FewerThanMax(t *testing.T) {
 }
 
 func TestFrequencyPolicy_SameCourseAll(t *testing.T) {
-	enqueuer := &fakePolicyEnqueuer{}
-	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
-	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
 	q := &fakeReviewQuery{
 		reviews: []review.ReviewView{
 			makeViewWithCode(7, "CS101", "aaa"),
@@ -87,18 +81,21 @@ func TestFrequencyPolicy_SameCourseAll(t *testing.T) {
 		MaxReviews:      3,
 		SimilarityRatio: 0.99,
 		SuspendDuration: 2 * time.Hour,
-		AdminEmails:     []string{"admin@example.edu"},
 	})
 
-	err := p.CanCreate(context.Background(), &auth.User{ID: 1}, &course.Course{ID: 10, Code: "CS101"}, &review.Review{Content: "z"})
+	targetCourse := &course.Course{ID: 10, Code: "CS101", Name: "Intro CS"}
+	targetReview := &review.Review{UserID: 1, CourseID: 10, Content: "z"}
+	err := p.CanCreate(context.Background(), &auth.User{ID: 1}, targetCourse, targetReview)
 	if !errors.Is(err, policy.ErrSameCourseSpam) {
 		t.Fatalf("expected ErrSameCourseSpam, got %v", err)
 	}
-	if len(enqueuer.tasks) != 2 {
-		t.Fatalf("tasks = %d, want 2", len(enqueuer.tasks))
+	var violation *review.FrequencyViolation
+	if !errors.As(err, &violation) {
+		t.Fatalf("expected FrequencyViolation, got %T", err)
 	}
-	assertSuspendTask(t, enqueuer.tasks[0], 1, 2*time.Hour)
-	assertEmailTask(t, enqueuer.tasks[1], "admin@example.edu", "1", "CS101")
+	if violation.Review != targetReview || violation.Course != targetCourse || violation.SuspendDuration != 2*time.Hour {
+		t.Fatalf("violation = %+v", violation)
+	}
 }
 
 func TestFrequencyPolicy_SameCourseIDButDifferentCode(t *testing.T) {
@@ -120,9 +117,6 @@ func TestFrequencyPolicy_SameCourseIDButDifferentCode(t *testing.T) {
 }
 
 func TestFrequencyPolicy_SimilarContent(t *testing.T) {
-	enqueuer := &fakePolicyEnqueuer{}
-	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
-	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
 	base := strings.Repeat("hello world course is great", 3)
 	q := &fakeReviewQuery{
 		reviews: []review.ReviewView{
@@ -136,14 +130,19 @@ func TestFrequencyPolicy_SimilarContent(t *testing.T) {
 		Window: time.Hour, MaxReviews: 4, SimilarityRatio: 0.7, SuspendDuration: 3 * time.Hour,
 	})
 
-	err := p.CanCreate(context.Background(), &auth.User{ID: 1}, &course.Course{ID: 99}, &review.Review{Content: base})
+	targetCourse := &course.Course{ID: 99, Code: "CS999"}
+	targetReview := &review.Review{UserID: 1, CourseID: 99, Content: base}
+	err := p.CanCreate(context.Background(), &auth.User{ID: 1}, targetCourse, targetReview)
 	if !errors.Is(err, policy.ErrSimilarContentDetected) {
 		t.Fatalf("expected ErrSimilarContentDetected, got %v", err)
 	}
-	if len(enqueuer.tasks) != 1 {
-		t.Fatalf("tasks = %d, want 1", len(enqueuer.tasks))
+	var violation *review.FrequencyViolation
+	if !errors.As(err, &violation) {
+		t.Fatalf("expected FrequencyViolation, got %T", err)
 	}
-	assertSuspendTask(t, enqueuer.tasks[0], 1, 3*time.Hour)
+	if violation.Review != targetReview || violation.Course != targetCourse || violation.SuspendDuration != 3*time.Hour {
+		t.Fatalf("violation = %+v", violation)
+	}
 }
 
 func TestFrequencyPolicy_NoSpam(t *testing.T) {
@@ -208,42 +207,5 @@ func TestSafetyPolicy_ModeratorError(t *testing.T) {
 	err := p.CanCreate(context.Background(), &auth.User{}, &course.Course{}, &review.Review{Content: "x"})
 	if !errors.Is(err, want) {
 		t.Fatalf("expected %v, got %v", want, err)
-	}
-}
-
-type fakePolicyEnqueuer struct {
-	tasks []task.Task
-}
-
-func (f *fakePolicyEnqueuer) Enqueue(ctx context.Context, t task.Task, opts ...task.EnqueueOption) error {
-	f.tasks = append(f.tasks, t)
-	return nil
-}
-
-func assertSuspendTask(t *testing.T, taskItem task.Task, userID int, duration time.Duration) {
-	t.Helper()
-	if got := taskItem.Type(); got != auth.TaskTypeSuspendUser {
-		t.Fatalf("task type = %q, want %q", got, auth.TaskTypeSuspendUser)
-	}
-	var payload auth.SuspendUserPayload
-	if err := json.Unmarshal(taskItem.Payload(), &payload); err != nil {
-		t.Fatalf("unmarshal payload: %v", err)
-	}
-	if payload.UserID != userID || payload.Duration != duration {
-		t.Fatalf("payload = %+v, want userID=%d duration=%s", payload, userID, duration)
-	}
-}
-
-func assertEmailTask(t *testing.T, taskItem task.Task, to string, userID string, courseCode string) {
-	t.Helper()
-	if got := taskItem.Type(); got != email.TaskTypeSendEmail {
-		t.Fatalf("task type = %q, want %q", got, email.TaskTypeSendEmail)
-	}
-	var payload email.SendEmailPayload
-	if err := json.Unmarshal(taskItem.Payload(), &payload); err != nil {
-		t.Fatalf("unmarshal email payload: %v", err)
-	}
-	if payload.To != to || payload.Params["UserID"] != userID || payload.Params["CourseCode"] != courseCode {
-		t.Fatalf("email payload = %+v", payload)
 	}
 }
