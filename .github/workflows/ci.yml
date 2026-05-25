@@ -28,7 +28,7 @@ jobs:
           cache-dependency-path: ${{ env.BACKEND_WORKING_DIR }}/go.sum
 
       - name: go vet
-        run: go vet ./...
+        run: go vet -tags test ./...
 
   test:
     name: Test
