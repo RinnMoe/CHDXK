@@ -171,7 +171,7 @@ type fakeModerator struct {
 	gotText   string
 }
 
-func (m *fakeModerator) IsSensitive(ctx context.Context, content string) (bool, error) {
+func (m *fakeModerator) IsSensitive(ctx context.Context, accountID string, content string) (bool, error) {
 	m.gotText = content
 	return m.sensitive, m.err
 }

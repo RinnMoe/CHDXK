@@ -10,6 +10,7 @@ import (
 	"jcourse/internal/application"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/review"
+	"jcourse/internal/domain/review/policy"
 )
 
 type ReviewController struct {
@@ -109,6 +110,10 @@ func (r *ReviewController) CreateReview(c *gin.Context) {
 	}
 
 	if err := r.command.CreateReview(c.Request.Context(), u, &cmd); err != nil {
+		if errors.Is(err, policy.ErrContentSensitive) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

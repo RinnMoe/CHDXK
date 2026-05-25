@@ -11,6 +11,7 @@ import (
 	"jcourse/internal/domain/review/policy"
 	"jcourse/internal/infrastructure/email"
 	"jcourse/internal/infrastructure/jaccount"
+	"jcourse/internal/infrastructure/moderation"
 	"jcourse/internal/infrastructure/persistence"
 	"jcourse/internal/infrastructure/repository"
 )
@@ -73,7 +74,8 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	reviewQuery := application.NewReviewQueryService(reviewRepo, voteRepo, notificationRepo)
 
 	freqPolicy := policy.NewFrequencyPolicy(reviewRepo, conf.Review.FrequencyPolicy)
-	safetyPolicy := policy.NewSafetyPolicy(nil)
+	moderator := newReviewContentModerator(conf.Review.SafetyPolicy)
+	safetyPolicy := policy.NewSafetyPolicy(moderator)
 
 	reviewCommand := application.NewReviewCommandService(
 		courseRepo,
@@ -169,4 +171,15 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		UserSettingsCommand:     userSettingsCommand,
 		EmailService:            emailService,
 	}
+}
+
+func newReviewContentModerator(conf moderation.AliyunGreenConfig) policy.ContentModerator {
+	if !conf.Enabled {
+		return nil
+	}
+	moderator, err := moderation.NewAliyunGreenModerator(conf)
+	if err != nil {
+		panic(err)
+	}
+	return moderator
 }

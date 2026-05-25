@@ -3,6 +3,7 @@ package policy
 import (
 	"context"
 	"errors"
+	"strconv"
 
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
@@ -14,7 +15,7 @@ var ErrContentSensitive = errors.New("review content is sensitive")
 // ContentModerator is an abstraction over an external content moderation service.
 // Implementations may call third-party sensitive-content detection APIs.
 type ContentModerator interface {
-	IsSensitive(ctx context.Context, content string) (bool, error)
+	IsSensitive(ctx context.Context, accountID string, content string) (bool, error)
 }
 
 type SafetyPolicy struct {
@@ -32,7 +33,11 @@ func (p *SafetyPolicy) CanCreate(ctx context.Context, u *auth.User, c *course.Co
 	if r.Content == "" {
 		return nil
 	}
-	sensitive, err := p.moderator.IsSensitive(ctx, r.Content)
+	accountID := ""
+	if u != nil {
+		accountID = strconv.Itoa(u.ID)
+	}
+	sensitive, err := p.moderator.IsSensitive(ctx, accountID, r.Content)
 	if err != nil {
 		return err
 	}

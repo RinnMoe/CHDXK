@@ -53,6 +53,16 @@ review:
     similarity_ratio: 0.7
     suspend_duration: "2160h"
     admin_emails: []
+  safety_policy:
+    enabled: false
+    access_key_id: ""
+    access_key_secret: ""
+    region_id: "cn-shanghai"
+    endpoint: "green-cip.cn-shanghai.aliyuncs.com"
+    service: "comment_detection_pro"
+    sensitive_level: "medium"
+    connect_timeout: "3s"
+    read_timeout: "10s"
   command:
     hot_scores:
       review_create_score: 3

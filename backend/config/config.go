@@ -17,6 +17,7 @@ import (
 	"jcourse/internal/domain/review/policy"
 	"jcourse/internal/domain/stat"
 	"jcourse/internal/infrastructure/email"
+	"jcourse/internal/infrastructure/moderation"
 	"jcourse/internal/infrastructure/persistence"
 	infratask "jcourse/internal/infrastructure/task"
 	"jcourse/internal/interface/web/middleware"
@@ -48,8 +49,9 @@ type AuthConfig struct {
 }
 
 type ReviewConfig struct {
-	Command         application.ReviewCommandConfig
-	FrequencyPolicy policy.FrequencyPolicyConfig
+	Command         application.ReviewCommandConfig `mapstructure:"command"`
+	FrequencyPolicy policy.FrequencyPolicyConfig    `mapstructure:"frequency_policy"`
+	SafetyPolicy    moderation.AliyunGreenConfig    `mapstructure:"safety_policy"`
 }
 
 type ServerConfig struct {
@@ -159,6 +161,15 @@ func setDefaults(v *viper.Viper) {
 		"similarity_ratio": policy.DefaultFrequencyPolicyConfig.SimilarityRatio,
 		"suspend_duration": policy.DefaultFrequencyPolicyConfig.SuspendDuration.String(),
 		"admin_emails":     policy.DefaultFrequencyPolicyConfig.AdminEmails,
+	})
+	setSectionDefaults(v, "review.safety_policy", map[string]any{
+		"enabled":         moderation.DefaultAliyunGreenConfig.Enabled,
+		"region_id":       moderation.DefaultAliyunGreenConfig.RegionID,
+		"endpoint":        moderation.DefaultAliyunGreenConfig.Endpoint,
+		"service":         moderation.DefaultAliyunGreenConfig.Service,
+		"sensitive_level": moderation.DefaultAliyunGreenConfig.SensitiveLevel,
+		"connect_timeout": moderation.DefaultAliyunGreenConfig.ConnectTimeout.String(),
+		"read_timeout":    moderation.DefaultAliyunGreenConfig.ReadTimeout.String(),
 	})
 	setSectionDefaults(v, "review.command.hot_scores", map[string]any{
 		"review_create_score": course.DefaultHotScoreConfig.ReviewCreateScore,
