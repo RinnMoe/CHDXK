@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -11,11 +12,13 @@ import (
 	"jcourse/internal/domain/auth"
 )
 
-const anonymousUserID = 0
+type limiterEntry struct {
+	limiter          *rate.Limiter
+	lastSeenUnixNano atomic.Int64
+}
 
-type userLimiter struct {
-	limiter  *rate.Limiter
-	lastSeen time.Time
+type GlobalRateLimiter struct {
+	limiter *rate.Limiter
 }
 
 type UserRateLimiter struct {
@@ -23,10 +26,10 @@ type UserRateLimiter struct {
 	burst           int
 	cleanupInterval time.Duration
 	idleTTL         time.Duration
-	now             func() time.Time
 
-	mu       sync.Mutex
-	limiters map[int]*userLimiter
+	userLimiters      sync.Map
+	apiKeyLimiters    sync.Map
+	anonymousLimiters sync.Map
 }
 
 func NewUserRateLimiter(rps rate.Limit, burst int) *UserRateLimiter {
@@ -35,13 +38,29 @@ func NewUserRateLimiter(rps rate.Limit, burst int) *UserRateLimiter {
 		burst:           burst,
 		cleanupInterval: time.Minute,
 		idleTTL:         10 * time.Minute,
-		now:             time.Now,
-		limiters:        make(map[int]*userLimiter),
 	}
 }
 
 func UserIDRateLimit() gin.HandlerFunc {
 	return NewUserRateLimiter(rate.Limit(10), 10).Middleware()
+}
+
+func NewGlobalRateLimiter(rps rate.Limit, burst int) *GlobalRateLimiter {
+	return &GlobalRateLimiter{limiter: rate.NewLimiter(rps, burst)}
+}
+
+func GlobalRateLimit() gin.HandlerFunc {
+	return NewGlobalRateLimiter(rate.Limit(300), 300).Middleware()
+}
+
+func (r *GlobalRateLimiter) Middleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if !r.limiter.Allow() {
+			abortRateLimited(c)
+			return
+		}
+		c.Next()
+	}
 }
 
 func (r *UserRateLimiter) Middleware() gin.HandlerFunc {
@@ -50,28 +69,62 @@ func (r *UserRateLimiter) Middleware() gin.HandlerFunc {
 	}
 
 	return func(c *gin.Context) {
-		limiter := r.limiterFor(userIDFromContext(c))
+		limiter := r.limiterForRequest(c)
 		if !limiter.Allow() {
-			c.Header("Retry-After", "1")
-			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{"error": "rate limit exceeded"})
+			abortRateLimited(c)
 			return
 		}
 		c.Next()
 	}
 }
 
-func (r *UserRateLimiter) limiterFor(userID int) *rate.Limiter {
-	now := r.now()
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func abortRateLimited(c *gin.Context) {
+	c.Header("Retry-After", "1")
+	c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{"error": "rate limit exceeded"})
+}
 
-	entry, ok := r.limiters[userID]
-	if !ok {
-		entry = &userLimiter{limiter: rate.NewLimiter(r.rate, r.burst)}
-		r.limiters[userID] = entry
+func (r *UserRateLimiter) limiterForRequest(c *gin.Context) *rate.Limiter {
+	u := auth.GetUserFromCtx(c.Request.Context())
+	if u != nil && u.ID > 0 {
+		return r.limiterForKey(&r.userLimiters, u.ID)
 	}
-	entry.lastSeen = now
+
+	apiKey := auth.GetApiKeyFromCtx(c.Request.Context())
+	if apiKey != nil && apiKey.UserID > 0 {
+		return r.limiterForKey(&r.userLimiters, apiKey.UserID)
+	}
+	if apiKey != nil && apiKey.ID > 0 {
+		return r.limiterForKey(&r.apiKeyLimiters, apiKey.ID)
+	}
+
+	return r.limiterForKey(&r.anonymousLimiters, c.ClientIP())
+}
+
+func (r *UserRateLimiter) limiterForKey(limiters *sync.Map, key any) *rate.Limiter {
+	now := time.Now()
+	if existing, ok := limiters.Load(key); ok {
+		entry := existing.(*limiterEntry)
+		entry.touch(now)
+		return entry.limiter
+	}
+
+	entry := newLimiterEntry(r.rate, r.burst, now)
+	actual, loaded := limiters.LoadOrStore(key, entry)
+	if loaded {
+		entry = actual.(*limiterEntry)
+		entry.touch(now)
+	}
 	return entry.limiter
+}
+
+func newLimiterEntry(rps rate.Limit, burst int, now time.Time) *limiterEntry {
+	entry := &limiterEntry{limiter: rate.NewLimiter(rps, burst)}
+	entry.touch(now)
+	return entry
+}
+
+func (l *limiterEntry) touch(now time.Time) {
+	l.lastSeenUnixNano.Store(now.UnixNano())
 }
 
 func (r *UserRateLimiter) cleanupLoop() {
@@ -84,21 +137,18 @@ func (r *UserRateLimiter) cleanupLoop() {
 }
 
 func (r *UserRateLimiter) cleanup() {
-	cutoff := r.now().Add(-r.idleTTL)
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	for userID, entry := range r.limiters {
-		if entry.lastSeen.Before(cutoff) {
-			delete(r.limiters, userID)
-		}
-	}
+	cutoff := time.Now().Add(-r.idleTTL).UnixNano()
+	r.cleanupLimiters(&r.userLimiters, cutoff)
+	r.cleanupLimiters(&r.apiKeyLimiters, cutoff)
+	r.cleanupLimiters(&r.anonymousLimiters, cutoff)
 }
 
-func userIDFromContext(c *gin.Context) int {
-	u := auth.GetUserFromCtx(c.Request.Context())
-	if u == nil || u.ID <= 0 {
-		return anonymousUserID
-	}
-	return u.ID
+func (r *UserRateLimiter) cleanupLimiters(limiters *sync.Map, cutoffUnixNano int64) {
+	limiters.Range(func(key, value any) bool {
+		entry, ok := value.(*limiterEntry)
+		if ok && entry.lastSeenUnixNano.Load() < cutoffUnixNano {
+			limiters.Delete(key)
+		}
+		return true
+	})
 }

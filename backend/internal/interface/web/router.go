@@ -47,6 +47,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	g.Use(sessions.Sessions("jcourse_session", store))
 	g.Use(middleware.ResolveCurrentUser(container.AuthResolution))
 	g.Use(middleware.CSRF())
+	g.Use(middleware.GlobalRateLimit())
 	g.Use(middleware.UserIDRateLimit())
 
 	reviewController := controller.NewReviewController(container.ReviewQuery, container.ReviewCommand)
