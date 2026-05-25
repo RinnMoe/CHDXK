@@ -13,8 +13,8 @@ function formatHotPeriodDescription(
   const [year, value] = periodKey.split("-")
   const number = Number(value)
   if (!year || !Number.isFinite(number)) return ""
-  if (period === "week") return `本周是 ${year} 年第 ${number} 周`
-  return `本月是 ${year} 年第 ${value} 月`
+  if (period === "week") return `${year} 年第 ${number} 周`
+  return `${year} 年第 ${value} 月`
 }
 
 export function HotCoursesPage() {
