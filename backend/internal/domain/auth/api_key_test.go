@@ -68,71 +68,8 @@ func TestApiKeyRoleHelpers(t *testing.T) {
 	}
 }
 
-type apiKeyServiceFakeRepo struct {
-	key       *ApiKey
-	keys      []ApiKey
-	count     int
-	created   *ApiKey
-	deleted   bool
-	touched   bool
-	deleteOK  bool
-	deleteID  int
-	deleteUID int
-	findErr   error
-	countErr  error
-	createErr error
-	deleteErr error
-	touchErr  error
-}
-
-func (r *apiKeyServiceFakeRepo) FindByKey(_ context.Context, key string) (*ApiKey, error) {
-	if r.findErr != nil {
-		return nil, r.findErr
-	}
-	if r.key != nil && r.key.Key == key {
-		copy := *r.key
-		return &copy, nil
-	}
-	return nil, nil
-}
-
-func (r *apiKeyServiceFakeRepo) ListByUser(_ context.Context, _ int) ([]ApiKey, error) {
-	return r.keys, nil
-}
-
-func (r *apiKeyServiceFakeRepo) CountByUser(_ context.Context, _ int) (int, error) {
-	if r.countErr != nil {
-		return 0, r.countErr
-	}
-	return r.count, nil
-}
-
-func (r *apiKeyServiceFakeRepo) Create(_ context.Context, apiKey *ApiKey) error {
-	if r.createErr != nil {
-		return r.createErr
-	}
-	copy := *apiKey
-	r.created = &copy
-	apiKey.ID = 99
-	return nil
-}
-
-func (r *apiKeyServiceFakeRepo) DeleteByUser(_ context.Context, id int, userID int) (bool, error) {
-	r.deleteID = id
-	r.deleteUID = userID
-	if r.deleteErr != nil {
-		return false, r.deleteErr
-	}
-	return r.deleteOK, nil
-}
-
-func (r *apiKeyServiceFakeRepo) TouchLastUsed(_ context.Context, _ int, _ time.Time) error {
-	r.touched = true
-	return r.touchErr
-}
-
 func TestApiKeyService_ValidateKeyReturnsKey(t *testing.T) {
-	repo := &apiKeyServiceFakeRepo{key: &ApiKey{ID: 1, Key: "k1", Role: ApiKeyRoleSystem}}
+	repo := &MockApiKeyRepository{Key: &ApiKey{ID: 1, Key: "k1", Role: ApiKeyRoleSystem}}
 	svc := NewApiKeyService(repo, DefaultApiKeyConfig)
 	got, err := svc.ValidateKey(context.Background(), "k1")
 	if err != nil {
@@ -143,19 +80,8 @@ func TestApiKeyService_ValidateKeyReturnsKey(t *testing.T) {
 	}
 }
 
-func TestApiKeyService_MarkKeyUsedTouchesLastUsed(t *testing.T) {
-	repo := &apiKeyServiceFakeRepo{}
-	svc := NewApiKeyService(repo, DefaultApiKeyConfig)
-	if err := svc.MarkKeyUsed(context.Background(), 1); err != nil {
-		t.Fatalf("MarkKeyUsed: %v", err)
-	}
-	if !repo.touched {
-		t.Fatal("expected TouchLastUsed to be called")
-	}
-}
-
 func TestApiKeyService_CreateUserKey(t *testing.T) {
-	repo := &apiKeyServiceFakeRepo{count: DefaultApiKeyConfig.MaxUserKeys - 1}
+	repo := &MockApiKeyRepository{Count: DefaultApiKeyConfig.MaxUserKeys - 1}
 	svc := NewApiKeyService(repo, DefaultApiKeyConfig)
 	got, err := svc.CreateUserKey(context.Background(), 8, " local ")
 	if err != nil {
@@ -164,8 +90,8 @@ func TestApiKeyService_CreateUserKey(t *testing.T) {
 	if got.ID != 99 {
 		t.Fatalf("ID = %d, want 99", got.ID)
 	}
-	if repo.created == nil || repo.created.UserID != 8 || repo.created.Role != ApiKeyRoleUser {
-		t.Fatalf("created key = %+v", repo.created)
+	if repo.Created == nil || repo.Created.UserID != 8 || repo.Created.Role != ApiKeyRoleUser {
+		t.Fatalf("created key = %+v", repo.Created)
 	}
 	if got.Name != "local" {
 		t.Fatalf("Name = %q, want %q", got.Name, "local")
@@ -173,30 +99,30 @@ func TestApiKeyService_CreateUserKey(t *testing.T) {
 }
 
 func TestApiKeyService_CreateUserKeyRejectsLimit(t *testing.T) {
-	repo := &apiKeyServiceFakeRepo{count: DefaultApiKeyConfig.MaxUserKeys}
+	repo := &MockApiKeyRepository{Count: DefaultApiKeyConfig.MaxUserKeys}
 	svc := NewApiKeyService(repo, DefaultApiKeyConfig)
 	_, err := svc.CreateUserKey(context.Background(), 8, " local ")
 	if !errors.Is(err, ErrApiKeyLimitExceeded) {
 		t.Fatalf("CreateUserKey error = %v, want ErrApiKeyLimitExceeded", err)
 	}
-	if repo.created != nil {
-		t.Fatalf("created key = %+v, want nil", repo.created)
+	if repo.Created != nil {
+		t.Fatalf("created key = %+v, want nil", repo.Created)
 	}
 }
 
 func TestApiKeyService_DeleteUserKey(t *testing.T) {
-	repo := &apiKeyServiceFakeRepo{deleteOK: true}
+	repo := &MockApiKeyRepository{Key: &ApiKey{ID: 11, Role: ApiKeyRoleUser, UserID: 8}, DeleteOK: true}
 	svc := NewApiKeyService(repo, DefaultApiKeyConfig)
 	if err := svc.DeleteUserKey(context.Background(), 8, 11); err != nil {
 		t.Fatalf("DeleteUserKey: %v", err)
 	}
-	if repo.deleteID != 11 || repo.deleteUID != 8 {
-		t.Fatalf("delete args = (%d,%d), want (11,8)", repo.deleteID, repo.deleteUID)
+	if repo.DeleteID != 11 {
+		t.Fatalf("delete id = %d, want 11", repo.DeleteID)
 	}
 }
 
 func TestApiKeyService_DeleteUserKeyMissing(t *testing.T) {
-	repo := &apiKeyServiceFakeRepo{deleteOK: false}
+	repo := &MockApiKeyRepository{Key: &ApiKey{ID: 11, Role: ApiKeyRoleUser, UserID: 8}, DeleteOK: false}
 	svc := NewApiKeyService(repo, DefaultApiKeyConfig)
 	err := svc.DeleteUserKey(context.Background(), 8, 11)
 	if !errors.Is(err, ErrApiKeyNotFound) {

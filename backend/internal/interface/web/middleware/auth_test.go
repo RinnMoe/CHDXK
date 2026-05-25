@@ -19,15 +19,15 @@ import (
 func TestRequireAuthReusesResolvedSessionUser(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	repo := &authMiddlewareUserRepo{user: &auth.User{ID: 7, Role: auth.RoleUser}}
+	repo := auth.NewMockUserRepository(map[int]*auth.User{7: {ID: 7, Role: auth.RoleUser}})
 	currentUserSvc := auth.NewCurrentUserService(repo)
-	apiKeySvc := auth.NewApiKeyService(&authMiddlewareAPIKeyRepo{}, auth.DefaultApiKeyConfig)
+	apiKeySvc := auth.NewApiKeyService(&auth.MockApiKeyRepository{}, auth.DefaultApiKeyConfig)
 	authResolution := application.NewAuthResolutionService(currentUserSvc, apiKeySvc, nil)
 	r := gin.New()
 	r.Use(sessions.Sessions("jcourse_session", filesession.NewStore(t.TempDir(), []byte("test-secret"))))
 	r.Use(ResolveCurrentUser(authResolution))
 	r.GET("/login-session", func(c *gin.Context) {
-		if err := SetSessionUserID(c, repo.user.ID); err != nil {
+		if err := SetSessionUserID(c, 7); err != nil {
 			c.Status(http.StatusInternalServerError)
 			return
 		}
@@ -46,8 +46,8 @@ func TestRequireAuthReusesResolvedSessionUser(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", w.Code, http.StatusOK)
 	}
-	if repo.findByIDCalls != 1 {
-		t.Fatalf("FindByID calls = %d, want 1", repo.findByIDCalls)
+	if repo.FindByIDCalls != 1 {
+		t.Fatalf("FindByID calls = %d, want 1", repo.FindByIDCalls)
 	}
 }
 
@@ -55,11 +55,8 @@ func TestResolveCurrentUserWithUserAPIKey(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	validKey := "test-api-key-123"
-	userRepo := &authMiddlewareUserRepo{user: &auth.User{ID: 7, Role: auth.RoleUser}}
-	apiKeyRepo := &authMiddlewareAPIKeyRepo{
-		key:    validKey,
-		apiKey: &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleUser, UserID: 7},
-	}
+	userRepo := auth.NewMockUserRepository(map[int]*auth.User{7: {ID: 7, Role: auth.RoleUser}})
+	apiKeyRepo := &auth.MockApiKeyRepository{Key: &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleUser, UserID: 7}}
 	tracker := &authMiddlewareAccessTracker{}
 	r := gin.New()
 	r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
@@ -85,11 +82,11 @@ func TestResolveCurrentUserWithUserAPIKey(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", w.Code, http.StatusOK)
 	}
-	if apiKeyRepo.findByKeyCalls != 1 {
-		t.Fatalf("FindByKey calls = %d, want 1", apiKeyRepo.findByKeyCalls)
+	if apiKeyRepo.FindByKeyCalls != 1 {
+		t.Fatalf("FindByKey calls = %d, want 1", apiKeyRepo.FindByKeyCalls)
 	}
-	if userRepo.findByIDCalls != 1 {
-		t.Fatalf("FindByID calls = %d, want 1", userRepo.findByIDCalls)
+	if userRepo.FindByIDCalls != 1 {
+		t.Fatalf("FindByID calls = %d, want 1", userRepo.FindByIDCalls)
 	}
 	if tracker.apiKeyID != 1 {
 		t.Fatalf("recorded api key access id = %d, want 1", tracker.apiKeyID)
@@ -248,72 +245,6 @@ func firstCookie(t *testing.T, res *http.Response) string {
 		t.Fatal("expected session cookie")
 	}
 	return cookies[0].String()
-}
-
-type authMiddlewareUserRepo struct {
-	user          *auth.User
-	findByIDCalls int
-}
-
-func (r *authMiddlewareUserRepo) Create(context.Context, *auth.User) error { return nil }
-
-func (r *authMiddlewareUserRepo) Update(context.Context, *auth.User) error { return nil }
-
-func (r *authMiddlewareUserRepo) TouchLastSeen(context.Context, int, time.Time) error { return nil }
-
-func (r *authMiddlewareUserRepo) FindByID(_ context.Context, id int) (*auth.User, error) {
-	r.findByIDCalls++
-	if r.user == nil || r.user.ID != id {
-		return nil, nil
-	}
-	copy := *r.user
-	return &copy, nil
-}
-
-func (r *authMiddlewareUserRepo) FindByRole(_ context.Context, role string) ([]auth.User, error) {
-	if r.user == nil || r.user.Role != role {
-		return []auth.User{}, nil
-	}
-	return []auth.User{*r.user}, nil
-}
-
-func (r *authMiddlewareUserRepo) FindByUsername(context.Context, string) (*auth.User, error) {
-	return nil, nil
-}
-
-func (r *authMiddlewareUserRepo) FindByEmail(context.Context, string) (*auth.User, error) {
-	return nil, nil
-}
-
-type authMiddlewareAPIKeyRepo struct {
-	key            string
-	apiKey         *auth.ApiKey
-	findByKeyCalls int
-}
-
-func (r *authMiddlewareAPIKeyRepo) FindByKey(_ context.Context, key string) (*auth.ApiKey, error) {
-	r.findByKeyCalls++
-	if key != r.key || r.apiKey == nil {
-		return nil, nil
-	}
-	copy := *r.apiKey
-	return &copy, nil
-}
-
-func (r *authMiddlewareAPIKeyRepo) ListByUser(context.Context, int) ([]auth.ApiKey, error) {
-	return nil, nil
-}
-
-func (r *authMiddlewareAPIKeyRepo) CountByUser(context.Context, int) (int, error) { return 0, nil }
-
-func (r *authMiddlewareAPIKeyRepo) Create(context.Context, *auth.ApiKey) error { return nil }
-
-func (r *authMiddlewareAPIKeyRepo) DeleteByUser(context.Context, int, int) (bool, error) {
-	return false, nil
-}
-
-func (r *authMiddlewareAPIKeyRepo) TouchLastUsed(context.Context, int, time.Time) error {
-	return nil
 }
 
 type authMiddlewareAccessTracker struct {

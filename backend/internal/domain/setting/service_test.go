@@ -8,26 +8,8 @@ import (
 	"jcourse/internal/domain/course"
 )
 
-type fakeUserSettingsRepo struct {
-	settings map[int]*UserSettings
-}
-
-func newFakeUserSettingsRepo() *fakeUserSettingsRepo {
-	return &fakeUserSettingsRepo{settings: map[int]*UserSettings{}}
-}
-
-func (r *fakeUserSettingsRepo) GetByUserID(ctx context.Context, userID int) (*UserSettings, error) {
-	if s, ok := r.settings[userID]; ok {
-		copy := *s
-		return &copy, nil
-	}
-	return nil, nil
-}
-
-func (r *fakeUserSettingsRepo) Save(ctx context.Context, settings *UserSettings) error {
-	copy := *settings
-	r.settings[settings.UserID] = &copy
-	return nil
+func newFakeUserSettingsRepo() *MockRepository {
+	return NewMockRepository()
 }
 
 type fakeSettingsCourseRepo struct {
@@ -56,7 +38,7 @@ func (r *fakeSettingsCourseRepo) OfferedCourseExists(ctx context.Context, course
 
 func TestUserSettingsService_GetCurrentSemesterUsesSavedValidSemester(t *testing.T) {
 	repo := newFakeUserSettingsRepo()
-	repo.settings[1] = &UserSettings{UserID: 1, CurrentSemester: "2024-2025-2"}
+	repo.Settings[1] = &UserSettings{UserID: 1, CurrentSemester: "2024-2025-2"}
 	svc := NewUserSettingsService(repo, newFakeSettingsCourseRepo("2025-2026-1", "2024-2025-2"))
 
 	got, err := svc.GetCurrentSemester(context.Background(), 1, []string{"2025-2026-1", "2024-2025-2"})
@@ -70,7 +52,7 @@ func TestUserSettingsService_GetCurrentSemesterUsesSavedValidSemester(t *testing
 
 func TestUserSettingsService_GetCurrentSemesterFallsBackWhenSavedInvalid(t *testing.T) {
 	repo := newFakeUserSettingsRepo()
-	repo.settings[1] = &UserSettings{UserID: 1, CurrentSemester: "2020-2021-1"}
+	repo.Settings[1] = &UserSettings{UserID: 1, CurrentSemester: "2020-2021-1"}
 	svc := NewUserSettingsService(repo, newFakeSettingsCourseRepo("2025-2026-1"))
 
 	got, err := svc.GetCurrentSemester(context.Background(), 1, []string{"2025-2026-1"})

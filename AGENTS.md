@@ -7,7 +7,7 @@ This repository contains `jcourse`, split into `backend/` and `frontend/`. Backe
 ## Build, Test, and Development Commands
 
 - `cd backend && go build ./...` builds all Go packages.
-- `cd backend && go test ./...` runs backend tests; repository tests expect PostgreSQL.
+- `cd backend && go test -tags test ./...` runs backend tests; repository tests expect PostgreSQL. Always include the `test` build tag for Go tests because shared repository mocks are guarded by `//go:build test`.
 - `cd backend && go vet ./...` runs Go static analysis.
 - `cd backend && docker compose up -d postgres redis` starts local backend dependencies.
 - `cd backend && go run cmd/api/main.go --config config/config.yaml` starts the API.

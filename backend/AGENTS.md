@@ -8,8 +8,8 @@ This directory is the Go backend for `jcourse`. Entrypoints live in `cmd/api` fo
 
 - `go build ./...` builds every package.
 - `go vet ./...` runs Go static analysis.
-- `go test ./...` runs all tests; repository tests require PostgreSQL.
-- `go test ./internal/infrastructure/repository/... -run TestName` runs a focused repository test.
+- `go test -tags test ./...` runs all tests; repository tests require PostgreSQL. Always include the `test` build tag because shared repository mocks are guarded by `//go:build test`.
+- `go test -tags test ./internal/infrastructure/repository/... -run TestName` runs a focused repository test.
 - `docker compose up -d postgres redis` starts local dependencies on ports `5432` and `6379`.
 - `go run cmd/api/main.go --config config/config.yaml` starts the API server.
 - `go run cmd/taskworker/main.go --config config/config.yaml` starts the async worker.
@@ -25,7 +25,7 @@ When changing database structure, fields, or indexes, add a new numbered SQL fil
 
 ## Testing Guidelines
 
-Tests use Go's standard `testing` package and live beside the code as `*_test.go`. Prefer table-driven tests for policy, validation, and application logic. Repository tests use helpers in `internal/infrastructure/repository/testhelper_test.go` and expect PostgreSQL with user/password `postgres/postgres`; `jcourse_test` is created and dropped automatically. Run `go test ./...` before handing off backend changes when local dependencies are available.
+Tests use Go's standard `testing` package and live beside the code as `*_test.go`. Prefer table-driven tests for policy, validation, and application logic. Repository tests use helpers in `internal/infrastructure/repository/testhelper_test.go` and expect PostgreSQL with user/password `postgres/postgres`; `jcourse_test` is created and dropped automatically. Run `go test -tags test ./...` before handing off backend changes when local dependencies are available.
 
 ## Commit & Pull Request Guidelines
 

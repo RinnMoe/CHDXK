@@ -12,120 +12,8 @@ import (
 	"jcourse/internal/domain/task"
 )
 
-type fakeCommandCourseRepo struct {
-	courses map[int]*course.Course
-}
-
-func (r *fakeCommandCourseRepo) Get(ctx context.Context, courseID int) (*course.Course, error) {
-	c, ok := r.courses[courseID]
-	if !ok {
-		return nil, nil
-	}
-	copy := *c
-	return &copy, nil
-}
-
-func (r *fakeCommandCourseRepo) OfferedCourseExists(ctx context.Context, courseID int, semester string) (bool, error) {
-	_, ok := r.courses[courseID]
-	return ok, nil
-}
-
-func (r *fakeCommandCourseRepo) OfferedSemesterExists(ctx context.Context, semester string) (bool, error) {
-	return false, nil
-}
-
-type fakeCommandReviewRepo struct {
-	nextID  int
-	reviews map[int]*review.Review
-}
-
-func newFakeCommandReviewRepo() *fakeCommandReviewRepo {
-	return &fakeCommandReviewRepo{nextID: 1, reviews: map[int]*review.Review{}}
-}
-
-func (r *fakeCommandReviewRepo) Create(ctx context.Context, rv *review.Review) error {
-	copy := *rv
-	copy.ID = r.nextID
-	r.nextID++
-	r.reviews[copy.ID] = &copy
-	rv.ID = copy.ID
-	return nil
-}
-
-func (r *fakeCommandReviewRepo) Update(ctx context.Context, rv *review.Review, revision review.Revision) error {
-	copy := *rv
-	r.reviews[copy.ID] = &copy
-	return nil
-}
-
-func (r *fakeCommandReviewRepo) UpdateModeratorRemark(ctx context.Context, reviewID int, moderatorRemark string) error {
-	rv, ok := r.reviews[reviewID]
-	if !ok {
-		return nil
-	}
-	copy := *rv
-	copy.ModeratorRemark = moderatorRemark
-	r.reviews[reviewID] = &copy
-	return nil
-}
-
-func (r *fakeCommandReviewRepo) Delete(ctx context.Context, rv *review.Review) error {
-	delete(r.reviews, rv.ID)
-	return nil
-}
-
-func (r *fakeCommandReviewRepo) Get(ctx context.Context, reviewID int) (*review.Review, error) {
-	rv, ok := r.reviews[reviewID]
-	if !ok {
-		return nil, nil
-	}
-	copy := *rv
-	return &copy, nil
-}
-
-type fakeCommandVoteRepo struct {
-	existing   *review.Vote
-	todayCount int64
-}
-
-func (r *fakeCommandVoteRepo) FindByReviewAndUser(ctx context.Context, reviewID, userID int) (*review.Vote, error) {
-	if r.existing == nil {
-		return nil, nil
-	}
-	copy := *r.existing
-	return &copy, nil
-}
-
-func (r *fakeCommandVoteRepo) FindByReviewsAndUser(ctx context.Context, reviewIDs []int, userID int) (map[int]review.Vote, error) {
-	return map[int]review.Vote{}, nil
-}
-
-func (r *fakeCommandVoteRepo) CountTodayByUser(ctx context.Context, userID int) (int64, error) {
-	return r.todayCount, nil
-}
-
-func (r *fakeCommandVoteRepo) Save(ctx context.Context, vote *review.Vote) error {
-	copy := *vote
-	r.existing = &copy
-	return nil
-}
-
-func (r *fakeCommandVoteRepo) Delete(ctx context.Context, reviewID, userID int) error {
-	r.existing = nil
-	return nil
-}
-
-type fakeHotScoreRepo struct {
-	calls []course.HotCourseRank
-}
-
-func (r *fakeHotScoreRepo) AddScore(ctx context.Context, courseID int, score int64, periods ...course.HotCoursePeriod) error {
-	r.calls = append(r.calls, course.HotCourseRank{CourseID: courseID, Score: score})
-	return nil
-}
-
-func (r *fakeHotScoreRepo) Top(ctx context.Context, period course.HotCoursePeriod, limit int64) ([]course.HotCourseRank, error) {
-	return nil, nil
+func newFakeCommandReviewRepo() *review.MockReviewRepository {
+	return review.NewMockReviewRepository()
 }
 
 type fakeReviewCommandEnqueuer struct {
@@ -137,10 +25,10 @@ func (f *fakeReviewCommandEnqueuer) Enqueue(ctx context.Context, t task.Task, op
 	return nil
 }
 
-func newReviewCommandTestService(reviewRepo *fakeCommandReviewRepo, voteRepo *fakeCommandVoteRepo) *application.ReviewCommandService {
-	courseRepo := &fakeCommandCourseRepo{courses: map[int]*course.Course{
-		1: &course.Course{ID: 1},
-	}}
+func newReviewCommandTestService(reviewRepo *review.MockReviewRepository, voteRepo *review.MockVoteRepository) *application.ReviewCommandService {
+	courseRepo := course.NewMockCourseRepository()
+	courseRepo.Courses[1] = &course.Course{ID: 1, LastSemester: "2025-2026-1"}
+	courseRepo.OfferedCourses[1] = map[string]bool{"2025-2026-1": true}
 	return application.NewReviewCommandService(
 		courseRepo,
 		reviewRepo,
@@ -162,7 +50,7 @@ func TestReviewCommandService_CreateReviewEnqueuesHotCourseActivity(t *testing.T
 	enqueuer := &fakeReviewCommandEnqueuer{}
 	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
 	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
-	svc := newReviewCommandTestService(reviewRepo, &fakeCommandVoteRepo{})
+	svc := newReviewCommandTestService(reviewRepo, &review.MockVoteRepository{})
 
 	err := svc.CreateReview(context.Background(), &auth.User{ID: 10}, &application.CreateReviewCommand{
 		CourseID: 1,
@@ -191,11 +79,11 @@ func TestReviewCommandService_CreateReviewEnqueuesHotCourseActivity(t *testing.T
 
 func TestReviewCommandService_UpdateReviewEnqueuesHotCourseActivity(t *testing.T) {
 	reviewRepo := newFakeCommandReviewRepo()
-	reviewRepo.reviews[1] = &review.Review{ID: 1, CourseID: 1, UserID: 10, Semester: "2025-2026-1", Rating: 4, Content: "old"}
+	reviewRepo.Reviews[1] = &review.Review{ID: 1, CourseID: 1, UserID: 10, Semester: "2025-2026-1", Rating: 4, Content: "old"}
 	enqueuer := &fakeReviewCommandEnqueuer{}
 	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
 	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
-	svc := newReviewCommandTestService(reviewRepo, &fakeCommandVoteRepo{})
+	svc := newReviewCommandTestService(reviewRepo, &review.MockVoteRepository{})
 
 	err := svc.UpdateReview(context.Background(), &auth.User{ID: 10}, &application.UpdateReviewCommand{
 		ReviewID: 1,
@@ -221,8 +109,8 @@ func TestReviewCommandService_UpdateReviewEnqueuesHotCourseActivity(t *testing.T
 
 func TestReviewCommandService_UpdateModeratorRemarkRequiresAdmin(t *testing.T) {
 	reviewRepo := newFakeCommandReviewRepo()
-	reviewRepo.reviews[1] = &review.Review{ID: 1, CourseID: 1, UserID: 10, Semester: "2025-2026-1", Rating: 4, Content: "old"}
-	svc := newReviewCommandTestService(reviewRepo, &fakeCommandVoteRepo{})
+	reviewRepo.Reviews[1] = &review.Review{ID: 1, CourseID: 1, UserID: 10, Semester: "2025-2026-1", Rating: 4, Content: "old"}
+	svc := newReviewCommandTestService(reviewRepo, &review.MockVoteRepository{})
 
 	err := svc.UpdateModeratorRemark(context.Background(), &auth.User{ID: 10, Role: auth.RoleUser}, 1, &application.UpdateReviewModeratorRemarkCommand{
 		ModeratorRemark: "需要补充依据",
@@ -237,15 +125,15 @@ func TestReviewCommandService_UpdateModeratorRemarkRequiresAdmin(t *testing.T) {
 	if err != nil {
 		t.Fatalf("admin UpdateModeratorRemark: %v", err)
 	}
-	if got := reviewRepo.reviews[1].ModeratorRemark; got != "已核实" {
+	if got := reviewRepo.Reviews[1].ModeratorRemark; got != "已核实" {
 		t.Fatalf("ModeratorRemark = %q, want 已核实", got)
 	}
 }
 
 func TestReviewCommandService_VoteReviewRecordsOnlyChangedVote(t *testing.T) {
 	reviewRepo := newFakeCommandReviewRepo()
-	reviewRepo.reviews[1] = &review.Review{ID: 1, CourseID: 1, UserID: 20, Semester: "2025-2026-1", Rating: 4, Content: "ok"}
-	voteRepo := &fakeCommandVoteRepo{existing: &review.Vote{ReviewID: 1, UserID: 10, VoteType: review.VoteLike}}
+	reviewRepo.Reviews[1] = &review.Review{ID: 1, CourseID: 1, UserID: 20, Semester: "2025-2026-1", Rating: 4, Content: "ok"}
+	voteRepo := &review.MockVoteRepository{Existing: &review.Vote{ReviewID: 1, UserID: 10, VoteType: review.VoteLike}}
 	enqueuer := &fakeReviewCommandEnqueuer{}
 	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
 	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
@@ -275,7 +163,7 @@ func TestReviewCommandService_VoteReviewRecordsOnlyChangedVote(t *testing.T) {
 }
 
 func TestCourseHotCommandService_RecordActivityUsesConfiguredScore(t *testing.T) {
-	hotRepo := &fakeHotScoreRepo{}
+	hotRepo := &course.MockHotCourseRepository{}
 	svc := application.NewCourseHotCommandService(hotRepo, course.HotScoreConfig{
 		ReviewCreateScore: 5,
 		ReviewUpdateScore: 2,
@@ -290,7 +178,7 @@ func TestCourseHotCommandService_RecordActivityUsesConfiguredScore(t *testing.T)
 	if err != nil {
 		t.Fatalf("RecordActivity: %v", err)
 	}
-	if len(hotRepo.calls) != 1 || hotRepo.calls[0].CourseID != 1 || hotRepo.calls[0].Score != 2 {
-		t.Fatalf("hot calls = %+v, want course=1 score=2", hotRepo.calls)
+	if len(hotRepo.Calls) != 1 || hotRepo.Calls[0].CourseID != 1 || hotRepo.Calls[0].Score != 2 {
+		t.Fatalf("hot calls = %+v, want course=1 score=2", hotRepo.Calls)
 	}
 }

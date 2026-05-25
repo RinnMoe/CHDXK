@@ -48,7 +48,7 @@ func TestAccountCommandService_RegisterAndLogin(t *testing.T) {
 	if err := svc.SendRegisterCode(ctx, application.SendRegisterCodeCommand{Email: "alice@example.edu"}); err != nil {
 		t.Fatalf("SendRegisterCode: %v", err)
 	}
-	registered, err := svc.Register(ctx, application.RegisterCommand{Email: "Alice@Example.EDU", Code: codes.saved["alice@example.edu"].Code, Password: "secret"})
+	registered, err := svc.Register(ctx, application.RegisterCommand{Email: "Alice@Example.EDU", Code: codes.Saved["alice@example.edu"].Code, Password: "secret"})
 	if err != nil {
 		t.Fatalf("Register: %v", err)
 	}
@@ -70,7 +70,7 @@ func TestAccountCommandService_RegisterAndLogin(t *testing.T) {
 
 func TestAccountCommandService_RegisterRejectsWrongCode(t *testing.T) {
 	codes := newFakeCodeRepo()
-	codes.saved["alice@example.edu"] = account.VerificationCode{Email: "alice@example.edu", Code: "123456", ExpiresAt: time.Now().Add(time.Minute)}
+	codes.Saved["alice@example.edu"] = account.VerificationCode{Email: "alice@example.edu", Code: "123456", ExpiresAt: time.Now().Add(time.Minute)}
 	svc := newAccountService(newFakeAccountRepo(nil), newFakeAuthUserRepo(nil), codes, &fakeCodeSender{})
 
 	_, err := svc.Register(context.Background(), application.RegisterCommand{Email: "alice@example.edu", Code: "000000", Password: "secret"})
@@ -134,8 +134,8 @@ func TestAccountCommandService_LoginAllowsExpiredSuspensionAndEnqueuesCleanup(t 
 	if !enqueuer.enqueued {
 		t.Fatal("expected cleanup task to be enqueued")
 	}
-	if accountRepo.touchCount != 1 {
-		t.Fatalf("TouchLastSeen count = %d, want 1", accountRepo.touchCount)
+	if accountRepo.TouchCount != 1 {
+		t.Fatalf("TouchLastSeen count = %d, want 1", accountRepo.TouchCount)
 	}
 }
 
@@ -145,7 +145,7 @@ func TestAccountCommandService_LoginLockedAfterMaxAttempts(t *testing.T) {
 		"alice@example.edu": {ID: 1, Username: username, PasswordHash: mustHash(t, "secret")},
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
-	attempts := &fakeLoginAttemptRepo{counts: map[string]int{"alice@example.edu": 5}}
+	attempts := account.NewMockLoginAttemptRepository(map[string]int{"alice@example.edu": 5})
 	svc := newAccountServiceWithAttempts(accountRepo, userRepo, newFakeCodeRepo(), newFakeCodeRepo(), &fakeCodeSender{}, 5, attempts)
 
 	_, err := svc.Login(context.Background(), application.LoginCommand{Email: "alice@example.edu", Password: "secret"})
@@ -162,7 +162,7 @@ func TestAccountCommandService_SendResetCodeAndResetPassword(t *testing.T) {
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
 	codes := newFakeCodeRepo()
 	sender := &fakeCodeSender{}
-	svc := newAccountServiceWithAttempts(accountRepo, userRepo, newFakeCodeRepo(), codes, sender, 5, &fakeLoginAttemptRepo{})
+	svc := newAccountServiceWithAttempts(accountRepo, userRepo, newFakeCodeRepo(), codes, sender, 5, account.NewMockLoginAttemptRepository(nil))
 	ctx := context.Background()
 
 	if err := svc.SendResetCode(ctx, application.SendResetCodeCommand{Email: "alice@example.edu"}); err != nil {
@@ -172,7 +172,7 @@ func TestAccountCommandService_SendResetCodeAndResetPassword(t *testing.T) {
 		t.Fatalf("sender email.To = %q, want alice@example.edu", sender.email.To)
 	}
 
-	if err := svc.ResetPassword(ctx, application.ResetPasswordCommand{Email: "alice@example.edu", Code: codes.saved["alice@example.edu"].Code, NewPassword: "newpass"}); err != nil {
+	if err := svc.ResetPassword(ctx, application.ResetPasswordCommand{Email: "alice@example.edu", Code: codes.Saved["alice@example.edu"].Code, NewPassword: "newpass"}); err != nil {
 		t.Fatalf("ResetPassword: %v", err)
 	}
 
@@ -214,7 +214,7 @@ func TestAccountCommandService_LoginFailedIncrementsAndLocks(t *testing.T) {
 		"alice@example.edu": {ID: 1, Username: username, PasswordHash: mustHash(t, "secret")},
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
-	attempts := &fakeLoginAttemptRepo{counts: map[string]int{}}
+	attempts := account.NewMockLoginAttemptRepository(map[string]int{})
 	svc := newAccountServiceWithAttempts(accountRepo, userRepo, newFakeCodeRepo(), newFakeCodeRepo(), &fakeCodeSender{}, 3, attempts)
 	ctx := context.Background()
 
@@ -231,20 +231,22 @@ func TestAccountCommandService_LoginFailedIncrementsAndLocks(t *testing.T) {
 	}
 }
 
-func newAccountService(accountRepo *fakeAccountRepo, userRepo *fakeAuthUserRepo, codes *fakeCodeRepo, sender *fakeCodeSender) *application.AccountCommandService {
-	return newAccountServiceWithAttempts(accountRepo, userRepo, codes, newFakeCodeRepo(), sender, 5, &fakeLoginAttemptRepo{})
+func newAccountService(accountRepo *account.MockAccountRepository, userRepo *auth.MockUserRepository, codes *account.MockVerificationCodeRepository, sender *fakeCodeSender) *application.AccountCommandService {
+	return newAccountServiceWithAttempts(accountRepo, userRepo, codes, newFakeCodeRepo(), sender, 5, account.NewMockLoginAttemptRepository(nil))
 }
 
 func newAccountServiceWithAttempts(
-	accountRepo *fakeAccountRepo,
-	userRepo *fakeAuthUserRepo,
-	registerCodes *fakeCodeRepo,
-	resetCodes *fakeCodeRepo,
+	accountRepo *account.MockAccountRepository,
+	userRepo *auth.MockUserRepository,
+	registerCodes *account.MockVerificationCodeRepository,
+	resetCodes *account.MockVerificationCodeRepository,
 	sender *fakeCodeSender,
 	maxLoginAttempts int,
 	attempts account.LoginAttemptRepository,
 ) *application.AccountCommandService {
-	accountRepo.userRepo = userRepo
+	accountRepo.AfterCreate = func(acct *account.Account) {
+		userRepo.Users[acct.ID] = &auth.User{ID: acct.ID, Role: auth.RoleUser}
+	}
 	hasher := account.NewDjangoPBKDF2SHA256PasswordHasher(account.PasswordHashConfig{Iterations: 1})
 	usernames := testUsernameDeriver()
 	return application.NewAccountCommandService(
@@ -288,31 +290,17 @@ func testLoginConfig(maxLoginAttempts int) account.LoginConfig {
 	}
 }
 
-type fakeAccountRepo struct {
-	nextID             int
-	accountsByID       map[int]*account.Account
-	accountsByEmail    map[string]*account.Account
-	accountsByUsername map[string]*account.Account
-	userRepo           *fakeAuthUserRepo
-	touchCount         int
-}
-
-func newFakeAccountRepo(accounts map[string]*account.Account) *fakeAccountRepo {
+func newFakeAccountRepo(accounts map[string]*account.Account) *account.MockAccountRepository {
 	if accounts == nil {
 		accounts = map[string]*account.Account{}
 	}
-	repo := &fakeAccountRepo{nextID: 1, accountsByID: map[int]*account.Account{}, accountsByEmail: map[string]*account.Account{}, accountsByUsername: map[string]*account.Account{}}
+	repo := account.NewMockAccountRepository(nil)
 	for email, acct := range accounts {
 		copy := *acct
 		if copy.Username == "" {
 			copy.Username = accountUsernameFromEmail(email)
 		}
-		repo.accountsByEmail[email] = &copy
-		repo.accountsByUsername[copy.Username] = &copy
-		repo.accountsByID[copy.ID] = &copy
-		if copy.ID >= repo.nextID {
-			repo.nextID = copy.ID + 1
-		}
+		repo.PutAccount(email, &copy)
 	}
 	return repo
 }
@@ -338,138 +326,12 @@ func testUsernameDeriver() account.UsernameDeriver {
 	return account.NewBLAKE2bUsernameDeriver(account.UsernameDeriverConfig{Salt: "SALT"})
 }
 
-func (r *fakeAccountRepo) Create(_ context.Context, acct *account.Account) error {
-	if _, ok := r.accountsByUsername[acct.Username]; ok {
-		return errors.New("duplicate user")
-	}
-	copy := *acct
-	copy.ID = r.nextID
-	r.nextID++
-	r.accountsByID[copy.ID] = &copy
-	r.accountsByEmail[copy.Email] = &copy
-	r.accountsByUsername[copy.Username] = &copy
-	if r.userRepo != nil {
-		r.userRepo.users[copy.ID] = &auth.User{ID: copy.ID, Role: auth.RoleUser}
-	}
-	acct.ID = copy.ID
-	return nil
+func newFakeAuthUserRepo(users map[int]*auth.User) *auth.MockUserRepository {
+	return auth.NewMockUserRepository(users)
 }
 
-func (r *fakeAccountRepo) Update(_ context.Context, acct *account.Account) error {
-	copy := *acct
-	r.accountsByID[acct.ID] = &copy
-	r.accountsByEmail[acct.Email] = &copy
-	r.accountsByUsername[acct.Username] = &copy
-	return nil
-}
-
-func (r *fakeAccountRepo) TouchLastSeen(_ context.Context, id int, at time.Time) error {
-	r.touchCount++
-	acct, ok := r.accountsByID[id]
-	if !ok {
-		return errors.New("account not found")
-	}
-	acct.LastSeenAt = at
-	return nil
-}
-
-func (r *fakeAccountRepo) FindByID(_ context.Context, id int) (*account.Account, error) {
-	acct, ok := r.accountsByID[id]
-	if !ok {
-		return nil, nil
-	}
-	copy := *acct
-	return &copy, nil
-}
-
-func (r *fakeAccountRepo) FindByUsername(_ context.Context, username string) (*account.Account, error) {
-	acct, ok := r.accountsByUsername[username]
-	if !ok {
-		return nil, nil
-	}
-	copy := *acct
-	return &copy, nil
-}
-
-func (r *fakeAccountRepo) FindByEmail(_ context.Context, email string) (*account.Account, error) {
-	acct, ok := r.accountsByEmail[email]
-	if !ok {
-		return nil, nil
-	}
-	copy := *acct
-	return &copy, nil
-}
-
-type fakeAuthUserRepo struct {
-	users map[int]*auth.User
-}
-
-func newFakeAuthUserRepo(users map[int]*auth.User) *fakeAuthUserRepo {
-	if users == nil {
-		users = map[int]*auth.User{}
-	}
-	return &fakeAuthUserRepo{users: users}
-}
-
-func (r *fakeAuthUserRepo) Update(_ context.Context, u *auth.User) error {
-	copy := *u
-	r.users[u.ID] = &copy
-	return nil
-}
-
-func (r *fakeAuthUserRepo) FindByID(_ context.Context, id int) (*auth.User, error) {
-	u, ok := r.users[id]
-	if !ok {
-		return nil, nil
-	}
-	copy := *u
-	return &copy, nil
-}
-
-func (r *fakeAuthUserRepo) FindByRole(_ context.Context, role string) ([]auth.User, error) {
-	users := make([]auth.User, 0)
-	for _, u := range r.users {
-		if u.Role == role {
-			users = append(users, *u)
-		}
-	}
-	return users, nil
-}
-
-type fakeCodeRepo struct {
-	saved        map[string]account.VerificationCode
-	cooldownTill map[string]time.Time
-}
-
-func newFakeCodeRepo() *fakeCodeRepo {
-	return &fakeCodeRepo{saved: map[string]account.VerificationCode{}, cooldownTill: map[string]time.Time{}}
-}
-
-func (r *fakeCodeRepo) ReserveSend(_ context.Context, email string, interval time.Duration) (time.Duration, error) {
-	now := time.Now()
-	if till := r.cooldownTill[email]; till.After(now) {
-		return time.Until(till), nil
-	}
-	r.cooldownTill[email] = now.Add(interval)
-	return 0, nil
-}
-
-func (r *fakeCodeRepo) Save(_ context.Context, code account.VerificationCode, _ time.Duration) error {
-	r.saved[code.Email] = code
-	return nil
-}
-
-func (r *fakeCodeRepo) Get(_ context.Context, email string) (*account.VerificationCode, error) {
-	code, ok := r.saved[email]
-	if !ok {
-		return nil, nil
-	}
-	return &code, nil
-}
-
-func (r *fakeCodeRepo) Delete(_ context.Context, email string) error {
-	delete(r.saved, email)
-	return nil
+func newFakeCodeRepo() *account.MockVerificationCodeRepository {
+	return account.NewMockVerificationCodeRepository()
 }
 
 type fakeCodeSender struct {
@@ -485,32 +347,5 @@ type fakeEnqueuer struct{ enqueued bool }
 
 func (f *fakeEnqueuer) Enqueue(context.Context, task.Task, ...task.EnqueueOption) error {
 	f.enqueued = true
-	return nil
-}
-
-type fakeLoginAttemptRepo struct {
-	counts map[string]int
-}
-
-func (r *fakeLoginAttemptRepo) Increment(_ context.Context, email string) (int, error) {
-	if r.counts == nil {
-		r.counts = map[string]int{}
-	}
-	r.counts[email]++
-	return r.counts[email], nil
-}
-
-func (r *fakeLoginAttemptRepo) Get(_ context.Context, email string) (int, error) {
-	if r.counts == nil {
-		r.counts = map[string]int{}
-	}
-	return r.counts[email], nil
-}
-
-func (r *fakeLoginAttemptRepo) Reset(_ context.Context, email string) error {
-	if r.counts == nil {
-		r.counts = map[string]int{}
-	}
-	r.counts[email] = 0
 	return nil
 }

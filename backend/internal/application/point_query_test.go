@@ -20,7 +20,7 @@ func TestPointQueryService_GetUserPoints(t *testing.T) {
 		},
 		recordTotal: 2,
 	}
-	svc := application.NewPointQueryService(repo, &fakeAccountRepoForQuery{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), account.NewBLAKE2bUsernameDeriver(account.UsernameDeriverConfig{Salt: "SALT"}))
+	svc := application.NewPointQueryService(repo, account.NewMockAccountRepository(nil), point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), account.NewBLAKE2bUsernameDeriver(account.UsernameDeriverConfig{Salt: "SALT"}))
 
 	result, err := svc.GetUserPoints(context.Background(), 7, application.PointRecordListFilter{Page: 1, PageSize: 20})
 	if err != nil {
@@ -42,7 +42,7 @@ func TestPointQueryService_GetUserPoints(t *testing.T) {
 
 func TestPointQueryService_PreviewTransfer(t *testing.T) {
 	repo := &fakePointQuery{total: 500}
-	svc := application.NewPointQueryService(repo, &fakeAccountRepoForQuery{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), account.NewBLAKE2bUsernameDeriver(account.UsernameDeriverConfig{Salt: "SALT"}))
+	svc := application.NewPointQueryService(repo, account.NewMockAccountRepository(nil), point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), account.NewBLAKE2bUsernameDeriver(account.UsernameDeriverConfig{Salt: "SALT"}))
 
 	got, err := svc.PreviewTransfer(context.Background(), 7, application.PreviewTransferParams{Amount: 100, FeePayer: point.FeePayerRecipient})
 	if err != nil {
@@ -71,21 +71,4 @@ func (q *fakePointQuery) SumByUser(_ context.Context, userID int) (int, error) {
 func (q *fakePointQuery) FindRecordsByUser(_ context.Context, filter point.RecordFilter) ([]point.Record, int64, error) {
 	q.userID = filter.UserID
 	return q.records, q.recordTotal, nil
-}
-
-type fakeAccountRepoForQuery struct{}
-
-func (r *fakeAccountRepoForQuery) Create(_ context.Context, _ *account.Account) error { return nil }
-func (r *fakeAccountRepoForQuery) Update(_ context.Context, _ *account.Account) error { return nil }
-func (r *fakeAccountRepoForQuery) TouchLastSeen(_ context.Context, _ int, _ time.Time) error {
-	return nil
-}
-func (r *fakeAccountRepoForQuery) FindByID(_ context.Context, _ int) (*account.Account, error) {
-	return nil, nil
-}
-func (r *fakeAccountRepoForQuery) FindByUsername(_ context.Context, _ string) (*account.Account, error) {
-	return nil, nil
-}
-func (r *fakeAccountRepoForQuery) FindByEmail(_ context.Context, _ string) (*account.Account, error) {
-	return nil, nil
 }

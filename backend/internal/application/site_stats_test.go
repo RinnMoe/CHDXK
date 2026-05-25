@@ -20,7 +20,7 @@ func TestSiteStatsCommandService_CollectDailyByDateString(t *testing.T) {
 		stat.MetricNewLikeCount:        7,
 		stat.MetricNewDislikeCount:     1,
 	}}
-	repo := &fakeDailyStatCommandRepository{}
+	repo := &stat.MockDailyStatCommandRepository{}
 	svc := application.NewSiteStatsCommandService(collector, repo, stat.DefaultConfig)
 
 	got, err := svc.CollectDailyByDateString(context.Background(), "2026-05-20")
@@ -34,11 +34,11 @@ func TestSiteStatsCommandService_CollectDailyByDateString(t *testing.T) {
 	if !collector.periodStart.Equal(wantStart) || !collector.periodEnd.Equal(wantEnd) {
 		t.Fatalf("period = [%s, %s), want [%s, %s)", collector.periodStart, collector.periodEnd, wantStart, wantEnd)
 	}
-	if repo.saved == nil {
+	if repo.Saved == nil {
 		t.Fatal("expected stat to be saved")
 	}
-	if repo.saved.StatDate.Format("2006-01-02") != "2026-05-20" {
-		t.Fatalf("saved stat date = %s", repo.saved.StatDate.Format("2006-01-02"))
+	if repo.Saved.StatDate.Format("2006-01-02") != "2026-05-20" {
+		t.Fatalf("saved stat date = %s", repo.Saved.StatDate.Format("2006-01-02"))
 	}
 	if got.ActiveUserCount != 11 || got.ReviewAuthorCount != 3 || got.NewDislikeCount != 1 {
 		t.Fatalf("flattened metrics = %+v", got)
@@ -98,16 +98,6 @@ func (c *fakeDailyStatCollector) Collect(_ context.Context, periodStart, periodE
 	c.periodStart = periodStart
 	c.periodEnd = periodEnd
 	return c.metrics, nil
-}
-
-type fakeDailyStatCommandRepository struct {
-	saved *stat.DailyStat
-}
-
-func (r *fakeDailyStatCommandRepository) Upsert(_ context.Context, daily *stat.DailyStat) error {
-	copy := *daily
-	r.saved = &copy
-	return nil
 }
 
 type fakeDailyStatQuery struct {

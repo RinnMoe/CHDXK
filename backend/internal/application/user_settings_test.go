@@ -10,30 +10,12 @@ import (
 	"jcourse/internal/domain/setting"
 )
 
-type fakeUserSettingsRepo struct {
-	settings map[int]*setting.UserSettings
-}
-
 type fakeSettingsCourseRepo struct {
 	offeredSemesters map[string]bool
 }
 
-func newFakeUserSettingsRepo() *fakeUserSettingsRepo {
-	return &fakeUserSettingsRepo{settings: make(map[int]*setting.UserSettings)}
-}
-
-func (r *fakeUserSettingsRepo) GetByUserID(ctx context.Context, userID int) (*setting.UserSettings, error) {
-	if s, ok := r.settings[userID]; ok {
-		copy := *s
-		return &copy, nil
-	}
-	return nil, nil
-}
-
-func (r *fakeUserSettingsRepo) Save(ctx context.Context, settings *setting.UserSettings) error {
-	copy := *settings
-	r.settings[settings.UserID] = &copy
-	return nil
+func newFakeUserSettingsRepo() *setting.MockRepository {
+	return setting.NewMockRepository()
 }
 
 func newFakeSettingsCourseRepo(semesters ...string) *fakeSettingsCourseRepo {
@@ -83,7 +65,7 @@ func TestUserSettingsQueryService_Get_DefaultsToLatestSemester(t *testing.T) {
 
 func TestUserSettingsQueryService_Get_UsesSavedValidSemester(t *testing.T) {
 	repo := newFakeUserSettingsRepo()
-	repo.settings[1] = &setting.UserSettings{UserID: 1, CurrentSemester: "2024-2025-2"}
+	repo.Settings[1] = &setting.UserSettings{UserID: 1, CurrentSemester: "2024-2025-2"}
 	courseQuery := newSettingsCourseQuery("2025-2026-1", "2024-2025-2")
 	courseRepo := newFakeSettingsCourseRepo("2025-2026-1", "2024-2025-2")
 	svc := application.NewUserSettingsQueryService(repo, courseQuery, courseRepo)
@@ -99,7 +81,7 @@ func TestUserSettingsQueryService_Get_UsesSavedValidSemester(t *testing.T) {
 
 func TestUserSettingsQueryService_Get_FallsBackWhenSavedSemesterExpired(t *testing.T) {
 	repo := newFakeUserSettingsRepo()
-	repo.settings[1] = &setting.UserSettings{UserID: 1, CurrentSemester: "2020-2021-1"}
+	repo.Settings[1] = &setting.UserSettings{UserID: 1, CurrentSemester: "2020-2021-1"}
 	courseQuery := newSettingsCourseQuery("2025-2026-1", "2024-2025-2")
 	courseRepo := newFakeSettingsCourseRepo("2025-2026-1", "2024-2025-2")
 	svc := application.NewUserSettingsQueryService(repo, courseQuery, courseRepo)

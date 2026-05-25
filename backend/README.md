@@ -84,15 +84,17 @@ go run cmd/taskworker/main.go --config config/config.yaml
 
 ```bash
 go build ./...
-go test ./...
+go test -tags test ./...
 go vet ./...
 ```
+
+Go 测试统一带 `-tags test`，因为 domain 包下复用的 repository mock 使用 `//go:build test` 约束。
 
 运行单个包或单个测试示例：
 
 ```bash
-go test ./internal/application -run TestCourseQuery
-go test ./internal/infrastructure/repository -run TestCourseHotRepository
+go test -tags test ./internal/application -run TestCourseQuery
+go test -tags test ./internal/infrastructure/repository -run TestCourseHotRepository
 ```
 
 仓库层测试依赖本地 PostgreSQL，并会创建测试数据库。

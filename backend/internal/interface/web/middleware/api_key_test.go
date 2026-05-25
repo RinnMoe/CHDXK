@@ -18,44 +18,6 @@ import (
 	"jcourse/internal/interface/web/middleware"
 )
 
-type fakeApiKeyRepo struct {
-	key            string
-	apiKey         *auth.ApiKey
-	err            error
-	findByKeyCalls int
-}
-
-func (r *fakeApiKeyRepo) FindByKey(_ context.Context, key string) (*auth.ApiKey, error) {
-	r.findByKeyCalls++
-	if r.err != nil {
-		return nil, r.err
-	}
-	if key == r.key && r.apiKey != nil {
-		return r.apiKey, nil
-	}
-	return nil, nil
-}
-
-func (r *fakeApiKeyRepo) ListByUser(_ context.Context, _ int) ([]auth.ApiKey, error) {
-	return nil, nil
-}
-
-func (r *fakeApiKeyRepo) CountByUser(_ context.Context, _ int) (int, error) {
-	return 0, nil
-}
-
-func (r *fakeApiKeyRepo) Create(_ context.Context, _ *auth.ApiKey) error {
-	return nil
-}
-
-func (r *fakeApiKeyRepo) DeleteByUser(_ context.Context, _ int, _ int) (bool, error) {
-	return false, nil
-}
-
-func (r *fakeApiKeyRepo) TouchLastUsed(_ context.Context, _ int, _ time.Time) error {
-	return nil
-}
-
 type fakeAccessTracker struct {
 	userID   int
 	apiKeyID int
@@ -79,7 +41,7 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	validKey := "test-api-key-123"
-	repo := &fakeApiKeyRepo{key: validKey, apiKey: &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleSystem, UserID: 0}}
+	repo := &auth.MockApiKeyRepository{Key: &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleSystem, UserID: 0}}
 	svc := auth.NewApiKeyService(repo, auth.DefaultApiKeyConfig)
 
 	handler := middleware.SystemAPIKeyAuth()
@@ -91,7 +53,6 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 		wantBody   string
 		apiKey     *auth.ApiKey
 		wantAccess int
-		keyValue   string
 	}{
 		{
 			name:       "missing header",
@@ -99,7 +60,6 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 			wantStatus: http.StatusUnauthorized,
 			wantBody:   "missing authorization header",
 			apiKey:     &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleSystem, UserID: 0},
-			keyValue:   validKey,
 		},
 		{
 			name:       "wrong format",
@@ -107,7 +67,6 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 			wantStatus: http.StatusUnauthorized,
 			wantBody:   "invalid authorization format",
 			apiKey:     &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleSystem, UserID: 0},
-			keyValue:   validKey,
 		},
 		{
 			name:       "invalid key",
@@ -115,7 +74,6 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 			wantStatus: http.StatusUnauthorized,
 			wantBody:   "invalid api key",
 			apiKey:     &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleSystem, UserID: 0},
-			keyValue:   validKey,
 		},
 		{
 			name:       "valid key",
@@ -124,7 +82,6 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 			wantBody:   "ok",
 			apiKey:     &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleSystem, UserID: 0},
 			wantAccess: 1,
-			keyValue:   validKey,
 		},
 		{
 			name:       "user key forbidden",
@@ -132,15 +89,13 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 			wantStatus: http.StatusForbidden,
 			wantBody:   "api key role is not allowed",
 			apiKey:     &auth.ApiKey{ID: 2, Key: "user-key", Role: auth.ApiKeyRoleUser, UserID: 7},
-			keyValue:   "user-key",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tracker := &fakeAccessTracker{}
-			repo.key = tt.keyValue
-			repo.apiKey = tt.apiKey
+			repo.Key = tt.apiKey
 
 			r := gin.New()
 			r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
@@ -177,7 +132,11 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 func TestSystemAPIKeyAuth_RepoError(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	svc := auth.NewApiKeyService(&fakeApiKeyRepo{err: errors.New("db down")}, auth.DefaultApiKeyConfig)
+	svc := auth.NewApiKeyService(&auth.MockApiKeyRepository{
+		OnFindByKey: func(context.Context, string) (*auth.ApiKey, error) {
+			return nil, errors.New("db down")
+		},
+	}, auth.DefaultApiKeyConfig)
 	handler := middleware.SystemAPIKeyAuth()
 
 	r := gin.New()
@@ -206,7 +165,7 @@ func TestSystemAPIKeyAuthReusesResolvedAPIKey(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	validKey := "test-api-key-123"
-	repo := &fakeApiKeyRepo{key: validKey, apiKey: &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleSystem, UserID: 0}}
+	repo := &auth.MockApiKeyRepository{Key: &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleSystem, UserID: 0}}
 	svc := auth.NewApiKeyService(repo, auth.DefaultApiKeyConfig)
 	tracker := &fakeAccessTracker{}
 
@@ -225,8 +184,8 @@ func TestSystemAPIKeyAuthReusesResolvedAPIKey(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", w.Code, http.StatusOK)
 	}
-	if repo.findByKeyCalls != 1 {
-		t.Fatalf("FindByKey calls = %d, want 1", repo.findByKeyCalls)
+	if repo.FindByKeyCalls != 1 {
+		t.Fatalf("FindByKey calls = %d, want 1", repo.FindByKeyCalls)
 	}
 	if tracker.apiKeyID != 1 {
 		t.Fatalf("recorded api key access id = %d, want 1", tracker.apiKeyID)

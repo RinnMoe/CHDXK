@@ -79,7 +79,7 @@ func TestReviewQueryService_GetReviews_WithIgnoredCourses(t *testing.T) {
 	ctx := context.Background()
 	notifRepo.SetLevel(ctx, 100, 2, course.NotificationLevelIgnored)
 
-	voteRepo := &fakeVoteRepo{}
+	voteRepo := &review.MockVoteRepository{}
 	svc := application.NewReviewQueryService(reviewRepo, voteRepo, notifRepo)
 
 	t.Run("excludes ignored courses for logged-in user", func(t *testing.T) {
@@ -111,7 +111,7 @@ func TestReviewQueryService_GetReviews_AttachesMyVotes(t *testing.T) {
 		{ID: 2, CourseID: 2, Rating: 4},
 	}
 
-	voteRepo := &fakeVoteRepo{votes: map[int]review.Vote{
+	voteRepo := &review.MockVoteRepository{Votes: map[int]review.Vote{
 		2: {ReviewID: 2, UserID: 100, VoteType: review.VoteDislike},
 	}}
 	svc := application.NewReviewQueryService(reviewRepo, voteRepo, newFakeNotificationRepo())
@@ -120,8 +120,8 @@ func TestReviewQueryService_GetReviews_AttachesMyVotes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetReviews: %v", err)
 	}
-	if voteRepo.batchCalls != 1 {
-		t.Fatalf("FindByReviewsAndUser calls = %d, want 1", voteRepo.batchCalls)
+	if voteRepo.BatchCalls != 1 {
+		t.Fatalf("FindByReviewsAndUser calls = %d, want 1", voteRepo.BatchCalls)
 	}
 	if result.Items[0].Vote.MyVote != nil {
 		t.Fatalf("first review MyVote = %v, want nil", *result.Items[0].Vote.MyVote)
@@ -134,14 +134,14 @@ func TestReviewQueryService_GetReviews_AttachesMyVotes(t *testing.T) {
 func TestReviewQueryService_GetReviews_AnonymousSkipsMyVotes(t *testing.T) {
 	reviewRepo := newFakeReviewQuery()
 	reviewRepo.reviews = []review.ReviewView{{ID: 1, CourseID: 1, Rating: 5}}
-	voteRepo := &fakeVoteRepo{}
+	voteRepo := &review.MockVoteRepository{}
 	svc := application.NewReviewQueryService(reviewRepo, voteRepo, newFakeNotificationRepo())
 
 	if _, err := svc.GetReviews(context.Background(), nil, application.ReviewListFilter{}); err != nil {
 		t.Fatalf("GetReviews: %v", err)
 	}
-	if voteRepo.batchCalls != 0 {
-		t.Fatalf("FindByReviewsAndUser calls = %d, want 0", voteRepo.batchCalls)
+	if voteRepo.BatchCalls != 0 {
+		t.Fatalf("FindByReviewsAndUser calls = %d, want 0", voteRepo.BatchCalls)
 	}
 }
 
@@ -158,7 +158,7 @@ func TestReviewQueryService_GetFollowedReviews(t *testing.T) {
 	notifRepo.SetLevel(ctx, 100, 1, course.NotificationLevelFollow)
 	notifRepo.SetLevel(ctx, 100, 3, course.NotificationLevelFollow)
 
-	voteRepo := &fakeVoteRepo{}
+	voteRepo := &review.MockVoteRepository{}
 	svc := application.NewReviewQueryService(reviewRepo, voteRepo, notifRepo)
 
 	t.Run("returns only followed course reviews", func(t *testing.T) {
@@ -183,41 +183,4 @@ func TestReviewQueryService_GetFollowedReviews(t *testing.T) {
 			t.Errorf("Items length: got %d, want 0", len(result.Items))
 		}
 	})
-}
-
-type fakeVoteRepo struct {
-	votes      map[int]review.Vote
-	batchCalls int
-}
-
-func (v *fakeVoteRepo) FindByReviewAndUser(ctx context.Context, reviewID, userID int) (*review.Vote, error) {
-	if vote, ok := v.votes[reviewID]; ok && vote.UserID == userID {
-		copy := vote
-		return &copy, nil
-	}
-	return nil, nil
-}
-
-func (v *fakeVoteRepo) FindByReviewsAndUser(ctx context.Context, reviewIDs []int, userID int) (map[int]review.Vote, error) {
-	v.batchCalls++
-	result := make(map[int]review.Vote)
-	for _, reviewID := range reviewIDs {
-		vote, ok := v.votes[reviewID]
-		if ok && vote.UserID == userID {
-			result[reviewID] = vote
-		}
-	}
-	return result, nil
-}
-
-func (v *fakeVoteRepo) CountTodayByUser(ctx context.Context, userID int) (int64, error) {
-	return 0, nil
-}
-
-func (v *fakeVoteRepo) Save(ctx context.Context, vote *review.Vote) error {
-	return nil
-}
-
-func (v *fakeVoteRepo) Delete(ctx context.Context, reviewID, userID int) error {
-	return nil
 }

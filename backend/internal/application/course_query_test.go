@@ -18,27 +18,12 @@ type fakeCourseQuery struct {
 	filters *course.CourseFilters
 }
 
-type fakeHotCourseRepo struct {
-	ranks []course.HotCourseRank
-}
-
 type fakeEnrollmentQuery struct {
 	rows []course.CourseEnrollmentView
 }
 
 type fakeTeacherQuery struct {
 	views map[int]teacher.TeacherView
-}
-
-func (r *fakeHotCourseRepo) AddScore(ctx context.Context, courseID int, score int64, periods ...course.HotCoursePeriod) error {
-	return nil
-}
-
-func (r *fakeHotCourseRepo) Top(ctx context.Context, period course.HotCoursePeriod, limit int64) ([]course.HotCourseRank, error) {
-	if limit < int64(len(r.ranks)) {
-		return r.ranks[:limit], nil
-	}
-	return r.ranks, nil
 }
 
 func newFakeCourseQuery() *fakeCourseQuery {
@@ -337,7 +322,7 @@ func TestCourseQueryService_ListHotCourses(t *testing.T) {
 	query.views[1] = course.CourseView{ID: 1, Code: "CS101", Name: "数据结构"}
 	query.views[2] = course.CourseView{ID: 2, Code: "CS102", Name: "算法"}
 
-	hotRepo := &fakeHotCourseRepo{ranks: []course.HotCourseRank{
+	hotRepo := &course.MockHotCourseRepository{Ranks: []course.HotCourseRank{
 		{CourseID: 2, Score: 10},
 		{CourseID: 1, Score: 8},
 	}}
@@ -369,7 +354,7 @@ func TestCourseQueryService_ListHotCourses_WithLimit(t *testing.T) {
 	query.views[1] = course.CourseView{ID: 1, Code: "CS101", Name: "数据结构"}
 	query.views[2] = course.CourseView{ID: 2, Code: "CS102", Name: "算法"}
 
-	hotRepo := &fakeHotCourseRepo{ranks: []course.HotCourseRank{
+	hotRepo := &course.MockHotCourseRepository{Ranks: []course.HotCourseRank{
 		{CourseID: 2, Score: 10},
 		{CourseID: 1, Score: 8},
 	}}
@@ -390,7 +375,7 @@ func TestCourseQueryService_ListHotCourses_WithLimit(t *testing.T) {
 }
 
 func TestCourseQueryService_ListHotCourses_InvalidPeriod(t *testing.T) {
-	svc := application.NewCourseQueryService(newFakeCourseQuery(), nil, newFakeReviewQuery(), newFakeNotificationRepo(), nil, &fakeHotCourseRepo{})
+	svc := application.NewCourseQueryService(newFakeCourseQuery(), nil, newFakeReviewQuery(), newFakeNotificationRepo(), nil, &course.MockHotCourseRepository{})
 	_, err := svc.ListHotCourses(context.Background(), "daily", 5)
 	if err != course.ErrInvalidHotCoursePeriod {
 		t.Fatalf("err: got %v, want %v", err, course.ErrInvalidHotCoursePeriod)
