@@ -4,7 +4,6 @@ import (
 	"context"
 	"slices"
 	"testing"
-	"time"
 
 	"jcourse/internal/application"
 	"jcourse/internal/domain/auth"
@@ -31,11 +30,11 @@ type fakeTeacherQuery struct {
 	views map[int]teacher.TeacherView
 }
 
-func (r *fakeHotCourseRepo) AddScore(ctx context.Context, courseID int, score int64, at time.Time) error {
+func (r *fakeHotCourseRepo) AddScore(ctx context.Context, courseID int, score int64, periods ...course.HotCoursePeriod) error {
 	return nil
 }
 
-func (r *fakeHotCourseRepo) Top(ctx context.Context, period course.HotCoursePeriod, at time.Time, limit int64) ([]course.HotCourseRank, error) {
+func (r *fakeHotCourseRepo) Top(ctx context.Context, period course.HotCoursePeriod, limit int64) ([]course.HotCourseRank, error) {
 	if limit < int64(len(r.ranks)) {
 		return r.ranks[:limit], nil
 	}
@@ -350,6 +349,9 @@ func TestCourseQueryService_ListHotCourses(t *testing.T) {
 	}
 	if result.Period != "week" {
 		t.Fatalf("Period: got %s, want week", result.Period)
+	}
+	if result.PeriodKey == "" {
+		t.Fatal("PeriodKey should not be empty")
 	}
 	if len(result.Items) != 2 {
 		t.Fatalf("items length: got %d, want 2", len(result.Items))

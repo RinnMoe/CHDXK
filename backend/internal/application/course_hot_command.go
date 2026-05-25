@@ -8,12 +8,17 @@ import (
 )
 
 type CourseHotCommandService struct {
-	repo   course.HotCourseRepository
-	scores course.HotScoreConfig
+	repo              course.HotCourseRepository
+	scores            course.HotScoreConfig
+	hotCourseLocation *time.Location
 }
 
 func NewCourseHotCommandService(repo course.HotCourseRepository, scores course.HotScoreConfig) *CourseHotCommandService {
-	return &CourseHotCommandService{repo: repo, scores: scores}
+	loc, err := course.DefaultHotCourseLocation()
+	if err != nil {
+		panic(err)
+	}
+	return &CourseHotCommandService{repo: repo, scores: scores, hotCourseLocation: loc}
 }
 
 func (s *CourseHotCommandService) RecordActivity(ctx context.Context, payload course.RecordHotCourseActivityPayload) error {
@@ -27,5 +32,6 @@ func (s *CourseHotCommandService) RecordActivity(ctx context.Context, payload co
 	if score == 0 {
 		return nil
 	}
-	return s.repo.AddScore(ctx, payload.CourseID, score, time.Now())
+	now := time.Now()
+	return s.repo.AddScore(ctx, payload.CourseID, score, course.CurrentHotCoursePeriods(now, s.hotCourseLocation)...)
 }

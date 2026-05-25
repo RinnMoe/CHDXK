@@ -172,10 +172,12 @@ export function useDeleteCourseEnrollment() {
 
 export function useHotCourses(
   period: "week" | "month" = "week",
-  limit?: number
+  limit?: number,
+  enabled = true
 ) {
   return useQuery({
     queryKey: ["hot-courses", period, limit],
     queryFn: () => listHotCourses(period, limit),
+    enabled,
   })
 }

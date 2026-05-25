@@ -36,14 +36,15 @@ func TestLoginAttemptRepositoryKey(t *testing.T) {
 }
 
 func TestCourseHotRepositoryKey(t *testing.T) {
-	loc := mustShanghaiLocation(t)
-	repo := NewCourseHotRepository(nil, loc)
-	at := time.Date(2026, time.May, 22, 12, 0, 0, 0, loc)
+	repo := NewCourseHotRepository(nil)
 
-	if got, want := repo.key(course.HotCoursePeriodWeek, at), "jcourse:course:hot:week:2026-20"; got != want {
+	week := course.HotCoursePeriod{Period: course.HotCoursePeriodWeek, PeriodKey: "2026-21"}
+	month := course.HotCoursePeriod{Period: course.HotCoursePeriodMonth, PeriodKey: "2026-05"}
+
+	if got, want := repo.key(week), "jcourse:course:hot:week:2026-21"; got != want {
 		t.Fatalf("week key = %s, want %s", got, want)
 	}
-	if got, want := repo.key(course.HotCoursePeriodMonth, at), "jcourse:course:hot:month:2026-05"; got != want {
+	if got, want := repo.key(month), "jcourse:course:hot:month:2026-05"; got != want {
 		t.Fatalf("month key = %s, want %s", got, want)
 	}
 }

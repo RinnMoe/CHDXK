@@ -906,15 +906,15 @@ func (m *Migrator) backfillCourseHotScores(ctx context.Context, scores course.Ho
 	}
 	logx.Info(ctx, "backfilling course hot scores")
 
-	loc, err := repository.DefaultHotCourseLocation()
+	loc, err := course.DefaultHotCourseLocation()
 	if err != nil {
 		return fmt.Errorf("load hot course location: %w", err)
 	}
 	now := time.Now()
-	monthKey := repository.HotCoursePeriodKey(course.HotCoursePeriodMonth, now, loc)
-	weekKey := repository.HotCoursePeriodKey(course.HotCoursePeriodWeek, now, loc)
-	monthStart, monthEnd := repository.HotCoursePeriodRange(course.HotCoursePeriodMonth, now, loc)
-	weekStart, weekEnd := repository.HotCoursePeriodRange(course.HotCoursePeriodWeek, now, loc)
+	monthKey := course.HotCoursePeriodKey(course.HotCoursePeriodMonth, now, loc)
+	weekKey := course.HotCoursePeriodKey(course.HotCoursePeriodWeek, now, loc)
+	monthStart, monthEnd := course.HotCoursePeriodRange(course.HotCoursePeriodMonth, now, loc)
+	weekStart, weekEnd := course.HotCoursePeriodRange(course.HotCoursePeriodWeek, now, loc)
 
 	var rowsAffected int64
 	err = m.target.Transaction(func(tx *gorm.DB) error {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"testing"
-	"time"
 
 	"jcourse/internal/application"
 	"jcourse/internal/domain/auth"
@@ -120,12 +119,12 @@ type fakeHotScoreRepo struct {
 	calls []course.HotCourseRank
 }
 
-func (r *fakeHotScoreRepo) AddScore(ctx context.Context, courseID int, score int64, at time.Time) error {
+func (r *fakeHotScoreRepo) AddScore(ctx context.Context, courseID int, score int64, periods ...course.HotCoursePeriod) error {
 	r.calls = append(r.calls, course.HotCourseRank{CourseID: courseID, Score: score})
 	return nil
 }
 
-func (r *fakeHotScoreRepo) Top(ctx context.Context, period course.HotCoursePeriod, at time.Time, limit int64) ([]course.HotCourseRank, error) {
+func (r *fakeHotScoreRepo) Top(ctx context.Context, period course.HotCoursePeriod, limit int64) ([]course.HotCourseRank, error) {
 	return nil, nil
 }
 

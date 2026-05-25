@@ -86,6 +86,7 @@ export interface HotCourseItemDTO {
 
 export interface HotCourseListDTO {
   period: "week" | "month"
+  period_key: string
   items: HotCourseItemDTO[]
 }
 

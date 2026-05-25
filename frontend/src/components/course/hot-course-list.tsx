@@ -1,4 +1,5 @@
 import { CourseCompactCard } from "./course-compact-card"
+import type { HotCourseListDTO } from "@/api/course"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useHotCourses } from "@/hooks/use-course"
 
@@ -6,6 +7,9 @@ interface HotCourseListProps {
   period: "week" | "month"
   limit: number
   skeletonCount?: number
+  data?: HotCourseListDTO
+  isLoading?: boolean
+  fetchData?: boolean
 }
 
 function HotCourseSkeleton({ count }: { count: number }) {
@@ -31,8 +35,13 @@ export function HotCourseList({
   period,
   limit,
   skeletonCount = 5,
+  data: providedData,
+  isLoading: providedIsLoading,
+  fetchData = true,
 }: HotCourseListProps) {
-  const { data, isLoading } = useHotCourses(period, limit)
+  const query = useHotCourses(period, limit, fetchData)
+  const data = providedData ?? query.data
+  const isLoading = providedIsLoading ?? query.isLoading
 
   if (isLoading) return <HotCourseSkeleton count={skeletonCount} />
 

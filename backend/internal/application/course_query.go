@@ -26,22 +26,28 @@ type CourseListFilter struct {
 }
 
 type CourseQueryService struct {
-	courseQuery      course.CourseQuery
-	teacherQuery     teacher.TeacherQuery
-	reviewQuery      review.ReviewQuery
-	notificationRepo course.CourseNotificationRepository
-	enrollmentQuery  course.CourseEnrollmentQuery
-	hotRepo          course.HotCourseRepository
+	courseQuery       course.CourseQuery
+	teacherQuery      teacher.TeacherQuery
+	reviewQuery       review.ReviewQuery
+	notificationRepo  course.CourseNotificationRepository
+	enrollmentQuery   course.CourseEnrollmentQuery
+	hotRepo           course.HotCourseRepository
+	hotCourseLocation *time.Location
 }
 
 func NewCourseQueryService(courseQuery course.CourseQuery, teacherQuery teacher.TeacherQuery, reviewQuery review.ReviewQuery, notificationRepo course.CourseNotificationRepository, enrollmentQuery course.CourseEnrollmentQuery, hotRepo course.HotCourseRepository) *CourseQueryService {
+	loc, err := course.DefaultHotCourseLocation()
+	if err != nil {
+		panic(err)
+	}
 	return &CourseQueryService{
-		courseQuery:      courseQuery,
-		teacherQuery:     teacherQuery,
-		reviewQuery:      reviewQuery,
-		notificationRepo: notificationRepo,
-		enrollmentQuery:  enrollmentQuery,
-		hotRepo:          hotRepo,
+		courseQuery:       courseQuery,
+		teacherQuery:      teacherQuery,
+		reviewQuery:       reviewQuery,
+		notificationRepo:  notificationRepo,
+		enrollmentQuery:   enrollmentQuery,
+		hotRepo:           hotRepo,
+		hotCourseLocation: loc,
 	}
 }
 
@@ -108,20 +114,25 @@ func (s *CourseQueryService) ListHotCourses(ctx context.Context, period string, 
 	if period == "" {
 		period = string(course.HotCoursePeriodWeek)
 	}
-	hotPeriod := course.HotCoursePeriod(period)
-	if hotPeriod != course.HotCoursePeriodWeek && hotPeriod != course.HotCoursePeriodMonth {
+	periodName := course.HotCoursePeriodName(period)
+	if periodName != course.HotCoursePeriodWeek && periodName != course.HotCoursePeriodMonth {
 		return nil, course.ErrInvalidHotCoursePeriod
 	}
+	hotPeriod, err := course.NewHotCoursePeriod(periodName, time.Now(), s.hotCourseLocation)
+	if err != nil {
+		return nil, err
+	}
+	result := &HotCourseListDTO{Period: string(hotPeriod.Period), PeriodKey: hotPeriod.PeriodKey, Items: []HotCourseItemDTO{}}
 	if s.hotRepo == nil {
-		return &HotCourseListDTO{Period: string(hotPeriod), Items: []HotCourseItemDTO{}}, nil
+		return result, nil
 	}
 
-	ranks, err := s.hotRepo.Top(ctx, hotPeriod, time.Now(), int64(limit))
+	ranks, err := s.hotRepo.Top(ctx, hotPeriod, int64(limit))
 	if err != nil {
 		return nil, err
 	}
 	if len(ranks) == 0 {
-		return &HotCourseListDTO{Period: string(hotPeriod), Items: []HotCourseItemDTO{}}, nil
+		return result, nil
 	}
 
 	ids := make([]int, 0, len(ranks))
@@ -149,7 +160,8 @@ func (s *CourseQueryService) ListHotCourses(ctx context.Context, period string, 
 		})
 	}
 
-	return &HotCourseListDTO{Period: string(hotPeriod), Items: items}, nil
+	result.Items = items
+	return result, nil
 }
 
 func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.User, courseID int) (*CourseDetailDTO, error) {

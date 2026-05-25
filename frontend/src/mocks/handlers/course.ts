@@ -29,6 +29,20 @@ function getNotificationLevel(courseID: number): CourseNotificationLevel {
   return notificationLevels.get(courseID) ?? 0
 }
 
+function mockHotPeriodKey(period: "week" | "month") {
+  const now = new Date()
+  if (period === "month") {
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`
+  }
+
+  const date = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
+  const day = date.getUTCDay() || 7
+  date.setUTCDate(date.getUTCDate() + 4 - day)
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1))
+  const week = Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
+  return `${date.getUTCFullYear()}-${String(week).padStart(2, "0")}`
+}
+
 function shouldShowMockMyReview(
   courseID: number,
   user: { id: number; username: string }
@@ -187,7 +201,7 @@ export const courseHandlers = [
       course,
       score: (limit - i) * 10 + Math.floor(Math.random() * 6),
     }))
-    return HttpResponse.json({ period, items })
+    return HttpResponse.json({ period, period_key: mockHotPeriodKey(period), items })
   }),
 
   http.get("/api/course/", async ({ request }) => {

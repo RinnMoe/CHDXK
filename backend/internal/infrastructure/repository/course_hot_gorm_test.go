@@ -20,21 +20,31 @@ func TestGormCourseHotRepository_AddScoreAndTop(t *testing.T) {
 	repo := repository.NewGormCourseHotRepository(db)
 	ctx := context.Background()
 	at := time.Date(2026, time.May, 22, 12, 0, 0, 0, loc)
+	periods := course.CurrentHotCoursePeriods(at, loc)
+	nextMonthPeriods := course.CurrentHotCoursePeriods(at.AddDate(0, 1, 0), loc)
+	weekPeriod, err := course.NewHotCoursePeriod(course.HotCoursePeriodWeek, at, loc)
+	if err != nil {
+		t.Fatalf("week period: %v", err)
+	}
+	monthPeriod, err := course.NewHotCoursePeriod(course.HotCoursePeriodMonth, at, loc)
+	if err != nil {
+		t.Fatalf("month period: %v", err)
+	}
 
-	if err := repo.AddScore(ctx, 1, 3, at); err != nil {
+	if err := repo.AddScore(ctx, 1, 3, periods...); err != nil {
 		t.Fatalf("add score: %v", err)
 	}
-	if err := repo.AddScore(ctx, 2, 5, at); err != nil {
+	if err := repo.AddScore(ctx, 2, 5, periods...); err != nil {
 		t.Fatalf("add score: %v", err)
 	}
-	if err := repo.AddScore(ctx, 1, 4, at); err != nil {
+	if err := repo.AddScore(ctx, 1, 4, periods...); err != nil {
 		t.Fatalf("add score again: %v", err)
 	}
-	if err := repo.AddScore(ctx, 3, 100, at.AddDate(0, 1, 0)); err != nil {
+	if err := repo.AddScore(ctx, 3, 100, nextMonthPeriods...); err != nil {
 		t.Fatalf("add next month score: %v", err)
 	}
 
-	ranks, err := repo.Top(ctx, course.HotCoursePeriodWeek, at, 2)
+	ranks, err := repo.Top(ctx, weekPeriod, 2)
 	if err != nil {
 		t.Fatalf("top week: %v", err)
 	}
@@ -43,7 +53,7 @@ func TestGormCourseHotRepository_AddScoreAndTop(t *testing.T) {
 		{CourseID: 2, Score: 5},
 	})
 
-	ranks, err = repo.Top(ctx, course.HotCoursePeriodMonth, at, 10)
+	ranks, err = repo.Top(ctx, monthPeriod, 10)
 	if err != nil {
 		t.Fatalf("top month: %v", err)
 	}
@@ -55,15 +65,10 @@ func TestGormCourseHotRepository_AddScoreAndTop(t *testing.T) {
 
 func TestGormCourseHotRepository_TopEdgeCases(t *testing.T) {
 	db := newTestDB(t)
-	loc, err := time.LoadLocation("Asia/Shanghai")
-	if err != nil {
-		t.Fatalf("load location: %v", err)
-	}
 	repo := repository.NewGormCourseHotRepository(db)
 	ctx := context.Background()
-	at := time.Date(2026, time.May, 22, 12, 0, 0, 0, loc)
 
-	ranks, err := repo.Top(ctx, course.HotCoursePeriod("daily"), at, 0)
+	ranks, err := repo.Top(ctx, course.HotCoursePeriod{Period: course.HotCoursePeriodName("daily"), PeriodKey: "2026-01"}, 0)
 	if err != nil {
 		t.Fatalf("top with zero limit should match redis behavior: %v", err)
 	}
@@ -71,7 +76,7 @@ func TestGormCourseHotRepository_TopEdgeCases(t *testing.T) {
 		t.Fatalf("top with zero limit len = %d, want 0", len(ranks))
 	}
 
-	_, err = repo.Top(ctx, course.HotCoursePeriod("daily"), at, 10)
+	_, err = repo.Top(ctx, course.HotCoursePeriod{Period: course.HotCoursePeriodName("daily"), PeriodKey: "2026-01"}, 10)
 	if err != course.ErrInvalidHotCoursePeriod {
 		t.Fatalf("top invalid period err = %v, want %v", err, course.ErrInvalidHotCoursePeriod)
 	}

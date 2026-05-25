@@ -105,8 +105,9 @@ type HotCourseItemDTO struct {
 }
 
 type HotCourseListDTO struct {
-	Period string             `json:"period"`
-	Items  []HotCourseItemDTO `json:"items"`
+	Period    string             `json:"period"`
+	PeriodKey string             `json:"period_key"`
+	Items     []HotCourseItemDTO `json:"items"`
 }
 
 type PaginatedResult[T any] struct {
