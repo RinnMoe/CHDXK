@@ -4,6 +4,7 @@ go 1.26.2
 
 require (
 	github.com/agnivade/levenshtein v1.2.1
+	github.com/bwmarrin/snowflake v0.3.0
 	github.com/gin-contrib/cors v1.7.7
 	github.com/gin-contrib/sessions v1.1.0
 	github.com/gin-gonic/gin v1.12.0

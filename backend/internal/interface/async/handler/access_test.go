@@ -30,7 +30,7 @@ func (t *fakeAsyncAccessTracker) RecordUserAccess(context.Context, int, time.Tim
 	return nil
 }
 
-func (t *fakeAsyncAccessTracker) RecordApiKeyAccess(context.Context, int, time.Time) error {
+func (t *fakeAsyncAccessTracker) RecordApiKeyAccess(context.Context, int64, time.Time) error {
 	return nil
 }
 

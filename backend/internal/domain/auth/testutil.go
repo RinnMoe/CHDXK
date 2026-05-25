@@ -65,50 +65,40 @@ func (r *MockUserRepository) ensureMap() {
 }
 
 type MockApiKeyRepository struct {
-	Key            *ApiKey
-	KeyByID        map[int]*ApiKey
-	Keys           []ApiKey
-	SystemKeys     []ApiKey
-	Count          int
-	Created        *ApiKey
-	Deleted        bool
-	Touched        bool
-	DeleteOK       bool
-	DeleteID       int
-	FindByKeyCalls int
+	Key          *ApiKey
+	KeyByID      map[int64]*ApiKey
+	Keys         []ApiKey
+	SystemKeys   []ApiKey
+	Count        int
+	Created      *ApiKey
+	Deleted      bool
+	Touched      bool
+	DeleteOK     bool
+	DeleteID     int64
+	GetByIDCalls int
 
-	OnGetByID     func(context.Context, int) (*ApiKey, error)
-	OnFindByKey   func(context.Context, string) (*ApiKey, error)
+	OnGetByID     func(context.Context, int64) (*ApiKey, error)
 	OnListSystem  func(context.Context) ([]ApiKey, error)
 	OnListByUser  func(context.Context, int) ([]ApiKey, error)
 	OnCountByUser func(context.Context, int) (int, error)
 	OnCreate      func(context.Context, *ApiKey) error
-	OnDelete      func(context.Context, int) (bool, error)
+	OnDelete      func(context.Context, int64) (bool, error)
 }
 
-func (r *MockApiKeyRepository) GetByID(ctx context.Context, id int) (*ApiKey, error) {
+func (r *MockApiKeyRepository) GetByID(ctx context.Context, id int64) (*ApiKey, error) {
 	if r.OnGetByID != nil {
 		return r.OnGetByID(ctx, id)
 	}
+	r.GetByIDCalls++
 	if r.Key != nil && r.Key.ID == id {
 		copy := *r.Key
 		return &copy, nil
 	}
-	if key, ok := r.KeyByID[id]; ok {
-		copy := *key
-		return &copy, nil
-	}
-	return nil, nil
-}
-
-func (r *MockApiKeyRepository) FindByKey(ctx context.Context, key string) (*ApiKey, error) {
-	if r.OnFindByKey != nil {
-		return r.OnFindByKey(ctx, key)
-	}
-	r.FindByKeyCalls++
-	if r.Key != nil && r.Key.Key == key {
-		copy := *r.Key
-		return &copy, nil
+	if r.KeyByID != nil {
+		if key, ok := r.KeyByID[id]; ok {
+			copy := *key
+			return &copy, nil
+		}
 	}
 	return nil, nil
 }
@@ -140,13 +130,10 @@ func (r *MockApiKeyRepository) Create(ctx context.Context, apiKey *ApiKey) error
 	}
 	copy := *apiKey
 	r.Created = &copy
-	if apiKey.ID == 0 {
-		apiKey.ID = 99
-	}
 	return nil
 }
 
-func (r *MockApiKeyRepository) Delete(ctx context.Context, id int) (bool, error) {
+func (r *MockApiKeyRepository) Delete(ctx context.Context, id int64) (bool, error) {
 	if r.OnDelete != nil {
 		return r.OnDelete(ctx, id)
 	}

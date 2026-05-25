@@ -98,7 +98,7 @@ export function ApiKeysPage() {
     }
   }
 
-  async function handleDelete(id: number) {
+  async function handleDelete(id: string) {
     setError("")
     try {
       await deleteMutation.mutateAsync(id)
@@ -223,7 +223,7 @@ export function ApiKeysPage() {
                         </TableCell>
                         <TableCell>
                           <code className="rounded bg-muted px-2 py-1 text-xs">
-                            {key.key_masked}
+                            {key.key}
                           </code>
                         </TableCell>
                         <TableCell className="text-muted-foreground">

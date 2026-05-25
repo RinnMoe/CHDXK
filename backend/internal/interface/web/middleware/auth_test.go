@@ -21,7 +21,8 @@ func TestRequireAuthReusesResolvedSessionUser(t *testing.T) {
 
 	repo := auth.NewMockUserRepository(map[int]*auth.User{7: {ID: 7, Role: auth.RoleUser}})
 	currentUserSvc := auth.NewCurrentUserService(repo)
-	apiKeySvc := auth.NewApiKeyService(&auth.MockApiKeyRepository{}, auth.DefaultApiKeyConfig)
+	apiKeyRepo := &auth.MockApiKeyRepository{}
+	apiKeySvc := auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig)
 	authResolution := application.NewAuthResolutionService(currentUserSvc, apiKeySvc, nil)
 	r := gin.New()
 	r.Use(sessions.Sessions("jcourse_session", filesession.NewStore(t.TempDir(), []byte("test-secret"))))
@@ -54,15 +55,15 @@ func TestRequireAuthReusesResolvedSessionUser(t *testing.T) {
 func TestResolveCurrentUserWithUserAPIKey(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	validKey := "test-api-key-123"
+	credential := testAuthMiddlewareCredential(1)
 	userRepo := auth.NewMockUserRepository(map[int]*auth.User{7: {ID: 7, Role: auth.RoleUser}})
-	apiKeyRepo := &auth.MockApiKeyRepository{Key: &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleUser, UserID: 7}}
+	apiKeyRepo := &auth.MockApiKeyRepository{Key: &auth.ApiKey{ID: credential.KeyID, SecretHash: credential.SecretHash, Role: auth.ApiKeyRoleUser, UserID: 7}}
 	tracker := &authMiddlewareAccessTracker{}
 	r := gin.New()
 	r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
 	r.Use(ResolveCurrentUser(application.NewAuthResolutionService(
 		auth.NewCurrentUserService(userRepo),
-		auth.NewApiKeyService(apiKeyRepo, auth.DefaultApiKeyConfig),
+		auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig),
 		tracker,
 	)))
 	r.GET("/protected", RequireAuth(), func(c *gin.Context) {
@@ -76,14 +77,14 @@ func TestResolveCurrentUserWithUserAPIKey(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/protected", nil)
-	req.Header.Set(HeaderAuthorization, PrefixBearer+validKey)
+	req.Header.Set(HeaderAuthorization, PrefixBearer+credential.Key())
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", w.Code, http.StatusOK)
 	}
-	if apiKeyRepo.FindByKeyCalls != 1 {
-		t.Fatalf("FindByKey calls = %d, want 1", apiKeyRepo.FindByKeyCalls)
+	if apiKeyRepo.GetByIDCalls != 1 {
+		t.Fatalf("GetByID calls = %d, want 1", apiKeyRepo.GetByIDCalls)
 	}
 	if userRepo.FindByIDCalls != 1 {
 		t.Fatalf("FindByID calls = %d, want 1", userRepo.FindByIDCalls)
@@ -249,7 +250,7 @@ func firstCookie(t *testing.T, res *http.Response) string {
 
 type authMiddlewareAccessTracker struct {
 	userID   int
-	apiKeyID int
+	apiKeyID int64
 }
 
 func (t *authMiddlewareAccessTracker) RecordUserAccess(_ context.Context, userID int, _ time.Time) error {
@@ -257,11 +258,17 @@ func (t *authMiddlewareAccessTracker) RecordUserAccess(_ context.Context, userID
 	return nil
 }
 
-func (t *authMiddlewareAccessTracker) RecordApiKeyAccess(_ context.Context, apiKeyID int, _ time.Time) error {
+func (t *authMiddlewareAccessTracker) RecordApiKeyAccess(_ context.Context, apiKeyID int64, _ time.Time) error {
 	t.apiKeyID = apiKeyID
 	return nil
 }
 
 func (t *authMiddlewareAccessTracker) Flush(context.Context) (auth.AccessFlushResult, error) {
 	return auth.AccessFlushResult{}, nil
+}
+
+func testAuthMiddlewareCredential(keyID int64) auth.ApiKeyCredential {
+	credential := auth.ApiKeyCredential{KeyID: keyID, Secret: []byte("1234567890abcdef")}
+	credential.SecretHash = credential.HashSecret()
+	return credential
 }

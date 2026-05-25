@@ -21,7 +21,7 @@ func (s *ApiKeyQueryService) ListMyApiKeys(ctx context.Context, userID int) ([]A
 	}
 	items := make([]ApiKeyDTO, 0, len(keys))
 	for _, key := range keys {
-		items = append(items, newApiKeyDTO(key, false))
+		items = append(items, newApiKeyDTO(key, key.MaskedKey()))
 	}
 	return items, nil
 }
@@ -33,7 +33,7 @@ func (s *ApiKeyQueryService) ListSystemApiKeys(ctx context.Context) ([]ApiKeyDTO
 	}
 	items := make([]ApiKeyDTO, 0, len(keys))
 	for _, key := range keys {
-		items = append(items, newApiKeyDTO(key, false))
+		items = append(items, newApiKeyDTO(key, key.MaskedKey()))
 	}
 	return items, nil
 }

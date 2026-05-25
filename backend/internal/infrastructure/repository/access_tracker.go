@@ -32,7 +32,7 @@ type AccessTrackerRepository struct {
 }
 
 type accessRecord struct {
-	ID    int
+	ID    int64
 	At    time.Time
 	Score int64
 }
@@ -45,10 +45,10 @@ func NewAccessTrackerRepository(db *gorm.DB, cache *redis.Client, flushLimit int
 }
 
 func (r *AccessTrackerRepository) RecordUserAccess(ctx context.Context, userID int, at time.Time) error {
-	return r.record(ctx, r.userKey(), userID, at)
+	return r.record(ctx, r.userKey(), int64(userID), at)
 }
 
-func (r *AccessTrackerRepository) RecordApiKeyAccess(ctx context.Context, apiKeyID int, at time.Time) error {
+func (r *AccessTrackerRepository) RecordApiKeyAccess(ctx context.Context, apiKeyID int64, at time.Time) error {
 	return r.record(ctx, r.apiKeyKey(), apiKeyID, at)
 }
 
@@ -84,19 +84,20 @@ func (r *AccessTrackerRepository) Flush(ctx context.Context) (auth.AccessFlushRe
 	return result, nil
 }
 
-func (r *AccessTrackerRepository) record(ctx context.Context, key string, id int, at time.Time) error {
+func (r *AccessTrackerRepository) record(ctx context.Context, key string, id int64, at time.Time) error {
 	if r.cache == nil || id <= 0 || at.IsZero() {
 		return nil
 	}
+	member := strconv.FormatInt(id, 10)
 	if err := r.cache.ZAddNX(ctx, key, redis.Z{
 		Score:  float64(at.UnixMilli()),
-		Member: strconv.Itoa(id),
+		Member: member,
 	}).Err(); err != nil {
 		return err
 	}
 	return r.cache.ZAddGT(ctx, key, redis.Z{
 		Score:  float64(at.UnixMilli()),
-		Member: strconv.Itoa(id),
+		Member: member,
 	}).Err()
 }
 
@@ -110,7 +111,7 @@ func (r *AccessTrackerRepository) readRecords(ctx context.Context, key string, l
 	}
 	records := make([]accessRecord, 0, len(items))
 	for _, item := range items {
-		id, err := strconv.Atoi(fmt.Sprint(item.Member))
+		id, err := strconv.ParseInt(fmt.Sprint(item.Member), 10, 64)
 		if err != nil || id <= 0 {
 			continue
 		}
@@ -167,7 +168,7 @@ func (r *AccessTrackerRepository) ackRecords(ctx context.Context, key string, re
 	}
 	args := make([]any, 0, len(records)*2)
 	for _, record := range records {
-		args = append(args, strconv.Itoa(record.ID), strconv.FormatInt(record.Score, 10))
+		args = append(args, strconv.FormatInt(record.ID, 10), strconv.FormatInt(record.Score, 10))
 	}
 	return ackAccessScript.Run(ctx, r.cache, []string{key}, args...).Err()
 }

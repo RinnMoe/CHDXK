@@ -30,7 +30,7 @@ export function useCreateApiKey() {
 export function useDeleteApiKey() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: number) => deleteApiKey(id),
+    mutationFn: (id: string) => deleteApiKey(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["api-keys"] })
     },
@@ -58,7 +58,7 @@ export function useCreateSystemApiKey() {
 export function useDeleteSystemApiKey() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: number) => deleteSystemApiKey(id),
+    mutationFn: (id: string) => deleteSystemApiKey(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["api-keys", "system"] })
     },

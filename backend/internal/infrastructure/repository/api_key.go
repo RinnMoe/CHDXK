@@ -25,7 +25,7 @@ func newApiKeyDomain(e *ApiKeyEntity) auth.ApiKey {
 	return auth.ApiKey{
 		ID:         e.ID,
 		Name:       e.Name,
-		Key:        e.Key,
+		SecretHash: e.SecretHash,
 		Role:       e.Role,
 		UserID:     userID,
 		CreatedAt:  e.CreatedAt,
@@ -41,7 +41,7 @@ func newApiKeyEntity(d *auth.ApiKey) ApiKeyEntity {
 	return ApiKeyEntity{
 		ID:         d.ID,
 		Name:       d.Name,
-		Key:        d.Key,
+		SecretHash: d.SecretHash,
 		Role:       d.Role,
 		UserID:     userID,
 		CreatedAt:  d.CreatedAt,
@@ -49,26 +49,10 @@ func newApiKeyEntity(d *auth.ApiKey) ApiKeyEntity {
 	}
 }
 
-func (r *ApiKeyRepository) GetByID(ctx context.Context, id int) (*auth.ApiKey, error) {
+func (r *ApiKeyRepository) GetByID(ctx context.Context, id int64) (*auth.ApiKey, error) {
 	var e ApiKeyEntity
 	if err := r.db.WithContext(ctx).
-		Select("id, name, key, role, user_id, last_used_at, created_at").
 		Where("id = ?", id).
-		Take(&e).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	d := newApiKeyDomain(&e)
-	return &d, nil
-}
-
-func (r *ApiKeyRepository) FindByKey(ctx context.Context, key string) (*auth.ApiKey, error) {
-	var e ApiKeyEntity
-	if err := r.db.WithContext(ctx).
-		Select("id, name, key, role, user_id, last_used_at, created_at").
-		Where("key = ?", key).
 		Take(&e).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -130,7 +114,7 @@ func (r *ApiKeyRepository) Create(ctx context.Context, apiKey *auth.ApiKey) erro
 	return nil
 }
 
-func (r *ApiKeyRepository) Delete(ctx context.Context, id int) (bool, error) {
+func (r *ApiKeyRepository) Delete(ctx context.Context, id int64) (bool, error) {
 	result := r.db.WithContext(ctx).Where("id = ?", id).Delete(&ApiKeyEntity{})
 	if result.Error != nil {
 		return false, result.Error
@@ -139,3 +123,4 @@ func (r *ApiKeyRepository) Delete(ctx context.Context, id int) (bool, error) {
 }
 
 var _ auth.ApiKeyRepository = (*ApiKeyRepository)(nil)
+var _ auth.ApiKeyQuery = (*ApiKeyRepository)(nil)

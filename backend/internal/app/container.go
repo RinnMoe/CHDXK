@@ -130,7 +130,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		passwordResetService,
 		currentUserService,
 	)
-	apiKeySvc := auth.NewApiKeyService(apiKeyRepo, conf.APIKey)
+	apiKeySvc := auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, conf.APIKey)
 	authResolution := application.NewAuthResolutionService(currentUserService, apiKeySvc, accessTracker)
 	apiKeyQuery := application.NewApiKeyQueryService(apiKeySvc)
 	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc)

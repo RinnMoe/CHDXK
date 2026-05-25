@@ -166,7 +166,7 @@ func performAnonymousRateLimitRequest(r http.Handler, ip string) int {
 	return w.Code
 }
 
-func performAPIKeyRateLimitRequest(r http.Handler, apiKeyID int) int {
+func performAPIKeyRateLimitRequest(r http.Handler, apiKeyID int64) int {
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
 	req = req.WithContext(auth.WithApiKey(req.Context(), &auth.ApiKey{ID: apiKeyID, Role: auth.ApiKeyRoleSystem}))
@@ -174,7 +174,7 @@ func performAPIKeyRateLimitRequest(r http.Handler, apiKeyID int) int {
 	return w.Code
 }
 
-func performUserAPIKeyRateLimitRequest(r http.Handler, apiKeyID int, userID int) int {
+func performUserAPIKeyRateLimitRequest(r http.Handler, apiKeyID int64, userID int) int {
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
 	req = req.WithContext(auth.WithApiKey(req.Context(), &auth.ApiKey{ID: apiKeyID, Role: auth.ApiKeyRoleUser, UserID: userID}))

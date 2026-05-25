@@ -24,6 +24,6 @@ type AccessFlushResult struct {
 
 type AccessTracker interface {
 	RecordUserAccess(ctx context.Context, userID int, at time.Time) error
-	RecordApiKeyAccess(ctx context.Context, apiKeyID int, at time.Time) error
+	RecordApiKeyAccess(ctx context.Context, apiKeyID int64, at time.Time) error
 	Flush(ctx context.Context) (AccessFlushResult, error)
 }

@@ -3,28 +3,50 @@ package auth
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 )
 
-func TestGenerateApiKey(t *testing.T) {
-	key, err := GenerateApiKey()
+func TestApiKeyCredentialKeyRoundTrip(t *testing.T) {
+	credential := testApiKeyCredential(12345)
+	key := credential.Key()
+
+	parsed, err := ParseApiKeyCredential(key)
 	if err != nil {
-		t.Fatalf("GenerateApiKey: %v", err)
+		t.Fatalf("ParseApiKeyCredential: %v", err)
 	}
-	if len(key) != len(apiKeyPrefix)+64 {
-		t.Fatalf("len(key) = %d, want %d", len(key), len(apiKeyPrefix)+64)
+	if parsed.KeyID != credential.KeyID {
+		t.Fatalf("KeyID = %d, want %d", parsed.KeyID, credential.KeyID)
 	}
-	if key[:len(apiKeyPrefix)] != apiKeyPrefix {
-		t.Fatalf("prefix = %q, want %q", key[:len(apiKeyPrefix)], apiKeyPrefix)
+	if string(parsed.Secret) != string(credential.Secret) {
+		t.Fatalf("Secret = %q, want %q", parsed.Secret, credential.Secret)
+	}
+	if parsed.SecretHash != credential.SecretHash {
+		t.Fatalf("SecretHash = %q, want %q", parsed.SecretHash, credential.SecretHash)
+	}
+	if !strings.HasPrefix(key, "jc_") {
+		t.Fatalf("key = %q, want jc_ prefix", key)
+	}
+}
+
+func TestParseApiKeyCredentialRejectsInvalidKey(t *testing.T) {
+	for _, key := range []string{"", "wrong", "jc_bad_bad", "jc_AAAAAAAAAAA_short"} {
+		if _, err := ParseApiKeyCredential(key); !errors.Is(err, ErrInvalidApiKey) {
+			t.Fatalf("ParseApiKeyCredential(%q) err = %v, want ErrInvalidApiKey", key, err)
+		}
 	}
 }
 
 func TestNewUserApiKey(t *testing.T) {
 	now := time.Date(2026, 5, 23, 10, 0, 0, 0, time.UTC)
-	key, err := NewUserApiKey("  local script  ", 12, now)
+	credential := testApiKeyCredential(12)
+	key, err := NewUserApiKey("  local script  ", 12, credential, now)
 	if err != nil {
 		t.Fatalf("NewUserApiKey: %v", err)
+	}
+	if key.ID != credential.KeyID || key.SecretHash != credential.SecretHash {
+		t.Fatalf("unexpected credential fields: %+v", key)
 	}
 	if key.Name != "local script" {
 		t.Fatalf("Name = %q, want %q", key.Name, "local script")
@@ -35,24 +57,19 @@ func TestNewUserApiKey(t *testing.T) {
 	if !key.CreatedAt.Equal(now) {
 		t.Fatalf("CreatedAt = %v, want %v", key.CreatedAt, now)
 	}
-	if key.Key == "" {
-		t.Fatal("expected generated key")
-	}
 }
 
 func TestNewUserApiKeyRejectsEmptyName(t *testing.T) {
-	_, err := NewUserApiKey("  ", 12, time.Now())
+	_, err := NewUserApiKey("  ", 12, testApiKeyCredential(12), time.Now())
 	if !errors.Is(err, ErrApiKeyNameRequired) {
 		t.Fatalf("err = %v, want ErrApiKeyNameRequired", err)
 	}
 }
 
-func TestMaskApiKey(t *testing.T) {
-	if got, want := MaskApiKey("short"), "*****"; got != want {
-		t.Fatalf("MaskApiKey(short) = %q, want %q", got, want)
-	}
-	if got, want := MaskApiKey("jc_1234567890abcdef"), "jc_1234************abcdef"; got != want {
-		t.Fatalf("MaskApiKey(long) = %q, want %q", got, want)
+func TestApiKeyMaskedKey(t *testing.T) {
+	key := ApiKey{ID: 12345}
+	if got, want := key.MaskedKey(), "jc_"+EncodeApiKeyID(12345)+"_********"; got != want {
+		t.Fatalf("MaskedKey() = %q, want %q", got, want)
 	}
 }
 
@@ -69,9 +86,10 @@ func TestApiKeyRoleHelpers(t *testing.T) {
 }
 
 func TestApiKeyService_ValidateKeyReturnsKey(t *testing.T) {
-	repo := &MockApiKeyRepository{Key: &ApiKey{ID: 1, Key: "k1", Role: ApiKeyRoleSystem}}
-	svc := NewApiKeyService(repo, DefaultApiKeyConfig)
-	got, err := svc.ValidateKey(context.Background(), "k1")
+	credential := testApiKeyCredential(1)
+	repo := &MockApiKeyRepository{Key: &ApiKey{ID: credential.KeyID, SecretHash: credential.SecretHash, Role: ApiKeyRoleSystem}}
+	svc := NewApiKeyService(repo, repo, DefaultApiKeyConfig)
+	got, err := svc.ValidateKey(context.Background(), credential.Key())
 	if err != nil {
 		t.Fatalf("ValidateKey: %v", err)
 	}
@@ -80,18 +98,36 @@ func TestApiKeyService_ValidateKeyReturnsKey(t *testing.T) {
 	}
 }
 
+func TestApiKeyService_ValidateKeyRejectsSecretMismatch(t *testing.T) {
+	credential := testApiKeyCredential(1)
+	mismatch := ApiKeyCredential{KeyID: 1, Secret: []byte("abcdef1234567890")}
+	mismatch.SecretHash = mismatch.HashSecret()
+	repo := &MockApiKeyRepository{Key: &ApiKey{ID: credential.KeyID, SecretHash: mismatch.SecretHash, Role: ApiKeyRoleSystem}}
+	svc := NewApiKeyService(repo, repo, DefaultApiKeyConfig)
+	got, err := svc.ValidateKey(context.Background(), credential.Key())
+	if err != nil {
+		t.Fatalf("ValidateKey: %v", err)
+	}
+	if got != nil {
+		t.Fatalf("ValidateKey = %+v, want nil", got)
+	}
+}
+
 func TestApiKeyService_CreateUserKey(t *testing.T) {
 	repo := &MockApiKeyRepository{Count: DefaultApiKeyConfig.MaxUserKeys - 1}
-	svc := NewApiKeyService(repo, DefaultApiKeyConfig)
-	got, err := svc.CreateUserKey(context.Background(), 8, " local ")
+	svc := NewApiKeyService(repo, repo, DefaultApiKeyConfig)
+	got, credential, err := svc.CreateUserKey(context.Background(), 8, " local ")
 	if err != nil {
 		t.Fatalf("CreateUserKey: %v", err)
 	}
-	if got.ID != 99 {
-		t.Fatalf("ID = %d, want 99", got.ID)
+	if got.ID <= 0 || got.ID != credential.KeyID {
+		t.Fatalf("ID = %d, credential key id = %d", got.ID, credential.KeyID)
 	}
 	if repo.Created == nil || repo.Created.UserID != 8 || repo.Created.Role != ApiKeyRoleUser {
 		t.Fatalf("created key = %+v", repo.Created)
+	}
+	if repo.Created.SecretHash == "" || repo.Created.SecretHash != credential.SecretHash {
+		t.Fatalf("created secret hash = %q, want credential hash", repo.Created.SecretHash)
 	}
 	if got.Name != "local" {
 		t.Fatalf("Name = %q, want %q", got.Name, "local")
@@ -100,8 +136,8 @@ func TestApiKeyService_CreateUserKey(t *testing.T) {
 
 func TestApiKeyService_CreateUserKeyRejectsLimit(t *testing.T) {
 	repo := &MockApiKeyRepository{Count: DefaultApiKeyConfig.MaxUserKeys}
-	svc := NewApiKeyService(repo, DefaultApiKeyConfig)
-	_, err := svc.CreateUserKey(context.Background(), 8, " local ")
+	svc := NewApiKeyService(repo, repo, DefaultApiKeyConfig)
+	_, _, err := svc.CreateUserKey(context.Background(), 8, " local ")
 	if !errors.Is(err, ErrApiKeyLimitExceeded) {
 		t.Fatalf("CreateUserKey error = %v, want ErrApiKeyLimitExceeded", err)
 	}
@@ -112,7 +148,7 @@ func TestApiKeyService_CreateUserKeyRejectsLimit(t *testing.T) {
 
 func TestApiKeyService_DeleteUserKey(t *testing.T) {
 	repo := &MockApiKeyRepository{Key: &ApiKey{ID: 11, Role: ApiKeyRoleUser, UserID: 8}, DeleteOK: true}
-	svc := NewApiKeyService(repo, DefaultApiKeyConfig)
+	svc := NewApiKeyService(repo, repo, DefaultApiKeyConfig)
 	if err := svc.DeleteUserKey(context.Background(), 8, 11); err != nil {
 		t.Fatalf("DeleteUserKey: %v", err)
 	}
@@ -123,9 +159,15 @@ func TestApiKeyService_DeleteUserKey(t *testing.T) {
 
 func TestApiKeyService_DeleteUserKeyMissing(t *testing.T) {
 	repo := &MockApiKeyRepository{Key: &ApiKey{ID: 11, Role: ApiKeyRoleUser, UserID: 8}, DeleteOK: false}
-	svc := NewApiKeyService(repo, DefaultApiKeyConfig)
+	svc := NewApiKeyService(repo, repo, DefaultApiKeyConfig)
 	err := svc.DeleteUserKey(context.Background(), 8, 11)
 	if !errors.Is(err, ErrApiKeyNotFound) {
 		t.Fatalf("DeleteUserKey error = %v, want ErrApiKeyNotFound", err)
 	}
+}
+
+func testApiKeyCredential(keyID int64) ApiKeyCredential {
+	credential := ApiKeyCredential{KeyID: keyID, Secret: []byte("1234567890abcdef")}
+	credential.SecretHash = credential.HashSecret()
+	return credential
 }

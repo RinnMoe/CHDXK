@@ -128,14 +128,16 @@ CREATE TABLE IF NOT EXISTS user_settings
 
 CREATE TABLE IF NOT EXISTS api_keys
 (
-    id           SERIAL PRIMARY KEY,
+    id           BIGINT PRIMARY KEY,
     name         TEXT        NOT NULL,
-    key          TEXT        NOT NULL UNIQUE,
+    secret_hash  TEXT        NOT NULL,
     role         TEXT        NOT NULL CHECK (role IN ('system', 'user')),
     user_id      INTEGER,
     last_used_at TIMESTAMPTZ,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
+    CONSTRAINT chk_api_keys_secret_hash
+        CHECK (length(secret_hash) = 64),
     CONSTRAINT chk_api_keys_role_user
         CHECK ((role = 'system' AND user_id IS NULL) OR (role = 'user' AND user_id IS NOT NULL)),
     CONSTRAINT fk_api_keys_user

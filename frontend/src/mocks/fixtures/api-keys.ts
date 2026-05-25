@@ -1,7 +1,7 @@
 import type { ApiKeyDTO } from "@/api/api-key"
 
 interface MockApiKey {
-  id: number
+  id: string
   name: string
   key: string
   role: string
@@ -23,9 +23,9 @@ const MOCK_API_KEY_STORAGE_KEY = "jcourse:mock-api-key-state"
 
 const initialApiKeys: MockApiKey[] = [
   {
-    id: 1,
+    id: "1",
     name: "本地脚本",
-    key: "jc_demo_user_00000000000000000000000000000001",
+    key: mockApiKeyValue("1"),
     role: "user",
     user_id: 1,
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString(),
@@ -82,16 +82,42 @@ if (import.meta.hot) {
 export const mockApiKeys = mockApiKeyState.keys
 
 function maskApiKey(key: string) {
-  if (key.length <= 12) return "*".repeat(key.length)
-  return `${key.slice(0, 7)}************${key.slice(-6)}`
+  const [prefix, keyID] = key.split("_")
+  return `${prefix}_${keyID}_********`
+}
+
+function mockApiKeyValue(id: string) {
+  return `jc_${mockEncodedKeyID(id)}_${mockSecret()}`
+}
+
+function mockEncodedKeyID(id: string) {
+  let value = BigInt(id)
+  const bytes = new Uint8Array(8)
+  for (let i = bytes.length - 1; i >= 0; i -= 1) {
+    bytes[i] = Number(value & 0xffn)
+    value >>= 8n
+  }
+  return base64URL(bytes)
+}
+
+function mockSecret() {
+  const bytes = new Uint8Array(16)
+  crypto.getRandomValues(bytes)
+  return base64URL(bytes)
+}
+
+function base64URL(bytes: Uint8Array) {
+  return btoa(String.fromCharCode(...bytes))
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replaceAll("=", "")
 }
 
 export function toApiKeyDTO(key: MockApiKey, includeKey = false): ApiKeyDTO {
   return {
     id: key.id,
     name: key.name,
-    key: includeKey ? key.key : undefined,
-    key_masked: maskApiKey(key.key),
+    key: includeKey ? key.key : maskApiKey(key.key),
     role: key.role,
     user_id: key.user_id,
     created_at: key.created_at,
@@ -102,17 +128,20 @@ export function toApiKeyDTO(key: MockApiKey, includeKey = false): ApiKeyDTO {
 export function listMockUserApiKeys(userID: number): ApiKeyDTO[] {
   return mockApiKeys
     .filter((key) => key.role === "user" && key.user_id === userID)
-    .sort((a, b) => b.created_at.localeCompare(a.created_at) || b.id - a.id)
+    .sort(
+      (a, b) =>
+        b.created_at.localeCompare(a.created_at) || Number(b.id) - Number(a.id)
+    )
     .map((key) => toApiKeyDTO(key))
 }
 
 export function createMockUserApiKey(userID: number, name: string): ApiKeyDTO {
   const now = new Date().toISOString()
-  const id = Math.max(0, ...mockApiKeys.map((key) => key.id)) + 1
+  const id = String(Math.max(0, ...mockApiKeys.map((key) => Number(key.id))) + 1)
   const key: MockApiKey = {
     id,
     name,
-    key: `jc_mock_${userID}_${crypto.randomUUID().replaceAll("-", "")}`,
+    key: mockApiKeyValue(id),
     role: "user",
     user_id: userID,
     created_at: now,
@@ -123,7 +152,7 @@ export function createMockUserApiKey(userID: number, name: string): ApiKeyDTO {
   return toApiKeyDTO(key, true)
 }
 
-export function deleteMockUserApiKey(userID: number, id: number): boolean {
+export function deleteMockUserApiKey(userID: number, id: string): boolean {
   const index = mockApiKeys.findIndex(
     (key) => key.id === id && key.role === "user" && key.user_id === userID
   )

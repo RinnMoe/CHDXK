@@ -223,9 +223,9 @@ func (SiteDailyStatEntity) TableName() string {
 }
 
 type ApiKeyEntity struct {
-	ID         int        `gorm:"column:id"`
+	ID         int64      `gorm:"column:id;primaryKey;autoIncrement:false"`
 	Name       string     `gorm:"column:name"`
-	Key        string     `gorm:"column:key;uniqueIndex"`
+	SecretHash string     `gorm:"column:secret_hash"`
 	Role       string     `gorm:"column:role"`
 	UserID     *int       `gorm:"column:user_id;index"`
 	LastUsedAt *time.Time `gorm:"column:last_used_at"`

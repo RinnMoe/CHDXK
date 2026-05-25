@@ -90,7 +90,7 @@ export function SystemApiKeysTab() {
     }
   }
 
-  async function handleDelete(id: number) {
+  async function handleDelete(id: string) {
     setError("")
     try {
       await deleteMutation.mutateAsync(id)
@@ -102,7 +102,7 @@ export function SystemApiKeysTab() {
 
   return (
     <section className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <h2 className="text-lg font-medium">系统 API Key</h2>
         <Button onClick={() => handleCreateOpenChange(true)}>
           <RiAddLine data-icon="inline-start" />
@@ -130,7 +130,6 @@ export function SystemApiKeysTab() {
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
                   onClick={() => copyKey(createdKey.key!)}
                 >
                   <RiFileCopyLine data-icon="inline-start" />
@@ -199,7 +198,7 @@ export function SystemApiKeysTab() {
                 <TableCell className="font-medium">{key.name}</TableCell>
                 <TableCell>
                   <code className="rounded bg-muted px-2 py-1 text-xs">
-                    {key.key_masked}
+                    {key.key}
                   </code>
                 </TableCell>
                 <TableCell className="text-muted-foreground">

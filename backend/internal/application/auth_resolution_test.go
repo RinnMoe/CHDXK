@@ -9,14 +9,15 @@ import (
 )
 
 func TestAuthResolutionServiceResolveUserAPIKey(t *testing.T) {
+	credential := testAuthResolutionCredential(1)
 	apiKeyRepo := &authResolutionAPIKeyRepo{
-		MockApiKeyRepository: auth.MockApiKeyRepository{Key: &auth.ApiKey{ID: 1, Key: "user-key", Role: auth.ApiKeyRoleUser, UserID: 7}},
+		MockApiKeyRepository: auth.MockApiKeyRepository{Key: &auth.ApiKey{ID: credential.KeyID, SecretHash: credential.SecretHash, Role: auth.ApiKeyRoleUser, UserID: 7}},
 	}
 	userRepo := auth.NewMockUserRepository(map[int]*auth.User{7: {ID: 7, Role: auth.RoleUser}})
 	tracker := &authResolutionAccessTracker{}
-	svc := NewAuthResolutionService(auth.NewCurrentUserService(userRepo), auth.NewApiKeyService(apiKeyRepo, auth.DefaultApiKeyConfig), tracker)
+	svc := NewAuthResolutionService(auth.NewCurrentUserService(userRepo), auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig), tracker)
 
-	resolved, err := svc.Resolve(context.Background(), "user-key", 0)
+	resolved, err := svc.Resolve(context.Background(), credential.Key(), 0)
 	if err != nil {
 		t.Fatalf("Resolve returned error: %v", err)
 	}
@@ -26,8 +27,8 @@ func TestAuthResolutionServiceResolveUserAPIKey(t *testing.T) {
 	if resolved.ApiKey == nil || resolved.ApiKey.ID != 1 {
 		t.Fatalf("resolved api key = %+v, want key 1", resolved.ApiKey)
 	}
-	if apiKeyRepo.FindByKeyCalls != 1 {
-		t.Fatalf("FindByKey calls = %d, want 1", apiKeyRepo.FindByKeyCalls)
+	if apiKeyRepo.GetByIDCalls != 1 {
+		t.Fatalf("GetByID calls = %d, want 1", apiKeyRepo.GetByIDCalls)
 	}
 	if userRepo.FindByIDCalls != 1 {
 		t.Fatalf("FindByID calls = %d, want 1", userRepo.FindByIDCalls)
@@ -41,14 +42,15 @@ func TestAuthResolutionServiceResolveUserAPIKey(t *testing.T) {
 }
 
 func TestAuthResolutionServiceResolveSystemAPIKey(t *testing.T) {
+	credential := testAuthResolutionCredential(1)
 	apiKeyRepo := &authResolutionAPIKeyRepo{
-		MockApiKeyRepository: auth.MockApiKeyRepository{Key: &auth.ApiKey{ID: 1, Key: "system-key", Role: auth.ApiKeyRoleSystem}},
+		MockApiKeyRepository: auth.MockApiKeyRepository{Key: &auth.ApiKey{ID: credential.KeyID, SecretHash: credential.SecretHash, Role: auth.ApiKeyRoleSystem}},
 	}
 	userRepo := auth.NewMockUserRepository(map[int]*auth.User{7: {ID: 7, Role: auth.RoleUser}})
 	tracker := &authResolutionAccessTracker{}
-	svc := NewAuthResolutionService(auth.NewCurrentUserService(userRepo), auth.NewApiKeyService(apiKeyRepo, auth.DefaultApiKeyConfig), tracker)
+	svc := NewAuthResolutionService(auth.NewCurrentUserService(userRepo), auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig), tracker)
 
-	resolved, err := svc.Resolve(context.Background(), "system-key", 7)
+	resolved, err := svc.Resolve(context.Background(), credential.Key(), 7)
 	if err != nil {
 		t.Fatalf("Resolve returned error: %v", err)
 	}
@@ -73,7 +75,7 @@ func TestAuthResolutionServiceResolveSessionUser(t *testing.T) {
 	apiKeyRepo := &authResolutionAPIKeyRepo{}
 	userRepo := auth.NewMockUserRepository(map[int]*auth.User{7: {ID: 7, Role: auth.RoleUser}})
 	tracker := &authResolutionAccessTracker{}
-	svc := NewAuthResolutionService(auth.NewCurrentUserService(userRepo), auth.NewApiKeyService(apiKeyRepo, auth.DefaultApiKeyConfig), tracker)
+	svc := NewAuthResolutionService(auth.NewCurrentUserService(userRepo), auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig), tracker)
 
 	resolved, err := svc.Resolve(context.Background(), "", 7)
 	if err != nil {
@@ -85,8 +87,8 @@ func TestAuthResolutionServiceResolveSessionUser(t *testing.T) {
 	if resolved.ApiKey != nil {
 		t.Fatalf("resolved api key = %+v, want nil", resolved.ApiKey)
 	}
-	if apiKeyRepo.FindByKeyCalls != 0 {
-		t.Fatalf("FindByKey calls = %d, want 0", apiKeyRepo.FindByKeyCalls)
+	if apiKeyRepo.GetByIDCalls != 0 {
+		t.Fatalf("GetByID calls = %d, want 0", apiKeyRepo.GetByIDCalls)
 	}
 	if userRepo.FindByIDCalls != 1 {
 		t.Fatalf("FindByID calls = %d, want 1", userRepo.FindByIDCalls)
@@ -103,7 +105,7 @@ func TestAuthResolutionServiceIgnoresAccessTrackerError(t *testing.T) {
 	apiKeyRepo := &authResolutionAPIKeyRepo{}
 	userRepo := auth.NewMockUserRepository(map[int]*auth.User{7: {ID: 7, Role: auth.RoleUser}})
 	tracker := &authResolutionAccessTracker{recordErr: context.Canceled}
-	svc := NewAuthResolutionService(auth.NewCurrentUserService(userRepo), auth.NewApiKeyService(apiKeyRepo, auth.DefaultApiKeyConfig), tracker)
+	svc := NewAuthResolutionService(auth.NewCurrentUserService(userRepo), auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig), tracker)
 
 	resolved, err := svc.Resolve(context.Background(), "", 7)
 	if err != nil {
@@ -120,7 +122,7 @@ type authResolutionAPIKeyRepo struct {
 
 type authResolutionAccessTracker struct {
 	userID    int
-	apiKeyID  int
+	apiKeyID  int64
 	recordErr error
 }
 
@@ -129,11 +131,17 @@ func (t *authResolutionAccessTracker) RecordUserAccess(_ context.Context, userID
 	return t.recordErr
 }
 
-func (t *authResolutionAccessTracker) RecordApiKeyAccess(_ context.Context, apiKeyID int, _ time.Time) error {
+func (t *authResolutionAccessTracker) RecordApiKeyAccess(_ context.Context, apiKeyID int64, _ time.Time) error {
 	t.apiKeyID = apiKeyID
 	return t.recordErr
 }
 
 func (t *authResolutionAccessTracker) Flush(context.Context) (auth.AccessFlushResult, error) {
 	return auth.AccessFlushResult{}, nil
+}
+
+func testAuthResolutionCredential(keyID int64) auth.ApiKeyCredential {
+	credential := auth.ApiKeyCredential{KeyID: keyID, Secret: []byte("1234567890abcdef")}
+	credential.SecretHash = credential.HashSecret()
+	return credential
 }

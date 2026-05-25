@@ -167,7 +167,8 @@ func setDefaults(v *viper.Viper) {
 		"max_daily_votes": review.DefaultVoteConfig.MaxDailyVotes,
 	})
 	setSectionDefaults(v, "api_key", map[string]any{
-		"max_user_keys": auth.DefaultApiKeyConfig.MaxUserKeys,
+		"max_user_keys":     auth.DefaultApiKeyConfig.MaxUserKeys,
+		"snowflake_node_id": auth.DefaultApiKeyConfig.SnowflakeNodeID,
 	})
 	setSectionDefaults(v, "admin", map[string]any{
 		"default_suspend_days": application.DefaultAdminUserCommandConfig.DefaultSuspendDays,

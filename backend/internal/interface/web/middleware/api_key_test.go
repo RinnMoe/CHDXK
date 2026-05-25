@@ -20,7 +20,7 @@ import (
 
 type fakeAccessTracker struct {
 	userID   int
-	apiKeyID int
+	apiKeyID int64
 }
 
 func (t *fakeAccessTracker) RecordUserAccess(_ context.Context, userID int, _ time.Time) error {
@@ -28,7 +28,7 @@ func (t *fakeAccessTracker) RecordUserAccess(_ context.Context, userID int, _ ti
 	return nil
 }
 
-func (t *fakeAccessTracker) RecordApiKeyAccess(_ context.Context, apiKeyID int, _ time.Time) error {
+func (t *fakeAccessTracker) RecordApiKeyAccess(_ context.Context, apiKeyID int64, _ time.Time) error {
 	t.apiKeyID = apiKeyID
 	return nil
 }
@@ -40,9 +40,10 @@ func (t *fakeAccessTracker) Flush(context.Context) (auth.AccessFlushResult, erro
 func TestSystemAPIKeyAuth(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	validKey := "test-api-key-123"
-	repo := &auth.MockApiKeyRepository{Key: &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleSystem, UserID: 0}}
-	svc := auth.NewApiKeyService(repo, auth.DefaultApiKeyConfig)
+	systemCredential := testMiddlewareCredential(1)
+	userCredential := testMiddlewareCredential(2)
+	repo := &auth.MockApiKeyRepository{Key: &auth.ApiKey{ID: systemCredential.KeyID, SecretHash: systemCredential.SecretHash, Role: auth.ApiKeyRoleSystem, UserID: 0}}
+	svc := auth.NewApiKeyService(repo, repo, auth.DefaultApiKeyConfig)
 
 	handler := middleware.SystemAPIKeyAuth()
 
@@ -52,43 +53,43 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 		wantStatus int
 		wantBody   string
 		apiKey     *auth.ApiKey
-		wantAccess int
+		wantAccess int64
 	}{
 		{
 			name:       "missing header",
 			authHeader: "",
 			wantStatus: http.StatusUnauthorized,
 			wantBody:   "missing authorization header",
-			apiKey:     &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleSystem, UserID: 0},
+			apiKey:     &auth.ApiKey{ID: systemCredential.KeyID, SecretHash: systemCredential.SecretHash, Role: auth.ApiKeyRoleSystem, UserID: 0},
 		},
 		{
 			name:       "wrong format",
 			authHeader: "Basic abc123",
 			wantStatus: http.StatusUnauthorized,
 			wantBody:   "invalid authorization format",
-			apiKey:     &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleSystem, UserID: 0},
+			apiKey:     &auth.ApiKey{ID: systemCredential.KeyID, SecretHash: systemCredential.SecretHash, Role: auth.ApiKeyRoleSystem, UserID: 0},
 		},
 		{
 			name:       "invalid key",
 			authHeader: "Bearer wrong-key",
 			wantStatus: http.StatusUnauthorized,
 			wantBody:   "invalid api key",
-			apiKey:     &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleSystem, UserID: 0},
+			apiKey:     &auth.ApiKey{ID: systemCredential.KeyID, SecretHash: systemCredential.SecretHash, Role: auth.ApiKeyRoleSystem, UserID: 0},
 		},
 		{
 			name:       "valid key",
-			authHeader: "Bearer " + validKey,
+			authHeader: "Bearer " + systemCredential.Key(),
 			wantStatus: http.StatusOK,
 			wantBody:   "ok",
-			apiKey:     &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleSystem, UserID: 0},
+			apiKey:     &auth.ApiKey{ID: systemCredential.KeyID, SecretHash: systemCredential.SecretHash, Role: auth.ApiKeyRoleSystem, UserID: 0},
 			wantAccess: 1,
 		},
 		{
 			name:       "user key forbidden",
-			authHeader: "Bearer user-key",
+			authHeader: "Bearer " + userCredential.Key(),
 			wantStatus: http.StatusForbidden,
 			wantBody:   "api key role is not allowed",
-			apiKey:     &auth.ApiKey{ID: 2, Key: "user-key", Role: auth.ApiKeyRoleUser, UserID: 7},
+			apiKey:     &auth.ApiKey{ID: userCredential.KeyID, SecretHash: userCredential.SecretHash, Role: auth.ApiKeyRoleUser, UserID: 7},
 		},
 	}
 
@@ -132,11 +133,13 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 func TestSystemAPIKeyAuth_RepoError(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	svc := auth.NewApiKeyService(&auth.MockApiKeyRepository{
-		OnFindByKey: func(context.Context, string) (*auth.ApiKey, error) {
+	credential := testMiddlewareCredential(1)
+	repo := &auth.MockApiKeyRepository{
+		OnGetByID: func(context.Context, int64) (*auth.ApiKey, error) {
 			return nil, errors.New("db down")
 		},
-	}, auth.DefaultApiKeyConfig)
+	}
+	svc := auth.NewApiKeyService(repo, repo, auth.DefaultApiKeyConfig)
 	handler := middleware.SystemAPIKeyAuth()
 
 	r := gin.New()
@@ -153,7 +156,7 @@ func TestSystemAPIKeyAuth_RepoError(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
-	req.Header.Set("Authorization", "Bearer some-key")
+	req.Header.Set("Authorization", "Bearer "+credential.Key())
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusInternalServerError {
@@ -164,9 +167,9 @@ func TestSystemAPIKeyAuth_RepoError(t *testing.T) {
 func TestSystemAPIKeyAuthReusesResolvedAPIKey(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	validKey := "test-api-key-123"
-	repo := &auth.MockApiKeyRepository{Key: &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleSystem, UserID: 0}}
-	svc := auth.NewApiKeyService(repo, auth.DefaultApiKeyConfig)
+	credential := testMiddlewareCredential(1)
+	repo := &auth.MockApiKeyRepository{Key: &auth.ApiKey{ID: credential.KeyID, SecretHash: credential.SecretHash, Role: auth.ApiKeyRoleSystem, UserID: 0}}
+	svc := auth.NewApiKeyService(repo, repo, auth.DefaultApiKeyConfig)
 	tracker := &fakeAccessTracker{}
 
 	r := gin.New()
@@ -178,14 +181,14 @@ func TestSystemAPIKeyAuthReusesResolvedAPIKey(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
-	req.Header.Set("Authorization", "Bearer "+validKey)
+	req.Header.Set("Authorization", "Bearer "+credential.Key())
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", w.Code, http.StatusOK)
 	}
-	if repo.FindByKeyCalls != 1 {
-		t.Fatalf("FindByKey calls = %d, want 1", repo.FindByKeyCalls)
+	if repo.GetByIDCalls != 1 {
+		t.Fatalf("GetByID calls = %d, want 1", repo.GetByIDCalls)
 	}
 	if tracker.apiKeyID != 1 {
 		t.Fatalf("recorded api key access id = %d, want 1", tracker.apiKeyID)
@@ -200,4 +203,10 @@ func (systemAuthUserRepo) FindByID(context.Context, int) (*auth.User, error) { r
 
 func (systemAuthUserRepo) FindByRole(context.Context, string) ([]auth.User, error) {
 	return nil, nil
+}
+
+func testMiddlewareCredential(keyID int64) auth.ApiKeyCredential {
+	credential := auth.ApiKeyCredential{KeyID: keyID, Secret: []byte("1234567890abcdef")}
+	credential.SecretHash = credential.HashSecret()
+	return credential
 }

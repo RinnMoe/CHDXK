@@ -2,10 +2,9 @@ import { apiClient } from "./client"
 import { BASE_URL } from "./constants"
 
 export interface ApiKeyDTO {
-  id: number
+  id: string
   name: string
-  key?: string
-  key_masked: string
+  key: string
   role: string
   user_id: number
   created_at: string
@@ -27,7 +26,7 @@ export function createApiKey(cmd: CreateApiKeyCommand): Promise<ApiKeyDTO> {
   })
 }
 
-export function deleteApiKey(id: number): Promise<void> {
+export function deleteApiKey(id: string): Promise<void> {
   return apiClient<void>(`${BASE_URL}/api-key/${id}`, {
     method: "DELETE",
   })
@@ -46,7 +45,7 @@ export function createSystemApiKey(
   })
 }
 
-export function deleteSystemApiKey(id: number): Promise<void> {
+export function deleteSystemApiKey(id: string): Promise<void> {
   return apiClient<void>(`${BASE_URL}/admin/api-key/system/${id}`, {
     method: "DELETE",
   })

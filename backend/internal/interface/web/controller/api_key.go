@@ -95,7 +95,7 @@ func (ctrl *ApiKeyController) DeleteMyApiKey(c *gin.Context) {
 		return
 	}
 
-	id, err := strconv.Atoi(c.Param("apiKeyID"))
+	id, err := strconv.ParseInt(c.Param("apiKeyID"), 10, 64)
 	if err != nil || id <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid api key id"})
 		return
@@ -113,7 +113,7 @@ func (ctrl *ApiKeyController) DeleteMyApiKey(c *gin.Context) {
 }
 
 func (ctrl *ApiKeyController) DeleteSystemApiKey(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("apiKeyID"))
+	id, err := strconv.ParseInt(c.Param("apiKeyID"), 10, 64)
 	if err != nil || id <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid api key id"})
 		return

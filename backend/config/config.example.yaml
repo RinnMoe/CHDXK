@@ -61,6 +61,7 @@ review:
 
 api_key:
   max_user_keys: 20
+  snowflake_node_id: 1
 
 admin:
   default_suspend_days: 30
