@@ -1,4 +1,4 @@
-package async
+package handler
 
 import (
 	"context"
@@ -12,7 +12,7 @@ type flushAccessHandler struct {
 	tracker auth.AccessTracker
 }
 
-func newFlushAccessHandler(tracker auth.AccessTracker) asynq.Handler {
+func NewFlushAccessHandler(tracker auth.AccessTracker) asynq.Handler {
 	return &flushAccessHandler{tracker: tracker}
 }
 

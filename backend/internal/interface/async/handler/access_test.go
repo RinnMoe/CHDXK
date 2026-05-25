@@ -1,4 +1,4 @@
-package async
+package handler
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 
 func TestFlushAccessHandlerCallsTracker(t *testing.T) {
 	tracker := &fakeAsyncAccessTracker{}
-	handler := newFlushAccessHandler(tracker)
+	handler := NewFlushAccessHandler(tracker)
 
 	if err := handler.ProcessTask(context.Background(), asynq.NewTask(auth.TaskTypeFlushAccess, auth.NewFlushAccessTask().Payload())); err != nil {
 		t.Fatalf("ProcessTask: %v", err)

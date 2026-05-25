@@ -8,15 +8,16 @@ import (
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/stat"
+	asynchandler "jcourse/internal/interface/async/handler"
 )
 
 func NewMux(container *app.ServiceContainer) *asynq.ServeMux {
 	mux := asynq.NewServeMux()
 	mux.Use(newTaskLoggingMiddleware())
-	mux.Handle(auth.TaskTypeClearExpiredSuspension, newClearExpiredSuspensionHandler(container.AuthUserService))
-	mux.Handle(auth.TaskTypeFlushAccess, newFlushAccessHandler(container.AccessTracker))
-	mux.Handle(course.TaskTypeRecordHotCourseActivity, newRecordHotCourseActivityHandler(container.CourseHotCommand))
-	mux.Handle(stat.TaskTypeCollectDailySiteStats, newCollectDailySiteStatsHandler(container.SiteStatsCommand))
+	mux.Handle(auth.TaskTypeClearExpiredSuspension, asynchandler.NewClearExpiredSuspensionHandler(container.AuthUserService))
+	mux.Handle(auth.TaskTypeFlushAccess, asynchandler.NewFlushAccessHandler(container.AccessTracker))
+	mux.Handle(course.TaskTypeRecordHotCourseActivity, asynchandler.NewRecordHotCourseActivityHandler(container.CourseHotCommand))
+	mux.Handle(stat.TaskTypeCollectDailySiteStats, asynchandler.NewCollectDailySiteStatsHandler(container.SiteStatsCommand))
 	return mux
 }
 

@@ -1,4 +1,4 @@
-package async
+package handler
 
 import (
 	"context"
@@ -14,7 +14,7 @@ type collectDailySiteStatsHandler struct {
 	command *application.SiteStatsCommandService
 }
 
-func newCollectDailySiteStatsHandler(command *application.SiteStatsCommandService) asynq.Handler {
+func NewCollectDailySiteStatsHandler(command *application.SiteStatsCommandService) asynq.Handler {
 	return &collectDailySiteStatsHandler{command: command}
 }
 

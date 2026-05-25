@@ -1,4 +1,4 @@
-package async
+package handler
 
 import (
 	"context"
@@ -14,7 +14,7 @@ type recordHotCourseActivityHandler struct {
 	command *application.CourseHotCommandService
 }
 
-func newRecordHotCourseActivityHandler(command *application.CourseHotCommandService) asynq.Handler {
+func NewRecordHotCourseActivityHandler(command *application.CourseHotCommandService) asynq.Handler {
 	return &recordHotCourseActivityHandler{command: command}
 }
 

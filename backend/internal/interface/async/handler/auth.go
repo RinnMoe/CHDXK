@@ -1,4 +1,4 @@
-package async
+package handler
 
 import (
 	"context"
@@ -13,7 +13,7 @@ type clearExpiredSuspensionHandler struct {
 	currentUserService *domainauth.AuthUserService
 }
 
-func newClearExpiredSuspensionHandler(currentUserService *domainauth.AuthUserService) asynq.Handler {
+func NewClearExpiredSuspensionHandler(currentUserService *domainauth.AuthUserService) asynq.Handler {
 	return &clearExpiredSuspensionHandler{currentUserService: currentUserService}
 }
 
