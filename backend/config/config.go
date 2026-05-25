@@ -42,6 +42,7 @@ type AuthConfig struct {
 	Registration    account.RegistrationConfig
 	PasswordReset   account.PasswordResetConfig
 	Login           account.LoginConfig
+	Access          auth.AccessConfig
 	PasswordHash    account.PasswordHashConfig
 	UsernameDeriver account.UsernameDeriverConfig
 }
@@ -138,6 +139,11 @@ func setDefaults(v *viper.Viper) {
 	setSectionDefaults(v, "auth.login", map[string]any{
 		"max_attempts": account.DefaultLoginConfig.MaxAttempts,
 		"lockout":      account.DefaultLoginConfig.Lockout.String(),
+	})
+	setSectionDefaults(v, "auth.access", map[string]any{
+		"flush_cron":        auth.DefaultAccessConfig.FlushCron,
+		"scheduler_enabled": auth.DefaultAccessConfig.SchedulerEnabled,
+		"flush_batch_size":  auth.DefaultAccessConfig.FlushBatchSize,
 	})
 	setSectionDefaults(v, "auth.password_hash", map[string]any{
 		"iterations":  account.DefaultPasswordHashConfig.Iterations,

@@ -34,6 +34,7 @@ type ServiceContainer struct {
 	AdminUserCommand        *application.AdminUserCommandService
 	AuthUserService         *auth.AuthUserService
 	AuthResolution          *application.AuthResolutionService
+	AccessTracker           auth.AccessTracker
 	AnnouncementQuery       *application.AnnouncementQueryService
 	ApiKeySvc               *auth.ApiKeyService
 	ApiKeyQuery             *application.ApiKeyQueryService
@@ -59,6 +60,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	userRepo := repository.NewUserRepository(db, redisClient)
 	userSettingsRepo := repository.NewUserSettingsRepository(db, redisClient)
 	apiKeyRepo := repository.NewApiKeyRepository(db)
+	accessTracker := repository.NewAccessTrackerRepository(db, redisClient, conf.Auth.Access.FlushBatchSize)
 	statRepo := repository.NewSiteDailyStatRepository(db, redisClient)
 	courseHotRepo := repository.NewGormCourseHotRepository(db, redisClient)
 	verificationRepo := repository.NewVerificationCodeRepository(redisClient)
@@ -129,7 +131,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		currentUserService,
 	)
 	apiKeySvc := auth.NewApiKeyService(apiKeyRepo, conf.APIKey)
-	authResolution := application.NewAuthResolutionService(currentUserService, apiKeySvc)
+	authResolution := application.NewAuthResolutionService(currentUserService, apiKeySvc, accessTracker)
 	apiKeyQuery := application.NewApiKeyQueryService(apiKeySvc)
 	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc)
 	userSettingsQuery := application.NewUserSettingsQueryService(userSettingsRepo, courseRepo, courseRepo)
@@ -155,6 +157,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		AdminUserCommand:        adminUserCommand,
 		AuthUserService:         currentUserService,
 		AuthResolution:          authResolution,
+		AccessTracker:           accessTracker,
 		AnnouncementQuery:       announcementQuery,
 		ApiKeySvc:               apiKeySvc,
 		ApiKeyQuery:             apiKeyQuery,

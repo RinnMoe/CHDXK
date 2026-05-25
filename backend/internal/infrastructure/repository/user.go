@@ -27,6 +27,8 @@ type UserRepository struct {
 	cache *redis.Client
 }
 
+const accountCacheTTL = 5 * time.Minute
+
 func newAccountEntity(u *account.Account) UserEntity {
 	return UserEntity{
 		ID:           u.ID,
@@ -130,7 +132,7 @@ func (r *AccountRepository) FindByID(ctx context.Context, id int) (*account.Acco
 		return nil, err
 	}
 	d := newAccountDomain(&e)
-	cacheSetJSON(ctx, r.cache, key, &d)
+	cacheSetJSONWithTTL(ctx, r.cache, key, &d, accountCacheTTL)
 	return &d, nil
 }
 
@@ -160,7 +162,7 @@ func (r *AccountRepository) FindByEmail(ctx context.Context, email string) (*acc
 		return nil, err
 	}
 	d := newAccountDomain(&e)
-	cacheSetJSON(ctx, r.cache, key, &d)
+	cacheSetJSONWithTTL(ctx, r.cache, key, &d, accountCacheTTL)
 	return &d, nil
 }
 

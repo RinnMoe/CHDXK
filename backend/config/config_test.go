@@ -43,6 +43,12 @@ review:
 	if conf.Auth.Login.Lockout != 15*time.Minute {
 		t.Fatalf("auth default lockout = %s, want %s", conf.Auth.Login.Lockout, 15*time.Minute)
 	}
+	if conf.Auth.Access.FlushCron != "*/5 * * * *" {
+		t.Fatalf("auth access default flush cron = %q, want */5 * * * *", conf.Auth.Access.FlushCron)
+	}
+	if conf.Auth.Access.FlushBatchSize != 1000 {
+		t.Fatalf("auth access default batch size = %d, want 1000", conf.Auth.Access.FlushBatchSize)
+	}
 	if conf.Session.MaxAge != 2592000 {
 		t.Fatalf("session default max age = %d, want 2592000", conf.Session.MaxAge)
 	}

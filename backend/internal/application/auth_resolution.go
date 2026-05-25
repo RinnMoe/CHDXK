@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"time"
 
 	"jcourse/internal/domain/auth"
 )
@@ -14,10 +15,11 @@ type ResolvedAuth struct {
 type AuthResolutionService struct {
 	currentUserSvc *auth.AuthUserService
 	apiKeySvc      *auth.ApiKeyService
+	accessTracker  auth.AccessTracker
 }
 
-func NewAuthResolutionService(currentUserSvc *auth.AuthUserService, apiKeySvc *auth.ApiKeyService) *AuthResolutionService {
-	return &AuthResolutionService{currentUserSvc: currentUserSvc, apiKeySvc: apiKeySvc}
+func NewAuthResolutionService(currentUserSvc *auth.AuthUserService, apiKeySvc *auth.ApiKeyService, accessTracker auth.AccessTracker) *AuthResolutionService {
+	return &AuthResolutionService{currentUserSvc: currentUserSvc, apiKeySvc: apiKeySvc, accessTracker: accessTracker}
 }
 
 func (s *AuthResolutionService) Resolve(ctx context.Context, bearerToken string, sessionUserID int) (*ResolvedAuth, error) {
@@ -44,9 +46,7 @@ func (s *AuthResolutionService) resolveAPIKey(ctx context.Context, token string)
 		}
 		resolved.User = user
 	}
-	if err := s.apiKeySvc.MarkKeyUsed(ctx, apiKey.ID); err != nil {
-		return nil, err
-	}
+	s.recordAccess(ctx, resolved)
 	return resolved, nil
 }
 
@@ -55,5 +55,20 @@ func (s *AuthResolutionService) resolveSessionUser(ctx context.Context, userID i
 	if err != nil || user == nil {
 		return &ResolvedAuth{}, err
 	}
-	return &ResolvedAuth{User: user}, nil
+	resolved := &ResolvedAuth{User: user}
+	s.recordAccess(ctx, resolved)
+	return resolved, nil
+}
+
+func (s *AuthResolutionService) recordAccess(ctx context.Context, resolved *ResolvedAuth) {
+	if s.accessTracker == nil || resolved == nil {
+		return
+	}
+	now := time.Now()
+	if resolved.ApiKey != nil {
+		_ = s.accessTracker.RecordApiKeyAccess(ctx, resolved.ApiKey.ID, now)
+	}
+	if resolved.User != nil {
+		_ = s.accessTracker.RecordUserAccess(ctx, resolved.User.ID, now)
+	}
 }

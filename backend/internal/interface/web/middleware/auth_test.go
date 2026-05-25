@@ -22,7 +22,7 @@ func TestRequireAuthReusesResolvedSessionUser(t *testing.T) {
 	repo := &authMiddlewareUserRepo{user: &auth.User{ID: 7, Role: auth.RoleUser}}
 	currentUserSvc := auth.NewCurrentUserService(repo)
 	apiKeySvc := auth.NewApiKeyService(&authMiddlewareAPIKeyRepo{}, auth.DefaultApiKeyConfig)
-	authResolution := application.NewAuthResolutionService(currentUserSvc, apiKeySvc)
+	authResolution := application.NewAuthResolutionService(currentUserSvc, apiKeySvc, nil)
 	r := gin.New()
 	r.Use(sessions.Sessions("jcourse_session", filesession.NewStore(t.TempDir(), []byte("test-secret"))))
 	r.Use(ResolveCurrentUser(authResolution))
@@ -60,11 +60,13 @@ func TestResolveCurrentUserWithUserAPIKey(t *testing.T) {
 		key:    validKey,
 		apiKey: &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleUser, UserID: 7},
 	}
+	tracker := &authMiddlewareAccessTracker{}
 	r := gin.New()
 	r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
 	r.Use(ResolveCurrentUser(application.NewAuthResolutionService(
 		auth.NewCurrentUserService(userRepo),
 		auth.NewApiKeyService(apiKeyRepo, auth.DefaultApiKeyConfig),
+		tracker,
 	)))
 	r.GET("/protected", RequireAuth(), func(c *gin.Context) {
 		u := auth.GetUserFromCtx(c.Request.Context())
@@ -89,8 +91,11 @@ func TestResolveCurrentUserWithUserAPIKey(t *testing.T) {
 	if userRepo.findByIDCalls != 1 {
 		t.Fatalf("FindByID calls = %d, want 1", userRepo.findByIDCalls)
 	}
-	if !apiKeyRepo.touched {
-		t.Fatal("expected api key to be touched")
+	if tracker.apiKeyID != 1 {
+		t.Fatalf("recorded api key access id = %d, want 1", tracker.apiKeyID)
+	}
+	if tracker.userID != 7 {
+		t.Fatalf("recorded user access id = %d, want 7", tracker.userID)
 	}
 }
 
@@ -284,7 +289,6 @@ type authMiddlewareAPIKeyRepo struct {
 	key            string
 	apiKey         *auth.ApiKey
 	findByKeyCalls int
-	touched        bool
 }
 
 func (r *authMiddlewareAPIKeyRepo) FindByKey(_ context.Context, key string) (*auth.ApiKey, error) {
@@ -309,6 +313,24 @@ func (r *authMiddlewareAPIKeyRepo) DeleteByUser(context.Context, int, int) (bool
 }
 
 func (r *authMiddlewareAPIKeyRepo) TouchLastUsed(context.Context, int, time.Time) error {
-	r.touched = true
 	return nil
+}
+
+type authMiddlewareAccessTracker struct {
+	userID   int
+	apiKeyID int
+}
+
+func (t *authMiddlewareAccessTracker) RecordUserAccess(_ context.Context, userID int, _ time.Time) error {
+	t.userID = userID
+	return nil
+}
+
+func (t *authMiddlewareAccessTracker) RecordApiKeyAccess(_ context.Context, apiKeyID int, _ time.Time) error {
+	t.apiKeyID = apiKeyID
+	return nil
+}
+
+func (t *authMiddlewareAccessTracker) Flush(context.Context) (auth.AccessFlushResult, error) {
+	return auth.AccessFlushResult{}, nil
 }

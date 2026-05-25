@@ -22,7 +22,6 @@ type fakeApiKeyRepo struct {
 	key            string
 	apiKey         *auth.ApiKey
 	err            error
-	touched        bool
 	findByKeyCalls int
 }
 
@@ -54,8 +53,26 @@ func (r *fakeApiKeyRepo) DeleteByUser(_ context.Context, _ int, _ int) (bool, er
 }
 
 func (r *fakeApiKeyRepo) TouchLastUsed(_ context.Context, _ int, _ time.Time) error {
-	r.touched = true
 	return nil
+}
+
+type fakeAccessTracker struct {
+	userID   int
+	apiKeyID int
+}
+
+func (t *fakeAccessTracker) RecordUserAccess(_ context.Context, userID int, _ time.Time) error {
+	t.userID = userID
+	return nil
+}
+
+func (t *fakeAccessTracker) RecordApiKeyAccess(_ context.Context, apiKeyID int, _ time.Time) error {
+	t.apiKeyID = apiKeyID
+	return nil
+}
+
+func (t *fakeAccessTracker) Flush(context.Context) (auth.AccessFlushResult, error) {
+	return auth.AccessFlushResult{}, nil
 }
 
 func TestSystemAPIKeyAuth(t *testing.T) {
@@ -73,7 +90,7 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 		wantStatus int
 		wantBody   string
 		apiKey     *auth.ApiKey
-		wantTouch  bool
+		wantAccess int
 		keyValue   string
 	}{
 		{
@@ -106,7 +123,7 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 			wantStatus: http.StatusOK,
 			wantBody:   "ok",
 			apiKey:     &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleSystem, UserID: 0},
-			wantTouch:  true,
+			wantAccess: 1,
 			keyValue:   validKey,
 		},
 		{
@@ -121,7 +138,7 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo.touched = false
+			tracker := &fakeAccessTracker{}
 			repo.key = tt.keyValue
 			repo.apiKey = tt.apiKey
 
@@ -130,6 +147,7 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 			r.Use(middleware.ResolveCurrentUser(application.NewAuthResolutionService(
 				auth.NewCurrentUserService(&systemAuthUserRepo{}),
 				svc,
+				tracker,
 			)))
 			r.Use(handler)
 			r.GET("/test", func(c *gin.Context) {
@@ -149,8 +167,8 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 			if !strings.Contains(w.Body.String(), tt.wantBody) {
 				t.Fatalf("body = %q, want to contain %q", w.Body.String(), tt.wantBody)
 			}
-			if repo.touched != tt.wantTouch {
-				t.Fatalf("touched = %v, want %v", repo.touched, tt.wantTouch)
+			if tracker.apiKeyID != tt.wantAccess {
+				t.Fatalf("recorded api key access id = %d, want %d", tracker.apiKeyID, tt.wantAccess)
 			}
 		})
 	}
@@ -167,6 +185,7 @@ func TestSystemAPIKeyAuth_RepoError(t *testing.T) {
 	r.Use(middleware.ResolveCurrentUser(application.NewAuthResolutionService(
 		auth.NewCurrentUserService(&systemAuthUserRepo{}),
 		svc,
+		nil,
 	)))
 	r.Use(handler)
 	r.GET("/test", func(c *gin.Context) {
@@ -189,10 +208,11 @@ func TestSystemAPIKeyAuthReusesResolvedAPIKey(t *testing.T) {
 	validKey := "test-api-key-123"
 	repo := &fakeApiKeyRepo{key: validKey, apiKey: &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleSystem, UserID: 0}}
 	svc := auth.NewApiKeyService(repo, auth.DefaultApiKeyConfig)
+	tracker := &fakeAccessTracker{}
 
 	r := gin.New()
 	r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
-	r.Use(middleware.ResolveCurrentUser(application.NewAuthResolutionService(auth.NewCurrentUserService(&systemAuthUserRepo{}), svc)))
+	r.Use(middleware.ResolveCurrentUser(application.NewAuthResolutionService(auth.NewCurrentUserService(&systemAuthUserRepo{}), svc, tracker)))
 	r.GET("/test", middleware.SystemAPIKeyAuth(), func(c *gin.Context) {
 		c.String(http.StatusOK, "ok")
 	})
@@ -208,8 +228,8 @@ func TestSystemAPIKeyAuthReusesResolvedAPIKey(t *testing.T) {
 	if repo.findByKeyCalls != 1 {
 		t.Fatalf("FindByKey calls = %d, want 1", repo.findByKeyCalls)
 	}
-	if !repo.touched {
-		t.Fatal("expected api key to be touched")
+	if tracker.apiKeyID != 1 {
+		t.Fatalf("recorded api key access id = %d, want 1", tracker.apiKeyID)
 	}
 }
 

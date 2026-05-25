@@ -12,7 +12,6 @@ import (
 
 	"jcourse/config"
 	"jcourse/internal/app"
-	domainstat "jcourse/internal/domain/stat"
 	domaintask "jcourse/internal/domain/task"
 	infratask "jcourse/internal/infrastructure/task"
 	"jcourse/internal/interface/async"
@@ -55,14 +54,11 @@ func main() {
 	statsLoc := mustLoadStatsLocation()
 	scheduler := infratask.NewScheduler(conf.Redis, statsLoc)
 	defer scheduler.Shutdown()
-	if conf.Stats.SchedulerEnabled && conf.Stats.DailyCron != "" {
-		if _, err := infratask.RegisterScheduledTask(
-			scheduler,
-			conf.Stats.DailyCron,
-			domainstat.NewCollectDailySiteStatsTask(""),
-		); err != nil {
-			logx.Fatal(ctx, "register site stats scheduler", "err", err)
-		}
+	schedulerEnabled, err := async.RegisterScheduledTasks(scheduler, conf)
+	if err != nil {
+		logx.Fatal(ctx, "register scheduled tasks", "err", err)
+	}
+	if schedulerEnabled {
 		if err := scheduler.Start(); err != nil {
 			logx.Fatal(ctx, "start scheduler", "err", err)
 		}

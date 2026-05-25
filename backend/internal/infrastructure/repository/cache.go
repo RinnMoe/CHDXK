@@ -44,6 +44,10 @@ func cacheGetJSON[T any](ctx context.Context, client *redis.Client, key string) 
 }
 
 func cacheSetJSON(ctx context.Context, client *redis.Client, key string, value any) {
+	cacheSetJSONWithTTL(ctx, client, key, value, repositoryCacheTTL)
+}
+
+func cacheSetJSONWithTTL(ctx context.Context, client *redis.Client, key string, value any, ttl time.Duration) {
 	if client == nil || value == nil {
 		return
 	}
@@ -52,7 +56,7 @@ func cacheSetJSON(ctx context.Context, client *redis.Client, key string, value a
 	if err != nil {
 		return
 	}
-	_ = client.Set(ctx, key, data, repositoryCacheTTL).Err()
+	_ = client.Set(ctx, key, data, ttl).Err()
 }
 
 func cacheDelete(ctx context.Context, client *redis.Client, keys ...string) {

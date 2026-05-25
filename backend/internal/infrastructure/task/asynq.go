@@ -63,13 +63,3 @@ func NewScheduler(redisConf persistence.RedisConfig, loc *time.Location) *asynq.
 		Logger:   newLogger(),
 	})
 }
-
-func RegisterScheduledTask(s *asynq.Scheduler, cronspec string, t domaintask.Task, opts ...domaintask.EnqueueOption) (string, error) {
-	asynqOpts := make([]asynq.Option, 0, len(opts))
-	for _, o := range opts {
-		if ao, ok := o.(asynq.Option); ok {
-			asynqOpts = append(asynqOpts, ao)
-		}
-	}
-	return s.Register(cronspec, asynq.NewTask(t.Type(), t.Payload()), asynqOpts...)
-}
