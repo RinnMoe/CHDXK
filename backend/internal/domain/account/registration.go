@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"jcourse/internal/domain/email"
 )
 
 type RegistrationConfig struct {
@@ -23,7 +25,7 @@ var DefaultRegistrationConfig = RegistrationConfig{
 type RegistrationService struct {
 	userRepo  AccountRepository
 	codes     VerificationCodeRepository
-	sender    EmailSender
+	sender    email.Sender
 	hasher    PasswordHasher
 	usernames UsernameDeriver
 	whitelist EmailWhitelist
@@ -33,7 +35,7 @@ type RegistrationService struct {
 func NewRegistrationService(
 	userRepo AccountRepository,
 	codes VerificationCodeRepository,
-	sender EmailSender,
+	sender email.Sender,
 	hasher PasswordHasher,
 	usernames UsernameDeriver,
 	config RegistrationConfig,

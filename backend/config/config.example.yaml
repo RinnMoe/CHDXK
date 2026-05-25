@@ -51,6 +51,8 @@ review:
     window: "1h"
     max_reviews: 10
     similarity_ratio: 0.7
+    suspend_duration: "2160h"
+    admin_emails: []
   command:
     hot_scores:
       review_create_score: 3

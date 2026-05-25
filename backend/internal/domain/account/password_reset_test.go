@@ -5,6 +5,8 @@ import (
 	"errors"
 	"testing"
 	"time"
+
+	domainemail "jcourse/internal/domain/email"
 )
 
 func TestPasswordResetService_SendResetCodeSuccess(t *testing.T) {
@@ -136,10 +138,10 @@ func TestPasswordResetService_ResetPasswordRejectsUnknownUser(t *testing.T) {
 }
 
 type resetFakeSender struct {
-	email Email
+	email domainemail.Email
 }
 
-func (s *resetFakeSender) SendEmail(_ context.Context, email Email) error {
+func (s *resetFakeSender) SendEmail(_ context.Context, email domainemail.Email) error {
 	s.email = email
 	return nil
 }

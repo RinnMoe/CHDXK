@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"time"
 )
 
 type AuthUserService struct {
@@ -38,5 +39,23 @@ func (s *AuthUserService) ClearExpiredSuspension(ctx context.Context, userID int
 		return nil
 	}
 	u.ClearSuspension()
+	return s.userRepo.Update(ctx, u)
+}
+
+func (s *AuthUserService) SuspendUser(ctx context.Context, userID int, duration time.Duration) error {
+	if duration <= 0 {
+		return nil
+	}
+	u, err := s.userRepo.FindByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if u == nil {
+		return nil
+	}
+	if u.IsAdmin() {
+		return nil
+	}
+	u.Suspend(duration)
 	return s.userRepo.Update(ctx, u)
 }

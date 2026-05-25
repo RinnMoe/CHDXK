@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"jcourse/internal/domain/email"
 )
 
 type PasswordResetConfig struct {
@@ -22,7 +24,7 @@ var DefaultPasswordResetConfig = PasswordResetConfig{
 type PasswordResetService struct {
 	userRepo  AccountRepository
 	codes     VerificationCodeRepository
-	sender    EmailSender
+	sender    email.Sender
 	hasher    PasswordHasher
 	usernames UsernameDeriver
 	config    PasswordResetConfig
@@ -31,7 +33,7 @@ type PasswordResetService struct {
 func NewPasswordResetService(
 	userRepo AccountRepository,
 	codes VerificationCodeRepository,
-	sender EmailSender,
+	sender email.Sender,
 	hasher PasswordHasher,
 	usernames UsernameDeriver,
 	config PasswordResetConfig,

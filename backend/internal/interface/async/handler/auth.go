@@ -13,8 +13,16 @@ type clearExpiredSuspensionHandler struct {
 	currentUserService *domainauth.AuthUserService
 }
 
+type suspendUserHandler struct {
+	currentUserService *domainauth.AuthUserService
+}
+
 func NewClearExpiredSuspensionHandler(currentUserService *domainauth.AuthUserService) asynq.Handler {
 	return &clearExpiredSuspensionHandler{currentUserService: currentUserService}
+}
+
+func NewSuspendUserHandler(currentUserService *domainauth.AuthUserService) asynq.Handler {
+	return &suspendUserHandler{currentUserService: currentUserService}
 }
 
 func (h *clearExpiredSuspensionHandler) ProcessTask(ctx context.Context, t *asynq.Task) error {
@@ -26,4 +34,12 @@ func (h *clearExpiredSuspensionHandler) ProcessTask(ctx context.Context, t *asyn
 		return err
 	}
 	return nil
+}
+
+func (h *suspendUserHandler) ProcessTask(ctx context.Context, t *asynq.Task) error {
+	var payload domainauth.SuspendUserPayload
+	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
+		return err
+	}
+	return h.currentUserService.SuspendUser(ctx, payload.UserID, payload.Duration)
 }

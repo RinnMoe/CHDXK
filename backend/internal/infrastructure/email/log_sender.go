@@ -3,7 +3,7 @@ package email
 import (
 	"context"
 
-	"jcourse/internal/domain/account"
+	domainemail "jcourse/internal/domain/email"
 	"jcourse/pkg/logx"
 )
 
@@ -13,9 +13,9 @@ func NewLogSender() *LogSender {
 	return &LogSender{}
 }
 
-func (s *LogSender) SendEmail(ctx context.Context, email account.Email) error {
+func (s *LogSender) SendEmail(ctx context.Context, email domainemail.Email) error {
 	logx.Info(ctx, "email sent by log sender", "to", email.To, "subject", email.Subject, "body", email.Body)
 	return nil
 }
 
-var _ account.EmailSender = (*LogSender)(nil)
+var _ domainemail.Sender = (*LogSender)(nil)

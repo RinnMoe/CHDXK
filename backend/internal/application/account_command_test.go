@@ -9,6 +9,7 @@ import (
 	"jcourse/internal/application"
 	"jcourse/internal/domain/account"
 	"jcourse/internal/domain/auth"
+	domainemail "jcourse/internal/domain/email"
 	"jcourse/internal/domain/task"
 )
 
@@ -335,10 +336,10 @@ func newFakeCodeRepo() *account.MockVerificationCodeRepository {
 }
 
 type fakeCodeSender struct {
-	email account.Email
+	email domainemail.Email
 }
 
-func (s *fakeCodeSender) SendEmail(_ context.Context, email account.Email) error {
+func (s *fakeCodeSender) SendEmail(_ context.Context, email domainemail.Email) error {
 	s.email = email
 	return nil
 }

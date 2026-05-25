@@ -5,6 +5,7 @@ import (
 	"jcourse/internal/application"
 	"jcourse/internal/domain/account"
 	"jcourse/internal/domain/auth"
+	domainemail "jcourse/internal/domain/email"
 	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/review/policy"
@@ -41,6 +42,7 @@ type ServiceContainer struct {
 	ApiKeyCommand           *application.ApiKeyCommandService
 	UserSettingsQuery       *application.UserSettingsQueryService
 	UserSettingsCommand     *application.UserSettingsCommandService
+	EmailService            *domainemail.Service
 }
 
 func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
@@ -101,6 +103,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	adminUserCommand := application.NewAdminUserCommandService(userRepo, conf.Admin)
 	hasher := account.NewDjangoPBKDF2SHA256PasswordHasher(conf.Auth.PasswordHash)
 	verificationSender := email.NewSMTPSender(conf.SMTP)
+	emailService := domainemail.NewService(verificationSender)
 	registrationService := account.NewRegistrationService(
 		accountRepo,
 		verificationRepo,
@@ -164,5 +167,6 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		ApiKeyCommand:           apiKeyCommand,
 		UserSettingsQuery:       userSettingsQuery,
 		UserSettingsCommand:     userSettingsCommand,
+		EmailService:            emailService,
 	}
 }

@@ -44,6 +44,35 @@ func TestCurrentUserService_GetUserEnqueuesCleanupForExpiredSuspension(t *testin
 	}
 }
 
+func TestCurrentUserService_SuspendUserSuspendsRegularUser(t *testing.T) {
+	repo := newCurrentUserServiceFakeRepo()
+	repo.Users[1] = &User{ID: 1, Role: RoleUser}
+
+	if err := NewCurrentUserService(repo).SuspendUser(context.Background(), 1, 2*time.Hour); err != nil {
+		t.Fatalf("SuspendUser: %v", err)
+	}
+	got := repo.Users[1]
+	if got.SuspendedAt == nil || got.SuspendTill == nil {
+		t.Fatalf("user was not suspended: %+v", got)
+	}
+	if d := got.SuspendTill.Sub(*got.SuspendedAt); d < 2*time.Hour-time.Second || d > 2*time.Hour+time.Second {
+		t.Fatalf("suspension duration = %s, want about 2h", d)
+	}
+}
+
+func TestCurrentUserService_SuspendUserSkipsAdmin(t *testing.T) {
+	repo := newCurrentUserServiceFakeRepo()
+	repo.Users[1] = &User{ID: 1, Role: RoleAdmin}
+
+	if err := NewCurrentUserService(repo).SuspendUser(context.Background(), 1, 2*time.Hour); err != nil {
+		t.Fatalf("SuspendUser: %v", err)
+	}
+	got := repo.Users[1]
+	if got.SuspendedAt != nil || got.SuspendTill != nil {
+		t.Fatalf("admin was suspended: %+v", got)
+	}
+}
+
 func newCurrentUserServiceFakeRepo() *MockUserRepository {
 	return NewMockUserRepository(nil)
 }

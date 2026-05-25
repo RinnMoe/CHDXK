@@ -6,7 +6,7 @@ import (
 
 	"gopkg.in/gomail.v2"
 
-	"jcourse/internal/domain/account"
+	domainemail "jcourse/internal/domain/email"
 )
 
 type SMTPConfig struct {
@@ -29,7 +29,7 @@ func NewSMTPSender(conf SMTPConfig) *SMTPSender {
 	}
 }
 
-func (s *SMTPSender) SendEmail(_ context.Context, email account.Email) error {
+func (s *SMTPSender) SendEmail(_ context.Context, email domainemail.Email) error {
 	m := gomail.NewMessage()
 	m.SetHeader("From", s.from)
 	m.SetHeader("To", email.To)
@@ -42,4 +42,4 @@ func (s *SMTPSender) SendEmail(_ context.Context, email account.Email) error {
 	return nil
 }
 
-var _ account.EmailSender = (*SMTPSender)(nil)
+var _ domainemail.Sender = (*SMTPSender)(nil)

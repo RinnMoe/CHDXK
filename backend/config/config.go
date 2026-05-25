@@ -157,6 +157,8 @@ func setDefaults(v *viper.Viper) {
 		"window":           policy.DefaultFrequencyPolicyConfig.Window.String(),
 		"max_reviews":      policy.DefaultFrequencyPolicyConfig.MaxReviews,
 		"similarity_ratio": policy.DefaultFrequencyPolicyConfig.SimilarityRatio,
+		"suspend_duration": policy.DefaultFrequencyPolicyConfig.SuspendDuration.String(),
+		"admin_emails":     policy.DefaultFrequencyPolicyConfig.AdminEmails,
 	})
 	setSectionDefaults(v, "review.command.hot_scores", map[string]any{
 		"review_create_score": course.DefaultHotScoreConfig.ReviewCreateScore,

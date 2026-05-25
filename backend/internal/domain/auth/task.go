@@ -2,11 +2,13 @@ package auth
 
 import (
 	"encoding/json"
+	"time"
 )
 
 const (
 	TaskTypeClearExpiredSuspension = "auth:clear_expired_suspension"
 	TaskTypeFlushAccess            = "auth:flush_access"
+	TaskTypeSuspendUser            = "auth:suspend_user"
 )
 
 type ClearExpiredSuspensionPayload struct {
@@ -45,6 +47,28 @@ func (t FlushAccessTask) Type() string {
 }
 
 func (t FlushAccessTask) Payload() []byte {
+	b, _ := json.Marshal(t.payload)
+	return b
+}
+
+type SuspendUserPayload struct {
+	UserID   int           `json:"user_id"`
+	Duration time.Duration `json:"duration"`
+}
+
+type SuspendUserTask struct {
+	payload SuspendUserPayload
+}
+
+func NewSuspendUserTask(userID int, duration time.Duration) SuspendUserTask {
+	return SuspendUserTask{payload: SuspendUserPayload{UserID: userID, Duration: duration}}
+}
+
+func (t SuspendUserTask) Type() string {
+	return TaskTypeSuspendUser
+}
+
+func (t SuspendUserTask) Payload() []byte {
 	b, _ := json.Marshal(t.payload)
 	return b
 }

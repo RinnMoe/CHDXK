@@ -2,25 +2,16 @@ package account
 
 import (
 	"bytes"
-	"context"
 	"embed"
 	"fmt"
 	"text/template"
 	"time"
+
+	"jcourse/internal/domain/email"
 )
 
 //go:embed templates/*.txt
 var emailTemplateFS embed.FS
-
-type Email struct {
-	To      string
-	Subject string
-	Body    string
-}
-
-type EmailSender interface {
-	SendEmail(ctx context.Context, email Email) error
-}
 
 type EmailTemplateName string
 
@@ -43,23 +34,23 @@ type AccountBannedEmailData struct {
 	BannedUntil string
 }
 
-func NewVerificationCodeEmail(to string, code string, ttl time.Duration) (Email, error) {
+func NewVerificationCodeEmail(to string, code string, ttl time.Duration) (email.Email, error) {
 	body, err := renderEmailTemplate(EmailTemplateVerificationCode, verificationCodeEmailData{
 		Code:      code,
 		ExpiresIn: formatEmailDuration(ttl),
 	})
 	if err != nil {
-		return Email{}, err
+		return email.Email{}, err
 	}
-	return Email{To: to, Subject: VerificationCodeEmailSubject, Body: body}, nil
+	return email.Email{To: to, Subject: VerificationCodeEmailSubject, Body: body}, nil
 }
 
-func NewAccountBannedEmail(to string, data AccountBannedEmailData) (Email, error) {
+func NewAccountBannedEmail(to string, data AccountBannedEmailData) (email.Email, error) {
 	body, err := renderEmailTemplate(EmailTemplateAccountBanned, data)
 	if err != nil {
-		return Email{}, err
+		return email.Email{}, err
 	}
-	return Email{To: to, Subject: AccountBannedEmailSubject, Body: body}, nil
+	return email.Email{To: to, Subject: AccountBannedEmailSubject, Body: body}, nil
 }
 
 func renderEmailTemplate(name EmailTemplateName, data any) (string, error) {
