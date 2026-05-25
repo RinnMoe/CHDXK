@@ -8,6 +8,8 @@ services:
     image: dujiajun/postgres-pg-jieba:17
     container_name: jcourse_postgres
     environment:
+      TZ: Asia/Shanghai
+      PGTZ: Asia/Shanghai
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: jcourse
