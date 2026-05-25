@@ -2,31 +2,25 @@ package async
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/hibiken/asynq"
+
+	"jcourse/pkg/logx"
 )
 
-type taskLogger interface {
-	Printf(format string, v ...any)
-}
-
-func newTaskLoggingMiddleware(logger taskLogger) asynq.MiddlewareFunc {
-	if logger == nil {
-		logger = log.Default()
-	}
+func newTaskLoggingMiddleware() asynq.MiddlewareFunc {
 	return func(next asynq.Handler) asynq.Handler {
 		return asynq.HandlerFunc(func(ctx context.Context, t *asynq.Task) error {
 			startedAt := time.Now()
-			logger.Printf("async task started: type=%s", t.Type())
+			logx.Info(ctx, "async task started", "type", t.Type())
 			err := next.ProcessTask(ctx, t)
 			duration := time.Since(startedAt)
 			if err != nil {
-				logger.Printf("async task failed: type=%s duration=%s error=%v", t.Type(), duration, err)
+				logx.Error(ctx, "async task failed", "type", t.Type(), "duration", duration, "err", err)
 				return err
 			}
-			logger.Printf("async task completed: type=%s duration=%s", t.Type(), duration)
+			logx.Info(ctx, "async task completed", "type", t.Type(), "duration", duration)
 			return nil
 		})
 	}

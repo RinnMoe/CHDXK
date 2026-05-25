@@ -1,9 +1,9 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -17,6 +17,7 @@ import (
 	"jcourse/internal/domain/stat"
 	teacherdomain "jcourse/internal/domain/teacher"
 	"jcourse/internal/infrastructure/repository"
+	"jcourse/pkg/logx"
 )
 
 const batchSize = 1000
@@ -35,72 +36,73 @@ func NewMigrator(source, target *gorm.DB, checkpointPath string) *Migrator {
 	return &Migrator{source: source, target: target, checkpoint: checkpoint}
 }
 
-func (m *Migrator) Run() error {
-	log.Println("Starting v1 data migration...")
-	ctx := &migrationContext{target: m.target}
+func (m *Migrator) Run(ctx context.Context) error {
+	logx.Info(ctx, "starting v1 data migration")
+	migrationCtx := &migrationContext{Context: ctx, target: m.target}
 
-	if err := m.migrateTeachers(ctx); err != nil {
+	if err := m.migrateTeachers(migrationCtx); err != nil {
 		return fmt.Errorf("migrate teachers: %w", err)
 	}
-	if err := m.migrateCourses(ctx); err != nil {
+	if err := m.migrateCourses(migrationCtx); err != nil {
 		return fmt.Errorf("migrate courses: %w", err)
 	}
-	if err := m.migrateUsers(ctx); err != nil {
+	if err := m.migrateUsers(migrationCtx); err != nil {
 		return fmt.Errorf("migrate users: %w", err)
 	}
-	if err := m.migrateUserPoints(ctx); err != nil {
+	if err := m.migrateUserPoints(migrationCtx); err != nil {
 		return fmt.Errorf("migrate user points: %w", err)
 	}
-	if err := m.migrateCourseEnrollments(ctx); err != nil {
+	if err := m.migrateCourseEnrollments(migrationCtx); err != nil {
 		return fmt.Errorf("migrate course enrollments: %w", err)
 	}
-	if err := m.migrateReviews(ctx); err != nil {
+	if err := m.migrateReviews(migrationCtx); err != nil {
 		return fmt.Errorf("migrate reviews: %w", err)
 	}
-	if err := m.migrateReviewRevisions(ctx); err != nil {
+	if err := m.migrateReviewRevisions(migrationCtx); err != nil {
 		return fmt.Errorf("migrate review revisions: %w", err)
 	}
-	if err := m.migrateVotes(ctx); err != nil {
+	if err := m.migrateVotes(migrationCtx); err != nil {
 		return fmt.Errorf("migrate votes: %w", err)
 	}
-	if err := m.migrateCourseNotifications(ctx); err != nil {
+	if err := m.migrateCourseNotifications(migrationCtx); err != nil {
 		return fmt.Errorf("migrate course notifications: %w", err)
 	}
-	if err := m.refreshDerivedData(); err != nil {
+	if err := m.refreshDerivedData(ctx); err != nil {
 		return fmt.Errorf("refresh derived data: %w", err)
 	}
-	if err := m.resetSequences(); err != nil {
+	if err := m.resetSequences(ctx); err != nil {
 		return fmt.Errorf("reset sequences: %w", err)
 	}
-	if err := m.backfillCourseHotScores(course.DefaultHotScoreConfig); err != nil {
+	if err := m.backfillCourseHotScores(ctx, course.DefaultHotScoreConfig); err != nil {
 		return fmt.Errorf("backfill course hot scores: %w", err)
 	}
-	if err := m.backfillSiteDailyStats(); err != nil {
+	if err := m.backfillSiteDailyStats(ctx); err != nil {
 		return fmt.Errorf("backfill site daily stats: %w", err)
 	}
 
-	log.Println("V1 data migration complete.")
+	logx.Info(ctx, "v1 data migration complete")
 	return nil
 }
 
 type migrationContext struct {
-	target *gorm.DB
+	Context context.Context
+	target  *gorm.DB
 }
 
 func (m *Migrator) migrateTeachers(ctx *migrationContext) error {
 	const stage = "teachers"
 	if m.checkpoint.StageDone(stage) {
-		log.Println("Migrating teachers... already done, skipping")
+		logx.Info(ctx.Context, "migration stage already done", "stage", "teachers")
 		return nil
 	}
-	log.Println("Migrating teachers...")
+	logx.Info(ctx.Context, "migrating teachers")
 
 	now := time.Now()
 	config := repository.SearchConfig(ctx.target)
 	total := 0
 	lastID := m.checkpoint.StageLastID(stage)
 	if lastID > 0 {
-		log.Printf("  Resuming teachers after legacy id %d", lastID)
+		logx.Info(ctx.Context, "resuming teachers", "last_id", lastID)
 	}
 	for {
 		rows, err := queryLegacyTeachers(m.source, lastID)
@@ -138,29 +140,29 @@ func (m *Migrator) migrateTeachers(ctx *migrationContext) error {
 		if err := m.checkpoint.MarkProgress(stage, lastID); err != nil {
 			return err
 		}
-		log.Printf("  Teachers: %d migrated...", total)
+		logx.Info(ctx.Context, "teachers migrated", "total", total)
 	}
 	if err := m.checkpoint.MarkDone(stage); err != nil {
 		return err
 	}
-	log.Printf("  Teachers: %d migrated", total)
+	logx.Info(ctx.Context, "teachers migrated", "total", total)
 	return nil
 }
 
 func (m *Migrator) migrateCourses(ctx *migrationContext) error {
 	const stage = "courses"
 	if m.checkpoint.StageDone(stage) {
-		log.Println("Migrating courses... already done, skipping")
+		logx.Info(ctx.Context, "migration stage already done", "stage", "courses")
 		return nil
 	}
-	log.Println("Migrating courses...")
+	logx.Info(ctx.Context, "migrating courses")
 
 	now := time.Now()
 	total := 0
 	skipped := 0
 	lastID := m.checkpoint.StageLastID(stage)
 	if lastID > 0 {
-		log.Printf("  Resuming courses after legacy id %d", lastID)
+		logx.Info(ctx.Context, "resuming courses", "last_id", lastID)
 	}
 	for {
 		rows, err := queryLegacyCourses(m.source, lastID)
@@ -208,28 +210,28 @@ func (m *Migrator) migrateCourses(ctx *migrationContext) error {
 		if err := m.checkpoint.MarkProgress(stage, lastID); err != nil {
 			return err
 		}
-		log.Printf("  Courses: %d migrated, %d skipped...", total, skipped)
+		logx.Info(ctx.Context, "courses migrated", "total", total, "skipped", skipped)
 	}
 	if err := m.checkpoint.MarkDone(stage); err != nil {
 		return err
 	}
-	log.Printf("  Courses: %d migrated, %d skipped", total, skipped)
+	logx.Info(ctx.Context, "courses migrated", "total", total, "skipped", skipped)
 	return nil
 }
 
 func (m *Migrator) migrateUsers(ctx *migrationContext) error {
 	const stage = "users"
 	if m.checkpoint.StageDone(stage) {
-		log.Println("Migrating users... already done, skipping")
+		logx.Info(ctx.Context, "migration stage already done", "stage", "users")
 		return nil
 	}
-	log.Println("Migrating users...")
+	logx.Info(ctx.Context, "migrating users")
 
 	now := time.Now()
 	total := 0
 	lastID := m.checkpoint.StageLastID(stage)
 	if lastID > 0 {
-		log.Printf("  Resuming users after legacy id %d", lastID)
+		logx.Info(ctx.Context, "resuming users", "last_id", lastID)
 	}
 	for {
 		rows, err := queryLegacyUsers(m.source, lastID)
@@ -266,26 +268,26 @@ func (m *Migrator) migrateUsers(ctx *migrationContext) error {
 		if err := m.checkpoint.MarkProgress(stage, lastID); err != nil {
 			return err
 		}
-		log.Printf("  Users: %d migrated...", total)
+		logx.Info(ctx.Context, "users migrated", "total", total)
 	}
 	if err := m.checkpoint.MarkDone(stage); err != nil {
 		return err
 	}
-	log.Printf("  Users: %d migrated", total)
+	logx.Info(ctx.Context, "users migrated", "total", total)
 	return nil
 }
 
 func (m *Migrator) migrateReviews(ctx *migrationContext) error {
 	const stage = "reviews"
 	if m.checkpoint.StageDone(stage) {
-		log.Println("Migrating reviews... already done, skipping")
+		logx.Info(ctx.Context, "migration stage already done", "stage", "reviews")
 		return nil
 	}
-	log.Println("Migrating reviews...")
+	logx.Info(ctx.Context, "migrating reviews")
 	total := 0
 	lastID := m.checkpoint.StageLastID(stage)
 	if lastID > 0 {
-		log.Printf("  Resuming reviews after legacy id %d", lastID)
+		logx.Info(ctx.Context, "resuming reviews", "last_id", lastID)
 	}
 	for {
 		rows, err := queryLegacyReviews(m.source, lastID)
@@ -325,28 +327,28 @@ func (m *Migrator) migrateReviews(ctx *migrationContext) error {
 		if err := m.checkpoint.MarkProgress(stage, lastID); err != nil {
 			return err
 		}
-		log.Printf("  Reviews: %d migrated...", total)
+		logx.Info(ctx.Context, "reviews migrated", "total", total)
 	}
 	if err := m.checkpoint.MarkDone(stage); err != nil {
 		return err
 	}
-	log.Printf("  Reviews: %d migrated", total)
+	logx.Info(ctx.Context, "reviews migrated", "total", total)
 	return nil
 }
 
 func (m *Migrator) migrateCourseEnrollments(ctx *migrationContext) error {
 	const stage = "course_enrollments"
 	if m.checkpoint.StageDone(stage) {
-		log.Println("Migrating course enrollments... already done, skipping")
+		logx.Info(ctx.Context, "migration stage already done", "stage", "course enrollments")
 		return nil
 	}
-	log.Println("Migrating course enrollments...")
+	logx.Info(ctx.Context, "migrating course enrollments")
 
 	total := 0
 	skipped := 0
 	lastID := m.checkpoint.StageLastID(stage)
 	if lastID > 0 {
-		log.Printf("  Resuming course enrollments after legacy id %d", lastID)
+		logx.Info(ctx.Context, "resuming course enrollments", "last_id", lastID)
 	}
 	for {
 		rows, err := queryLegacyCourseEnrollments(m.source, lastID)
@@ -382,28 +384,28 @@ func (m *Migrator) migrateCourseEnrollments(ctx *migrationContext) error {
 		if err := m.checkpoint.MarkProgress(stage, lastID); err != nil {
 			return err
 		}
-		log.Printf("  Course enrollments: %d migrated, %d skipped...", total, skipped)
+		logx.Info(ctx.Context, "course enrollments migrated", "total", total, "skipped", skipped)
 	}
 	if err := m.checkpoint.MarkDone(stage); err != nil {
 		return err
 	}
-	log.Printf("  Course enrollments: %d migrated, %d skipped", total, skipped)
+	logx.Info(ctx.Context, "course enrollments migrated", "total", total, "skipped", skipped)
 	return nil
 }
 
 func (m *Migrator) migrateUserPoints(ctx *migrationContext) error {
 	const stage = "user_points"
 	if m.checkpoint.StageDone(stage) {
-		log.Println("Migrating user points... already done, skipping")
+		logx.Info(ctx.Context, "migration stage already done", "stage", "user points")
 		return nil
 	}
-	log.Println("Migrating user points...")
+	logx.Info(ctx.Context, "migrating user points")
 
 	now := time.Now()
 	total := 0
 	lastID := m.checkpoint.StageLastID(stage)
 	if lastID > 0 {
-		log.Printf("  Resuming user points after legacy id %d", lastID)
+		logx.Info(ctx.Context, "resuming user points", "last_id", lastID)
 	}
 	for {
 		rows, err := queryLegacyUserPoints(m.source, lastID)
@@ -441,28 +443,28 @@ func (m *Migrator) migrateUserPoints(ctx *migrationContext) error {
 		if err := m.checkpoint.MarkProgress(stage, lastID); err != nil {
 			return err
 		}
-		log.Printf("  User points: %d migrated...", total)
+		logx.Info(ctx.Context, "user points migrated", "total", total)
 	}
 	if err := m.checkpoint.MarkDone(stage); err != nil {
 		return err
 	}
-	log.Printf("  User points: %d migrated", total)
+	logx.Info(ctx.Context, "user points migrated", "total", total)
 	return nil
 }
 
 func (m *Migrator) migrateVotes(ctx *migrationContext) error {
 	const stage = "review_votes"
 	if m.checkpoint.StageDone(stage) {
-		log.Println("Migrating review votes... already done, skipping")
+		logx.Info(ctx.Context, "migration stage already done", "stage", "review votes")
 		return nil
 	}
-	log.Println("Migrating review votes...")
+	logx.Info(ctx.Context, "migrating review votes")
 
 	now := time.Now()
 	total := 0
 	lastID := m.checkpoint.StageLastID(stage)
 	if lastID > 0 {
-		log.Printf("  Resuming review votes after legacy id %d", lastID)
+		logx.Info(ctx.Context, "resuming review votes", "last_id", lastID)
 	}
 	for {
 		rows, err := queryLegacyReactions(m.source, lastID)
@@ -495,27 +497,27 @@ func (m *Migrator) migrateVotes(ctx *migrationContext) error {
 		if err := m.checkpoint.MarkProgress(stage, lastID); err != nil {
 			return err
 		}
-		log.Printf("  Review votes: %d migrated...", total)
+		logx.Info(ctx.Context, "review votes migrated", "total", total)
 	}
 	if err := m.checkpoint.MarkDone(stage); err != nil {
 		return err
 	}
-	log.Printf("  Review votes: %d migrated", total)
+	logx.Info(ctx.Context, "review votes migrated", "total", total)
 	return nil
 }
 
 func (m *Migrator) migrateReviewRevisions(ctx *migrationContext) error {
 	const stage = "review_revisions"
 	if m.checkpoint.StageDone(stage) {
-		log.Println("Migrating review revisions... already done, skipping")
+		logx.Info(ctx.Context, "migration stage already done", "stage", "review revisions")
 		return nil
 	}
-	log.Println("Migrating review revisions...")
+	logx.Info(ctx.Context, "migrating review revisions")
 
 	total := 0
 	lastID := m.checkpoint.StageLastID(stage)
 	if lastID > 0 {
-		log.Printf("  Resuming review revisions after legacy id %d", lastID)
+		logx.Info(ctx.Context, "resuming review revisions", "last_id", lastID)
 	}
 	for {
 		rows, err := queryLegacyReviewRevisions(m.source, lastID)
@@ -553,27 +555,27 @@ func (m *Migrator) migrateReviewRevisions(ctx *migrationContext) error {
 		if err := m.checkpoint.MarkProgress(stage, lastID); err != nil {
 			return err
 		}
-		log.Printf("  Review revisions: %d migrated...", total)
+		logx.Info(ctx.Context, "review revisions migrated", "total", total)
 	}
 	if err := m.checkpoint.MarkDone(stage); err != nil {
 		return err
 	}
-	log.Printf("  Review revisions: %d migrated", total)
+	logx.Info(ctx.Context, "review revisions migrated", "total", total)
 	return nil
 }
 
 func (m *Migrator) migrateCourseNotifications(ctx *migrationContext) error {
 	const stage = "course_notifications"
 	if m.checkpoint.StageDone(stage) {
-		log.Println("Migrating course notifications... already done, skipping")
+		logx.Info(ctx.Context, "migration stage already done", "stage", "course notifications")
 		return nil
 	}
-	log.Println("Migrating course notifications...")
+	logx.Info(ctx.Context, "migrating course notifications")
 
 	total := 0
 	lastID := m.checkpoint.StageLastID(stage)
 	if lastID > 0 {
-		log.Printf("  Resuming course notifications after legacy id %d", lastID)
+		logx.Info(ctx.Context, "resuming course notifications", "last_id", lastID)
 	}
 	for {
 		rows, err := queryLegacyCourseNotifications(m.source, lastID)
@@ -607,12 +609,12 @@ func (m *Migrator) migrateCourseNotifications(ctx *migrationContext) error {
 		if err := m.checkpoint.MarkProgress(stage, lastID); err != nil {
 			return err
 		}
-		log.Printf("  Course notifications: %d migrated...", total)
+		logx.Info(ctx.Context, "course notifications migrated", "total", total)
 	}
 	if err := m.checkpoint.MarkDone(stage); err != nil {
 		return err
 	}
-	log.Printf("  Course notifications: %d migrated", total)
+	logx.Info(ctx.Context, "course notifications migrated", "total", total)
 	return nil
 }
 
@@ -849,14 +851,14 @@ func upsertCourseNotifications(db *gorm.DB, batch []repository.CourseNotificatio
 	}).Create(&batch).Error
 }
 
-func (m *Migrator) refreshDerivedData() error {
+func (m *Migrator) refreshDerivedData(ctx context.Context) error {
 	const stage = "refresh_derived_data"
 	if m.checkpoint.StageDone(stage) {
-		log.Println("Refreshing search vectors and denormalized counters... already done, skipping")
+		logx.Info(ctx, "migration stage already done", "stage", stage)
 		return nil
 	}
 	db := m.target
-	log.Println("Refreshing search vectors and denormalized counters...")
+	logx.Info(ctx, "refreshing search vectors and denormalized counters")
 	if err := db.Exec(`
 		UPDATE reviews AS r SET
 			like_count = (SELECT COUNT(*) FROM review_votes AS v WHERE v.review_id = r.id AND v.vote_type = 1),
@@ -880,14 +882,14 @@ func (m *Migrator) refreshDerivedData() error {
 	return m.checkpoint.MarkDone(stage)
 }
 
-func (m *Migrator) resetSequences() error {
+func (m *Migrator) resetSequences(ctx context.Context) error {
 	const stage = "reset_sequences"
 	if m.checkpoint.StageDone(stage) {
-		log.Println("Resetting sequences... already done, skipping")
+		logx.Info(ctx, "migration stage already done", "stage", stage)
 		return nil
 	}
 	db := m.target
-	log.Println("Resetting sequences...")
+	logx.Info(ctx, "resetting sequences")
 	for _, table := range []string{"teachers", "courses", "users", "course_enrollments", "user_point_records", "reviews", "review_revisions"} {
 		if err := resetSequence(db, table, "id"); err != nil {
 			return err
@@ -896,13 +898,13 @@ func (m *Migrator) resetSequences() error {
 	return m.checkpoint.MarkDone(stage)
 }
 
-func (m *Migrator) backfillCourseHotScores(scores course.HotScoreConfig) error {
+func (m *Migrator) backfillCourseHotScores(ctx context.Context, scores course.HotScoreConfig) error {
 	const stage = "course_hot_scores_current_period"
 	if m.checkpoint.StageDone(stage) {
-		log.Println("Backfilling course hot scores... already done, skipping")
+		logx.Info(ctx, "migration stage already done", "stage", stage)
 		return nil
 	}
-	log.Println("Backfilling course hot scores...")
+	logx.Info(ctx, "backfilling course hot scores")
 
 	loc, err := repository.DefaultHotCourseLocation()
 	if err != nil {
@@ -981,17 +983,17 @@ func (m *Migrator) backfillCourseHotScores(scores course.HotScoreConfig) error {
 	if err := m.checkpoint.MarkDone(stage); err != nil {
 		return err
 	}
-	log.Printf("  Course hot scores: %d rows backfilled for month=%s week=%s", rowsAffected, monthKey, weekKey)
+	logx.Info(ctx, "course hot scores backfilled", "rows", rowsAffected, "month", monthKey, "week", weekKey)
 	return nil
 }
 
-func (m *Migrator) backfillSiteDailyStats() error {
+func (m *Migrator) backfillSiteDailyStats(ctx context.Context) error {
 	const stage = "site_daily_stats"
 	if m.checkpoint.StageDone(stage) {
-		log.Println("Backfilling site daily stats... already done, skipping")
+		logx.Info(ctx, "migration stage already done", "stage", stage)
 		return nil
 	}
-	log.Println("Backfilling site daily stats...")
+	logx.Info(ctx, "backfilling site daily stats")
 
 	loc, err := time.LoadLocation("Asia/Shanghai")
 	if err != nil {
@@ -1004,7 +1006,7 @@ func (m *Migrator) backfillSiteDailyStats() error {
 		return err
 	}
 	if startDate.IsZero() {
-		log.Println("  Site daily stats: no source data, skipping")
+		logx.Info(ctx, "site daily stats has no source data")
 		return m.checkpoint.MarkDone(stage)
 	}
 
@@ -1014,7 +1016,7 @@ func (m *Migrator) backfillSiteDailyStats() error {
 			return fmt.Errorf("parse site daily stats checkpoint date: %w", err)
 		}
 		startDate = resumeDate.AddDate(0, 0, 1)
-		log.Printf("  Resuming site daily stats after %s", lastDate)
+		logx.Info(ctx, "resuming site daily stats", "last_date", lastDate)
 	}
 	if startDate.After(endDate) {
 		return m.checkpoint.MarkDone(stage)
@@ -1136,13 +1138,13 @@ func (m *Migrator) backfillSiteDailyStats() error {
 		if err := m.checkpoint.MarkDateProgress(stage, dateKey); err != nil {
 			return fmt.Errorf("save site daily stats checkpoint: %w", err)
 		}
-		log.Printf("  Site daily stats: %s", dateKey)
+		logx.Info(ctx, "site daily stats backfilled", "date", dateKey)
 	}
 
 	if err := m.checkpoint.MarkDone(stage); err != nil {
 		return err
 	}
-	log.Printf("  Site daily stats: %d days backfilled", int(endDate.Sub(startDate).Hours()/24)+1)
+	logx.Info(ctx, "site daily stats backfilled", "days", int(endDate.Sub(startDate).Hours()/24)+1)
 	return nil
 }
 

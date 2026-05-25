@@ -1,8 +1,6 @@
 package async
 
 import (
-	"log"
-
 	"github.com/hibiken/asynq"
 
 	"jcourse/internal/app"
@@ -13,7 +11,7 @@ import (
 
 func NewMux(container *app.ServiceContainer) *asynq.ServeMux {
 	mux := asynq.NewServeMux()
-	mux.Use(newTaskLoggingMiddleware(log.Default()))
+	mux.Use(newTaskLoggingMiddleware())
 	mux.Handle(auth.TaskTypeClearExpiredSuspension, newClearExpiredSuspensionHandler(container.AuthUserService))
 	mux.Handle(course.TaskTypeRecordHotCourseActivity, newRecordHotCourseActivityHandler(container.CourseHotCommand))
 	mux.Handle(stat.TaskTypeCollectDailySiteStats, newCollectDailySiteStatsHandler(container.SiteStatsCommand))

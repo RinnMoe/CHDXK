@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"testing"
 	"time"
 
@@ -14,6 +13,7 @@ import (
 
 	teacherdomain "jcourse/internal/domain/teacher"
 	"jcourse/internal/infrastructure/repository"
+	"jcourse/pkg/logx"
 )
 
 const (
@@ -74,7 +74,7 @@ func newTestDB(t *testing.T) *gorm.DB {
 			Logger: logger.Default.LogMode(logger.Silent),
 		})
 		if err != nil {
-			log.Printf("cleanup: connect root db: %v", err)
+			logx.Warn(context.Background(), "cleanup connect root db", "err", err)
 			return
 		}
 		defer func() {

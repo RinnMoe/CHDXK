@@ -1,8 +1,7 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"context"
 	"os"
 	"os/signal"
 	"syscall"
@@ -17,17 +16,21 @@ import (
 	domaintask "jcourse/internal/domain/task"
 	infratask "jcourse/internal/infrastructure/task"
 	"jcourse/internal/interface/async"
+	"jcourse/pkg/logx"
 )
 
 func main() {
+	logx.ConfigureDefault()
+	ctx := context.Background()
+
 	pflag.String("config", "", "path to config file (env: CONFIG_PATH)")
 	pflag.Parse()
 
 	if err := viper.BindPFlag("config", pflag.Lookup("config")); err != nil {
-		log.Fatalf("bind config flag: %v", err)
+		logx.Fatal(ctx, "bind config flag", "err", err)
 	}
 	if err := viper.BindEnv("config", "CONFIG_PATH"); err != nil {
-		log.Fatalf("bind config env: %v", err)
+		logx.Fatal(ctx, "bind config env", "err", err)
 	}
 
 	configPath := viper.GetString("config")
@@ -37,14 +40,14 @@ func main() {
 
 	conf, err := config.Load(configPath)
 	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
+		logx.Fatal(ctx, "failed to load config", "err", err)
 	}
 	container := app.NewServiceContainer(conf)
 
 	client := infratask.NewClient(conf.Redis)
 	defer func() {
 		if err := client.Close(); err != nil {
-			log.Printf("close task client: %v", err)
+			logx.Warn(ctx, "close task client", "err", err)
 		}
 	}()
 	domaintask.SetEnqueuer(infratask.NewEnqueuer(client))
@@ -58,35 +61,35 @@ func main() {
 			conf.Stats.DailyCron,
 			domainstat.NewCollectDailySiteStatsTask(""),
 		); err != nil {
-			log.Fatalf("register site stats scheduler: %v", err)
+			logx.Fatal(ctx, "register site stats scheduler", "err", err)
 		}
 		if err := scheduler.Start(); err != nil {
-			log.Fatalf("start scheduler: %v", err)
+			logx.Fatal(ctx, "start scheduler", "err", err)
 		}
 	}
 
 	server := infratask.NewServer(conf.Redis, conf.Asynq)
 	mux := async.NewMux(container)
 
-	fmt.Println("task worker starting...")
+	logx.Info(ctx, "task worker starting")
 	if err := server.Start(mux); err != nil {
-		log.Fatalf("start server: %v", err)
+		logx.Fatal(ctx, "start server", "err", err)
 	}
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	fmt.Println("shutting down task worker...")
+	logx.Info(ctx, "shutting down task worker")
 	scheduler.Shutdown()
 	server.Shutdown()
-	fmt.Println("task worker exited")
+	logx.Info(ctx, "task worker exited")
 }
 
 func mustLoadStatsLocation() *time.Location {
 	loc, err := time.LoadLocation("Asia/Shanghai")
 	if err != nil {
-		log.Fatalf("load stats timezone: %v", err)
+		logx.Fatal(context.Background(), "load stats timezone", "err", err)
 	}
 	return loc
 }

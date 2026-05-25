@@ -2,9 +2,9 @@ package email
 
 import (
 	"context"
-	"log"
 
 	"jcourse/internal/domain/account"
+	"jcourse/pkg/logx"
 )
 
 type LogSender struct{}
@@ -13,8 +13,8 @@ func NewLogSender() *LogSender {
 	return &LogSender{}
 }
 
-func (s *LogSender) SendEmail(_ context.Context, email account.Email) error {
-	log.Printf("email to %s, subject: %s, body: %s", email.To, email.Subject, email.Body)
+func (s *LogSender) SendEmail(ctx context.Context, email account.Email) error {
+	logx.Info(ctx, "email sent by log sender", "to", email.To, "subject", email.Subject, "body", email.Body)
 	return nil
 }
 

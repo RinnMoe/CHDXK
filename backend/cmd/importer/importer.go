@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"context"
 	"time"
 
 	"github.com/lib/pq"
@@ -10,6 +10,7 @@ import (
 
 	teacherdomain "jcourse/internal/domain/teacher"
 	"jcourse/internal/infrastructure/repository"
+	"jcourse/pkg/logx"
 )
 
 const batchSize = 100
@@ -23,36 +24,36 @@ func NewImporter(db *gorm.DB, semester string) *Importer {
 	return &Importer{db: db, semester: semester}
 }
 
-func (imp *Importer) Run(rows []CSVRow) error {
-	log.Println("Collecting unique entities from CSV data...")
+func (imp *Importer) Run(ctx context.Context, rows []CSVRow) error {
+	logx.Info(ctx, "collecting unique entities from csv data")
 	teachers, courses := collectUnique(rows)
 
-	log.Println("Upserting teachers...")
-	imp.upsertTeachers(teachers)
+	logx.Info(ctx, "upserting teachers")
+	imp.upsertTeachers(ctx, teachers)
 
-	log.Println("Resolving teacher IDs...")
-	teacherIDMap := imp.resolveTeacherIDs()
+	logx.Info(ctx, "resolving teacher ids")
+	teacherIDMap := imp.resolveTeacherIDs(ctx)
 
-	log.Println("Upserting courses...")
-	imp.upsertCourses(courses, teacherIDMap)
+	logx.Info(ctx, "upserting courses")
+	imp.upsertCourses(ctx, courses, teacherIDMap)
 
-	log.Println("Resolving course IDs...")
-	courseIDMap := imp.resolveCourseIDs()
+	logx.Info(ctx, "resolving course ids")
+	courseIDMap := imp.resolveCourseIDs(ctx)
 
-	log.Println("Creating offered courses...")
-	imp.upsertOfferedCourses(rows, teacherIDMap, courseIDMap)
+	logx.Info(ctx, "creating offered courses")
+	imp.upsertOfferedCourses(ctx, rows, teacherIDMap, courseIDMap)
 
-	log.Println("Syncing course languages from last offered courses...")
-	if err := imp.syncCourseLanguagesFromLastOfferings(); err != nil {
+	logx.Info(ctx, "syncing course languages from last offered courses")
+	if err := imp.syncCourseLanguagesFromLastOfferings(ctx); err != nil {
 		return err
 	}
 
-	log.Println("Refreshing course search vectors...")
+	logx.Info(ctx, "refreshing course search vectors")
 	if err := repository.RefreshCourseSearchVectors(imp.db); err != nil {
 		return err
 	}
 
-	log.Println("Import complete!")
+	logx.Info(ctx, "import complete")
 	return nil
 }
 
@@ -81,7 +82,7 @@ func collectUnique(rows []CSVRow) (
 	return
 }
 
-func (imp *Importer) upsertTeachers(teachers map[string]TeacherInfo) {
+func (imp *Importer) upsertTeachers(ctx context.Context, teachers map[string]TeacherInfo) {
 	config := repository.SearchConfig(imp.db)
 	onConflict := clause.OnConflict{
 		Columns: []clause.Column{{Name: "code"}},
@@ -121,27 +122,27 @@ func (imp *Importer) upsertTeachers(teachers map[string]TeacherInfo) {
 		}
 		count++
 		if count%500 == 0 {
-			log.Printf("  Processed %d/%d teachers...", count, len(teachers))
+			logx.Info(ctx, "processed teachers", "processed", count, "total", len(teachers))
 		}
 	}
 	if len(batch) > 0 {
 		imp.db.Model(&repository.TeacherEntity{}).Clauses(onConflict).Create(&batch)
 	}
-	log.Printf("  Teachers: %d processed", count)
+	logx.Info(ctx, "teachers processed", "count", count)
 }
 
-func (imp *Importer) resolveTeacherIDs() map[string]int {
+func (imp *Importer) resolveTeacherIDs(ctx context.Context) map[string]int {
 	var teachers []repository.TeacherEntity
 	imp.db.Select("id, code").Find(&teachers)
 	m := make(map[string]int, len(teachers))
 	for _, t := range teachers {
 		m[t.Code] = t.ID
 	}
-	log.Printf("  Resolved %d teacher IDs", len(m))
+	logx.Info(ctx, "resolved teacher ids", "count", len(m))
 	return m
 }
 
-func (imp *Importer) upsertCourses(courses map[string]CSVRow, teacherIDMap map[string]int) {
+func (imp *Importer) upsertCourses(ctx context.Context, courses map[string]CSVRow, teacherIDMap map[string]int) {
 	onConflict := clause.OnConflict{
 		Columns: []clause.Column{{Name: "code"}, {Name: "main_teacher_id"}},
 		DoUpdates: clause.Assignments(map[string]interface{}{
@@ -161,7 +162,7 @@ func (imp *Importer) upsertCourses(courses map[string]CSVRow, teacherIDMap map[s
 	for _, row := range courses {
 		mainTeacherID := teacherIDMap[row.MainTeacher.Code]
 		if mainTeacherID == 0 {
-			log.Printf("  Skipping course %s (%s): no main teacher found (code=%q)", row.CourseCode, row.CourseName, row.MainTeacher.Code)
+			logx.Warn(ctx, "skipping course without main teacher", "course_code", row.CourseCode, "course_name", row.CourseName, "teacher_code", row.MainTeacher.Code)
 			skipped++
 			continue
 		}
@@ -183,10 +184,10 @@ func (imp *Importer) upsertCourses(courses map[string]CSVRow, teacherIDMap map[s
 	if len(batch) > 0 {
 		imp.db.Clauses(onConflict).Create(&batch)
 	}
-	log.Printf("  Courses: %d imported, %d skipped", len(courses)-skipped, skipped)
+	logx.Info(ctx, "courses imported", "imported", len(courses)-skipped, "skipped", skipped)
 }
 
-func (imp *Importer) resolveCourseIDs() map[string]int {
+func (imp *Importer) resolveCourseIDs(ctx context.Context) map[string]int {
 	var courses []repository.CourseEntity
 	imp.db.Model(&repository.CourseEntity{}).
 		Joins("MainTeacher").
@@ -195,11 +196,11 @@ func (imp *Importer) resolveCourseIDs() map[string]int {
 	for _, c := range courses {
 		m[courseKey(c.Code, c.MainTeacher.Code)] = c.ID
 	}
-	log.Printf("  Resolved %d course IDs", len(m))
+	logx.Info(ctx, "resolved course ids", "count", len(m))
 	return m
 }
 
-func (imp *Importer) syncCourseLanguagesFromLastOfferings() error {
+func (imp *Importer) syncCourseLanguagesFromLastOfferings(ctx context.Context) error {
 	result := imp.db.Exec(`
 		UPDATE courses AS c
 		SET language = oc.language
@@ -211,7 +212,7 @@ func (imp *Importer) syncCourseLanguagesFromLastOfferings() error {
 	if result.Error != nil {
 		return result.Error
 	}
-	log.Printf("  Course languages synced: %d updated", result.RowsAffected)
+	logx.Info(ctx, "course languages synced", "updated", result.RowsAffected)
 	return nil
 }
 
@@ -223,7 +224,7 @@ type courseAgg struct {
 	language        string
 }
 
-func (imp *Importer) upsertOfferedCourses(rows []CSVRow, teacherIDMap map[string]int, courseIDMap map[string]int) {
+func (imp *Importer) upsertOfferedCourses(ctx context.Context, rows []CSVRow, teacherIDMap map[string]int, courseIDMap map[string]int) {
 	onConflict := clause.OnConflict{
 		Columns: []clause.Column{{Name: "course_id"}, {Name: "semester"}},
 		DoUpdates: clause.Assignments(map[string]interface{}{
@@ -280,7 +281,7 @@ func (imp *Importer) upsertOfferedCourses(rows []CSVRow, teacherIDMap map[string
 		if !ok {
 			skipped++
 			if processed%500 == 0 {
-				log.Printf("  Processed %d/%d offered courses...", processed, len(aggMap))
+				logx.Info(ctx, "processed offered courses", "processed", processed, "total", len(aggMap))
 			}
 			continue
 		}
@@ -320,11 +321,11 @@ func (imp *Importer) upsertOfferedCourses(rows []CSVRow, teacherIDMap map[string
 			batch = batch[:0]
 		}
 		if processed%500 == 0 {
-			log.Printf("  Processed %d/%d offered courses...", processed, len(aggMap))
+			logx.Info(ctx, "processed offered courses", "processed", processed, "total", len(aggMap))
 		}
 	}
 	if len(batch) > 0 {
 		imp.db.Clauses(onConflict).Create(&batch)
 	}
-	log.Printf("  Offered courses: %d imported, %d skipped", processed-skipped, skipped)
+	logx.Info(ctx, "offered courses imported", "imported", processed-skipped, "skipped", skipped)
 }

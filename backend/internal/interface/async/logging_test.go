@@ -1,26 +1,21 @@
 package async
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
-	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/hibiken/asynq"
+
+	"jcourse/pkg/logx"
 )
 
-type fakeTaskLogger struct {
-	lines []string
-}
-
-func (l *fakeTaskLogger) Printf(format string, v ...any) {
-	l.lines = append(l.lines, strings.TrimSpace(fmt.Sprintf(format, v...)))
-}
-
 func TestTaskLoggingMiddlewareLogsSuccess(t *testing.T) {
-	logger := &fakeTaskLogger{}
-	middleware := newTaskLoggingMiddleware(logger)
+	var buf bytes.Buffer
+	logx.Configure(&buf)
+	middleware := newTaskLoggingMiddleware()
 	handler := middleware(asynq.HandlerFunc(func(ctx context.Context, t *asynq.Task) error {
 		return nil
 	}))
@@ -29,21 +24,23 @@ func TestTaskLoggingMiddlewareLogsSuccess(t *testing.T) {
 		t.Fatalf("ProcessTask: %v", err)
 	}
 
-	if len(logger.lines) != 2 {
-		t.Fatalf("log lines = %d, want 2", len(logger.lines))
+	entries := decodeLogEntries(t, &buf)
+	if len(entries) != 2 {
+		t.Fatalf("log entries = %d, want 2", len(entries))
 	}
-	if !strings.Contains(logger.lines[0], "async task started") || !strings.Contains(logger.lines[0], "type=test:success") {
-		t.Fatalf("start log = %q", logger.lines[0])
+	if entries[0]["msg"] != "async task started" || entries[0]["type"] != "test:success" {
+		t.Fatalf("start log = %#v", entries[0])
 	}
-	if !strings.Contains(logger.lines[1], "async task completed") || !strings.Contains(logger.lines[1], "type=test:success") || !strings.Contains(logger.lines[1], "duration=") {
-		t.Fatalf("complete log = %q", logger.lines[1])
+	if entries[1]["msg"] != "async task completed" || entries[1]["type"] != "test:success" || entries[1]["duration"] == nil {
+		t.Fatalf("complete log = %#v", entries[1])
 	}
 }
 
 func TestTaskLoggingMiddlewareLogsFailure(t *testing.T) {
-	logger := &fakeTaskLogger{}
+	var buf bytes.Buffer
+	logx.Configure(&buf)
 	wantErr := errors.New("boom")
-	middleware := newTaskLoggingMiddleware(logger)
+	middleware := newTaskLoggingMiddleware()
 	handler := middleware(asynq.HandlerFunc(func(ctx context.Context, t *asynq.Task) error {
 		return wantErr
 	}))
@@ -53,13 +50,28 @@ func TestTaskLoggingMiddlewareLogsFailure(t *testing.T) {
 		t.Fatalf("ProcessTask error = %v, want %v", err, wantErr)
 	}
 
-	if len(logger.lines) != 2 {
-		t.Fatalf("log lines = %d, want 2", len(logger.lines))
+	entries := decodeLogEntries(t, &buf)
+	if len(entries) != 2 {
+		t.Fatalf("log entries = %d, want 2", len(entries))
 	}
-	if !strings.Contains(logger.lines[0], "async task started") {
-		t.Fatalf("start log = %q", logger.lines[0])
+	if entries[0]["msg"] != "async task started" {
+		t.Fatalf("start log = %#v", entries[0])
 	}
-	if !strings.Contains(logger.lines[1], "async task failed") || !strings.Contains(logger.lines[1], "type=test:failure") || !strings.Contains(logger.lines[1], "error=boom") {
-		t.Fatalf("failure log = %q", logger.lines[1])
+	if entries[1]["msg"] != "async task failed" || entries[1]["type"] != "test:failure" || entries[1]["err"] != "boom" {
+		t.Fatalf("failure log = %#v", entries[1])
 	}
+}
+
+func decodeLogEntries(t *testing.T, buf *bytes.Buffer) []map[string]any {
+	t.Helper()
+	var entries []map[string]any
+	decoder := json.NewDecoder(buf)
+	for decoder.More() {
+		var entry map[string]any
+		if err := decoder.Decode(&entry); err != nil {
+			t.Fatalf("decode log entry: %v", err)
+		}
+		entries = append(entries, entry)
+	}
+	return entries
 }

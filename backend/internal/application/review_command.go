@@ -2,13 +2,13 @@ package application
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/task"
+	"jcourse/pkg/logx"
 )
 
 type ReviewCommandConfig struct {
@@ -104,6 +104,6 @@ func (s *ReviewCommandService) VoteReview(ctx context.Context, userID int, revie
 
 func (s *ReviewCommandService) enqueueHotCourseActivity(ctx context.Context, userID int, activity course.HotCourseActivity, courseID int) {
 	if err := task.Enqueue(ctx, course.NewRecordHotCourseActivityTask(userID, activity, courseID)); err != nil {
-		log.Printf("enqueue hot course activity: %v", err)
+		logx.Warn(ctx, "enqueue hot course activity", "user_id", userID, "activity", activity, "course_id", courseID, "err", err)
 	}
 }

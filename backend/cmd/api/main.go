@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -18,17 +16,21 @@ import (
 	"jcourse/internal/domain/task"
 	infratask "jcourse/internal/infrastructure/task"
 	"jcourse/internal/interface/web"
+	"jcourse/pkg/logx"
 )
 
 func main() {
+	logx.ConfigureDefault()
+	ctx := context.Background()
+
 	pflag.String("config", "", "path to config file (env: CONFIG_PATH)")
 	pflag.Parse()
 
 	if err := viper.BindPFlag("config", pflag.Lookup("config")); err != nil {
-		log.Fatalf("bind config flag: %v", err)
+		logx.Fatal(ctx, "bind config flag", "err", err)
 	}
 	if err := viper.BindEnv("config", "CONFIG_PATH"); err != nil {
-		log.Fatalf("bind config env: %v", err)
+		logx.Fatal(ctx, "bind config env", "err", err)
 	}
 
 	configPath := viper.GetString("config")
@@ -38,7 +40,7 @@ func main() {
 
 	conf, err := config.Load(configPath)
 	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
+		logx.Fatal(ctx, "failed to load config", "err", err)
 	}
 
 	container := app.NewServiceContainer(conf)
@@ -47,7 +49,7 @@ func main() {
 	taskClient := infratask.NewClient(conf.Redis)
 	defer func() {
 		if err := taskClient.Close(); err != nil {
-			log.Printf("close task client: %v", err)
+			logx.Warn(ctx, "close task client", "err", err)
 		}
 	}()
 	task.SetEnqueuer(infratask.NewEnqueuer(taskClient))
@@ -58,21 +60,21 @@ func main() {
 	}
 
 	go func() {
-		fmt.Printf("server starting on %s\n", srv.Addr)
+		logx.Info(ctx, "server starting", "addr", srv.Addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
+			logx.Fatal(ctx, "listen", "err", err)
 		}
 	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	fmt.Println("shutting down server...")
+	logx.Info(ctx, "shutting down server")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("server forced to shutdown:", err)
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		logx.Fatal(ctx, "server forced to shutdown", "err", err)
 	}
-	fmt.Println("server exited")
+	logx.Info(ctx, "server exited")
 }
