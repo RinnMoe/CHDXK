@@ -26,3 +26,16 @@ func (s *ApiKeyCommandService) CreateMyApiKey(ctx context.Context, userID int, c
 func (s *ApiKeyCommandService) DeleteMyApiKey(ctx context.Context, userID int, id int) error {
 	return s.svc.DeleteUserKey(ctx, userID, id)
 }
+
+func (s *ApiKeyCommandService) CreateSystemApiKey(ctx context.Context, cmd CreateApiKeyCommand) (*ApiKeyDTO, error) {
+	key, err := s.svc.CreateSystemKey(ctx, cmd.Name)
+	if err != nil {
+		return nil, err
+	}
+	dto := newApiKeyDTO(*key, true)
+	return &dto, nil
+}
+
+func (s *ApiKeyCommandService) DeleteSystemApiKey(ctx context.Context, id int) error {
+	return s.svc.DeleteSystemKey(ctx, id)
+}

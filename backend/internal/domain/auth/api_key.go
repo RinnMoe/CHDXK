@@ -31,12 +31,13 @@ type ApiKey struct {
 }
 
 type ApiKeyRepository interface {
+	GetByID(ctx context.Context, id int) (*ApiKey, error)
 	FindByKey(ctx context.Context, key string) (*ApiKey, error)
+	ListSystem(ctx context.Context) ([]ApiKey, error)
 	ListByUser(ctx context.Context, userID int) ([]ApiKey, error)
 	CountByUser(ctx context.Context, userID int) (int, error)
 	Create(ctx context.Context, apiKey *ApiKey) error
-	DeleteByUser(ctx context.Context, id int, userID int) (bool, error)
-	TouchLastUsed(ctx context.Context, id int, at time.Time) error
+	Delete(ctx context.Context, id int) (bool, error)
 }
 
 type ApiKeyService struct {
@@ -65,6 +66,23 @@ func NewUserApiKey(name string, userID int, now time.Time) (*ApiKey, error) {
 		Key:       key,
 		Role:      ApiKeyRoleUser,
 		UserID:    userID,
+		CreatedAt: now,
+	}, nil
+}
+
+func NewSystemApiKey(name string, now time.Time) (*ApiKey, error) {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, ErrApiKeyNameRequired
+	}
+	key, err := GenerateApiKey()
+	if err != nil {
+		return nil, err
+	}
+	return &ApiKey{
+		Name:      name,
+		Key:       key,
+		Role:      ApiKeyRoleSystem,
 		CreatedAt: now,
 	}, nil
 }
@@ -107,12 +125,23 @@ func (s *ApiKeyService) ValidateKey(ctx context.Context, key string) (*ApiKey, e
 	return apiKey, nil
 }
 
-func (s *ApiKeyService) MarkKeyUsed(ctx context.Context, id int) error {
-	return s.repo.TouchLastUsed(ctx, id, time.Now())
-}
-
 func (s *ApiKeyService) ListUserKeys(ctx context.Context, userID int) ([]ApiKey, error) {
 	return s.repo.ListByUser(ctx, userID)
+}
+
+func (s *ApiKeyService) ListSystemKeys(ctx context.Context) ([]ApiKey, error) {
+	return s.repo.ListSystem(ctx)
+}
+
+func (s *ApiKeyService) CreateSystemKey(ctx context.Context, name string) (*ApiKey, error) {
+	apiKey, err := NewSystemApiKey(name, time.Now())
+	if err != nil {
+		return nil, err
+	}
+	if err := s.repo.Create(ctx, apiKey); err != nil {
+		return nil, err
+	}
+	return apiKey, nil
 }
 
 func (s *ApiKeyService) CreateUserKey(ctx context.Context, userID int, name string) (*ApiKey, error) {
@@ -135,7 +164,32 @@ func (s *ApiKeyService) CreateUserKey(ctx context.Context, userID int, name stri
 }
 
 func (s *ApiKeyService) DeleteUserKey(ctx context.Context, userID int, id int) error {
-	deleted, err := s.repo.DeleteByUser(ctx, id, userID)
+	key, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if key == nil || !key.BelongsTo(userID) {
+		return ErrApiKeyNotFound
+	}
+	deleted, err := s.repo.Delete(ctx, id)
+	if err != nil {
+		return err
+	}
+	if !deleted {
+		return ErrApiKeyNotFound
+	}
+	return nil
+}
+
+func (s *ApiKeyService) DeleteSystemKey(ctx context.Context, id int) error {
+	key, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if key == nil || !key.IsSystem() {
+		return ErrApiKeyNotFound
+	}
+	deleted, err := s.repo.Delete(ctx, id)
 	if err != nil {
 		return err
 	}

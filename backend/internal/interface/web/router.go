@@ -159,6 +159,12 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		adminUserGroup.PUT("/:userID/admin", adminUserController.GrantAdmin)
 		adminUserGroup.DELETE("/:userID/admin", adminUserController.RevokeAdmin)
 	}
+	adminApiKeyGroup := apiGroup.Group("/admin/api-key", middleware.RequireAdmin())
+	{
+		adminApiKeyGroup.GET("/system", apiKeyController.ListSystemApiKeys)
+		adminApiKeyGroup.POST("/system", apiKeyController.CreateSystemApiKey)
+		adminApiKeyGroup.DELETE("/system/:apiKeyID", apiKeyController.DeleteSystemApiKey)
+	}
 	announcementGroup := apiGroup.Group("/announcement")
 	{
 		announcementGroup.GET("/", announcementController.ListAnnouncements)

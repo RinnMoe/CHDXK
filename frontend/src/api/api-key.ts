@@ -32,3 +32,22 @@ export function deleteApiKey(id: number): Promise<void> {
     method: "DELETE",
   })
 }
+
+export function listSystemApiKeys(): Promise<ApiKeyDTO[]> {
+  return apiClient<ApiKeyDTO[]>(`${BASE_URL}/admin/api-key/system`)
+}
+
+export function createSystemApiKey(
+  cmd: CreateApiKeyCommand
+): Promise<ApiKeyDTO> {
+  return apiClient<ApiKeyDTO>(`${BASE_URL}/admin/api-key/system`, {
+    method: "POST",
+    body: JSON.stringify(cmd),
+  })
+}
+
+export function deleteSystemApiKey(id: number): Promise<void> {
+  return apiClient<void>(`${BASE_URL}/admin/api-key/system/${id}`, {
+    method: "DELETE",
+  })
+}
