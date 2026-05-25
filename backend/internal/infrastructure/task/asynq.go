@@ -53,11 +53,15 @@ func NewServer(redisConf persistence.RedisConfig, conf Config) *asynq.Server {
 	}
 	return asynq.NewServer(redisOpt(redisConf), asynq.Config{
 		Concurrency: concurrency,
+		Logger:      newLogger(),
 	})
 }
 
 func NewScheduler(redisConf persistence.RedisConfig, loc *time.Location) *asynq.Scheduler {
-	return asynq.NewScheduler(redisOpt(redisConf), &asynq.SchedulerOpts{Location: loc})
+	return asynq.NewScheduler(redisOpt(redisConf), &asynq.SchedulerOpts{
+		Location: loc,
+		Logger:   newLogger(),
+	})
 }
 
 func RegisterScheduledTask(s *asynq.Scheduler, cronspec string, t domaintask.Task, opts ...domaintask.EnqueueOption) (string, error) {

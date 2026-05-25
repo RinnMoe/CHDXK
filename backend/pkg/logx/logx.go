@@ -18,6 +18,10 @@ func Configure(w io.Writer) {
 	slog.SetDefault(slog.New(slog.NewJSONHandler(w, nil)))
 }
 
+func Logger() *slog.Logger {
+	return slog.Default()
+}
+
 func Debug(ctx context.Context, msg string, args ...any) {
 	slog.DebugContext(ctx, msg, args...)
 }
