@@ -277,7 +277,7 @@ func (r2 *ReviewRepository) applySort(db *gorm.DB, filter review.ReviewFilter) *
 	if searchQuery(filter.Q) != "" && filter.OrderBy == "" {
 		db = db.Order(clause.Expr{
 			SQL:  searchRankOrder("reviews.search_vector", filter.Q),
-			Vars: []interface{}{r2.searchConfig, searchQuery(filter.Q)},
+			Vars: []any{r2.searchConfig, searchQuery(filter.Q)},
 		})
 	}
 	order := clause.OrderByColumn{Column: clause.Column{Table: "reviews", Name: "id"}, Desc: desc}

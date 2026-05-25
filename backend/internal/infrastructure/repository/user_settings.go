@@ -53,7 +53,7 @@ func (r *UserSettingsRepository) Save(ctx context.Context, settings *setting.Use
 	}
 	err := r.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "user_id"}},
-		DoUpdates: clause.Assignments(map[string]interface{}{
+		DoUpdates: clause.Assignments(map[string]any{
 			"current_semester": e.CurrentSemester,
 			"updated_at":       e.UpdatedAt,
 		}),

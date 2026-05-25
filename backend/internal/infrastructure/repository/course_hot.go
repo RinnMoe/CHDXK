@@ -95,7 +95,7 @@ func (r *GormCourseHotRepository) AddScore(ctx context.Context, courseID int, sc
 			{Name: "period_key"},
 			{Name: "course_id"},
 		},
-		DoUpdates: clause.Assignments(map[string]interface{}{
+		DoUpdates: clause.Assignments(map[string]any{
 			"score":      gorm.Expr("course_hot_scores.score + EXCLUDED.score"),
 			"updated_at": now,
 		}),

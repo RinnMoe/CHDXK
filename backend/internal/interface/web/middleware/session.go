@@ -96,7 +96,7 @@ func resetSession(c *gin.Context) error {
 		}
 		gs.ID = ""
 		gs.IsNew = true
-		gs.Values = map[interface{}]interface{}{}
+		gs.Values = map[any]any{}
 		gs.Options = options
 		return nil
 	}

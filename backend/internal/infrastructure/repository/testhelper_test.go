@@ -132,7 +132,7 @@ func seedTeacherRaw(t *testing.T, db *gorm.DB, code, name, department, title str
 		UpdatedAt:  now,
 	}
 	config := repository.SearchConfig(db)
-	if err := db.Model(&repository.TeacherEntity{}).Create(map[string]interface{}{
+	if err := db.Model(&repository.TeacherEntity{}).Create(map[string]any{
 		"code":          e.Code,
 		"name":          e.Name,
 		"department":    e.Department,

@@ -200,7 +200,7 @@ func TestPointController_GetPointsByEmail(t *testing.T) {
 			t.Fatalf("status = %d, want %d", w.Code, http.StatusOK)
 		}
 
-		var resp map[string]interface{}
+		var resp map[string]any
 		if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
 			t.Fatalf("unmarshal: %v", err)
 		}

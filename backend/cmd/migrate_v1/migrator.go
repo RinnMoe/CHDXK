@@ -775,9 +775,9 @@ type teacherUpsertRow struct {
 }
 
 func upsertTeachers(db *gorm.DB, config string, batch []teacherUpsertRow) error {
-	rows := make([]map[string]interface{}, 0, len(batch))
+	rows := make([]map[string]any, 0, len(batch))
 	for _, teacher := range batch {
-		rows = append(rows, map[string]interface{}{
+		rows = append(rows, map[string]any{
 			"id":            teacher.ID,
 			"code":          teacher.Code,
 			"name":          teacher.Name,

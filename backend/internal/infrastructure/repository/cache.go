@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -12,11 +13,12 @@ import (
 const repositoryCacheTTL = 30 * time.Minute
 
 func redisKey(domain string, parts ...any) string {
-	key := "jcourse:" + domain
+	var key strings.Builder
+	key.WriteString("jcourse:" + domain)
 	for _, part := range parts {
-		key += ":" + fmt.Sprint(part)
+		key.WriteString(":" + fmt.Sprint(part))
 	}
-	return key
+	return key.String()
 }
 
 func cacheKey(domain string, parts ...any) string {

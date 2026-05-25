@@ -8,6 +8,7 @@ import (
 	"os"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -39,8 +40,8 @@ func parseTeacherField(raw string) []TeacherInfo {
 		return nil
 	}
 	var teachers []TeacherInfo
-	parts := strings.Split(raw, ";")
-	for _, p := range parts {
+	parts := strings.SplitSeq(raw, ";")
+	for p := range parts {
 		p = strings.TrimSpace(p)
 		m := teacherPartRe.FindStringSubmatch(p)
 		if m == nil {
@@ -67,10 +68,16 @@ func parseMainTeacher(raw string) TeacherInfo {
 	return TeacherInfo{Code: strings.TrimSpace(raw)}
 }
 
-func parseFloat(s string) float32 {
-	var v float32
-	fmt.Sscanf(strings.TrimSpace(s), "%f", &v)
-	return v
+func parseFloat(s string) (float32, error) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return 0, nil
+	}
+	v, err := strconv.ParseFloat(s, 32)
+	if err != nil {
+		return 0, fmt.Errorf("parse float %q: %w", s, err)
+	}
+	return float32(v), nil
 }
 
 func parseList(raw string) []string {
@@ -78,7 +85,7 @@ func parseList(raw string) []string {
 		return nil
 	}
 	var result []string
-	for _, s := range strings.Split(raw, ",") {
+	for s := range strings.SplitSeq(raw, ",") {
 		s = strings.TrimSpace(s)
 		if s != "" {
 			result = append(result, s)
@@ -92,12 +99,16 @@ func parseCSV(filepath string) ([]CSVRow, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open csv: %w", err)
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 
 	br := bufio.NewReader(f)
 	bom, _ := br.Peek(3)
 	if len(bom) >= 3 && bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF {
-		br.Discard(3)
+		if _, err := br.Discard(3); err != nil {
+			return nil, fmt.Errorf("discard csv bom: %w", err)
+		}
 	}
 
 	r := csv.NewReader(br)
@@ -130,7 +141,10 @@ func parseCSV(filepath string) ([]CSVRow, error) {
 
 		allTeachers := parseTeacherField(get("合上教师"))
 		mainTeacher := parseMainTeacher(get("任课教师"))
-		credit := parseFloat(get("学分"))
+		credit, err := parseFloat(get("学分"))
+		if err != nil {
+			return nil, fmt.Errorf("parse csv row %d credit: %w", len(rows)+2, err)
+		}
 		categories := parseList(get("通识课归属模块"))
 		targetYears := parseList(get("年级"))
 		department := get("开课院系")

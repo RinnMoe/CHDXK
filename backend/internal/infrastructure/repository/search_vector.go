@@ -45,7 +45,7 @@ func TeacherSearchVectorExpr(config, code, searchName string) clause.Expr {
 			setweight(to_tsvector('simple', coalesce(?, '')), 'A') ||
 			setweight(to_tsvector(?::regconfig, coalesce(?, '')), 'A')
 		`,
-		Vars: []interface{}{code, config, searchName},
+		Vars: []any{code, config, searchName},
 	}
 }
 

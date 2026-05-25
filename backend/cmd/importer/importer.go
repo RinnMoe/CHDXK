@@ -86,7 +86,7 @@ func (imp *Importer) upsertTeachers(ctx context.Context, teachers map[string]Tea
 	config := repository.SearchConfig(imp.db)
 	onConflict := clause.OnConflict{
 		Columns: []clause.Column{{Name: "code"}},
-		DoUpdates: clause.Assignments(map[string]interface{}{
+		DoUpdates: clause.Assignments(map[string]any{
 			"name":          clause.Column{Table: "excluded", Name: "name"},
 			"department":    clause.Column{Table: "excluded", Name: "department"},
 			"title":         clause.Column{Table: "excluded", Name: "title"},
@@ -96,17 +96,17 @@ func (imp *Importer) upsertTeachers(ctx context.Context, teachers map[string]Tea
 		}),
 		Where: clause.Where{
 			Exprs: []clause.Expression{
-				clause.Expr{SQL: "teachers.last_semester < ?", Vars: []interface{}{imp.semester}},
+				clause.Expr{SQL: "teachers.last_semester < ?", Vars: []any{imp.semester}},
 			},
 		},
 	}
 
-	var batch []map[string]interface{}
+	var batch []map[string]any
 	count := 0
 	for code, info := range teachers {
 		now := time.Now()
 		searchName := teacherdomain.NewSearchName(info.Name)
-		batch = append(batch, map[string]interface{}{
+		batch = append(batch, map[string]any{
 			"code":          code,
 			"name":          info.Name,
 			"department":    info.Department,
@@ -145,14 +145,14 @@ func (imp *Importer) resolveTeacherIDs(ctx context.Context) map[string]int {
 func (imp *Importer) upsertCourses(ctx context.Context, courses map[string]CSVRow, teacherIDMap map[string]int) {
 	onConflict := clause.OnConflict{
 		Columns: []clause.Column{{Name: "code"}, {Name: "main_teacher_id"}},
-		DoUpdates: clause.Assignments(map[string]interface{}{
+		DoUpdates: clause.Assignments(map[string]any{
 			"department":    clause.Column{Table: "excluded", Name: "department"},
 			"language":      clause.Column{Table: "excluded", Name: "language"},
 			"last_semester": clause.Column{Table: "excluded", Name: "last_semester"},
 		}),
 		Where: clause.Where{
 			Exprs: []clause.Expression{
-				clause.Expr{SQL: "courses.last_semester < ?", Vars: []interface{}{imp.semester}},
+				clause.Expr{SQL: "courses.last_semester < ?", Vars: []any{imp.semester}},
 			},
 		},
 	}
@@ -227,7 +227,7 @@ type courseAgg struct {
 func (imp *Importer) upsertOfferedCourses(ctx context.Context, rows []CSVRow, teacherIDMap map[string]int, courseIDMap map[string]int) {
 	onConflict := clause.OnConflict{
 		Columns: []clause.Column{{Name: "course_id"}, {Name: "semester"}},
-		DoUpdates: clause.Assignments(map[string]interface{}{
+		DoUpdates: clause.Assignments(map[string]any{
 			"language":     clause.Column{Table: "excluded", Name: "language"},
 			"target_years": clause.Column{Table: "excluded", Name: "target_years"},
 			"categories":   clause.Column{Table: "excluded", Name: "categories"},
@@ -253,12 +253,9 @@ func (imp *Importer) upsertOfferedCourses(ctx context.Context, rows []CSVRow, te
 			aggMap[key] = agg
 		}
 
-		var tids []int64
 		for _, t := range r.AllTeachers {
 			if id, ok := teacherIDMap[t.Code]; ok {
-				tid := int64(id)
-				agg.tidSet[tid] = true
-				tids = append(tids, tid)
+				agg.tidSet[int64(id)] = true
 			}
 		}
 		for _, y := range r.TargetYears {
@@ -300,7 +297,7 @@ func (imp *Importer) upsertOfferedCourses(ctx context.Context, rows []CSVRow, te
 		}
 		mainTeacherID := teacherIDMap[agg.mainTeacherCode]
 
-		imp.db.Model(&repository.CourseEntity{}).Where("id = ? AND last_semester = ?", courseID, imp.semester).Updates(map[string]interface{}{
+		imp.db.Model(&repository.CourseEntity{}).Where("id = ? AND last_semester = ?", courseID, imp.semester).Updates(map[string]any{
 			"main_teacher_id": mainTeacherID,
 			"target_years":    targetYears,
 			"categories":      courseCats,
