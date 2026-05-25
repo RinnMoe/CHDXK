@@ -1,5 +1,5 @@
--- PostgreSQL 18 schema for jcourse
--- Generated from entity definitions; run against a fresh postgres:16 database.
+-- PostgreSQL 17 schema for jcourse
+-- Generated from entity definitions; run against a fresh postgres:17 database.
 
 BEGIN;
 

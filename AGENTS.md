@@ -19,7 +19,9 @@ This repository contains `jcourse`, split into `backend/` and `frontend/`. Backe
 
 ## Coding Style & Naming Conventions
 
-Use `gofmt` for Go and keep package names short, lower-case nouns such as `course`, `review`, or `repository`. Keep domain code independent of Gin, Gorm, Redis, and other adapter details. Frontend code uses TypeScript, React function components, path aliases such as `@/components/ui/button`, Prettier, Tailwind CSS, and ESLint. Name components in PascalCase, hooks as `useThing`, and page files with kebab-case names such as `course-detail-page.tsx`. Prefer existing feature folders and UI primitives before adding new structure.
+Use `gofmt` for Go and keep package names short, lower-case nouns such as `course`, `review`, or `repository`. Backend code follows DDD and CQRS: keep domain code independent of Gin, Gorm, Redis, infrastructure, and other adapter details; keep interfaces separate from their implementations; add a mock implementation whenever introducing a new interface. Frontend code uses TypeScript, React function components, path aliases such as `@/components/ui/button`, Prettier, Tailwind CSS, and ESLint. Name components in PascalCase, hooks as `useThing`, and page files with kebab-case names such as `course-detail-page.tsx`. Prefer existing feature folders and UI primitives before adding new structure.
+
+When changing database structure, fields, or indexes, add a new numbered SQL file under `backend/script` instead of editing an earlier migration. The initial PostgreSQL schema is `01-schema-pgsql.sql`; subsequent changes should be named `02-xxx.sql`, `03-xxx.sql`, and so on.
 
 ## Testing Guidelines
 
