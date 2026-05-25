@@ -99,9 +99,14 @@ export function CourseEnrollmentList({
             <div className="flex shrink-0 flex-col items-end gap-2 self-center">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="outline" size="sm">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="size-8 px-0 md:w-auto md:px-2.5"
+                    aria-label="删除选课记录"
+                  >
                     <RiDeleteBinLine />
-                    删除
+                    <span className="hidden md:inline">删除</span>
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent size="sm">

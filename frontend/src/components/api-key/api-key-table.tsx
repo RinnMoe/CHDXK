@@ -91,7 +91,7 @@ export function ApiKeyTable({
             <TableHead>
               <LastUsedTableHead />
             </TableHead>
-            <TableHead className="w-16 text-right">操作</TableHead>
+            <TableHead className="w-16 text-right md:w-24">操作</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -114,11 +114,13 @@ export function ApiKeyTable({
                   <AlertDialogTrigger asChild>
                     <Button
                       variant="destructive"
-                      size="icon-sm"
+                      size="sm"
+                      className="size-8 px-0 md:w-auto md:px-2.5"
                       aria-label={deleteAriaLabel}
                       disabled={isDeleting}
                     >
                       <RiDeleteBinLine />
+                      <span className="hidden md:inline">{deleteActionLabel}</span>
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent size="sm">

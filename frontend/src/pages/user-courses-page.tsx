@@ -201,9 +201,14 @@ export function UserCoursesPage() {
     return (
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant="outline" size="sm">
+          <Button
+            variant="destructive"
+            size="sm"
+            className="size-8 px-0 md:w-auto md:px-2.5"
+            aria-label={`删除${recordName}`}
+          >
             <RiDeleteBinLine />
-            删除
+            <span className="hidden md:inline">删除</span>
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent size="sm">
