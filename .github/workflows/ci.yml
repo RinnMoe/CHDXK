@@ -71,7 +71,7 @@ jobs:
           cache-dependency-path: ${{ env.BACKEND_WORKING_DIR }}/go.sum
 
       - name: Run tests
-        run: go test ./...
+        run: go test -tags test ./...
         env:
           JCOURSE_POSTGRES_HOST: localhost
           JCOURSE_POSTGRES_PORT: 5432
