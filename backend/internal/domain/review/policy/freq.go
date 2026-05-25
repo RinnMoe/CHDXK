@@ -29,9 +29,9 @@ type FrequencyPolicyConfig struct {
 }
 
 var DefaultFrequencyPolicyConfig = FrequencyPolicyConfig{
-	Window:          time.Hour,
-	MaxReviews:      10,
-	SimilarityRatio: 0.7,
+	Window:          5 * time.Minute,
+	MaxReviews:      3,
+	SimilarityRatio: 0.85,
 	SuspendDuration: 90 * 24 * time.Hour,
 }
 
