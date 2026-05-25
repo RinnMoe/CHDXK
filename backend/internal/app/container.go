@@ -33,6 +33,7 @@ type ServiceContainer struct {
 	AdminUserQuery          *application.AdminUserQueryService
 	AdminUserCommand        *application.AdminUserCommandService
 	AuthUserService         *auth.AuthUserService
+	AuthResolution          *application.AuthResolutionService
 	AnnouncementQuery       *application.AnnouncementQueryService
 	ApiKeySvc               *auth.ApiKeyService
 	ApiKeyQuery             *application.ApiKeyQueryService
@@ -128,6 +129,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		currentUserService,
 	)
 	apiKeySvc := auth.NewApiKeyService(apiKeyRepo, conf.APIKey)
+	authResolution := application.NewAuthResolutionService(currentUserService, apiKeySvc)
 	apiKeyQuery := application.NewApiKeyQueryService(apiKeySvc)
 	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc)
 	userSettingsQuery := application.NewUserSettingsQueryService(userSettingsRepo, courseRepo, courseRepo)
@@ -152,6 +154,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		AdminUserQuery:          adminUserQuery,
 		AdminUserCommand:        adminUserCommand,
 		AuthUserService:         currentUserService,
+		AuthResolution:          authResolution,
 		AnnouncementQuery:       announcementQuery,
 		ApiKeySvc:               apiKeySvc,
 		ApiKeyQuery:             apiKeyQuery,

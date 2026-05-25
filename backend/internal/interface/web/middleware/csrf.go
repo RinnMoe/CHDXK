@@ -8,12 +8,19 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+
+	"jcourse/internal/domain/auth"
 )
 
 const csrfHeader = "X-CSRF-Token"
 
 func CSRF() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if auth.GetApiKeyFromCtx(c.Request.Context()) != nil {
+			c.Next()
+			return
+		}
+
 		s := sessions.Default(c)
 
 		switch c.Request.Method {

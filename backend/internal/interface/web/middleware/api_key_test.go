@@ -9,20 +9,25 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 
+	"jcourse/internal/application"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/interface/web/middleware"
 )
 
 type fakeApiKeyRepo struct {
-	key     string
-	apiKey  *auth.ApiKey
-	err     error
-	touched bool
+	key            string
+	apiKey         *auth.ApiKey
+	err            error
+	touched        bool
+	findByKeyCalls int
 }
 
 func (r *fakeApiKeyRepo) FindByKey(_ context.Context, key string) (*auth.ApiKey, error) {
+	r.findByKeyCalls++
 	if r.err != nil {
 		return nil, r.err
 	}
@@ -60,7 +65,7 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 	repo := &fakeApiKeyRepo{key: validKey, apiKey: &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleSystem, UserID: 0}}
 	svc := auth.NewApiKeyService(repo, auth.DefaultApiKeyConfig)
 
-	handler := middleware.SystemAPIKeyAuth(svc)
+	handler := middleware.SystemAPIKeyAuth()
 
 	tests := []struct {
 		name       string
@@ -121,6 +126,11 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 			repo.apiKey = tt.apiKey
 
 			r := gin.New()
+			r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
+			r.Use(middleware.ResolveCurrentUser(application.NewAuthResolutionService(
+				auth.NewCurrentUserService(&systemAuthUserRepo{}),
+				svc,
+			)))
 			r.Use(handler)
 			r.GET("/test", func(c *gin.Context) {
 				c.String(http.StatusOK, "ok")
@@ -150,9 +160,14 @@ func TestSystemAPIKeyAuth_RepoError(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	svc := auth.NewApiKeyService(&fakeApiKeyRepo{err: errors.New("db down")}, auth.DefaultApiKeyConfig)
-	handler := middleware.SystemAPIKeyAuth(svc)
+	handler := middleware.SystemAPIKeyAuth()
 
 	r := gin.New()
+	r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
+	r.Use(middleware.ResolveCurrentUser(application.NewAuthResolutionService(
+		auth.NewCurrentUserService(&systemAuthUserRepo{}),
+		svc,
+	)))
 	r.Use(handler)
 	r.GET("/test", func(c *gin.Context) {
 		c.String(http.StatusOK, "ok")
@@ -166,4 +181,44 @@ func TestSystemAPIKeyAuth_RepoError(t *testing.T) {
 	if w.Code != http.StatusInternalServerError {
 		t.Fatalf("status = %d, want %d", w.Code, http.StatusInternalServerError)
 	}
+}
+
+func TestSystemAPIKeyAuthReusesResolvedAPIKey(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	validKey := "test-api-key-123"
+	repo := &fakeApiKeyRepo{key: validKey, apiKey: &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleSystem, UserID: 0}}
+	svc := auth.NewApiKeyService(repo, auth.DefaultApiKeyConfig)
+
+	r := gin.New()
+	r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
+	r.Use(middleware.ResolveCurrentUser(application.NewAuthResolutionService(auth.NewCurrentUserService(&systemAuthUserRepo{}), svc)))
+	r.GET("/test", middleware.SystemAPIKeyAuth(), func(c *gin.Context) {
+		c.String(http.StatusOK, "ok")
+	})
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req.Header.Set("Authorization", "Bearer "+validKey)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", w.Code, http.StatusOK)
+	}
+	if repo.findByKeyCalls != 1 {
+		t.Fatalf("FindByKey calls = %d, want 1", repo.findByKeyCalls)
+	}
+	if !repo.touched {
+		t.Fatal("expected api key to be touched")
+	}
+}
+
+type systemAuthUserRepo struct{}
+
+func (systemAuthUserRepo) Update(context.Context, *auth.User) error { return nil }
+
+func (systemAuthUserRepo) FindByID(context.Context, int) (*auth.User, error) { return nil, nil }
+
+func (systemAuthUserRepo) FindByRole(context.Context, string) ([]auth.User, error) {
+	return nil, nil
 }

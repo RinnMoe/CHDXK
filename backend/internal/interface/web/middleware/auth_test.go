@@ -12,17 +12,20 @@ import (
 	filesession "github.com/gin-contrib/sessions/filesystem"
 	"github.com/gin-gonic/gin"
 
+	"jcourse/internal/application"
 	"jcourse/internal/domain/auth"
 )
 
-func TestAuthReusesOptionalAuthUser(t *testing.T) {
+func TestRequireAuthReusesResolvedSessionUser(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	repo := &authMiddlewareUserRepo{user: &auth.User{ID: 7, Role: auth.RoleUser}}
 	currentUserSvc := auth.NewCurrentUserService(repo)
+	apiKeySvc := auth.NewApiKeyService(&authMiddlewareAPIKeyRepo{}, auth.DefaultApiKeyConfig)
+	authResolution := application.NewAuthResolutionService(currentUserSvc, apiKeySvc)
 	r := gin.New()
 	r.Use(sessions.Sessions("jcourse_session", filesession.NewStore(t.TempDir(), []byte("test-secret"))))
-	r.Use(OptionalAuth(currentUserSvc))
+	r.Use(ResolveCurrentUser(authResolution))
 	r.GET("/login-session", func(c *gin.Context) {
 		if err := SetSessionUserID(c, repo.user.ID); err != nil {
 			c.Status(http.StatusInternalServerError)
@@ -30,7 +33,7 @@ func TestAuthReusesOptionalAuthUser(t *testing.T) {
 		}
 		c.Status(http.StatusNoContent)
 	})
-	r.GET("/protected", Auth(currentUserSvc), func(c *gin.Context) {
+	r.GET("/protected", RequireAuth(), func(c *gin.Context) {
 		c.Status(http.StatusOK)
 	})
 
@@ -45,6 +48,49 @@ func TestAuthReusesOptionalAuthUser(t *testing.T) {
 	}
 	if repo.findByIDCalls != 1 {
 		t.Fatalf("FindByID calls = %d, want 1", repo.findByIDCalls)
+	}
+}
+
+func TestResolveCurrentUserWithUserAPIKey(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	validKey := "test-api-key-123"
+	userRepo := &authMiddlewareUserRepo{user: &auth.User{ID: 7, Role: auth.RoleUser}}
+	apiKeyRepo := &authMiddlewareAPIKeyRepo{
+		key:    validKey,
+		apiKey: &auth.ApiKey{ID: 1, Key: validKey, Role: auth.ApiKeyRoleUser, UserID: 7},
+	}
+	r := gin.New()
+	r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
+	r.Use(ResolveCurrentUser(application.NewAuthResolutionService(
+		auth.NewCurrentUserService(userRepo),
+		auth.NewApiKeyService(apiKeyRepo, auth.DefaultApiKeyConfig),
+	)))
+	r.GET("/protected", RequireAuth(), func(c *gin.Context) {
+		u := auth.GetUserFromCtx(c.Request.Context())
+		if u == nil || u.ID != 7 {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+		c.Status(http.StatusOK)
+	})
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/protected", nil)
+	req.Header.Set(HeaderAuthorization, PrefixBearer+validKey)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", w.Code, http.StatusOK)
+	}
+	if apiKeyRepo.findByKeyCalls != 1 {
+		t.Fatalf("FindByKey calls = %d, want 1", apiKeyRepo.findByKeyCalls)
+	}
+	if userRepo.findByIDCalls != 1 {
+		t.Fatalf("FindByID calls = %d, want 1", userRepo.findByIDCalls)
+	}
+	if !apiKeyRepo.touched {
+		t.Fatal("expected api key to be touched")
 	}
 }
 
@@ -232,4 +278,37 @@ func (r *authMiddlewareUserRepo) FindByUsername(context.Context, string) (*auth.
 
 func (r *authMiddlewareUserRepo) FindByEmail(context.Context, string) (*auth.User, error) {
 	return nil, nil
+}
+
+type authMiddlewareAPIKeyRepo struct {
+	key            string
+	apiKey         *auth.ApiKey
+	findByKeyCalls int
+	touched        bool
+}
+
+func (r *authMiddlewareAPIKeyRepo) FindByKey(_ context.Context, key string) (*auth.ApiKey, error) {
+	r.findByKeyCalls++
+	if key != r.key || r.apiKey == nil {
+		return nil, nil
+	}
+	copy := *r.apiKey
+	return &copy, nil
+}
+
+func (r *authMiddlewareAPIKeyRepo) ListByUser(context.Context, int) ([]auth.ApiKey, error) {
+	return nil, nil
+}
+
+func (r *authMiddlewareAPIKeyRepo) CountByUser(context.Context, int) (int, error) { return 0, nil }
+
+func (r *authMiddlewareAPIKeyRepo) Create(context.Context, *auth.ApiKey) error { return nil }
+
+func (r *authMiddlewareAPIKeyRepo) DeleteByUser(context.Context, int, int) (bool, error) {
+	return false, nil
+}
+
+func (r *authMiddlewareAPIKeyRepo) TouchLastUsed(context.Context, int, time.Time) error {
+	r.touched = true
+	return nil
 }

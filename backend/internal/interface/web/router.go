@@ -45,8 +45,8 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		panic(err)
 	}
 	g.Use(sessions.Sessions("jcourse_session", store))
+	g.Use(middleware.ResolveCurrentUser(container.AuthResolution))
 	g.Use(middleware.CSRF())
-	g.Use(middleware.OptionalAuth(container.AuthUserService))
 	g.Use(middleware.UserIDRateLimit())
 
 	reviewController := controller.NewReviewController(container.ReviewQuery, container.ReviewCommand)
@@ -73,7 +73,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		publicAuthGroup.POST("/password-reset", accountController.ResetPassword)
 	}
 
-	extGroup := apiGroup.Group("/ext", middleware.SystemAPIKeyAuth(container.ApiKeySvc))
+	extGroup := apiGroup.Group("/ext", middleware.SystemAPIKeyAuth())
 	{
 		extGroup.GET("/point", pointController.GetPointsByEmail)
 	}
@@ -81,10 +81,10 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	enrollmentSyncGroup := apiGroup.Group("/course/enrollment-sync")
 	{
 		enrollmentSyncGroup.GET("/callback", courseEnrollmentSyncController.Callback)
-		enrollmentSyncGroup.GET("/start", middleware.Auth(container.AuthUserService), courseEnrollmentSyncController.Start)
+		enrollmentSyncGroup.GET("/start", middleware.RequireAuth(), courseEnrollmentSyncController.Start)
 	}
 
-	apiGroup.Use(middleware.Auth(container.AuthUserService))
+	apiGroup.Use(middleware.RequireAuth())
 
 	authGroup := apiGroup.Group("/auth")
 	{
@@ -118,11 +118,11 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	{
 		reviewGroup.GET("", reviewController.ListReviews)
 		reviewGroup.GET("/followed", reviewController.ListFollowedReviews)
-		reviewGroup.GET("/:reviewID/revision", middleware.Admin(), reviewController.ListReviewRevisions)
+		reviewGroup.GET("/:reviewID/revision", middleware.RequireAdmin(), reviewController.ListReviewRevisions)
 		reviewGroup.GET("/:reviewID", reviewController.GetReview)
 		reviewGroup.POST("/", reviewController.CreateReview)
 		reviewGroup.POST("/:reviewID/vote", reviewController.VoteReview)
-		reviewGroup.PUT("/:reviewID/moderator-remark", middleware.Admin(), reviewController.UpdateModeratorRemark)
+		reviewGroup.PUT("/:reviewID/moderator-remark", middleware.RequireAdmin(), reviewController.UpdateModeratorRemark)
 		reviewGroup.PUT("/:reviewID", reviewController.UpdateReview)
 		reviewGroup.DELETE("/:reviewID", reviewController.DeleteReview)
 	}
@@ -144,12 +144,12 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		pointGroup.POST("/transfer/preview", pointController.PreviewTransfer)
 		pointGroup.POST("/transfer", pointController.CreateTransfer)
 	}
-	siteStatsGroup := apiGroup.Group("/site-stat", middleware.Admin())
+	siteStatsGroup := apiGroup.Group("/site-stat", middleware.RequireAdmin())
 	{
 		siteStatsGroup.GET("/daily/:date", siteStatsController.GetByDate)
 		siteStatsGroup.GET("/daily", siteStatsController.ListDaily)
 	}
-	adminUserGroup := apiGroup.Group("/admin/user", middleware.Admin())
+	adminUserGroup := apiGroup.Group("/admin/user", middleware.RequireAdmin())
 	{
 		adminUserGroup.GET("/admin", adminUserController.ListAdmins)
 		adminUserGroup.GET("/by-email", adminUserController.GetUserByEmail)
