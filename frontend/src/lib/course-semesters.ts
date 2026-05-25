@@ -25,3 +25,13 @@ export function getCourseSemesters(course?: CourseSemesterSource | null) {
 
   return [...semesters].sort(sortDesc)
 }
+
+export function getDefaultSemester(
+  semesters: string[],
+  currentSemester?: string | null
+) {
+  if (currentSemester && semesters.includes(currentSemester)) {
+    return currentSemester
+  }
+  return semesters[0] ?? ""
+}

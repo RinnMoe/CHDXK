@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 import { Link, useParams, useSearchParams } from "react-router-dom"
-import { RiArrowLeftLine, RiAddLine, RiMailLine } from "@remixicon/react"
+import { RiArrowLeftLine, RiMailLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -26,6 +26,8 @@ import {
   useCourseReviewFilters,
   useCourseReviews,
 } from "@/hooks/use-course"
+import { useUserSettings } from "@/hooks/use-user-settings"
+import { useAuth } from "@/contexts/auth-context"
 import { ReviewList } from "@/components/review/review-list"
 import { ReviewCard } from "@/components/review/review-card"
 import { CourseReviewFilters } from "@/components/course/course-review-filters"
@@ -101,7 +103,9 @@ export function CourseDetailPage() {
   const orderBy =
     searchParams.get("order_by") === "like_count" ? "like_count" : "created_at"
 
+  const { user } = useAuth()
   const { data: course, isLoading } = useCourseDetail(id)
+  const settingsQuery = useUserSettings(!!user)
   const { data: reviewFilters } = useCourseReviewFilters(id)
   const { data: reviews, isLoading: reviewsLoading } = useCourseReviews(id, {
     semester,
@@ -286,6 +290,7 @@ export function CourseDetailPage() {
                         courseID={course.id}
                         courseName={course.name}
                         semesters={courseSemesters}
+                        currentSemester={settingsQuery.data?.current_semester}
                       />
                     )}
                     <Button

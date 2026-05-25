@@ -8,16 +8,24 @@ import { CourseHeaderMeta } from "@/components/course/course-header-meta"
 import { ReviewForm } from "@/components/review/review-form"
 import { useCourseDetail } from "@/hooks/use-course"
 import { useCreateReview } from "@/hooks/use-review"
-import { getCourseSemesters } from "@/lib/course-semesters"
+import { useUserSettings } from "@/hooks/use-user-settings"
+import { useAuth } from "@/contexts/auth-context"
+import { getCourseSemesters, getDefaultSemester } from "@/lib/course-semesters"
 import type { CreateReviewCommand, UpdateReviewCommand } from "@/api/review"
 
 export function NewReviewPage() {
   const { courseID } = useParams<{ courseID: string }>()
   const id = Number(courseID)
   const navigate = useNavigate()
+  const { user } = useAuth()
   const { data: course } = useCourseDetail(id)
+  const settingsQuery = useUserSettings(!!user)
   const { mutateAsync, isPending } = useCreateReview()
   const semesters = getCourseSemesters(course)
+  const defaultSemester = getDefaultSemester(
+    semesters,
+    settingsQuery.data?.current_semester
+  )
 
   async function handleSubmit(cmd: CreateReviewCommand | UpdateReviewCommand) {
     await mutateAsync(cmd as CreateReviewCommand)
@@ -44,6 +52,7 @@ export function NewReviewPage() {
             <ReviewForm
               courseID={id}
               semesters={semesters}
+              defaultSemester={defaultSemester}
               onSubmit={handleSubmit}
               onCancel={() => navigate(`/course/${id}`)}
               isSubmitting={isPending}

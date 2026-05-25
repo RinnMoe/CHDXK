@@ -24,6 +24,7 @@ interface ReviewFormProps {
   courseID?: number
   initialReview?: ReviewDTO
   semesters?: string[]
+  defaultSemester?: string
   onSubmit: (
     cmd: CreateReviewCommand | UpdateReviewCommand
   ) => Promise<void> | void
@@ -57,12 +58,14 @@ export function ReviewForm({
   courseID,
   initialReview,
   semesters,
+  defaultSemester,
   onSubmit,
   onCancel,
   isSubmitting,
 }: ReviewFormProps) {
   const isEdit = !!initialReview
   const availableSemesters = semesters ?? []
+  const resolvedDefaultSemester = initialReview?.semester ?? defaultSemester ?? ""
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const form = useForm({
@@ -97,9 +100,10 @@ export function ReviewForm({
   })
 
   function getSelectedSemester(semester: string) {
-    return semesters && semester && !semesters.includes(semester)
+    const selectedSemester = semester || resolvedDefaultSemester
+    return semesters && selectedSemester && !semesters.includes(selectedSemester)
       ? ""
-      : semester
+      : selectedSemester
   }
 
   function handleSubmit(e: React.FormEvent) {

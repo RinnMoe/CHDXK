@@ -52,6 +52,7 @@ import {
   useSetNotificationLevel,
 } from "@/hooks/use-course"
 import { useUserSettings } from "@/hooks/use-user-settings"
+import { getDefaultSemester } from "@/lib/course-semesters"
 
 const PAGE_SIZE = 20
 const ALL = "__all__"
@@ -83,6 +84,14 @@ export function UserCoursesPage() {
   const syncSemesters = useMemo(
     () => filtersQuery.data?.semesters?.filter((item) => item.name) ?? [],
     [filtersQuery.data?.semesters]
+  )
+  const syncSemesterNames = useMemo(
+    () => syncSemesters.map((item) => item.name),
+    [syncSemesters]
+  )
+  const defaultSyncSemester = getDefaultSemester(
+    syncSemesterNames,
+    settingsQuery.data?.current_semester
   )
   const enrolledItems = enrolledCourses.data ?? []
   const enrollmentSemesters = [
@@ -155,12 +164,7 @@ export function UserCoursesPage() {
   }
 
   function handleOpenSyncDialog() {
-    setSyncSemester(
-      semester ??
-        settingsQuery.data?.current_semester ??
-        syncSemesters[0]?.name ??
-        ""
-    )
+    setSyncSemester(defaultSyncSemester)
     setSyncOpen(true)
   }
 
