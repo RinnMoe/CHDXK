@@ -97,8 +97,10 @@ export function UserCoursesPage() {
   const enrollmentSemesters = [
     ...new Set(enrolledItems.map((item) => item.semester)),
   ].sort((a, b) => b.localeCompare(a))
-  const filteredEnrollments = semester
-    ? enrolledItems.filter((item) => item.semester === semester)
+  const activeSemester =
+    semester && enrollmentSemesters.includes(semester) ? semester : undefined
+  const filteredEnrollments = activeSemester
+    ? enrolledItems.filter((item) => item.semester === activeSemester)
     : enrolledItems
   const activeCourseQuery =
     view === "followed" ? followedCourses : ignoredCourses
@@ -113,12 +115,15 @@ export function UserCoursesPage() {
     const handleMessage = (payload: CourseEnrollmentSyncMessage) => {
       if (payload.status === "ok") {
         void enrolledCourses.refetch()
+        const matched = payload.matched ?? 0
         setSyncMessage(
-          `已同步 ${payload.semester}，匹配 ${payload.matched ?? 0} 条记录。`
+          `已同步 ${payload.semester}，匹配 ${matched} 条记录。`
         )
         const next = new URLSearchParams(searchParams)
         next.set("type", "enrolled")
-        if (payload.semester) next.set("semester", payload.semester)
+        if (matched > 0 && payload.semester) {
+          next.set("semester", payload.semester)
+        }
         setSearchParams(next, { replace: true })
         return
       }
@@ -172,7 +177,7 @@ export function UserCoursesPage() {
     if (!syncSemester) return
     setSyncMessage("")
     const width = 560
-    const height = 720
+    const height = 560
     const left = Math.max(0, window.screenX + (window.outerWidth - width) / 2)
     const top = Math.max(0, window.screenY + (window.outerHeight - height) / 2)
     const popup = window.open(
@@ -255,7 +260,7 @@ export function UserCoursesPage() {
           {view === "enrolled" && user && (
             <div className="flex flex-wrap items-center gap-2">
               <Select
-                value={semester ?? ALL}
+                value={activeSemester ?? ALL}
                 onValueChange={handleSemesterChange}
               >
                 <SelectTrigger size="sm" className="w-44">

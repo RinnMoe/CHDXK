@@ -13,6 +13,9 @@ export function CourseEnrollmentSyncCallbackPage() {
   const message = searchParams.get("message") ?? undefined
   const matched = Number(searchParams.get("matched") ?? "0") || 0
   const total = Number(searchParams.get("total") ?? "0") || 0
+  const returnURL = `/course/mine?type=enrolled${
+    semester && matched > 0 ? `&semester=${semester}` : ""
+  }`
 
   useEffect(() => {
     const payload: CourseEnrollmentSyncMessage = {
@@ -47,9 +50,7 @@ export function CourseEnrollmentSyncCallbackPage() {
             : (message ?? "请关闭窗口后重试。")}
         </p>
         <Button asChild variant="outline">
-          <Link
-            to={`/course/mine?type=enrolled${semester ? `&semester=${semester}` : ""}`}
-          >
+          <Link to={returnURL}>
             返回我的课程
           </Link>
         </Button>
