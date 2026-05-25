@@ -31,8 +31,11 @@ func TestTaskLoggingMiddlewareLogsSuccess(t *testing.T) {
 	if entries[0]["msg"] != "async task started" || entries[0]["type"] != "test:success" {
 		t.Fatalf("start log = %#v", entries[0])
 	}
-	if entries[1]["msg"] != "async task completed" || entries[1]["type"] != "test:success" || entries[1]["duration"] == nil {
+	if entries[1]["msg"] != "async task completed" || entries[1]["type"] != "test:success" {
 		t.Fatalf("complete log = %#v", entries[1])
+	}
+	if _, ok := entries[1]["duration"].(float64); !ok {
+		t.Fatalf("duration = %#v, want milliseconds as number", entries[1]["duration"])
 	}
 }
 
@@ -59,6 +62,9 @@ func TestTaskLoggingMiddlewareLogsFailure(t *testing.T) {
 	}
 	if entries[1]["msg"] != "async task failed" || entries[1]["type"] != "test:failure" || entries[1]["err"] != "boom" {
 		t.Fatalf("failure log = %#v", entries[1])
+	}
+	if _, ok := entries[1]["duration"].(float64); !ok {
+		t.Fatalf("duration = %#v, want milliseconds as number", entries[1]["duration"])
 	}
 }
 

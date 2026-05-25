@@ -15,7 +15,7 @@ func newTaskLoggingMiddleware() asynq.MiddlewareFunc {
 			startedAt := time.Now()
 			logx.Info(ctx, "async task started", "type", t.Type())
 			err := next.ProcessTask(ctx, t)
-			duration := time.Since(startedAt)
+			duration := time.Since(startedAt).Milliseconds()
 			if err != nil {
 				logx.Error(ctx, "async task failed", "type", t.Type(), "duration", duration, "err", err)
 				return err
