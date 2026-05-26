@@ -88,11 +88,13 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		[]review.CreatePolicy{freqPolicy, safetyPolicy},
 	)
 	courseHotService := course.NewCourseHotService(courseHotRepo, conf.Review.Command.HotScores)
+	courseService := course.NewService(courseRepo)
 	courseRatingCommand := course.NewCourseRatingCommandService(courseRepo, conf.Course.RatingScore)
 	courseQuery := application.NewCourseQueryService(courseRepo, teacherRepo, reviewRepo, notificationRepo, courseEnrollmentRepo, courseHotRepo)
 	jaccountClient := jaccount.NewOAuthClient(conf.JAccount)
 	courseEnrollmentService := course.NewEnrollmentService(courseRepo, courseEnrollmentRepo, jaccountClient)
 	courseCommand := application.NewCourseCommandService(
+		courseService,
 		course.NewNotificationService(courseRepo, notificationRepo),
 		courseEnrollmentService,
 		courseHotService,

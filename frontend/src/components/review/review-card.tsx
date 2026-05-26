@@ -246,7 +246,6 @@ function ModeratorRemarkBanner({ remark }: { remark: string }) {
 
   return (
     <div className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-sm">
-      <div className="mb-1 font-medium text-primary">管理员批注</div>
       <div className="whitespace-pre-wrap text-foreground/90">{trimmed}</div>
     </div>
   )

@@ -184,20 +184,21 @@ func (m *Migrator) migrateCourses(ctx *migrationContext) error {
 				courseTeachers = []int64{int64(row.MainTeacherID)}
 			}
 			batch = append(batch, repository.CourseEntity{
-				ID:            row.ID,
-				Code:          row.Code,
-				Name:          row.Name,
-				Credit:        row.Credit,
-				Department:    legacyDepartmentName(row.Department),
-				MainTeacherID: row.MainTeacherID,
-				Categories:    pq.StringArray(legacyCategoryNames(row.Categories)),
-				Language:      "",
-				TargetYears:   pq.StringArray{},
-				TeacherIDs:    pq.Int64Array(courseTeachers),
-				LastSemester:  legacySemesterName(row.LastSemester),
-				RatingCount:   intOrZero(row.ReviewCount),
-				RatingAvg:     floatOrZero(row.ReviewAvg),
-				CreatedAt:     now,
+				ID:              row.ID,
+				Code:            row.Code,
+				Name:            row.Name,
+				Credit:          row.Credit,
+				Department:      legacyDepartmentName(row.Department),
+				MainTeacherID:   row.MainTeacherID,
+				Categories:      pq.StringArray(legacyCategoryNames(row.Categories)),
+				Language:        "",
+				TargetYears:     pq.StringArray{},
+				TeacherIDs:      pq.Int64Array(courseTeachers),
+				LastSemester:    legacySemesterName(row.LastSemester),
+				ModeratorRemark: nullStringValue(row.ModeratorRemark),
+				RatingCount:     intOrZero(row.ReviewCount),
+				RatingAvg:       floatOrZero(row.ReviewAvg),
+				CreatedAt:       now,
 			})
 		}
 		if len(batch) > 0 {

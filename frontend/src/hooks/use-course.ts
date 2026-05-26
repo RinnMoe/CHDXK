@@ -18,9 +18,11 @@ import {
   listCourseEnrollments,
   createCourseEnrollment,
   deleteCourseEnrollment,
+  updateCourseModeratorRemark,
   type CourseDetailDTO,
   type CourseListFilter,
   type CourseNotificationLevel,
+  type UpdateCourseModeratorRemarkCommand,
 } from "@/api/course"
 import type { ReviewListFilter } from "@/api/review"
 
@@ -106,6 +108,22 @@ export function useSetNotificationLevel() {
       queryClient.invalidateQueries({ queryKey: ["course", courseID] })
       queryClient.invalidateQueries({ queryKey: ["followed-courses"] })
       queryClient.invalidateQueries({ queryKey: ["ignored-courses"] })
+    },
+  })
+}
+
+export function useUpdateCourseModeratorRemark() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      courseID,
+      cmd,
+    }: {
+      courseID: number
+      cmd: UpdateCourseModeratorRemarkCommand
+    }) => updateCourseModeratorRemark(courseID, cmd),
+    onSuccess: (_, { courseID }) => {
+      queryClient.invalidateQueries({ queryKey: ["course", courseID] })
     },
   })
 }

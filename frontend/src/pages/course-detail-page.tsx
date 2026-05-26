@@ -1,6 +1,11 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Link, useParams, useSearchParams } from "react-router-dom"
-import { RiAddLine, RiArrowLeftLine, RiMailLine } from "@remixicon/react"
+import {
+  RiAddLine,
+  RiArrowLeftLine,
+  RiEditLine,
+  RiMailLine,
+} from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -16,6 +21,7 @@ import {
 import { CourseHeaderMeta } from "@/components/course/course-header-meta"
 import { CourseNotificationControl } from "@/components/course/course-notification-control"
 import { CourseEnrollmentDialog } from "@/components/course/course-enrollment-dialog"
+import { CourseModeratorRemarkDialog } from "@/components/course/course-moderator-remark-dialog"
 import { CourseReviewTrendDialog } from "@/components/course/course-review-trend-dialog"
 import { RatingDistribution } from "@/components/course/rating-distribution"
 import { PageShell } from "@/components/layout/page-shell"
@@ -81,6 +87,42 @@ function buildFeedbackMailto(course: CourseDetailDTO) {
     subject,
     body,
   }).toString()}`
+}
+
+function CourseModeratorRemark({ course }: { course: CourseDetailDTO }) {
+  const trimmed = (course.moderator_remark ?? "").trim()
+  if (!trimmed) return null
+
+  return (
+    <section className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-sm">
+      <div className="whitespace-pre-wrap text-foreground/90">{trimmed}</div>
+    </section>
+  )
+}
+
+function CourseModeratorRemarkButton({ course }: { course: CourseDetailDTO }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="h-8 px-2 text-muted-foreground hover:text-foreground"
+        onClick={() => setOpen(true)}
+        aria-label="修改管理员备注"
+        title="修改管理员备注"
+      >
+        <RiEditLine data-icon="inline-start" />
+      </Button>
+      <CourseModeratorRemarkDialog
+        course={course}
+        open={open}
+        onOpenChange={setOpen}
+      />
+    </>
+  )
 }
 
 export function CourseDetailPage() {
@@ -171,6 +213,7 @@ export function CourseDetailPage() {
   const hasSelectedCourse = selectedSemesters.length > 0
   const teacherGroup = course.teacher_group ?? []
   const feedbackMailto = buildFeedbackMailto(course)
+  const isAdmin = user?.role === "admin"
   const hasRelatedCourses =
     course.same_code_courses.length > 0 ||
     course.same_teacher_courses.length > 0
@@ -258,6 +301,8 @@ export function CourseDetailPage() {
                     </section>
                   )}
 
+                  <CourseModeratorRemark course={course} />
+
                   {selectedSemesters.length > 0 && (
                     <section className="flex flex-wrap items-center gap-2 text-sm">
                       <h2 className="text-sm text-muted-foreground">
@@ -304,6 +349,7 @@ export function CourseDetailPage() {
                         反馈
                       </a>
                     </Button>
+                    {isAdmin && <CourseModeratorRemarkButton course={course} />}
                   </div>
                 </div>
 

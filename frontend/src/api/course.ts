@@ -58,6 +58,7 @@ export interface CourseDetailDTO {
   credit: number
   department: string
   last_semester: string
+  moderator_remark: string
   language: string
   target_years?: string[]
   categories?: string[]
@@ -70,6 +71,10 @@ export interface CourseDetailDTO {
   notification_level: CourseNotificationLevel
   my_enrollments?: CourseEnrollmentDTO[]
   my_review?: ReviewDTO
+}
+
+export interface UpdateCourseModeratorRemarkCommand {
+  moderator_remark: string
 }
 
 export interface CourseEnrollmentDTO {
@@ -166,6 +171,16 @@ export function setNotificationLevel(
   return apiClient(`${BASE_URL}/course/${courseID}/notification`, {
     method: "POST",
     body: JSON.stringify({ level }),
+  })
+}
+
+export function updateCourseModeratorRemark(
+  courseID: number,
+  cmd: UpdateCourseModeratorRemarkCommand
+): Promise<{ message: string }> {
+  return apiClient(`${BASE_URL}/course/${courseID}/moderator-remark`, {
+    method: "PUT",
+    body: JSON.stringify(cmd),
   })
 }
 

@@ -24,18 +24,21 @@ const notificationLevels = new Map<number, CourseNotificationLevel>([
   [7, 2],
   [8, 2],
 ])
+const moderatorRemarks = new Map<number, string>([
+  [1, "课程信息已由管理员核对。"],
+])
 
 const DEFAULT_PAGE = 1
 const DEFAULT_PAGE_SIZE = 20
 const MAX_PAGE_SIZE = 100
 
 function normalizePage(value: number) {
-	return value > 0 ? value : DEFAULT_PAGE
+  return value > 0 ? value : DEFAULT_PAGE
 }
 
 function normalizePageSize(value: number) {
-	if (value <= 0) return DEFAULT_PAGE_SIZE
-	return Math.min(value, MAX_PAGE_SIZE)
+  if (value <= 0) return DEFAULT_PAGE_SIZE
+  return Math.min(value, MAX_PAGE_SIZE)
 }
 
 function getNotificationLevel(courseID: number): CourseNotificationLevel {
@@ -79,8 +82,8 @@ function makeMockMyReview(
 }
 
 function paginate<T>(items: T[], page: number, pageSize: number) {
-	page = normalizePage(page)
-	pageSize = normalizePageSize(pageSize)
+  page = normalizePage(page)
+  pageSize = normalizePageSize(pageSize)
   const start = (page - 1) * pageSize
   return {
     items: items.slice(start, start + pageSize),
@@ -284,10 +287,32 @@ export const courseHandlers = [
     const myReview = user ? makeMockMyReview(id, user) : undefined
     return HttpResponse.json({
       ...makeCourseDetail(course),
+      moderator_remark: moderatorRemarks.get(id) ?? "",
       notification_level: getNotificationLevel(id),
       my_review: myReview,
     })
   }),
+
+  http.put(
+    "/api/course/:courseID/moderator-remark",
+    async ({ params, request }) => {
+      await randomDelay()
+      const user = mockSession.userID
+        ? findUserByID(mockSession.userID)
+        : undefined
+      if (!user || user.role !== "admin") {
+        return HttpResponse.json({ error: "forbidden" }, { status: 403 })
+      }
+      const id = Number(params.courseID)
+      const course = mockCourses.find((c) => c.id === id)
+      if (!course) {
+        return HttpResponse.json({ error: "course not found" }, { status: 404 })
+      }
+      const body = (await request.json()) as { moderator_remark?: string }
+      moderatorRemarks.set(id, body.moderator_remark ?? "")
+      return HttpResponse.json({ message: "ok" })
+    }
+  ),
 
   http.get("/api/course/:courseID/review", async ({ params, request }) => {
     await randomDelay()

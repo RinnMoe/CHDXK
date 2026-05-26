@@ -118,6 +118,32 @@ func (ctrl *CourseController) SetNotificationLevel(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "ok"})
 }
 
+func (ctrl *CourseController) UpdateModeratorRemark(c *gin.Context) {
+	courseID, err := strconv.Atoi(c.Param("courseID"))
+	if err != nil {
+		respondBadRequest(c, "课程 ID 无效")
+		return
+	}
+
+	u := auth.GetUserFromCtx(c.Request.Context())
+	if u == nil {
+		respondUnauthorized(c)
+		return
+	}
+
+	var cmd application.UpdateCourseModeratorRemarkCommand
+	if err := c.ShouldBindJSON(&cmd); err != nil {
+		respondBindError(c, err)
+		return
+	}
+
+	if err := ctrl.command.UpdateModeratorRemark(c.Request.Context(), u, courseID, &cmd); err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "ok"})
+}
+
 func (ctrl *CourseController) ListFollowedCourses(c *gin.Context) {
 	u := auth.GetUserFromCtx(c.Request.Context())
 	if u == nil {

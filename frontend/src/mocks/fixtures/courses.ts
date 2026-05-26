@@ -295,6 +295,7 @@ export function makeCourseDetail(course: CourseListItemDTO): CourseDetailDTO {
     credit: course.credit,
     department: course.department,
     last_semester: "2025-2026-1",
+    moderator_remark: "",
     language: course.language,
     target_years: course.target_years,
     categories: course.categories,

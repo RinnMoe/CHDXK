@@ -301,6 +301,16 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 	return result, nil
 }
 
+func (r *CourseRepository) UpdateModeratorRemark(ctx context.Context, courseID int, moderatorRemark string) error {
+	if err := r.db.WithContext(ctx).Model(&CourseEntity{}).
+		Where("id = ?", courseID).
+		Update("moderator_remark", moderatorRemark).Error; err != nil {
+		return err
+	}
+	cacheDelete(ctx, r.cache, cacheKey("course", courseID), cacheKey("course", courseID, "detail"))
+	return nil
+}
+
 func (r *CourseRepository) GetFilters(ctx context.Context) (*course.CourseFilters, error) {
 	key := cacheKey("course", "filters")
 	if cached, ok := cacheGetJSON[course.CourseFilters](ctx, r.cache, key); ok {

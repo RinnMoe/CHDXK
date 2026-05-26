@@ -196,6 +196,7 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 		Credit:            detail.Credit,
 		Department:        detail.Department,
 		LastSemester:      detail.LastSemester,
+		ModeratorRemark:   detail.ModeratorRemark,
 		Language:          detail.Language,
 		TargetYears:       detail.TargetYears,
 		Categories:        detail.Categories,

@@ -1,0 +1,2 @@
+ALTER TABLE courses
+    ADD COLUMN IF NOT EXISTS moderator_remark TEXT NOT NULL DEFAULT '';

@@ -35,19 +35,20 @@ type CourseFilter struct {
 
 // Read model: course list/search result
 type CourseView struct {
-	ID            int
-	Code          string
-	Name          string
-	Credit        float32
-	Department    string
-	MainTeacherID int
-	MainTeacher   *teacher.TeacherView
-	Categories    []string
-	Language      string
-	TargetYears   []string
-	LastSemester  string
-	CreatedAt     time.Time
-	Rating        RatingInfo
+	ID              int
+	Code            string
+	Name            string
+	Credit          float32
+	Department      string
+	MainTeacherID   int
+	MainTeacher     *teacher.TeacherView
+	Categories      []string
+	Language        string
+	TargetYears     []string
+	LastSemester    string
+	ModeratorRemark string
+	CreatedAt       time.Time
+	Rating          RatingInfo
 }
 
 // Read model: course detail with offered courses and rating distribution
@@ -60,6 +61,7 @@ type CourseDetailView struct {
 	MainTeacherID     int
 	MainTeacher       *teacher.TeacherView
 	LastSemester      string
+	ModeratorRemark   string
 	TeacherIDs        []int
 	Categories        []string
 	Language          string

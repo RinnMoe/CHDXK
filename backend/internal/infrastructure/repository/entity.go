@@ -56,23 +56,24 @@ func (CourseEnrollmentEntity) TableName() string {
 }
 
 type CourseEntity struct {
-	ID            int            `gorm:"column:id"`
-	Code          string         `gorm:"column:code;uniqueIndex:idx_courses_code_teacher"`
-	Name          string         `gorm:"column:name"`
-	Credit        float32        `gorm:"column:credit"`
-	Department    string         `gorm:"column:department;index"`
-	MainTeacherID int            `gorm:"column:main_teacher_id;uniqueIndex:idx_courses_code_teacher"`
-	TargetYears   pq.StringArray `gorm:"column:target_years;type:text[]"`
-	Language      string         `gorm:"column:language"`
-	Categories    pq.StringArray `gorm:"column:categories;type:text[]"`
-	TeacherIDs    pq.Int64Array  `gorm:"column:teacher_ids;type:integer[]"`
-	SearchVector  string         `gorm:"column:search_vector;type:tsvector;index:,type:gin;<-:false"`
-	LastSemester  string         `gorm:"column:last_semester"`
-	RatingCount   int            `gorm:"column:rating_count"`
-	RatingAvg     float64        `gorm:"column:rating_avg"`
-	RatingScore   float64        `gorm:"column:rating_score"`
-	CreatedAt     time.Time      `gorm:"column:created_at"`
-	MainTeacher   *TeacherEntity `gorm:"foreignKey:main_teacher_id;references:id"`
+	ID              int            `gorm:"column:id"`
+	Code            string         `gorm:"column:code;uniqueIndex:idx_courses_code_teacher"`
+	Name            string         `gorm:"column:name"`
+	Credit          float32        `gorm:"column:credit"`
+	Department      string         `gorm:"column:department;index"`
+	MainTeacherID   int            `gorm:"column:main_teacher_id;uniqueIndex:idx_courses_code_teacher"`
+	TargetYears     pq.StringArray `gorm:"column:target_years;type:text[]"`
+	Language        string         `gorm:"column:language"`
+	Categories      pq.StringArray `gorm:"column:categories;type:text[]"`
+	TeacherIDs      pq.Int64Array  `gorm:"column:teacher_ids;type:integer[]"`
+	SearchVector    string         `gorm:"column:search_vector;type:tsvector;index:,type:gin;<-:false"`
+	LastSemester    string         `gorm:"column:last_semester"`
+	ModeratorRemark string         `gorm:"column:moderator_remark"`
+	RatingCount     int            `gorm:"column:rating_count"`
+	RatingAvg       float64        `gorm:"column:rating_avg"`
+	RatingScore     float64        `gorm:"column:rating_score"`
+	CreatedAt       time.Time      `gorm:"column:created_at"`
+	MainTeacher     *TeacherEntity `gorm:"foreignKey:main_teacher_id;references:id"`
 }
 
 func (CourseEntity) TableName() string {

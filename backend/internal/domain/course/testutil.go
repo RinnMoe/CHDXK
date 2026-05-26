@@ -18,6 +18,7 @@ type MockCourseRepository struct {
 	OnGetDetail             func(context.Context, int) (*CourseDetailView, error)
 	OnFindOfferedCourses    func(context.Context, int) ([]OfferedCourseView, error)
 	OnGetFilters            func(context.Context) (*CourseFilters, error)
+	OnUpdateModeratorRemark func(context.Context, int, string) error
 	OnRefreshRatingScores   func(context.Context, RatingScoreConfig) error
 	OnOfferedCourseExists   func(context.Context, int, string) (bool, error)
 	OnOfferedSemesterExists func(context.Context, string) (bool, error)
@@ -90,18 +91,19 @@ func (r *MockCourseRepository) GetDetail(ctx context.Context, courseID int) (*Co
 		return nil, err
 	}
 	return &CourseDetailView{
-		ID:            c.ID,
-		Code:          c.Code,
-		Name:          c.Name,
-		Credit:        c.Credit,
-		Department:    c.Department,
-		MainTeacherID: c.MainTeacherID,
-		MainTeacher:   c.MainTeacher,
-		LastSemester:  c.LastSemester,
-		Categories:    c.Categories,
-		Language:      c.Language,
-		TargetYears:   c.TargetYears,
-		Rating:        c.Rating,
+		ID:              c.ID,
+		Code:            c.Code,
+		Name:            c.Name,
+		Credit:          c.Credit,
+		Department:      c.Department,
+		MainTeacherID:   c.MainTeacherID,
+		MainTeacher:     c.MainTeacher,
+		LastSemester:    c.LastSemester,
+		Categories:      c.Categories,
+		Language:        c.Language,
+		TargetYears:     c.TargetYears,
+		Rating:          c.Rating,
+		ModeratorRemark: c.ModeratorRemark,
 	}, nil
 }
 
@@ -117,6 +119,17 @@ func (r *MockCourseRepository) GetFilters(ctx context.Context) (*CourseFilters, 
 		return r.OnGetFilters(ctx)
 	}
 	return r.Filters, nil
+}
+
+func (r *MockCourseRepository) UpdateModeratorRemark(ctx context.Context, courseID int, moderatorRemark string) error {
+	if r.OnUpdateModeratorRemark != nil {
+		return r.OnUpdateModeratorRemark(ctx, courseID, moderatorRemark)
+	}
+	r.ensureMaps()
+	if c, ok := r.Courses[courseID]; ok {
+		c.ModeratorRemark = moderatorRemark
+	}
+	return nil
 }
 
 func (r *MockCourseRepository) RefreshRatingScores(ctx context.Context, config RatingScoreConfig) error {

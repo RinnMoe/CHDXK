@@ -4,12 +4,14 @@ import (
 	"context"
 	"time"
 
+	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 )
 
 var ErrCourseNotFound = course.ErrCourseNotFound
 
 type CourseCommandService struct {
+	courseService        *course.Service
 	notificationService  *course.NotificationService
 	enrollmentService    *course.EnrollmentService
 	hotService           *course.CourseHotService
@@ -17,17 +19,30 @@ type CourseCommandService struct {
 }
 
 func NewCourseCommandService(
+	courseService *course.Service,
 	notificationService *course.NotificationService,
 	enrollmentService *course.EnrollmentService,
 	hotService *course.CourseHotService,
 	ratingCommandService *course.CourseRatingCommandService,
 ) *CourseCommandService {
 	return &CourseCommandService{
+		courseService:        courseService,
 		notificationService:  notificationService,
 		enrollmentService:    enrollmentService,
 		hotService:           hotService,
 		ratingCommandService: ratingCommandService,
 	}
+}
+
+type UpdateCourseModeratorRemarkCommand struct {
+	ModeratorRemark string `json:"moderator_remark,omitempty"`
+}
+
+func (s *CourseCommandService) UpdateModeratorRemark(ctx context.Context, u *auth.User, courseID int, cmd *UpdateCourseModeratorRemarkCommand) error {
+	return s.courseService.UpdateModeratorRemark(ctx, u, course.UpdateModeratorRemark{
+		CourseID:        courseID,
+		ModeratorRemark: cmd.ModeratorRemark,
+	})
 }
 
 func (s *CourseCommandService) SetNotificationLevel(ctx context.Context, userID, courseID int, level course.NotificationLevel) error {

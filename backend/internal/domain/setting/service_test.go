@@ -48,6 +48,10 @@ func (r *fakeSettingsCourseRepo) GetFilters(ctx context.Context) (*course.Course
 	return nil, nil
 }
 
+func (r *fakeSettingsCourseRepo) UpdateModeratorRemark(ctx context.Context, courseID int, moderatorRemark string) error {
+	return nil
+}
+
 func (r *fakeSettingsCourseRepo) RefreshRatingScores(ctx context.Context, config course.RatingScoreConfig) error {
 	return nil
 }
