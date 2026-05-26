@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-contrib/sessions"
@@ -19,6 +20,10 @@ func ResolveCurrentUser(authResolution *application.AuthResolutionService) gin.H
 
 		resolved, err := authResolution.Resolve(c.Request.Context(), bearerToken(c), sessionUserID(c))
 		if err != nil {
+			if errors.Is(err, auth.ErrUserSuspended) {
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": err.Error()})
+				return
+			}
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 			return
 		}

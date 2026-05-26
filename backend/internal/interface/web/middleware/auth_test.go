@@ -97,6 +97,49 @@ func TestResolveCurrentUserWithUserAPIKey(t *testing.T) {
 	}
 }
 
+func TestResolveCurrentUserRejectsSuspendedSessionUser(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	now := time.Now()
+	suspendedAt := now.Add(-time.Hour)
+	suspendTill := now.Add(time.Hour)
+	repo := auth.NewMockUserRepository(map[int]*auth.User{
+		7: {
+			ID:          7,
+			Role:        auth.RoleUser,
+			SuspendedAt: &suspendedAt,
+			SuspendTill: &suspendTill,
+		},
+	})
+	currentUserSvc := auth.NewCurrentUserService(repo)
+	apiKeyRepo := &auth.MockApiKeyRepository{}
+	apiKeySvc := auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig)
+	authResolution := application.NewAuthResolutionService(currentUserSvc, apiKeySvc, nil)
+	r := gin.New()
+	r.Use(sessions.Sessions("jcourse_session", filesession.NewStore(t.TempDir(), []byte("test-secret"))))
+	r.Use(ResolveCurrentUser(authResolution))
+	r.GET("/login-session", func(c *gin.Context) {
+		if err := SetSessionUserID(c, 7); err != nil {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+		c.Status(http.StatusNoContent)
+	})
+	r.GET("/protected", RequireAuth(), func(c *gin.Context) {
+		c.Status(http.StatusOK)
+	})
+
+	cookieValue := captureSessionCookie(t, r)
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/protected", nil)
+	req.Header.Set("Cookie", cookieValue)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("status = %d, want %d", w.Code, http.StatusForbidden)
+	}
+}
+
 func TestCSRFMiddleware(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
