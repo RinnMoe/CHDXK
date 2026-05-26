@@ -232,7 +232,7 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 	sameCodeCourses, _, err := s.courseQuery.FindBy(ctx, course.CourseFilter{
 		Code:      detail.Code,
 		ExcludeID: courseID,
-		OrderBy:   "rating_avg",
+		OrderBy:   "rating_score",
 	})
 	if err != nil {
 		return nil, err
@@ -245,7 +245,7 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 	sameTeacherCourses, _, err := s.courseQuery.FindBy(ctx, course.CourseFilter{
 		TeacherID: detail.MainTeacherID,
 		ExcludeID: courseID,
-		OrderBy:   "rating_avg",
+		OrderBy:   "rating_score",
 	})
 	if err != nil {
 		return nil, err

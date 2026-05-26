@@ -40,6 +40,7 @@ func newCourseViewFromEntity(e *CourseEntity) *course.CourseView {
 		Rating: course.RatingInfo{
 			Count: e.RatingCount,
 			Avg:   e.RatingAvg,
+			Score: e.RatingScore,
 		},
 	}
 	if e.MainTeacher != nil {
@@ -64,6 +65,7 @@ func newCourseDetailViewFromEntity(e *CourseEntity) *course.CourseDetailView {
 		Rating: course.RatingInfo{
 			Count: e.RatingCount,
 			Avg:   e.RatingAvg,
+			Score: e.RatingScore,
 		},
 		OfferedCourses: make([]course.OfferedCourseView, 0),
 	}

@@ -17,6 +17,7 @@ type Course struct {
 	LastSemester  string
 	RatingCount   int
 	RatingAvg     float64
+	RatingScore   float64
 	CreatedAt     time.Time
 }
 

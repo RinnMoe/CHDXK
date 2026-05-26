@@ -29,6 +29,7 @@ type AppConfig struct {
 	Redis    persistence.RedisConfig            `mapstructure:"redis"`
 	Session  middleware.SessionConfig           `mapstructure:"session"`
 	Auth     AuthConfig                         `mapstructure:"auth"`
+	Course   CourseConfig                       `mapstructure:"course"`
 	Review   ReviewConfig                       `mapstructure:"review"`
 	APIKey   auth.ApiKeyConfig                  `mapstructure:"api_key"`
 	Admin    application.AdminUserCommandConfig `mapstructure:"admin"`
@@ -46,6 +47,10 @@ type AuthConfig struct {
 	Access          auth.AccessConfig
 	PasswordHash    account.PasswordHashConfig
 	UsernameDeriver account.UsernameDeriverConfig
+}
+
+type CourseConfig struct {
+	RatingScore course.RatingScoreConfig `mapstructure:"rating_score"`
 }
 
 type ReviewConfig struct {
@@ -154,6 +159,11 @@ func setDefaults(v *viper.Viper) {
 	setSectionDefaults(v, "point", map[string]any{
 		"rate_bps": point.DefaultTransferFeeConfig.RateBps,
 		"min_fee":  point.DefaultTransferFeeConfig.MinFee,
+	})
+	setSectionDefaults(v, "course.rating_score", map[string]any{
+		"prior_count":       course.DefaultRatingScoreConfig.PriorCount,
+		"refresh_cron":      course.DefaultRatingScoreConfig.RefreshCron,
+		"scheduler_enabled": course.DefaultRatingScoreConfig.SchedulerEnabled,
 	})
 	setSectionDefaults(v, "review.frequency_policy", map[string]any{
 		"window":           policy.DefaultFrequencyPolicyConfig.Window.String(),

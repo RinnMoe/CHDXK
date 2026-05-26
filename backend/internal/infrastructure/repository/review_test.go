@@ -574,6 +574,9 @@ func TestReviewRepository_CourseStatsAggregation(t *testing.T) {
 	if c.RatingAvg != avg {
 		t.Errorf("AvgRating: got %v, want %v", c.RatingAvg, avg)
 	}
+	if c.RatingScore != avg {
+		t.Errorf("RatingScore: got %v, want %v", c.RatingScore, avg)
+	}
 }
 
 func TestReviewRepository_GetCourseFilters(t *testing.T) {

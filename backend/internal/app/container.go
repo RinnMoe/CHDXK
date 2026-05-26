@@ -20,6 +20,7 @@ type ServiceContainer struct {
 	ReviewQuery             *application.ReviewQueryService
 	ReviewCommand           *application.ReviewCommandService
 	CourseHotCommand        *application.CourseHotCommandService
+	CourseRatingCommand     *application.CourseRatingCommandService
 	CourseQuery             *application.CourseQueryService
 	CourseCommand           *application.CourseCommandService
 	CourseEnrollmentQuery   *application.CourseEnrollmentQueryService
@@ -51,7 +52,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	db := persistence.NewPostgres(conf.Postgres)
 	redisClient := persistence.NewRedisClient(conf.Redis)
 
-	reviewRepo := repository.NewReviewRepository(db, redisClient)
+	reviewRepo := repository.NewReviewRepositoryWithRatingScore(db, redisClient, conf.Course.RatingScore)
 	voteRepo := repository.NewReviewVoteRepository(db, redisClient)
 	courseRepo := repository.NewCourseRepository(db, redisClient)
 	courseEnrollmentRepo := repository.NewCourseEnrollmentRepository(db, redisClient)
@@ -85,6 +86,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		[]review.CreatePolicy{freqPolicy, safetyPolicy},
 	)
 	courseHotCommand := application.NewCourseHotCommandService(courseHotRepo, conf.Review.Command.HotScores)
+	courseRatingCommand := application.NewCourseRatingCommandService(courseRepo, conf.Course.RatingScore)
 	courseQuery := application.NewCourseQueryService(courseRepo, teacherRepo, reviewRepo, notificationRepo, courseEnrollmentRepo, courseHotRepo)
 	courseCommand := application.NewCourseCommandService(courseRepo, notificationRepo)
 	jaccountClient := jaccount.NewOAuthClient(conf.JAccount)
@@ -146,6 +148,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		ReviewQuery:             reviewQuery,
 		ReviewCommand:           reviewCommand,
 		CourseHotCommand:        courseHotCommand,
+		CourseRatingCommand:     courseRatingCommand,
 		CourseQuery:             courseQuery,
 		CourseCommand:           courseCommand,
 		CourseEnrollmentQuery:   courseEnrollmentQuery,

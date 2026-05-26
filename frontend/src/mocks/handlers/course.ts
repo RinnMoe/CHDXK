@@ -106,6 +106,14 @@ function applyCourseFilter(url: URL) {
         b.rating.count - a.rating.count ||
         a.code.localeCompare(b.code)
     )
+  } else if (orderBy === "rating_score" || !orderBy) {
+    list.sort(
+      (a, b) =>
+        b.rating.score - a.rating.score ||
+        b.rating.count - a.rating.count ||
+        b.rating.avg - a.rating.avg ||
+        a.code.localeCompare(b.code)
+    )
   } else if (orderBy === "rating_count") {
     list.sort(
       (a, b) =>

@@ -116,6 +116,10 @@ func (q *fakeCourseQuery) GetFilters(ctx context.Context) (*course.CourseFilters
 	return &course.CourseFilters{}, nil
 }
 
+func (q *fakeCourseQuery) RefreshRatingScores(ctx context.Context, config course.RatingScoreConfig) error {
+	return nil
+}
+
 var errNotFound = errorString("not found")
 
 type errorString string

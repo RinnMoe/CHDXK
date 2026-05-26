@@ -866,11 +866,38 @@ func (m *Migrator) refreshDerivedData(ctx context.Context) error {
 	`).Error; err != nil {
 		return err
 	}
+	priorCount := course.DefaultRatingScoreConfig.PriorCount
 	if err := db.Exec(`
+		WITH global_rating AS (
+			SELECT COALESCE(AVG(rating), 0)::double precision AS avg_rating
+			FROM reviews
+		), course_rating AS (
+			SELECT
+				course_id,
+				COUNT(*)::double precision AS rating_count,
+				AVG(rating)::double precision AS rating_avg
+			FROM reviews
+			GROUP BY course_id
+		), computed AS (
+			SELECT
+				c.id,
+				COALESCE(cr.rating_count, 0) AS rating_count,
+				COALESCE(cr.rating_avg, 0) AS rating_avg,
+				CASE
+					WHEN COALESCE(cr.rating_count, 0) = 0 THEN 0
+					ELSE ((cr.rating_avg * cr.rating_count) + (? * gr.avg_rating)) / (cr.rating_count + ?)
+				END AS rating_score
+			FROM courses AS c
+			CROSS JOIN global_rating AS gr
+			LEFT JOIN course_rating AS cr ON cr.course_id = c.id
+		)
 		UPDATE courses AS c SET
-			rating_count = (SELECT COUNT(*) FROM reviews AS r WHERE r.course_id = c.id),
-			rating_avg = (SELECT COALESCE(AVG(rating), 0) FROM reviews AS r WHERE r.course_id = c.id)
-	`).Error; err != nil {
+			rating_count = computed.rating_count::integer,
+			rating_avg = computed.rating_avg,
+			rating_score = computed.rating_score
+		FROM computed
+		WHERE computed.id = c.id
+	`, priorCount, priorCount).Error; err != nil {
 		return err
 	}
 	if err := repository.RefreshCourseSearchVectors(db); err != nil {

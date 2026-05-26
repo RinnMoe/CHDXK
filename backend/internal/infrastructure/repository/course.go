@@ -25,6 +25,7 @@ func newCourseDomain(e *CourseEntity) course.Course {
 		LastSemester:  e.LastSemester,
 		RatingCount:   e.RatingCount,
 		RatingAvg:     e.RatingAvg,
+		RatingScore:   e.RatingScore,
 		CreatedAt:     e.CreatedAt,
 	}
 }
@@ -97,6 +98,13 @@ func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm
 func (r *CourseRepository) applySort(db *gorm.DB, f course.CourseFilter) *gorm.DB {
 	desc := !f.Ascend
 	switch f.OrderBy {
+	case "", "rating_score":
+		return db.
+			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_score"}, Desc: desc}).
+			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_count"}, Desc: true}).
+			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_avg"}, Desc: true}).
+			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "code"}}).
+			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "id"}})
 	case "rating_count":
 		return db.
 			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_count"}, Desc: desc}).
@@ -120,6 +128,45 @@ func (r *CourseRepository) applyPagination(db *gorm.DB, f course.CourseFilter) *
 		db = db.Offset(offset).Limit(f.PageSize)
 	}
 	return db
+}
+
+func (r *CourseRepository) RefreshRatingScores(ctx context.Context, config course.RatingScoreConfig) error {
+	priorCount := config.Normalized().PriorCount
+	if err := r.db.WithContext(ctx).Exec(`
+		WITH global_rating AS (
+			SELECT COALESCE(AVG(rating), 0)::double precision AS avg_rating
+			FROM reviews
+		), course_rating AS (
+			SELECT
+				course_id,
+				COUNT(*)::double precision AS rating_count,
+				AVG(rating)::double precision AS rating_avg
+			FROM reviews
+			GROUP BY course_id
+		), computed AS (
+			SELECT
+				c.id,
+				COALESCE(cr.rating_count, 0) AS rating_count,
+				COALESCE(cr.rating_avg, 0) AS rating_avg,
+				CASE
+					WHEN COALESCE(cr.rating_count, 0) = 0 THEN 0
+					ELSE ((cr.rating_avg * cr.rating_count) + (? * gr.avg_rating)) / (cr.rating_count + ?)
+				END AS rating_score
+			FROM courses AS c
+			CROSS JOIN global_rating AS gr
+			LEFT JOIN course_rating AS cr ON cr.course_id = c.id
+		)
+		UPDATE courses AS c SET
+			rating_count = computed.rating_count::integer,
+			rating_avg = computed.rating_avg,
+			rating_score = computed.rating_score
+		FROM computed
+		WHERE computed.id = c.id
+	`, priorCount, priorCount).Error; err != nil {
+		return err
+	}
+	cacheDeletePattern(ctx, r.cache, cacheKey("course", "*"))
+	return nil
 }
 
 func (r *CourseRepository) OfferedCourseExists(ctx context.Context, courseID int, semester string) (bool, error) {

@@ -46,6 +46,12 @@ auth:
   username_deriver:
     salt: "SALT"
 
+course:
+  rating_score:
+    prior_count: 5
+    refresh_cron: "0 5 * * *"
+    scheduler_enabled: true
+
 review:
   frequency_policy:
     window: "1h"

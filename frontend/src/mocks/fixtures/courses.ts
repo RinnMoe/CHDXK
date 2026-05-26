@@ -124,6 +124,13 @@ function avgFromDistribution(
   return Math.round((sum / total) * 100) / 100
 }
 
+function ratingScore(avg: number, count: number): number {
+  if (count === 0) return 0
+  const globalAvg = 3.8
+  const priorCount = 5
+  return Math.round(((avg * count + priorCount * globalAvg) / (count + priorCount)) * 100) / 100
+}
+
 let courseIDSeed = 1
 
 // Define code groups: most courses share a code with 1-3 other courses
@@ -164,6 +171,7 @@ function makeCourse(): CourseListItemDTO {
   const group = pick(CODE_GROUPS)
   const count = randInt(0, 50)
   const distribution = makeDistribution(count)
+  const avg = avgFromDistribution(distribution)
   const mainTeacher = makeTeacher()
   return {
     id: courseIDSeed++,
@@ -177,7 +185,8 @@ function makeCourse(): CourseListItemDTO {
     main_teacher: mainTeacher,
     rating: {
       count,
-      avg: avgFromDistribution(distribution),
+      avg,
+      score: ratingScore(avg, count),
       distribution,
     },
   }
@@ -228,7 +237,7 @@ mockCourses.push(
     target_years: ["大三", "大四"],
     categories: ["专业选修"],
     main_teacher: makeTeacher("钱学"),
-    rating: { count: 0, avg: 0, distribution: noRatingDistribution },
+    rating: { count: 0, avg: 0, score: 0, distribution: noRatingDistribution },
   },
   {
     id: courseIDSeed++,
@@ -240,7 +249,7 @@ mockCourses.push(
     target_years: ["研究生"],
     categories: ["专业必修"],
     main_teacher: makeTeacher("孙理"),
-    rating: { count: 0, avg: 0, distribution: noRatingDistribution },
+    rating: { count: 0, avg: 0, score: 0, distribution: noRatingDistribution },
   },
   {
     id: courseIDSeed++,
@@ -252,17 +261,24 @@ mockCourses.push(
     target_years: ["大三", "研究生"],
     categories: ["专业选修", "通识选修"],
     main_teacher: makeTeacher("李星"),
-    rating: { count: 0, avg: 0, distribution: noRatingDistribution },
+    rating: { count: 0, avg: 0, score: 0, distribution: noRatingDistribution },
   }
 )
 
 export function makeCourseDetail(course: CourseListItemDTO): CourseDetailDTO {
-  const sameCode = mockCourses.filter(
-    (c) => c.code === course.code && c.id !== course.id
-  )
-  const sameTeacher = mockCourses.filter(
-    (c) => c.main_teacher.id === course.main_teacher.id && c.id !== course.id
-  )
+  const byRatingScore = (a: CourseListItemDTO, b: CourseListItemDTO) =>
+    b.rating.score - a.rating.score ||
+    b.rating.count - a.rating.count ||
+    b.rating.avg - a.rating.avg ||
+    a.code.localeCompare(b.code)
+  const sameCode = mockCourses
+    .filter((c) => c.code === course.code && c.id !== course.id)
+    .sort(byRatingScore)
+  const sameTeacher = mockCourses
+    .filter(
+      (c) => c.main_teacher.id === course.main_teacher.id && c.id !== course.id
+    )
+    .sort(byRatingScore)
   const currentTeacherGroup = [
     course.main_teacher,
     makeTeacher(pick(TEACHER_NAMES)),

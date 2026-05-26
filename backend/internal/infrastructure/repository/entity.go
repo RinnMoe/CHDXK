@@ -70,6 +70,7 @@ type CourseEntity struct {
 	LastSemester  string         `gorm:"column:last_semester"`
 	RatingCount   int            `gorm:"column:rating_count"`
 	RatingAvg     float64        `gorm:"column:rating_avg"`
+	RatingScore   float64        `gorm:"column:rating_score"`
 	CreatedAt     time.Time      `gorm:"column:created_at"`
 	MainTeacher   *TeacherEntity `gorm:"foreignKey:main_teacher_id;references:id"`
 }

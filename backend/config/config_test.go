@@ -55,6 +55,15 @@ review:
 	if conf.Session.Secure {
 		t.Fatal("session default secure = true, want false")
 	}
+	if conf.Course.RatingScore.PriorCount != 5 {
+		t.Fatalf("course rating score prior count = %d, want 5", conf.Course.RatingScore.PriorCount)
+	}
+	if conf.Course.RatingScore.RefreshCron != "0 5 * * *" {
+		t.Fatalf("course rating score refresh cron = %q, want 0 5 * * *", conf.Course.RatingScore.RefreshCron)
+	}
+	if !conf.Course.RatingScore.SchedulerEnabled {
+		t.Fatal("course rating score scheduler enabled = false, want true")
+	}
 	if conf.Review.FrequencyPolicy.Window != 2*time.Hour {
 		t.Fatalf("review override window = %s, want %s", conf.Review.FrequencyPolicy.Window, 2*time.Hour)
 	}

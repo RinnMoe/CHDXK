@@ -10,6 +10,7 @@ import (
 type RatingInfoDTO struct {
 	Count        int     `json:"count"`
 	Avg          float64 `json:"avg"`
+	Score        float64 `json:"score"`
 	Distribution [5]int  `json:"distribution"`
 }
 
@@ -17,6 +18,7 @@ func newRatingInfoDTO(info course.RatingInfo) RatingInfoDTO {
 	return RatingInfoDTO{
 		Count:        info.Count,
 		Avg:          info.Avg,
+		Score:        info.Score,
 		Distribution: info.Distribution,
 	}
 }

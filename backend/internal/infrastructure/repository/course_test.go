@@ -305,6 +305,44 @@ func TestCourseRepository_FindBy(t *testing.T) {
 		}
 	})
 
+	t.Run("default sort by rating_score", func(t *testing.T) {
+		highScore := seedCourseRaw(t, db, "RS100", "综合评分更高", 3.0, "计算机学院", t1.ID, "zh", []string{"核心课"}, []string{"2021"})
+		highCount := seedCourseRaw(t, db, "RS101", "综合评分相同点评更多", 3.0, "计算机学院", t1.ID, "zh", []string{"核心课"}, []string{"2021"})
+		codeFirst := seedCourseRaw(t, db, "RS102", "综合评分相同点评相同", 3.0, "计算机学院", t1.ID, "zh", []string{"核心课"}, []string{"2021"})
+		t.Cleanup(func() {
+			_ = db.Delete(&repository.CourseEntity{}, []int{highScore.ID, highCount.ID, codeFirst.ID}).Error
+		})
+
+		for _, tc := range []struct {
+			courseID int
+			count    int
+			avg      float64
+			score    float64
+		}{
+			{courseID: c1.ID, count: 2, avg: 4, score: 4.1},
+			{courseID: highScore.ID, count: 1, avg: 5, score: 4.5},
+			{courseID: highCount.ID, count: 3, avg: 4, score: 4.1},
+			{courseID: codeFirst.ID, count: 2, avg: 4, score: 4.1},
+		} {
+			if err := db.Model(&repository.CourseEntity{}).
+				Where("id = ?", tc.courseID).
+				Updates(map[string]any{"rating_count": tc.count, "rating_avg": tc.avg, "rating_score": tc.score}).Error; err != nil {
+				t.Fatalf("update course rating: %v", err)
+			}
+		}
+
+		results, _, err := repo.FindBy(ctx, course.CourseFilter{})
+		if err != nil {
+			t.Fatalf("FindBy default rating_score desc: %v", err)
+		}
+		if len(results) < 4 {
+			t.Fatalf("results: got %d, want at least 4", len(results))
+		}
+		if results[0].ID != highScore.ID || results[1].ID != highCount.ID || results[2].ID != c1.ID || results[3].ID != codeFirst.ID {
+			t.Fatalf("order ids: got %d,%d,%d,%d", results[0].ID, results[1].ID, results[2].ID, results[3].ID)
+		}
+	})
+
 	t.Run("sort by rating_count", func(t *testing.T) {
 		highAvg := seedCourseRaw(t, db, "RC100", "点评数相同均分更高", 3.0, "计算机学院", t1.ID, "zh", []string{"核心课"}, []string{"2021"})
 		highCount := seedCourseRaw(t, db, "RC101", "点评数更多", 3.0, "计算机学院", t1.ID, "zh", []string{"核心课"}, []string{"2021"})

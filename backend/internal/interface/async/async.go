@@ -19,6 +19,7 @@ func NewMux(container *app.ServiceContainer) *asynq.ServeMux {
 	mux.Handle(auth.TaskTypeSuspendUser, asynchandler.NewSuspendUserHandler(container.AuthUserService))
 	mux.Handle(auth.TaskTypeFlushAccess, asynchandler.NewFlushAccessHandler(container.AccessTracker))
 	mux.Handle(course.TaskTypeRecordHotCourseActivity, asynchandler.NewRecordHotCourseActivityHandler(container.CourseHotCommand))
+	mux.Handle(course.TaskTypeRefreshRatingScores, asynchandler.NewRefreshCourseRatingScoresHandler(container.CourseRatingCommand))
 	mux.Handle(domainemail.TaskTypeSendEmail, asynchandler.NewSendEmailHandler(container.EmailService))
 	mux.Handle(stat.TaskTypeCollectDailySiteStats, asynchandler.NewCollectDailySiteStatsHandler(container.SiteStatsCommand))
 	return mux
@@ -36,6 +37,14 @@ func RegisterScheduledTasks(scheduler *asynq.Scheduler, conf config.AppConfig) (
 	if conf.Auth.Access.SchedulerEnabled && conf.Auth.Access.FlushCron != "" {
 		task := auth.NewFlushAccessTask()
 		if _, err := scheduler.Register(conf.Auth.Access.FlushCron, asynq.NewTask(task.Type(), task.Payload())); err != nil {
+			return false, err
+		}
+		registered = true
+	}
+	ratingScore := conf.Course.RatingScore.Normalized()
+	if ratingScore.SchedulerEnabled && ratingScore.RefreshCron != "" {
+		task := course.NewRefreshRatingScoresTask()
+		if _, err := scheduler.Register(ratingScore.RefreshCron, asynq.NewTask(task.Type(), task.Payload())); err != nil {
 			return false, err
 		}
 		registered = true

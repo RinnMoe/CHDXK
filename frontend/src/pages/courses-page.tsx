@@ -24,8 +24,10 @@ export function CoursesPage() {
       target_years: target_years.length > 0 ? target_years : undefined,
       credit: credits[0],
       order_by:
-        (searchParams.get("order_by") as "rating_count" | "rating_avg") ??
-        undefined,
+        (searchParams.get("order_by") as
+          | "rating_score"
+          | "rating_count"
+          | "rating_avg") ?? undefined,
       page: Number(searchParams.get("page") ?? "1"),
       page_size: 20,
     }

@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
+	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/review"
 )
 
@@ -97,6 +98,7 @@ type ReviewRepository struct {
 	db           *gorm.DB
 	cache        *redis.Client
 	searchConfig string
+	ratingScore  course.RatingScoreConfig
 }
 
 func (r2 *ReviewRepository) deleteReviewCache(ctx context.Context, reviewID, courseID int) {
@@ -116,10 +118,31 @@ func (r2 *ReviewRepository) deleteReviewCache(ctx context.Context, reviewID, cou
 }
 
 func (r2 *ReviewRepository) updateCourseStats(tx *gorm.DB, courseID int) error {
-	return tx.Exec(`UPDATE courses SET
-		rating_count = (SELECT COUNT(*) FROM reviews WHERE course_id = ?),
-		rating_avg = (SELECT COALESCE(AVG(rating), 0) FROM reviews WHERE course_id = ?)
-		WHERE id = ?`, courseID, courseID, courseID).Error
+	priorCount := r2.ratingScore.Normalized().PriorCount
+	return tx.Exec(`
+		WITH global_rating AS (
+			SELECT COALESCE(AVG(rating), 0)::double precision AS avg_rating
+			FROM reviews
+		), course_rating AS (
+			SELECT
+				course_id,
+				COUNT(*)::double precision AS rating_count,
+				AVG(rating)::double precision AS rating_avg
+			FROM reviews
+			WHERE course_id = ?
+			GROUP BY course_id
+		)
+		UPDATE courses AS c SET
+			rating_count = COALESCE(cr.rating_count, 0)::integer,
+			rating_avg = COALESCE(cr.rating_avg, 0),
+			rating_score = CASE
+				WHEN COALESCE(cr.rating_count, 0) = 0 THEN 0
+				ELSE ((cr.rating_avg * cr.rating_count) + (? * gr.avg_rating)) / (cr.rating_count + ?)
+			END
+		FROM global_rating AS gr
+		LEFT JOIN course_rating AS cr ON true
+		WHERE c.id = ?
+	`, courseID, priorCount, priorCount, courseID).Error
 }
 
 func (r2 *ReviewRepository) FindBy(ctx context.Context, filter review.ReviewFilter) ([]review.ReviewView, int64, error) {
@@ -402,7 +425,12 @@ func NewReviewRepository(db *gorm.DB, cache ...*redis.Client) *ReviewRepository 
 	if len(cache) > 0 {
 		client = cache[0]
 	}
-	return &ReviewRepository{db: db, cache: client, searchConfig: SearchConfig(db)}
+	return NewReviewRepositoryWithRatingScore(db, client, course.DefaultRatingScoreConfig)
+}
+
+func NewReviewRepositoryWithRatingScore(db *gorm.DB, cache *redis.Client, ratingScore course.RatingScoreConfig) *ReviewRepository {
+	ratingScore = ratingScore.Normalized()
+	return &ReviewRepository{db: db, cache: cache, searchConfig: SearchConfig(db), ratingScore: ratingScore}
 }
 
 var _ review.ReviewRepository = (*ReviewRepository)(nil)

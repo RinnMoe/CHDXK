@@ -12,6 +12,7 @@ export interface PaginatedResult<T> {
 export interface RatingInfoDTO {
   count: number
   avg: number
+  score: number
   distribution: [number, number, number, number, number]
 }
 

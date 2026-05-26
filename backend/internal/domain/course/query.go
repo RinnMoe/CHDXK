@@ -9,6 +9,7 @@ import (
 type RatingInfo struct {
 	Count        int
 	Avg          float64
+	Score        float64
 	Distribution [5]int
 }
 
@@ -26,7 +27,7 @@ type CourseFilter struct {
 	TargetYears     []string
 	Credit          *float32
 	HasReview       *bool
-	OrderBy         string // "rating_count" | "rating_avg"
+	OrderBy         string // "rating_score" | "rating_count" | "rating_avg"
 	Ascend          bool
 	Page            int
 	PageSize        int
@@ -83,4 +84,5 @@ type CourseQuery interface {
 	GetDetail(ctx context.Context, courseID int) (*CourseDetailView, error)
 	FindOfferedCourses(ctx context.Context, courseID int) ([]OfferedCourseView, error)
 	GetFilters(ctx context.Context) (*CourseFilters, error)
+	RefreshRatingScores(ctx context.Context, config RatingScoreConfig) error
 }
