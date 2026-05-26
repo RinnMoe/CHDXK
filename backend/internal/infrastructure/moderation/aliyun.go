@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	green20220302 "github.com/alibabacloud-go/green-20220302/v3/client"
+
+	"jcourse/pkg/logx"
 )
 
 type AliyunGreenConfig struct {
@@ -30,8 +31,8 @@ var DefaultAliyunGreenConfig = AliyunGreenConfig{
 	Endpoint:       "green-cip.cn-shanghai.aliyuncs.com",
 	Service:        "comment_detection_pro",
 	SensitiveLevel: "medium",
-	ConnectTimeout: 3,
-	ReadTimeout:    10,
+	ConnectTimeout: 3000,
+	ReadTimeout:    10000,
 }
 
 type AliyunGreenModerator struct {
@@ -75,7 +76,10 @@ func (m *AliyunGreenModerator) IsSensitive(ctx context.Context, accountID string
 		return false, ctx.Err()
 	default:
 	}
-
+	if len(content) >= 600 {
+		logx.Warn(ctx, "aliyun green text moderation content length is too long", "content", content)
+		return false, nil
+	}
 	params, err := json.Marshal(map[string]any{
 		"accountId": accountID,
 		"content":   content,
@@ -105,10 +109,6 @@ func (m *AliyunGreenModerator) IsSensitive(ctx context.Context, accountID string
 	}
 
 	return riskLevelIsSensitive(stringValue(body.Data.RiskLevel), m.config.SensitiveLevel), nil
-}
-
-func durationMillis(d time.Duration) int {
-	return int(d / time.Millisecond)
 }
 
 func riskLevelIsSensitive(riskLevel string, threshold string) bool {

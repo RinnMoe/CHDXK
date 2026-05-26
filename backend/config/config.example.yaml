@@ -56,9 +56,9 @@ course:
 
 review:
   frequency_policy:
-    window: "1h"
-    max_reviews: 10
-    similarity_ratio: 0.7
+    window: "5m"
+    max_reviews: 3
+    similarity_ratio: 0.85
     suspend_duration: "2160h"
   safety_policy:
     enabled: false
@@ -68,8 +68,8 @@ review:
     endpoint: "green-cip.cn-shanghai.aliyuncs.com"
     service: "comment_detection_pro"
     sensitive_level: "medium"
-    connect_timeout: "3"
-    read_timeout: "10"
+    connect_timeout: 3000
+    read_timeout: 10000
   command:
     frequency_violation_admin_emails: []
     hot_scores:
