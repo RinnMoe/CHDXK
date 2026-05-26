@@ -2,8 +2,9 @@ package review
 
 import (
 	"context"
-	"errors"
 	"time"
+
+	"jcourse/pkg/apperr"
 )
 
 const (
@@ -30,9 +31,9 @@ type VoteResult struct {
 	Changed  bool
 }
 
-var ErrDailyVoteLimitReached = errors.New("daily vote limit reached")
+var ErrDailyVoteLimitReached = apperr.ErrDailyVoteLimitReached
 
-var ErrInvalidVoteType = errors.New("invalid vote type")
+var ErrInvalidVoteType = apperr.ErrInvalidVoteType
 
 type VoteService struct {
 	reviewRepo ReviewRepository

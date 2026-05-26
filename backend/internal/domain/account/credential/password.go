@@ -5,15 +5,16 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
+	"jcourse/pkg/apperr"
+
 	"golang.org/x/crypto/pbkdf2"
 )
 
-var ErrPasswordRequired = errors.New("password is required")
+var ErrPasswordRequired = apperr.ErrPasswordRequired
 
 const (
 	djangoPBKDF2SHA256Algorithm  = "pbkdf2_sha256"

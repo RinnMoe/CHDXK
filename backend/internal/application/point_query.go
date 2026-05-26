@@ -2,10 +2,10 @@ package application
 
 import (
 	"context"
-	"errors"
 
 	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/point"
+	"jcourse/pkg/apperr"
 )
 
 type PointRecordListFilter struct {
@@ -73,7 +73,7 @@ func (s *PointQueryService) PreviewTransfer(ctx context.Context, userID int, par
 	return &dto, nil
 }
 
-var ErrPointUserNotFound = errors.New("user not found")
+var ErrPointUserNotFound = apperr.ErrPointUserNotFound
 
 func (s *PointQueryService) GetUserPointsByEmail(ctx context.Context, email string) (int, error) {
 	username, err := s.usernames.UsernameFromEmail(email)

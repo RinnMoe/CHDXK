@@ -3,9 +3,10 @@ package course
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
+
+	"jcourse/pkg/apperr"
 )
 
 type HotCoursePeriodName string
@@ -15,7 +16,7 @@ const (
 	HotCoursePeriodMonth HotCoursePeriodName = "month"
 )
 
-var ErrInvalidHotCoursePeriod = errors.New("invalid hot course period")
+var ErrInvalidHotCoursePeriod = apperr.ErrInvalidHotCoursePeriod
 
 type HotCoursePeriod struct {
 	Period    HotCoursePeriodName
@@ -121,7 +122,7 @@ const (
 	HotCourseActivityReviewVote   HotCourseActivity = "review_vote"
 )
 
-var ErrInvalidHotCourseActivity = errors.New("invalid hot course activity")
+var ErrInvalidHotCourseActivity = apperr.ErrInvalidHotCourseActivity
 
 func (c HotScoreConfig) ScoreForActivity(activity HotCourseActivity) (int64, error) {
 	switch activity {

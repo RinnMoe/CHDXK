@@ -2,10 +2,11 @@ package setting
 
 import (
 	"context"
-	"errors"
+
+	"jcourse/pkg/apperr"
 )
 
-var ErrInvalidCurrentSemester = errors.New("invalid current semester")
+var ErrInvalidCurrentSemester = apperr.ErrInvalidCurrentSemester
 
 type UserSettings struct {
 	UserID          int

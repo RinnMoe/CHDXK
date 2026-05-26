@@ -2,10 +2,11 @@ package course
 
 import (
 	"context"
-	"errors"
+
+	"jcourse/pkg/apperr"
 )
 
-var ErrCourseNotFound = errors.New("course not found")
+var ErrCourseNotFound = apperr.ErrCourseNotFound
 
 type NotificationLevel int
 

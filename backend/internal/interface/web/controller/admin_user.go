@@ -1,14 +1,12 @@
 package controller
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
 	"jcourse/internal/application"
-	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 )
 
@@ -31,17 +29,13 @@ func NewAdminUserController(
 func (ctrl *AdminUserController) GetUserByEmail(c *gin.Context) {
 	email := c.Query("email")
 	if email == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "email is required"})
+		respondBadRequest(c, "邮箱不能为空")
 		return
 	}
 
 	result, err := ctrl.query.FindByEmail(c.Request.Context(), email)
 	if err != nil {
-		if errors.Is(err, identity.ErrNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -50,7 +44,7 @@ func (ctrl *AdminUserController) GetUserByEmail(c *gin.Context) {
 func (ctrl *AdminUserController) ListAdmins(c *gin.Context) {
 	result, err := ctrl.query.ListAdmins(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -64,19 +58,19 @@ func (ctrl *AdminUserController) SuspendUser(c *gin.Context) {
 	cmd := suspendUserCommand{Days: 30}
 	if c.Request.ContentLength != 0 {
 		if err := c.ShouldBindJSON(&cmd); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			respondBindError(c, err)
 			return
 		}
 	}
 
 	actor := auth.GetUserFromCtx(c.Request.Context())
 	if actor == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c)
 		return
 	}
 
 	if err := ctrl.command.SuspendUserForDays(c.Request.Context(), actor, userID, cmd.Days); err != nil {
-		handleAdminUserCommandError(c, err)
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "ok"})
@@ -90,12 +84,12 @@ func (ctrl *AdminUserController) ClearSuspension(c *gin.Context) {
 
 	actor := auth.GetUserFromCtx(c.Request.Context())
 	if actor == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c)
 		return
 	}
 
 	if err := ctrl.command.ClearSuspension(c.Request.Context(), actor, userID); err != nil {
-		handleAdminUserCommandError(c, err)
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "ok"})
@@ -108,12 +102,12 @@ func (ctrl *AdminUserController) GrantAdmin(c *gin.Context) {
 	}
 	actor := auth.GetUserFromCtx(c.Request.Context())
 	if actor == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c)
 		return
 	}
 
 	if err := ctrl.command.GrantAdmin(c.Request.Context(), actor, userID); err != nil {
-		handleAdminUserCommandError(c, err)
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "ok"})
@@ -126,12 +120,12 @@ func (ctrl *AdminUserController) RevokeAdmin(c *gin.Context) {
 	}
 	actor := auth.GetUserFromCtx(c.Request.Context())
 	if actor == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c)
 		return
 	}
 
 	if err := ctrl.command.RevokeAdmin(c.Request.Context(), actor, userID); err != nil {
-		handleAdminUserCommandError(c, err)
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "ok"})
@@ -140,24 +134,8 @@ func (ctrl *AdminUserController) RevokeAdmin(c *gin.Context) {
 func bindAdminUserID(c *gin.Context) (int, bool) {
 	userID, err := strconv.Atoi(c.Param("userID"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+		respondBadRequest(c, "用户 ID 无效")
 		return 0, false
 	}
 	return userID, true
-}
-
-func handleAdminUserCommandError(c *gin.Context, err error) {
-	if errors.Is(err, identity.ErrNotFound) {
-		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
-		return
-	}
-	if errors.Is(err, application.ErrCannotSuspendAdmin) {
-		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-		return
-	}
-	if errors.Is(err, application.ErrCannotOperateSelf) {
-		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 }

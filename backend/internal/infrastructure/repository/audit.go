@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"maps"
 
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -20,9 +21,7 @@ func NewAuditLogRepository(db *gorm.DB) *AuditLogRepository {
 
 func newAuditLogEntity(l *audit.Log) AuditLogEntity {
 	details := datatypes.JSONMap{}
-	for key, value := range l.Details {
-		details[key] = value
-	}
+	maps.Copy(details, l.Details)
 	return AuditLogEntity{
 		ID:          l.ID,
 		OccurredAt:  l.OccurredAt,
@@ -37,9 +36,7 @@ func newAuditLogEntity(l *audit.Log) AuditLogEntity {
 
 func newAuditLogDomain(e *AuditLogEntity) audit.Log {
 	details := audit.Details{}
-	for key, value := range e.Details {
-		details[key] = value
-	}
+	maps.Copy(details, e.Details)
 	return audit.Log{
 		ID:          e.ID,
 		OccurredAt:  e.OccurredAt,

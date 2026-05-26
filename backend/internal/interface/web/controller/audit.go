@@ -1,13 +1,11 @@
 package controller
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"jcourse/internal/application"
-	"jcourse/internal/domain/audit"
 )
 
 type AuditLogController struct {
@@ -21,7 +19,7 @@ func NewAuditLogController(query *application.AuditLogQueryService) *AuditLogCon
 func (ctrl *AuditLogController) ListAuditLogs(c *gin.Context) {
 	var f application.AuditLogListFilter
 	if err := c.ShouldBindQuery(&f); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBindError(c, err)
 		return
 	}
 	if f.Page <= 0 {
@@ -33,11 +31,7 @@ func (ctrl *AuditLogController) ListAuditLogs(c *gin.Context) {
 
 	result, err := ctrl.query.List(c.Request.Context(), f)
 	if err != nil {
-		if errors.Is(err, audit.ErrInvalidTimeRange) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, result)

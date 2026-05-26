@@ -2,7 +2,6 @@ package policy
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/agnivade/levenshtein"
@@ -10,11 +9,12 @@ import (
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/review"
+	"jcourse/pkg/apperr"
 )
 
 var (
-	ErrSimilarContentDetected = errors.New("too many similar reviews detected")
-	ErrSameCourseSpam         = errors.New("too many reviews for the same course")
+	ErrSimilarContentDetected = apperr.ErrSimilarContentDetected
+	ErrSameCourseSpam         = apperr.ErrSameCourseSpam
 )
 
 type FrequencyPolicyConfig struct {

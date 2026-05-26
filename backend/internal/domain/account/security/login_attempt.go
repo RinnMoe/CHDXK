@@ -2,12 +2,13 @@ package security
 
 import (
 	"context"
-	"errors"
+
+	"jcourse/pkg/apperr"
 )
 
 var (
-	ErrInvalidCredentials = errors.New("invalid email or password")
-	ErrLoginLocked        = errors.New("too many failed login attempts, please try again later")
+	ErrInvalidCredentials = apperr.ErrInvalidCredentials
+	ErrLoginLocked        = apperr.ErrLoginLocked
 )
 
 type LoginAttemptRepository interface {

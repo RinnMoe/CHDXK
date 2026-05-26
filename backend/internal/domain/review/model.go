@@ -2,8 +2,9 @@ package review
 
 import (
 	"context"
-	"errors"
 	"time"
+
+	"jcourse/pkg/apperr"
 )
 
 type Review struct {
@@ -50,13 +51,13 @@ type Update struct {
 
 func (r *Review) Validate() error {
 	if r.Rating < 0 || r.Rating > 5 {
-		return errors.New("invalid rating")
+		return apperr.ErrInvalidRating
 	}
 	if r.Content == "" {
-		return errors.New("content cannot be empty")
+		return apperr.ErrReviewContentEmpty
 	}
 	if len(r.Content) > 9681 {
-		return errors.New("content cannot be longer than 9681 characters")
+		return apperr.ErrReviewContentTooLong
 	}
 	return nil
 }

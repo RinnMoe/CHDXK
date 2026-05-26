@@ -2,8 +2,9 @@ package stat
 
 import (
 	"context"
-	"errors"
 	"time"
+
+	"jcourse/pkg/apperr"
 )
 
 const DateLayout = "2006-01-02"
@@ -22,7 +23,7 @@ var DefaultConfig = Config{
 	Timezone:         DefaultTimezoneName,
 }
 
-var ErrInvalidDateRange = errors.New("invalid date range")
+var ErrInvalidDateRange = apperr.ErrInvalidDateRange
 
 const (
 	MetricTotalUserCount      = "total_user_count"

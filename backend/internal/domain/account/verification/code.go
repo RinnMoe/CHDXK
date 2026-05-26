@@ -2,14 +2,15 @@ package verification
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"time"
+
+	"jcourse/pkg/apperr"
 )
 
 var (
-	ErrSendTooSoon = errors.New("verification code sent too recently")
-	ErrCodeInvalid = errors.New("verification code is invalid")
+	ErrSendTooSoon = apperr.ErrVerificationSendTooSoon
+	ErrCodeInvalid = apperr.ErrVerificationCodeInvalid
 )
 
 type Config struct {

@@ -1,14 +1,12 @@
 package controller
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"jcourse/internal/application"
 	"jcourse/internal/domain/auth"
-	"jcourse/internal/domain/setting"
 )
 
 type UserSettingsController struct {
@@ -23,13 +21,13 @@ func NewUserSettingsController(query *application.UserSettingsQueryService, comm
 func (ctrl *UserSettingsController) GetMySettings(c *gin.Context) {
 	u := auth.GetUserFromCtx(c.Request.Context())
 	if u == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c)
 		return
 	}
 
 	result, err := ctrl.query.Get(c.Request.Context(), u.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -38,23 +36,19 @@ func (ctrl *UserSettingsController) GetMySettings(c *gin.Context) {
 func (ctrl *UserSettingsController) UpdateMySettings(c *gin.Context) {
 	u := auth.GetUserFromCtx(c.Request.Context())
 	if u == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c)
 		return
 	}
 
 	var cmd application.UpdateUserSettingsCommand
 	if err := c.ShouldBindJSON(&cmd); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBindError(c, err)
 		return
 	}
 
 	result, err := ctrl.command.Update(c.Request.Context(), u.ID, cmd)
 	if err != nil {
-		if errors.Is(err, setting.ErrInvalidCurrentSemester) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, result)

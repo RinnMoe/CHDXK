@@ -2,21 +2,21 @@ package review
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
+	"jcourse/pkg/apperr"
 )
 
 var (
-	ErrReviewNotFound       = errors.New("review not found")
-	ErrCourseNotFound       = errors.New("course not found")
-	ErrOfferedCourseMissing = errors.New("offered course not found for the given semester")
-	ErrUserCannotCreate     = errors.New("user cannot create review")
-	ErrUserCannotUpdate     = errors.New("user cannot update review")
-	ErrUserCannotModerate   = errors.New("user cannot update moderator remark")
-	ErrUserCannotDelete     = errors.New("user cannot delete review")
+	ErrReviewNotFound       = apperr.ErrReviewNotFound
+	ErrCourseNotFound       = apperr.ErrCourseNotFound
+	ErrOfferedCourseMissing = apperr.ErrOfferedCourseMissing
+	ErrUserCannotCreate     = apperr.ErrUserCannotCreateReview
+	ErrUserCannotUpdate     = apperr.ErrUserCannotUpdateReview
+	ErrUserCannotModerate   = apperr.ErrUserCannotModerateReview
+	ErrUserCannotDelete     = apperr.ErrUserCannotDeleteReview
 )
 
 type CreateReview struct {

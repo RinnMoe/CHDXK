@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -24,7 +23,7 @@ func NewCourseController(query *application.CourseQueryService, command *applica
 func (ctrl *CourseController) GetCourseFilters(c *gin.Context) {
 	result, err := ctrl.query.GetCourseFilters(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -33,7 +32,7 @@ func (ctrl *CourseController) GetCourseFilters(c *gin.Context) {
 func (ctrl *CourseController) ListCourses(c *gin.Context) {
 	var f application.CourseListFilter
 	if err := c.ShouldBindQuery(&f); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBindError(c, err)
 		return
 	}
 	if f.Page <= 0 {
@@ -45,7 +44,7 @@ func (ctrl *CourseController) ListCourses(c *gin.Context) {
 
 	result, err := ctrl.query.ListCourses(c.Request.Context(), f)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -56,16 +55,12 @@ func (ctrl *CourseController) ListHotCourses(c *gin.Context) {
 	limitStr := c.DefaultQuery("limit", "5")
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil || limit <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid limit"})
+		respondBadRequest(c, "数量限制无效")
 		return
 	}
 	result, err := ctrl.query.ListHotCourses(c.Request.Context(), period, limit)
 	if err != nil {
-		if errors.Is(err, course.ErrInvalidHotCoursePeriod) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -74,7 +69,7 @@ func (ctrl *CourseController) ListHotCourses(c *gin.Context) {
 func (ctrl *CourseController) GetCourse(c *gin.Context) {
 	courseID, err := strconv.Atoi(c.Param("courseID"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid course id"})
+		respondBadRequest(c, "课程 ID 无效")
 		return
 	}
 
@@ -82,7 +77,7 @@ func (ctrl *CourseController) GetCourse(c *gin.Context) {
 
 	result, err := ctrl.query.GetCourseDetail(c.Request.Context(), u, courseID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "course not found"})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -91,13 +86,13 @@ func (ctrl *CourseController) GetCourse(c *gin.Context) {
 func (ctrl *CourseController) SetNotificationLevel(c *gin.Context) {
 	courseID, err := strconv.Atoi(c.Param("courseID"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid course id"})
+		respondBadRequest(c, "课程 ID 无效")
 		return
 	}
 
 	u := auth.GetUserFromCtx(c.Request.Context())
 	if u == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c)
 		return
 	}
 
@@ -105,20 +100,16 @@ func (ctrl *CourseController) SetNotificationLevel(c *gin.Context) {
 		Level int `json:"level"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBindError(c, err)
 		return
 	}
 	if req.Level < 0 || req.Level > 2 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "level must be 0, 1, or 2"})
+		respondBadRequest(c, "通知级别必须是 0、1 或 2")
 		return
 	}
 
 	if err := ctrl.command.SetNotificationLevel(c.Request.Context(), u.ID, courseID, course.NotificationLevel(req.Level)); err != nil {
-		if errors.Is(err, application.ErrCourseNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "course not found"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "ok"})
@@ -127,13 +118,13 @@ func (ctrl *CourseController) SetNotificationLevel(c *gin.Context) {
 func (ctrl *CourseController) ListFollowedCourses(c *gin.Context) {
 	u := auth.GetUserFromCtx(c.Request.Context())
 	if u == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c)
 		return
 	}
 
 	var f application.CourseListFilter
 	if err := c.ShouldBindQuery(&f); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBindError(c, err)
 		return
 	}
 	if f.Page <= 0 {
@@ -145,7 +136,7 @@ func (ctrl *CourseController) ListFollowedCourses(c *gin.Context) {
 
 	result, err := ctrl.query.ListCoursesByNotificationLevel(c.Request.Context(), u.ID, course.NotificationLevelFollow, f)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -154,13 +145,13 @@ func (ctrl *CourseController) ListFollowedCourses(c *gin.Context) {
 func (ctrl *CourseController) ListIgnoredCourses(c *gin.Context) {
 	u := auth.GetUserFromCtx(c.Request.Context())
 	if u == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c)
 		return
 	}
 
 	var f application.CourseListFilter
 	if err := c.ShouldBindQuery(&f); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBindError(c, err)
 		return
 	}
 	if f.Page <= 0 {
@@ -172,7 +163,7 @@ func (ctrl *CourseController) ListIgnoredCourses(c *gin.Context) {
 
 	result, err := ctrl.query.ListCoursesByNotificationLevel(c.Request.Context(), u.ID, course.NotificationLevelIgnored, f)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, result)

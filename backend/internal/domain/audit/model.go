@@ -2,8 +2,9 @@ package audit
 
 import (
 	"context"
-	"errors"
 	"time"
+
+	"jcourse/pkg/apperr"
 )
 
 const (
@@ -22,7 +23,7 @@ const (
 	TargetTypeReview       = "review"
 )
 
-var ErrInvalidTimeRange = errors.New("invalid audit log time range")
+var ErrInvalidTimeRange = apperr.ErrInvalidAuditTimeRange
 
 type Details map[string]any
 

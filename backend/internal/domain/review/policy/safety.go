@@ -2,15 +2,15 @@ package policy
 
 import (
 	"context"
-	"errors"
 	"strconv"
 
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/review"
+	"jcourse/pkg/apperr"
 )
 
-var ErrContentSensitive = errors.New("review content is sensitive")
+var ErrContentSensitive = apperr.ErrContentSensitive
 
 // ContentModerator is an abstraction over an external content moderation service.
 // Implementations may call third-party sensitive-content detection APIs.

@@ -2,13 +2,14 @@ package identity
 
 import (
 	"encoding/hex"
-	"errors"
 	"strings"
+
+	"jcourse/pkg/apperr"
 
 	"golang.org/x/crypto/blake2b"
 )
 
-var ErrEmailNotAllowed = errors.New("email is not allowed")
+var ErrEmailNotAllowed = apperr.ErrEmailNotAllowed
 
 type EmailWhitelist struct {
 	entries []string

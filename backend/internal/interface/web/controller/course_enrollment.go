@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -23,13 +22,13 @@ func NewCourseEnrollmentController(query *application.CourseEnrollmentQueryServi
 func (ctrl *CourseEnrollmentController) ListMyEnrollments(c *gin.Context) {
 	u := auth.GetUserFromCtx(c.Request.Context())
 	if u == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c)
 		return
 	}
 
 	result, err := ctrl.query.ListMyEnrollments(c.Request.Context(), u.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -38,13 +37,13 @@ func (ctrl *CourseEnrollmentController) ListMyEnrollments(c *gin.Context) {
 func (ctrl *CourseEnrollmentController) CreateEnrollment(c *gin.Context) {
 	u := auth.GetUserFromCtx(c.Request.Context())
 	if u == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c)
 		return
 	}
 
 	courseID, err := strconv.Atoi(c.Param("courseID"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid course id"})
+		respondBadRequest(c, "课程 ID 无效")
 		return
 	}
 
@@ -52,7 +51,7 @@ func (ctrl *CourseEnrollmentController) CreateEnrollment(c *gin.Context) {
 		Semester string `json:"semester"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBindError(c, err)
 		return
 	}
 
@@ -61,14 +60,7 @@ func (ctrl *CourseEnrollmentController) CreateEnrollment(c *gin.Context) {
 		Semester: req.Semester,
 	})
 	if err != nil {
-		switch {
-		case errors.Is(err, application.ErrSemesterRequired):
-			c.JSON(http.StatusBadRequest, gin.H{"error": "semester required"})
-		case errors.Is(err, application.ErrOfferedCourseNotFound):
-			c.JSON(http.StatusBadRequest, gin.H{"error": "offered course not found"})
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		}
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "ok"})
@@ -77,18 +69,18 @@ func (ctrl *CourseEnrollmentController) CreateEnrollment(c *gin.Context) {
 func (ctrl *CourseEnrollmentController) DeleteEnrollment(c *gin.Context) {
 	u := auth.GetUserFromCtx(c.Request.Context())
 	if u == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c)
 		return
 	}
 
 	enrollmentID, err := strconv.Atoi(c.Param("enrollmentID"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid enrollment id"})
+		respondBadRequest(c, "选课记录 ID 无效")
 		return
 	}
 
 	if err := ctrl.command.DeleteEnrollment(c.Request.Context(), u.ID, enrollmentID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "ok"})

@@ -2,13 +2,13 @@ package application
 
 import (
 	"context"
-	"errors"
 	"strings"
 
 	"jcourse/internal/domain/teacher"
+	"jcourse/pkg/apperr"
 )
 
-var ErrTeacherNotFound = errors.New("teacher not found")
+var ErrTeacherNotFound = apperr.ErrTeacherNotFound
 
 type TeacherQueryService struct {
 	teacherQuery teacher.TeacherQuery

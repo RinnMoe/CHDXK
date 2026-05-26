@@ -2,13 +2,14 @@ package identity
 
 import (
 	"context"
-	"errors"
 	"time"
+
+	"jcourse/pkg/apperr"
 )
 
 var (
-	ErrAlreadyExists = errors.New("user already exists")
-	ErrNotFound      = errors.New("user not found")
+	ErrAlreadyExists = apperr.ErrUserAlreadyExists
+	ErrNotFound      = apperr.ErrUserNotFound
 )
 
 type Account struct {

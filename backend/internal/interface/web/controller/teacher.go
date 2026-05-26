@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -22,7 +21,7 @@ func NewTeacherController(teacherQuery *application.TeacherQueryService, courseQ
 func (ctrl *TeacherController) GetTeacherFilters(c *gin.Context) {
 	result, err := ctrl.teacherQuery.GetTeacherFilters(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -31,7 +30,7 @@ func (ctrl *TeacherController) GetTeacherFilters(c *gin.Context) {
 func (ctrl *TeacherController) ListTeachers(c *gin.Context) {
 	var f application.TeacherListFilter
 	if err := c.ShouldBindQuery(&f); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBindError(c, err)
 		return
 	}
 	if f.Page <= 0 {
@@ -43,7 +42,7 @@ func (ctrl *TeacherController) ListTeachers(c *gin.Context) {
 
 	result, err := ctrl.teacherQuery.ListTeachers(c.Request.Context(), f)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -53,17 +52,13 @@ func (ctrl *TeacherController) GetTeacher(c *gin.Context) {
 	teacherIDStr := c.Param("teacherID")
 	teacherID, err := strconv.Atoi(teacherIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid teacher ID"})
+		respondBadRequest(c, "教师 ID 无效")
 		return
 	}
 
 	result, err := ctrl.teacherQuery.GetTeacher(c.Request.Context(), teacherID)
 	if err != nil {
-		if errors.Is(err, application.ErrTeacherNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "teacher not found"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -73,13 +68,13 @@ func (ctrl *TeacherController) ListTeacherCourses(c *gin.Context) {
 	teacherIDStr := c.Param("teacherID")
 	teacherID, err := strconv.Atoi(teacherIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid teacher ID"})
+		respondBadRequest(c, "教师 ID 无效")
 		return
 	}
 
 	var f application.CourseListFilter
 	if err := c.ShouldBindQuery(&f); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBindError(c, err)
 		return
 	}
 	if f.Page <= 0 {
@@ -91,7 +86,7 @@ func (ctrl *TeacherController) ListTeacherCourses(c *gin.Context) {
 
 	result, err := ctrl.courseQuery.ListTeacherCourses(c.Request.Context(), teacherID, f)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, result)

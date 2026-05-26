@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -21,11 +20,11 @@ func (ctrl *SiteStatsController) GetByDate(c *gin.Context) {
 	dateStr := c.Param("date")
 	result, err := ctrl.query.GetByDateString(c.Request.Context(), dateStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	if result == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "site daily stats not found"})
+		respondNotFound(c, "站点每日统计不存在")
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -34,7 +33,7 @@ func (ctrl *SiteStatsController) GetByDate(c *gin.Context) {
 func (ctrl *SiteStatsController) ListDaily(c *gin.Context) {
 	var f application.SiteDailyStatListFilter
 	if err := c.ShouldBindQuery(&f); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBindError(c, err)
 		return
 	}
 	if f.Page <= 0 {
@@ -46,11 +45,7 @@ func (ctrl *SiteStatsController) ListDaily(c *gin.Context) {
 
 	result, err := ctrl.query.ListDaily(c.Request.Context(), f)
 	if err != nil {
-		if errors.Is(err, application.ErrInvalidDateRange) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, result)

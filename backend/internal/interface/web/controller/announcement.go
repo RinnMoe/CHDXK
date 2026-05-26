@@ -19,7 +19,7 @@ func NewAnnouncementController(announcementQuery *application.AnnouncementQueryS
 func (ctrl *AnnouncementController) ListAnnouncements(c *gin.Context) {
 	result, err := ctrl.announcementQuery.ListActiveAnnouncements(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, result)

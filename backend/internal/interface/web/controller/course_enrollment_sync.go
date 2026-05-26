@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -37,41 +36,34 @@ func NewCourseEnrollmentSyncController(command *application.CourseCommandService
 func (ctrl *CourseEnrollmentSyncController) Start(c *gin.Context) {
 	u := auth.GetUserFromCtx(c.Request.Context())
 	if u == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c)
 		return
 	}
 	semester := strings.TrimSpace(c.Query("semester"))
 	if semester == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "semester required"})
+		respondBadRequest(c, "学期不能为空")
 		return
 	}
 	state, err := randomState()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	semester, authURL, err := ctrl.command.StartEnrollmentSync(c.Request.Context(), semester, state)
 	if err != nil {
-		switch {
-		case errors.Is(err, application.ErrSemesterRequired), errors.Is(err, application.ErrInvalidSyncSemester):
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		case errors.Is(err, application.ErrEnrollmentSyncDisabled):
-			c.JSON(http.StatusServiceUnavailable, gin.H{"error": err.Error()})
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		}
+		respondError(c, err)
 		return
 	}
 	stored := enrollmentSyncState{State: state, UserID: u.ID, Semester: semester, CreatedAt: time.Now().Unix()}
 	encoded, err := json.Marshal(stored)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	s := sessions.Default(c)
 	s.Set(enrollmentSyncSessionKey, string(encoded))
 	if err := s.Save(); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.Redirect(http.StatusFound, authURL)
@@ -113,7 +105,7 @@ func (ctrl *CourseEnrollmentSyncController) redirectResult(c *gin.Context, semes
 	}
 	u, err := url.Parse(callback)
 	if err != nil {
-		c.String(http.StatusInternalServerError, "invalid frontend callback url")
+		c.String(http.StatusInternalServerError, "前端回调地址无效")
 		return
 	}
 	q := u.Query()
@@ -144,14 +136,14 @@ type enrollmentSyncState struct {
 func loadEnrollmentSyncState(c *gin.Context) (*enrollmentSyncState, error) {
 	v, ok := sessions.Default(c).Get(enrollmentSyncSessionKey).(string)
 	if !ok || v == "" {
-		return nil, fmt.Errorf("missing enrollment sync state")
+		return nil, fmt.Errorf("缺少选课同步状态")
 	}
 	var state enrollmentSyncState
 	if err := json.Unmarshal([]byte(v), &state); err != nil {
 		return nil, err
 	}
 	if state.State == "" || state.UserID == 0 || state.Semester == "" {
-		return nil, fmt.Errorf("invalid enrollment sync state")
+		return nil, fmt.Errorf("选课同步状态无效")
 	}
 	return &state, nil
 }

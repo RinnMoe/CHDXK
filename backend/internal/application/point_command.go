@@ -2,20 +2,20 @@ package application
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"time"
 
 	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/point"
+	"jcourse/pkg/apperr"
 )
 
 var (
 	ErrPointTransferInvalidAmount        = point.ErrTransferInvalidAmount
 	ErrPointTransferInvalidFeePayer      = point.ErrTransferInvalidFeePayer
 	ErrPointTransferSelf                 = point.ErrTransferSelf
-	ErrPointTransferRecipientNotFound    = errors.New("point transfer recipient not found")
+	ErrPointTransferRecipientNotFound    = apperr.ErrPointTransferRecipientNotFound
 	ErrPointTransferRecipientAmountSmall = point.ErrTransferRecipientAmountSmall
 )
 

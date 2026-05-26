@@ -7,13 +7,14 @@ import (
 	"time"
 
 	"jcourse/internal/domain/jaccount"
+	"jcourse/pkg/apperr"
 )
 
 var (
-	ErrSemesterRequired       = errors.New("semester required")
-	ErrOfferedCourseNotFound  = errors.New("offered course not found")
-	ErrInvalidSyncSemester    = errors.New("invalid semester")
-	ErrEnrollmentSyncDisabled = errors.New("course enrollment sync disabled")
+	ErrSemesterRequired       = apperr.ErrSemesterRequired
+	ErrOfferedCourseNotFound  = apperr.ErrOfferedCourseNotFound
+	ErrInvalidSyncSemester    = apperr.ErrInvalidSyncSemester
+	ErrEnrollmentSyncDisabled = apperr.ErrEnrollmentSyncDisabled
 )
 
 type CourseEnrollment struct {

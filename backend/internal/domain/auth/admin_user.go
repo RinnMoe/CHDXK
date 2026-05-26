@@ -2,14 +2,15 @@ package auth
 
 import (
 	"context"
-	"errors"
 	"time"
+
+	"jcourse/pkg/apperr"
 )
 
 var (
-	ErrCannotSuspendAdmin = errors.New("cannot suspend admin user")
-	ErrCannotOperateSelf  = errors.New("cannot operate on yourself")
-	ErrUserNotFound       = errors.New("user not found")
+	ErrCannotSuspendAdmin = apperr.ErrCannotSuspendAdmin
+	ErrCannotOperateSelf  = apperr.ErrCannotOperateSelf
+	ErrUserNotFound       = apperr.ErrUserNotFound
 )
 
 type AdminUserService struct {

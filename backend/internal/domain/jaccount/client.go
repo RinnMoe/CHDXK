@@ -2,14 +2,15 @@ package jaccount
 
 import (
 	"context"
-	"errors"
+
+	"jcourse/pkg/apperr"
 
 	"golang.org/x/oauth2"
 )
 
 var (
-	ErrDisabled         = errors.New("jaccount course sync disabled")
-	ErrSemesterRequired = errors.New("semester required")
+	ErrDisabled         = apperr.ErrJAccountDisabled
+	ErrSemesterRequired = apperr.ErrJAccountSemesterRequired
 )
 
 type LessonCourse struct {

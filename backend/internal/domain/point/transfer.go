@@ -2,9 +2,10 @@ package point
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"time"
+
+	"jcourse/pkg/apperr"
 )
 
 const (
@@ -18,11 +19,11 @@ const (
 type FeePayer string
 
 var (
-	ErrInsufficientBalance          = errors.New("insufficient point balance")
-	ErrTransferInvalidAmount        = errors.New("point transfer amount must be positive")
-	ErrTransferInvalidFeePayer      = errors.New("invalid point transfer fee payer")
-	ErrTransferSelf                 = errors.New("cannot transfer points to self")
-	ErrTransferRecipientAmountSmall = errors.New("point transfer amount is too small after fee")
+	ErrInsufficientBalance          = apperr.ErrInsufficientPointBalance
+	ErrTransferInvalidAmount        = apperr.ErrPointTransferInvalidAmount
+	ErrTransferInvalidFeePayer      = apperr.ErrPointTransferInvalidFeePayer
+	ErrTransferSelf                 = apperr.ErrPointTransferSelf
+	ErrTransferRecipientAmountSmall = apperr.ErrPointTransferRecipientAmountSmall
 )
 
 type TransferFeeConfig struct {
