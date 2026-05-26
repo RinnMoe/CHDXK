@@ -17,8 +17,8 @@ var ErrPasswordRequired = errors.New("password is required")
 
 const (
 	djangoPBKDF2SHA256Algorithm  = "pbkdf2_sha256"
-	djangoPBKDF2SHA256Iterations = 720000
-	djangoSaltLength             = 12
+	djangoPBKDF2SHA256Iterations = 1200000
+	djangoSaltLength             = 22
 )
 
 type PasswordHashConfig struct {

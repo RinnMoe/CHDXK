@@ -43,8 +43,8 @@ auth:
     scheduler_enabled: true
     flush_batch_size: 1000
   password_hash:
-    iterations: 720000
-    salt_length: 12
+    iterations: 1200000
+    salt_length: 22
   username_deriver:
     salt: "SALT"
 
