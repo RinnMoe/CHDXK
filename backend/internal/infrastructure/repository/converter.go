@@ -37,6 +37,8 @@ func newCourseViewFromEntity(e *CourseEntity) *course.CourseView {
 		Categories:    e.Categories,
 		Language:      e.Language,
 		TargetYears:   e.TargetYears,
+		LastSemester:  e.LastSemester,
+		CreatedAt:     e.CreatedAt,
 		Rating: course.RatingInfo{
 			Count: e.RatingCount,
 			Avg:   e.RatingAvg,

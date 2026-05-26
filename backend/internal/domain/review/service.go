@@ -44,17 +44,12 @@ type UpdateModeratorRemark struct {
 }
 
 type Service struct {
-	courseRepo CourseRepository
+	courseRepo course.CourseRepository
 	reviewRepo ReviewRepository
 	policies   []CreatePolicy
 }
 
-type CourseRepository interface {
-	Get(ctx context.Context, courseID int) (*course.Course, error)
-	OfferedCourseExists(ctx context.Context, courseID int, semester string) (bool, error)
-}
-
-func NewService(courseRepo CourseRepository, reviewRepo ReviewRepository, policies []CreatePolicy) *Service {
+func NewService(courseRepo course.CourseRepository, reviewRepo ReviewRepository, policies []CreatePolicy) *Service {
 	return &Service{courseRepo: courseRepo, reviewRepo: reviewRepo, policies: policies}
 }
 
@@ -186,5 +181,5 @@ func (s *Service) UpdateModeratorRemark(ctx context.Context, u *auth.User, cmd U
 }
 
 type CreatePolicy interface {
-	CanCreate(ctx context.Context, u *auth.User, c *course.Course, r *Review) error
+	CanCreate(ctx context.Context, u *auth.User, c *course.CourseView, r *Review) error
 }

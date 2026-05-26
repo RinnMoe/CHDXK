@@ -16,12 +16,8 @@ func newFakeReviewRepo() *review.MockReviewRepository {
 }
 
 func TestServiceCreateAllowsCourseLastSemester(t *testing.T) {
-	courseRepo := &review.MockCourseRepository{
-		Courses: map[int]*course.Course{
-			1: &course.Course{ID: 1, LastSemester: "2025-2026-1"},
-		},
-		OfferedCourses: map[int]map[string]bool{},
-	}
+	courseRepo := course.NewMockCourseRepository()
+	courseRepo.Courses[1] = &course.CourseView{ID: 1, LastSemester: "2025-2026-1"}
 	reviewRepo := newFakeReviewRepo()
 	svc := review.NewService(courseRepo, reviewRepo, nil)
 
@@ -39,12 +35,8 @@ func TestServiceCreateAllowsCourseLastSemester(t *testing.T) {
 }
 
 func TestServiceCreateRejectsMissingSemester(t *testing.T) {
-	courseRepo := &review.MockCourseRepository{
-		Courses: map[int]*course.Course{
-			1: &course.Course{ID: 1, LastSemester: "2025-2026-1"},
-		},
-		OfferedCourses: map[int]map[string]bool{},
-	}
+	courseRepo := course.NewMockCourseRepository()
+	courseRepo.Courses[1] = &course.CourseView{ID: 1, LastSemester: "2025-2026-1"}
 	svc := review.NewService(courseRepo, newFakeReviewRepo(), nil)
 
 	err := svc.Create(context.Background(), &auth.User{ID: 10}, review.CreateReview{
@@ -61,12 +53,8 @@ func TestServiceCreateRejectsMissingSemester(t *testing.T) {
 }
 
 func TestServiceUpdateAllowsCourseLastSemester(t *testing.T) {
-	courseRepo := &review.MockCourseRepository{
-		Courses: map[int]*course.Course{
-			1: &course.Course{ID: 1, LastSemester: "2025-2026-1"},
-		},
-		OfferedCourses: map[int]map[string]bool{},
-	}
+	courseRepo := course.NewMockCourseRepository()
+	courseRepo.Courses[1] = &course.CourseView{ID: 1, LastSemester: "2025-2026-1"}
 	reviewRepo := newFakeReviewRepo()
 	reviewRepo.Reviews[1] = &review.Review{ID: 1, CourseID: 1, UserID: 10, Semester: "2024-2025-2", Rating: 4, Content: "old"}
 	svc := review.NewService(courseRepo, reviewRepo, nil)

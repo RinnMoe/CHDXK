@@ -1,7 +1,7 @@
 package course
 
 import (
-	"context"
+	"time"
 
 	"jcourse/internal/domain/teacher"
 )
@@ -45,6 +45,8 @@ type CourseView struct {
 	Categories    []string
 	Language      string
 	TargetYears   []string
+	LastSemester  string
+	CreatedAt     time.Time
 	Rating        RatingInfo
 }
 
@@ -76,13 +78,4 @@ type CourseFilters struct {
 	TargetYears []FilterItem `json:"target_years"`
 	Languages   []FilterItem `json:"languages"`
 	Semesters   []FilterItem `json:"semesters"`
-}
-
-// Read model interface
-type CourseQuery interface {
-	FindBy(ctx context.Context, filter CourseFilter) ([]CourseView, int64, error)
-	GetDetail(ctx context.Context, courseID int) (*CourseDetailView, error)
-	FindOfferedCourses(ctx context.Context, courseID int) ([]OfferedCourseView, error)
-	GetFilters(ctx context.Context) (*CourseFilters, error)
-	RefreshRatingScores(ctx context.Context, config RatingScoreConfig) error
 }

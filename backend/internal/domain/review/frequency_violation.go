@@ -9,7 +9,7 @@ import (
 type FrequencyViolation struct {
 	Reason          error
 	Review          *Review
-	Course          *course.Course
+	Course          *course.CourseView
 	SuspendDuration time.Duration
 }
 

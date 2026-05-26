@@ -26,7 +26,7 @@ type CourseListFilter struct {
 }
 
 type CourseQueryService struct {
-	courseQuery       course.CourseQuery
+	courseRepo        course.CourseRepository
 	teacherQuery      teacher.TeacherQuery
 	reviewQuery       review.ReviewQuery
 	notificationRepo  course.CourseNotificationRepository
@@ -35,13 +35,13 @@ type CourseQueryService struct {
 	hotCourseLocation *time.Location
 }
 
-func NewCourseQueryService(courseQuery course.CourseQuery, teacherQuery teacher.TeacherQuery, reviewQuery review.ReviewQuery, notificationRepo course.CourseNotificationRepository, enrollmentQuery course.CourseEnrollmentQuery, hotRepo course.HotCourseRepository) *CourseQueryService {
+func NewCourseQueryService(courseRepo course.CourseRepository, teacherQuery teacher.TeacherQuery, reviewQuery review.ReviewQuery, notificationRepo course.CourseNotificationRepository, enrollmentQuery course.CourseEnrollmentQuery, hotRepo course.HotCourseRepository) *CourseQueryService {
 	loc, err := course.DefaultHotCourseLocation()
 	if err != nil {
 		panic(err)
 	}
 	return &CourseQueryService{
-		courseQuery:       courseQuery,
+		courseRepo:        courseRepo,
 		teacherQuery:      teacherQuery,
 		reviewQuery:       reviewQuery,
 		notificationRepo:  notificationRepo,
@@ -73,7 +73,7 @@ func (s *CourseQueryService) teacherGroupDTOs(ctx context.Context, teacherIDs []
 }
 
 func (s *CourseQueryService) GetCourseFilters(ctx context.Context) (*course.CourseFilters, error) {
-	return s.courseQuery.GetFilters(ctx)
+	return s.courseRepo.GetFilters(ctx)
 }
 
 func (s *CourseQueryService) ListCourses(ctx context.Context, f CourseListFilter) (*PaginatedResult[CourseListItemDTO], error) {
@@ -92,7 +92,7 @@ func (s *CourseQueryService) ListCourses(ctx context.Context, f CourseListFilter
 		PageSize:    f.PageSize,
 	}
 
-	courses, total, err := s.courseQuery.FindBy(ctx, filter)
+	courses, total, err := s.courseRepo.FindBy(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +139,7 @@ func (s *CourseQueryService) ListHotCourses(ctx context.Context, period string, 
 	for _, rank := range ranks {
 		ids = append(ids, rank.CourseID)
 	}
-	courses, _, err := s.courseQuery.FindBy(ctx, course.CourseFilter{CourseIDs: ids})
+	courses, _, err := s.courseRepo.FindBy(ctx, course.CourseFilter{CourseIDs: ids})
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func (s *CourseQueryService) ListHotCourses(ctx context.Context, period string, 
 }
 
 func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.User, courseID int) (*CourseDetailDTO, error) {
-	detail, err := s.courseQuery.GetDetail(ctx, courseID)
+	detail, err := s.courseRepo.GetDetail(ctx, courseID)
 	if err != nil {
 		return nil, err
 	}
@@ -229,7 +229,7 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 		dto.OfferedCourses = append(dto.OfferedCourses, ocView)
 	}
 
-	sameCodeCourses, _, err := s.courseQuery.FindBy(ctx, course.CourseFilter{
+	sameCodeCourses, _, err := s.courseRepo.FindBy(ctx, course.CourseFilter{
 		Code:      detail.Code,
 		ExcludeID: courseID,
 		OrderBy:   "rating_score",
@@ -242,7 +242,7 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 		dto.SameCodeCourses[i] = newCourseListItemDTO(&c)
 	}
 
-	sameTeacherCourses, _, err := s.courseQuery.FindBy(ctx, course.CourseFilter{
+	sameTeacherCourses, _, err := s.courseRepo.FindBy(ctx, course.CourseFilter{
 		TeacherID: detail.MainTeacherID,
 		ExcludeID: courseID,
 		OrderBy:   "rating_score",
@@ -292,7 +292,7 @@ func (s *CourseQueryService) ListTeacherCourses(ctx context.Context, teacherID i
 		PageSize:    f.PageSize,
 	}
 
-	courses, total, err := s.courseQuery.FindBy(ctx, filter)
+	courses, total, err := s.courseRepo.FindBy(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -332,7 +332,7 @@ func (s *CourseQueryService) ListCoursesByNotificationLevel(ctx context.Context,
 		PageSize:  f.PageSize,
 	}
 
-	courses, total, err := s.courseQuery.FindBy(ctx, filter)
+	courses, total, err := s.courseRepo.FindBy(ctx, filter)
 	if err != nil {
 		return nil, err
 	}

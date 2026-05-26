@@ -12,24 +12,6 @@ import (
 	"jcourse/internal/domain/course"
 )
 
-func newCourseDomain(e *CourseEntity) course.Course {
-	return course.Course{
-		ID:            e.ID,
-		Code:          e.Code,
-		Name:          e.Name,
-		Credit:        e.Credit,
-		MainTeacherID: e.MainTeacherID,
-		Categories:    e.Categories,
-		Language:      e.Language,
-		TargetYears:   e.TargetYears,
-		LastSemester:  e.LastSemester,
-		RatingCount:   e.RatingCount,
-		RatingAvg:     e.RatingAvg,
-		RatingScore:   e.RatingScore,
-		CreatedAt:     e.CreatedAt,
-	}
-}
-
 type CourseRepository struct {
 	db           *gorm.DB
 	cache        *redis.Client
@@ -44,11 +26,11 @@ func NewCourseRepository(db *gorm.DB, cache ...*redis.Client) *CourseRepository 
 	return &CourseRepository{db: db, cache: client, searchConfig: SearchConfig(db)}
 }
 
-func (r *CourseRepository) baseCourseQuery(ctx context.Context) *gorm.DB {
-	return r.db.WithContext(ctx).Model(&CourseEntity{}).Joins("MainTeacher")
+func (r *CourseRepository) baseCourseQuery() gorm.ChainInterface[CourseEntity] {
+	return gorm.G[CourseEntity](r.db).Joins(clause.LeftJoin.Association("MainTeacher"), nil)
 }
 
-func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm.DB {
+func (r *CourseRepository) applyFilter(db gorm.ChainInterface[CourseEntity], f course.CourseFilter) gorm.ChainInterface[CourseEntity] {
 	if len(f.CourseIDs) > 0 {
 		db = db.Where("courses.id IN ?", f.CourseIDs)
 	}
@@ -59,7 +41,9 @@ func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm
 		db = db.Where("courses.id != ?", f.ExcludeID)
 	}
 	if f.Q != "" {
-		db = applySearchVectorFilter(db, r.searchConfig, "courses.search_vector", f.Q)
+		if query := searchQuery(f.Q); query != "" {
+			db = db.Where("courses.search_vector @@ websearch_to_tsquery(?::regconfig, ?)", r.searchConfig, query)
+		}
 	}
 	if f.Code != "" {
 		db = db.Where("LOWER(courses.code) = LOWER(?)", f.Code)
@@ -95,7 +79,7 @@ func (r *CourseRepository) applyFilter(db *gorm.DB, f course.CourseFilter) *gorm
 	return db
 }
 
-func (r *CourseRepository) applySort(db *gorm.DB, f course.CourseFilter) *gorm.DB {
+func (r *CourseRepository) applySort(db gorm.ChainInterface[CourseEntity], f course.CourseFilter) gorm.ChainInterface[CourseEntity] {
 	desc := !f.Ascend
 	switch f.OrderBy {
 	case "", "rating_score":
@@ -122,7 +106,7 @@ func (r *CourseRepository) applySort(db *gorm.DB, f course.CourseFilter) *gorm.D
 	}
 }
 
-func (r *CourseRepository) applyPagination(db *gorm.DB, f course.CourseFilter) *gorm.DB {
+func (r *CourseRepository) applyPagination(db gorm.ChainInterface[CourseEntity], f course.CourseFilter) gorm.ChainInterface[CourseEntity] {
 	if f.Page > 0 && f.PageSize > 0 {
 		offset := (f.Page - 1) * f.PageSize
 		db = db.Offset(offset).Limit(f.PageSize)
@@ -223,21 +207,21 @@ func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int)
 }
 
 func (r *CourseRepository) FindBy(ctx context.Context, filter course.CourseFilter) ([]course.CourseView, int64, error) {
-	db := r.baseCourseQuery(ctx)
+	db := r.baseCourseQuery()
 	db = r.applyFilter(db, filter)
 
-	var total int64
-	countDB := r.baseCourseQuery(ctx)
+	countDB := r.baseCourseQuery()
 	countDB = r.applyFilter(countDB, filter)
-	if err := countDB.Count(&total).Error; err != nil {
+	total, err := countDB.Count(ctx, "courses.id")
+	if err != nil {
 		return nil, 0, err
 	}
 
 	db = r.applySort(db, filter)
 	db = r.applyPagination(db, filter)
 
-	var entities []CourseEntity
-	if err := db.Find(&entities).Error; err != nil {
+	entities, err := db.Find(ctx)
+	if err != nil {
 		return nil, 0, err
 	}
 
@@ -249,22 +233,25 @@ func (r *CourseRepository) FindBy(ctx context.Context, filter course.CourseFilte
 	return cs, total, nil
 }
 
-func (r *CourseRepository) Get(ctx context.Context, courseID int) (*course.Course, error) {
+func (r *CourseRepository) Get(ctx context.Context, courseID int) (*course.CourseView, error) {
 	key := cacheKey("course", courseID)
-	if cached, ok := cacheGetJSON[course.Course](ctx, r.cache, key); ok {
+	if cached, ok := cacheGetJSON[course.CourseView](ctx, r.cache, key); ok {
 		return cached, nil
 	}
 
-	e, err := gorm.G[CourseEntity](r.db).Where("id = ?", courseID).Take(ctx)
+	e, err := gorm.G[CourseEntity](r.db).
+		Joins(clause.LeftJoin.Association("MainTeacher"), nil).
+		Where("courses.id = ?", courseID).
+		Take(ctx)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, err
 	}
-	c := newCourseDomain(&e)
-	cacheSetJSON(ctx, r.cache, key, &c)
-	return &c, nil
+	c := newCourseViewFromEntity(&e)
+	cacheSetJSON(ctx, r.cache, key, c)
+	return c, nil
 }
 
 func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course.CourseDetailView, error) {
@@ -273,11 +260,10 @@ func (r *CourseRepository) GetDetail(ctx context.Context, courseID int) (*course
 		return cached, nil
 	}
 
-	var entity CourseEntity
-	err := r.db.WithContext(ctx).
-		Joins("MainTeacher").
+	entity, err := gorm.G[CourseEntity](r.db).
+		Joins(clause.LeftJoin.Association("MainTeacher"), nil).
 		Where("courses.id = ?", courseID).
-		Take(&entity).Error
+		Take(ctx)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -386,4 +372,3 @@ func (r *CourseRepository) GetFilters(ctx context.Context) (*course.CourseFilter
 }
 
 var _ course.CourseRepository = (*CourseRepository)(nil)
-var _ course.CourseQuery = (*CourseRepository)(nil)

@@ -28,8 +28,28 @@ func (r *fakeSettingsCourseRepo) OfferedSemesterExists(ctx context.Context, seme
 	return r.offered[semester], nil
 }
 
-func (r *fakeSettingsCourseRepo) Get(ctx context.Context, courseID int) (*course.Course, error) {
+func (r *fakeSettingsCourseRepo) Get(ctx context.Context, courseID int) (*course.CourseView, error) {
 	return nil, nil
+}
+
+func (r *fakeSettingsCourseRepo) FindBy(ctx context.Context, filter course.CourseFilter) ([]course.CourseView, int64, error) {
+	return nil, 0, nil
+}
+
+func (r *fakeSettingsCourseRepo) GetDetail(ctx context.Context, courseID int) (*course.CourseDetailView, error) {
+	return nil, nil
+}
+
+func (r *fakeSettingsCourseRepo) FindOfferedCourses(ctx context.Context, courseID int) ([]course.OfferedCourseView, error) {
+	return nil, nil
+}
+
+func (r *fakeSettingsCourseRepo) GetFilters(ctx context.Context) (*course.CourseFilters, error) {
+	return nil, nil
+}
+
+func (r *fakeSettingsCourseRepo) RefreshRatingScores(ctx context.Context, config course.RatingScoreConfig) error {
+	return nil
 }
 
 func (r *fakeSettingsCourseRepo) OfferedCourseExists(ctx context.Context, courseID int, semester string) (bool, error) {

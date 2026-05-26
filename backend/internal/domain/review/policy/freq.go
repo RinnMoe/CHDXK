@@ -53,7 +53,7 @@ func NewFrequencyPolicy(query review.ReviewQuery, config FrequencyPolicyConfig) 
 	return &FrequencyPolicy{query: query, config: config}
 }
 
-func (p *FrequencyPolicy) CanCreate(ctx context.Context, u *auth.User, c *course.Course, r *review.Review) error {
+func (p *FrequencyPolicy) CanCreate(ctx context.Context, u *auth.User, c *course.CourseView, r *review.Review) error {
 	if p.config.MaxReviews <= 0 {
 		return nil
 	}
@@ -95,7 +95,7 @@ func (p *FrequencyPolicy) CanCreate(ctx context.Context, u *auth.User, c *course
 	return nil
 }
 
-func (p *FrequencyPolicy) newViolation(r *review.Review, c *course.Course, reason error) error {
+func (p *FrequencyPolicy) newViolation(r *review.Review, c *course.CourseView, reason error) error {
 	return &review.FrequencyViolation{
 		Reason:          reason,
 		Review:          r,
@@ -104,7 +104,7 @@ func (p *FrequencyPolicy) newViolation(r *review.Review, c *course.Course, reaso
 	}
 }
 
-func reviewCourseMatches(r review.ReviewView, c *course.Course) bool {
+func reviewCourseMatches(r review.ReviewView, c *course.CourseView) bool {
 	if r.Course != nil && c.Code != "" {
 		return r.Course.Code == c.Code
 	}

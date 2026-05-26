@@ -10,49 +10,25 @@ import (
 	"jcourse/internal/domain/setting"
 )
 
-type fakeSettingsCourseRepo struct {
-	offeredSemesters map[string]bool
-}
-
 func newFakeUserSettingsRepo() *setting.MockRepository {
 	return setting.NewMockRepository()
 }
 
-func newFakeSettingsCourseRepo(semesters ...string) *fakeSettingsCourseRepo {
-	repo := &fakeSettingsCourseRepo{offeredSemesters: make(map[string]bool)}
-	for _, semester := range semesters {
-		repo.offeredSemesters[semester] = true
-	}
-	return repo
-}
-
-func (r *fakeSettingsCourseRepo) Get(ctx context.Context, courseID int) (*course.Course, error) {
-	return nil, nil
-}
-
-func (r *fakeSettingsCourseRepo) OfferedCourseExists(ctx context.Context, courseID int, semester string) (bool, error) {
-	return false, nil
-}
-
-func (r *fakeSettingsCourseRepo) OfferedSemesterExists(ctx context.Context, semester string) (bool, error) {
-	return r.offeredSemesters[semester], nil
-}
-
-func newSettingsCourseQuery(semesters ...string) *fakeCourseQuery {
+func newSettingsCourseRepo(semesters ...string) *course.MockCourseRepository {
 	items := make([]course.FilterItem, 0, len(semesters))
+	repo := course.NewMockCourseRepository()
 	for _, semester := range semesters {
 		items = append(items, course.FilterItem{Name: semester, Count: 1})
+		repo.OfferedSemesters[semester] = true
 	}
-	q := newFakeCourseQuery()
-	q.filters = &course.CourseFilters{Semesters: items}
-	return q
+	repo.Filters = &course.CourseFilters{Semesters: items}
+	return repo
 }
 
 func TestUserSettingsQueryService_Get_DefaultsToLatestSemester(t *testing.T) {
 	repo := newFakeUserSettingsRepo()
-	courseQuery := newSettingsCourseQuery("2025-2026-1", "2024-2025-2")
-	courseRepo := newFakeSettingsCourseRepo("2025-2026-1", "2024-2025-2")
-	svc := application.NewUserSettingsQueryService(repo, courseQuery, courseRepo)
+	courseRepo := newSettingsCourseRepo("2025-2026-1", "2024-2025-2")
+	svc := application.NewUserSettingsQueryService(repo, courseRepo)
 
 	dto, err := svc.Get(context.Background(), 1)
 	if err != nil {
@@ -66,9 +42,8 @@ func TestUserSettingsQueryService_Get_DefaultsToLatestSemester(t *testing.T) {
 func TestUserSettingsQueryService_Get_UsesSavedValidSemester(t *testing.T) {
 	repo := newFakeUserSettingsRepo()
 	repo.Settings[1] = &setting.UserSettings{UserID: 1, CurrentSemester: "2024-2025-2"}
-	courseQuery := newSettingsCourseQuery("2025-2026-1", "2024-2025-2")
-	courseRepo := newFakeSettingsCourseRepo("2025-2026-1", "2024-2025-2")
-	svc := application.NewUserSettingsQueryService(repo, courseQuery, courseRepo)
+	courseRepo := newSettingsCourseRepo("2025-2026-1", "2024-2025-2")
+	svc := application.NewUserSettingsQueryService(repo, courseRepo)
 
 	dto, err := svc.Get(context.Background(), 1)
 	if err != nil {
@@ -82,9 +57,8 @@ func TestUserSettingsQueryService_Get_UsesSavedValidSemester(t *testing.T) {
 func TestUserSettingsQueryService_Get_FallsBackWhenSavedSemesterExpired(t *testing.T) {
 	repo := newFakeUserSettingsRepo()
 	repo.Settings[1] = &setting.UserSettings{UserID: 1, CurrentSemester: "2020-2021-1"}
-	courseQuery := newSettingsCourseQuery("2025-2026-1", "2024-2025-2")
-	courseRepo := newFakeSettingsCourseRepo("2025-2026-1", "2024-2025-2")
-	svc := application.NewUserSettingsQueryService(repo, courseQuery, courseRepo)
+	courseRepo := newSettingsCourseRepo("2025-2026-1", "2024-2025-2")
+	svc := application.NewUserSettingsQueryService(repo, courseRepo)
 
 	dto, err := svc.Get(context.Background(), 1)
 	if err != nil {
@@ -97,7 +71,7 @@ func TestUserSettingsQueryService_Get_FallsBackWhenSavedSemesterExpired(t *testi
 
 func TestUserSettingsCommandService_Update(t *testing.T) {
 	repo := newFakeUserSettingsRepo()
-	courseRepo := newFakeSettingsCourseRepo("2025-2026-1", "2024-2025-2")
+	courseRepo := newSettingsCourseRepo("2025-2026-1", "2024-2025-2")
 	svc := application.NewUserSettingsCommandService(repo, courseRepo)
 
 	dto, err := svc.Update(context.Background(), 1, application.UpdateUserSettingsCommand{CurrentSemester: " 2024-2025-2 "})
@@ -115,7 +89,7 @@ func TestUserSettingsCommandService_Update(t *testing.T) {
 
 func TestUserSettingsCommandService_Update_InvalidSemester(t *testing.T) {
 	repo := newFakeUserSettingsRepo()
-	courseRepo := newFakeSettingsCourseRepo("2025-2026-1")
+	courseRepo := newSettingsCourseRepo("2025-2026-1")
 	svc := application.NewUserSettingsCommandService(repo, courseRepo)
 
 	_, err := svc.Update(context.Background(), 1, application.UpdateUserSettingsCommand{CurrentSemester: "2020-2021-1"})
@@ -126,7 +100,7 @@ func TestUserSettingsCommandService_Update_InvalidSemester(t *testing.T) {
 
 func TestUserSettingsCommandService_Update_AllowsExistingOfferedSemesterOutsideFilters(t *testing.T) {
 	repo := newFakeUserSettingsRepo()
-	courseRepo := newFakeSettingsCourseRepo("2025-2026-1", "2024-2025-2")
+	courseRepo := newSettingsCourseRepo("2025-2026-1", "2024-2025-2")
 	svc := application.NewUserSettingsCommandService(repo, courseRepo)
 
 	dto, err := svc.Update(context.Background(), 1, application.UpdateUserSettingsCommand{CurrentSemester: "2024-2025-2"})

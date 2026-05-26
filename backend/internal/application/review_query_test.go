@@ -15,6 +15,12 @@ type fakeReviewQuery struct {
 	reviews []review.ReviewView
 }
 
+var errNotFound = errorString("not found")
+
+type errorString string
+
+func (e errorString) Error() string { return string(e) }
+
 func newFakeReviewQuery() *fakeReviewQuery {
 	return &fakeReviewQuery{reviews: make([]review.ReviewView, 0)}
 }

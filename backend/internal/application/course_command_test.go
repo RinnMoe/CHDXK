@@ -24,7 +24,7 @@ func newFakeCourseRepo() *course.MockCourseRepository {
 
 func TestCourseCommandService_SetNotificationLevel_Success(t *testing.T) {
 	courseRepo := newFakeCourseRepo()
-	courseRepo.Courses[1] = &course.Course{ID: 1, Code: "CS101", Name: "数据结构"}
+	courseRepo.Courses[1] = &course.CourseView{ID: 1, Code: "CS101", Name: "数据结构"}
 	notificationRepo := newFakeNotificationRepo()
 	svc := application.NewCourseCommandService(course.NewNotificationService(courseRepo, notificationRepo), nil, nil, nil, nil)
 	ctx := context.Background()
@@ -58,7 +58,7 @@ func TestCourseCommandService_SetNotificationLevel_CourseNotFound(t *testing.T) 
 
 func TestCourseCommandService_SetNotificationLevel_Update(t *testing.T) {
 	courseRepo := newFakeCourseRepo()
-	courseRepo.Courses[1] = &course.Course{ID: 1}
+	courseRepo.Courses[1] = &course.CourseView{ID: 1}
 	notificationRepo := newFakeNotificationRepo()
 	notificationRepo.SetLevel(context.Background(), 100, 1, course.NotificationLevelFollow)
 	svc := application.NewCourseCommandService(course.NewNotificationService(courseRepo, notificationRepo), nil, nil, nil, nil)

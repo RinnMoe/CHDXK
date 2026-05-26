@@ -5,24 +5,31 @@ package course
 import "context"
 
 type MockCourseRepository struct {
-	Courses          map[int]*Course
+	Courses          map[int]*CourseView
 	OfferedCourses   map[int]map[string]bool
 	OfferedSemesters map[string]bool
+	Filters          *CourseFilters
+	RatingConfig     RatingScoreConfig
 
-	OnGet                   func(context.Context, int) (*Course, error)
+	OnGet                   func(context.Context, int) (*CourseView, error)
+	OnFindBy                func(context.Context, CourseFilter) ([]CourseView, int64, error)
+	OnGetDetail             func(context.Context, int) (*CourseDetailView, error)
+	OnFindOfferedCourses    func(context.Context, int) ([]OfferedCourseView, error)
+	OnGetFilters            func(context.Context) (*CourseFilters, error)
+	OnRefreshRatingScores   func(context.Context, RatingScoreConfig) error
 	OnOfferedCourseExists   func(context.Context, int, string) (bool, error)
 	OnOfferedSemesterExists func(context.Context, string) (bool, error)
 }
 
 func NewMockCourseRepository() *MockCourseRepository {
 	return &MockCourseRepository{
-		Courses:          map[int]*Course{},
+		Courses:          map[int]*CourseView{},
 		OfferedCourses:   map[int]map[string]bool{},
 		OfferedSemesters: map[string]bool{},
 	}
 }
 
-func (r *MockCourseRepository) Get(ctx context.Context, courseID int) (*Course, error) {
+func (r *MockCourseRepository) Get(ctx context.Context, courseID int) (*CourseView, error) {
 	if r.OnGet != nil {
 		return r.OnGet(ctx, courseID)
 	}
@@ -33,6 +40,89 @@ func (r *MockCourseRepository) Get(ctx context.Context, courseID int) (*Course, 
 	}
 	copy := *c
 	return &copy, nil
+}
+
+func (r *MockCourseRepository) FindBy(ctx context.Context, filter CourseFilter) ([]CourseView, int64, error) {
+	if r.OnFindBy != nil {
+		return r.OnFindBy(ctx, filter)
+	}
+	r.ensureMaps()
+	views := make([]CourseView, 0, len(r.Courses))
+	for id, c := range r.Courses {
+		if len(filter.CourseIDs) > 0 && !containsInt(filter.CourseIDs, id) {
+			continue
+		}
+		if filter.TeacherID > 0 && c.MainTeacherID != filter.TeacherID {
+			continue
+		}
+		if filter.ExcludeID > 0 && id == filter.ExcludeID {
+			continue
+		}
+		if filter.Code != "" && c.Code != filter.Code {
+			continue
+		}
+		if filter.Name != "" && c.Name != filter.Name {
+			continue
+		}
+		if filter.Department != "" && c.Department != filter.Department {
+			continue
+		}
+		if filter.Credit != nil && c.Credit != *filter.Credit {
+			continue
+		}
+		if filter.Language != "" && c.Language != filter.Language {
+			continue
+		}
+		copy := *c
+		views = append(views, copy)
+	}
+	return views, int64(len(views)), nil
+}
+
+func (r *MockCourseRepository) GetDetail(ctx context.Context, courseID int) (*CourseDetailView, error) {
+	if r.OnGetDetail != nil {
+		return r.OnGetDetail(ctx, courseID)
+	}
+	c, err := r.Get(ctx, courseID)
+	if err != nil || c == nil {
+		return nil, err
+	}
+	return &CourseDetailView{
+		ID:            c.ID,
+		Code:          c.Code,
+		Name:          c.Name,
+		Credit:        c.Credit,
+		Department:    c.Department,
+		MainTeacherID: c.MainTeacherID,
+		MainTeacher:   c.MainTeacher,
+		LastSemester:  c.LastSemester,
+		Categories:    c.Categories,
+		Language:      c.Language,
+		TargetYears:   c.TargetYears,
+		Rating:        c.Rating,
+	}, nil
+}
+
+func (r *MockCourseRepository) FindOfferedCourses(ctx context.Context, courseID int) ([]OfferedCourseView, error) {
+	if r.OnFindOfferedCourses != nil {
+		return r.OnFindOfferedCourses(ctx, courseID)
+	}
+	return []OfferedCourseView{}, nil
+}
+
+func (r *MockCourseRepository) GetFilters(ctx context.Context) (*CourseFilters, error) {
+	if r.OnGetFilters != nil {
+		return r.OnGetFilters(ctx)
+	}
+	return r.Filters, nil
+}
+
+func (r *MockCourseRepository) RefreshRatingScores(ctx context.Context, config RatingScoreConfig) error {
+	if r.OnRefreshRatingScores != nil {
+		return r.OnRefreshRatingScores(ctx, config)
+	}
+	r.RatingConfig = config
+	return nil
 }
 
 func (r *MockCourseRepository) OfferedCourseExists(ctx context.Context, courseID int, semester string) (bool, error) {
@@ -56,7 +146,7 @@ func (r *MockCourseRepository) OfferedSemesterExists(ctx context.Context, semest
 
 func (r *MockCourseRepository) ensureMaps() {
 	if r.Courses == nil {
-		r.Courses = map[int]*Course{}
+		r.Courses = map[int]*CourseView{}
 	}
 	if r.OfferedCourses == nil {
 		r.OfferedCourses = map[int]map[string]bool{}
@@ -64,6 +154,15 @@ func (r *MockCourseRepository) ensureMaps() {
 	if r.OfferedSemesters == nil {
 		r.OfferedSemesters = map[string]bool{}
 	}
+}
+
+func containsInt(values []int, target int) bool {
+	for _, value := range values {
+		if value == target {
+			return true
+		}
+	}
+	return false
 }
 
 type MockCourseEnrollmentRepository struct {

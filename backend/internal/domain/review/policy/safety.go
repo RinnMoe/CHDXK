@@ -26,7 +26,7 @@ func NewSafetyPolicy(moderator ContentModerator) *SafetyPolicy {
 	return &SafetyPolicy{moderator: moderator}
 }
 
-func (p *SafetyPolicy) CanCreate(ctx context.Context, u *auth.User, c *course.Course, r *review.Review) error {
+func (p *SafetyPolicy) CanCreate(ctx context.Context, u *auth.User, c *course.CourseView, r *review.Review) error {
 	if p.moderator == nil {
 		return nil
 	}

@@ -3,14 +3,14 @@ package course
 import "context"
 
 type CourseRatingCommandService struct {
-	query  CourseQuery
+	repo   CourseRepository
 	config RatingScoreConfig
 }
 
-func NewCourseRatingCommandService(query CourseQuery, config RatingScoreConfig) *CourseRatingCommandService {
-	return &CourseRatingCommandService{query: query, config: config.Normalized()}
+func NewCourseRatingCommandService(repo CourseRepository, config RatingScoreConfig) *CourseRatingCommandService {
+	return &CourseRatingCommandService{repo: repo, config: config.Normalized()}
 }
 
 func (s *CourseRatingCommandService) RefreshRatingScores(ctx context.Context) error {
-	return s.query.RefreshRatingScores(ctx, s.config)
+	return s.repo.RefreshRatingScores(ctx, s.config)
 }

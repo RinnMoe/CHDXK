@@ -35,7 +35,7 @@ func newReviewCommandTestService(reviewRepo *review.MockReviewRepository, voteRe
 
 func newReviewCommandTestServiceWithPolicies(reviewRepo *review.MockReviewRepository, voteRepo *review.MockVoteRepository, policies []review.CreatePolicy) *application.ReviewCommandService {
 	courseRepo := course.NewMockCourseRepository()
-	courseRepo.Courses[1] = &course.Course{ID: 1, Code: "CS101", LastSemester: "2025-2026-1"}
+	courseRepo.Courses[1] = &course.CourseView{ID: 1, Code: "CS101", LastSemester: "2025-2026-1"}
 	courseRepo.OfferedCourses[1] = map[string]bool{"2025-2026-1": true}
 	return application.NewReviewCommandService(
 		courseRepo,
@@ -58,7 +58,7 @@ type rejectCreatePolicy struct {
 	err error
 }
 
-func (p rejectCreatePolicy) CanCreate(ctx context.Context, u *auth.User, c *course.Course, r *review.Review) error {
+func (p rejectCreatePolicy) CanCreate(ctx context.Context, u *auth.User, c *course.CourseView, r *review.Review) error {
 	return p.err
 }
 
@@ -103,7 +103,7 @@ func TestReviewCommandService_CreateReviewEnqueuesFrequencyViolationTasks(t *tes
 	violation := &review.FrequencyViolation{
 		Reason:          policy.ErrSameCourseSpam,
 		Review:          &review.Review{UserID: 10, CourseID: 1, Content: "spam content"},
-		Course:          &course.Course{ID: 1, Code: "CS101", Name: "Intro CS"},
+		Course:          &course.CourseView{ID: 1, Code: "CS101", Name: "Intro CS"},
 		SuspendDuration: duration,
 	}
 	svc := newReviewCommandTestServiceWithPolicies(reviewRepo, &review.MockVoteRepository{}, []review.CreatePolicy{

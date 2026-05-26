@@ -9,12 +9,12 @@ import (
 )
 
 type UserSettingsQueryService struct {
-	courseQuery course.CourseQuery
-	settings    *setting.UserSettingsService
+	courseRepo course.CourseRepository
+	settings   *setting.UserSettingsService
 }
 
-func NewUserSettingsQueryService(repo setting.Repository, courseQuery course.CourseQuery, courseRepo course.CourseRepository) *UserSettingsQueryService {
-	return &UserSettingsQueryService{courseQuery: courseQuery, settings: setting.NewUserSettingsService(repo, courseRepo)}
+func NewUserSettingsQueryService(repo setting.Repository, courseRepo course.CourseRepository) *UserSettingsQueryService {
+	return &UserSettingsQueryService{courseRepo: courseRepo, settings: setting.NewUserSettingsService(repo, courseRepo)}
 }
 
 func (s *UserSettingsQueryService) Get(ctx context.Context, userID int) (*UserSettingsDTO, error) {
@@ -30,11 +30,11 @@ func (s *UserSettingsQueryService) Get(ctx context.Context, userID int) (*UserSe
 }
 
 func (s *UserSettingsQueryService) validSemesters(ctx context.Context) ([]string, error) {
-	return validSemesters(ctx, s.courseQuery)
+	return validSemesters(ctx, s.courseRepo)
 }
 
-func validSemesters(ctx context.Context, courseQuery course.CourseQuery) ([]string, error) {
-	filters, err := courseQuery.GetFilters(ctx)
+func validSemesters(ctx context.Context, courseRepo course.CourseRepository) ([]string, error) {
+	filters, err := courseRepo.GetFilters(ctx)
 	if err != nil {
 		return nil, err
 	}

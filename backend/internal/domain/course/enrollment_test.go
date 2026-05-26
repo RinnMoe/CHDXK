@@ -17,7 +17,7 @@ func newFakeEnrollmentCourseRepo() *MockCourseRepository {
 
 func TestEnrollmentService_CreateUsesLastSemester(t *testing.T) {
 	courseRepo := newFakeEnrollmentCourseRepo()
-	courseRepo.Courses[1] = &Course{ID: 1, LastSemester: "2025-2026-1"}
+	courseRepo.Courses[1] = &CourseView{ID: 1, LastSemester: "2025-2026-1"}
 	enrollmentRepo := &MockCourseEnrollmentRepository{}
 	svc := NewEnrollmentService(courseRepo, enrollmentRepo)
 	now := time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
@@ -32,7 +32,7 @@ func TestEnrollmentService_CreateUsesLastSemester(t *testing.T) {
 
 func TestEnrollmentService_CreateUsesOfferedCourse(t *testing.T) {
 	courseRepo := newFakeEnrollmentCourseRepo()
-	courseRepo.Courses[1] = &Course{ID: 1, LastSemester: "2025-2026-1"}
+	courseRepo.Courses[1] = &CourseView{ID: 1, LastSemester: "2025-2026-1"}
 	courseRepo.OfferedSemesters["2024-2025-2"] = true
 	enrollmentRepo := &MockCourseEnrollmentRepository{}
 	svc := NewEnrollmentService(courseRepo, enrollmentRepo)
@@ -56,7 +56,7 @@ func TestEnrollmentService_CreateRejectsMissingSemester(t *testing.T) {
 
 func TestEnrollmentService_CreateRejectsMissingOfferedCourse(t *testing.T) {
 	courseRepo := newFakeEnrollmentCourseRepo()
-	courseRepo.Courses[1] = &Course{ID: 1, LastSemester: "2025-2026-1"}
+	courseRepo.Courses[1] = &CourseView{ID: 1, LastSemester: "2025-2026-1"}
 	svc := NewEnrollmentService(courseRepo, &MockCourseEnrollmentRepository{})
 
 	err := svc.Create(context.Background(), 10, 1, "2024-2025-2", time.Now())

@@ -2,53 +2,7 @@
 
 package review
 
-import (
-	"context"
-
-	"jcourse/internal/domain/course"
-)
-
-type MockCourseRepository struct {
-	Courses        map[int]*course.Course
-	OfferedCourses map[int]map[string]bool
-
-	OnGet                 func(context.Context, int) (*course.Course, error)
-	OnOfferedCourseExists func(context.Context, int, string) (bool, error)
-}
-
-func NewMockCourseRepository() *MockCourseRepository {
-	return &MockCourseRepository{Courses: map[int]*course.Course{}, OfferedCourses: map[int]map[string]bool{}}
-}
-
-func (r *MockCourseRepository) Get(ctx context.Context, courseID int) (*course.Course, error) {
-	if r.OnGet != nil {
-		return r.OnGet(ctx, courseID)
-	}
-	r.ensureMaps()
-	c, ok := r.Courses[courseID]
-	if !ok {
-		return nil, nil
-	}
-	copy := *c
-	return &copy, nil
-}
-
-func (r *MockCourseRepository) OfferedCourseExists(ctx context.Context, courseID int, semester string) (bool, error) {
-	if r.OnOfferedCourseExists != nil {
-		return r.OnOfferedCourseExists(ctx, courseID, semester)
-	}
-	r.ensureMaps()
-	return r.OfferedCourses[courseID][semester], nil
-}
-
-func (r *MockCourseRepository) ensureMaps() {
-	if r.Courses == nil {
-		r.Courses = map[int]*course.Course{}
-	}
-	if r.OfferedCourses == nil {
-		r.OfferedCourses = map[int]map[string]bool{}
-	}
-}
+import "context"
 
 type MockReviewRepository struct {
 	NextID  int

@@ -62,7 +62,7 @@ func TestFrequencyPolicy_FewerThanMax(t *testing.T) {
 		Window: time.Hour, MaxReviews: 5, SimilarityRatio: 0.7,
 	})
 
-	err := p.CanCreate(context.Background(), &auth.User{ID: 1}, &course.Course{ID: 2}, &review.Review{Content: "new"})
+	err := p.CanCreate(context.Background(), &auth.User{ID: 1}, &course.CourseView{ID: 2}, &review.Review{Content: "new"})
 	if err != nil {
 		t.Fatalf("expected nil, got %v", err)
 	}
@@ -83,7 +83,7 @@ func TestFrequencyPolicy_SameCourseAll(t *testing.T) {
 		SuspendDuration: 2 * time.Hour,
 	})
 
-	targetCourse := &course.Course{ID: 10, Code: "CS101", Name: "Intro CS"}
+	targetCourse := &course.CourseView{ID: 10, Code: "CS101", Name: "Intro CS"}
 	targetReview := &review.Review{UserID: 1, CourseID: 10, Content: "z"}
 	err := p.CanCreate(context.Background(), &auth.User{ID: 1}, targetCourse, targetReview)
 	if !errors.Is(err, policy.ErrSameCourseSpam) {
@@ -110,7 +110,7 @@ func TestFrequencyPolicy_SameCourseIDButDifferentCode(t *testing.T) {
 		Window: time.Hour, MaxReviews: 3, SimilarityRatio: 0.99,
 	})
 
-	err := p.CanCreate(context.Background(), &auth.User{ID: 1}, &course.Course{ID: 7, Code: "CS999"}, &review.Review{Content: "z"})
+	err := p.CanCreate(context.Background(), &auth.User{ID: 1}, &course.CourseView{ID: 7, Code: "CS999"}, &review.Review{Content: "z"})
 	if err != nil {
 		t.Fatalf("expected nil (different target code), got %v", err)
 	}
@@ -130,7 +130,7 @@ func TestFrequencyPolicy_SimilarContent(t *testing.T) {
 		Window: time.Hour, MaxReviews: 4, SimilarityRatio: 0.7, SuspendDuration: 3 * time.Hour,
 	})
 
-	targetCourse := &course.Course{ID: 99, Code: "CS999"}
+	targetCourse := &course.CourseView{ID: 99, Code: "CS999"}
 	targetReview := &review.Review{UserID: 1, CourseID: 99, Content: base}
 	err := p.CanCreate(context.Background(), &auth.User{ID: 1}, targetCourse, targetReview)
 	if !errors.Is(err, policy.ErrSimilarContentDetected) {
@@ -158,7 +158,7 @@ func TestFrequencyPolicy_NoSpam(t *testing.T) {
 		Window: time.Hour, MaxReviews: 4, SimilarityRatio: 0.9,
 	})
 
-	err := p.CanCreate(context.Background(), &auth.User{ID: 1}, &course.Course{ID: 99}, &review.Review{Content: "completely original review"})
+	err := p.CanCreate(context.Background(), &auth.User{ID: 1}, &course.CourseView{ID: 99}, &review.Review{Content: "completely original review"})
 	if err != nil {
 		t.Fatalf("expected nil, got %v", err)
 	}
@@ -177,7 +177,7 @@ func (m *fakeModerator) IsSensitive(ctx context.Context, accountID string, conte
 
 func TestSafetyPolicy_Nil(t *testing.T) {
 	p := policy.NewSafetyPolicy(nil)
-	if err := p.CanCreate(context.Background(), &auth.User{}, &course.Course{}, &review.Review{Content: "hi"}); err != nil {
+	if err := p.CanCreate(context.Background(), &auth.User{}, &course.CourseView{}, &review.Review{Content: "hi"}); err != nil {
 		t.Fatalf("expected nil, got %v", err)
 	}
 }
@@ -185,7 +185,7 @@ func TestSafetyPolicy_Nil(t *testing.T) {
 func TestSafetyPolicy_Sensitive(t *testing.T) {
 	m := &fakeModerator{sensitive: true}
 	p := policy.NewSafetyPolicy(m)
-	err := p.CanCreate(context.Background(), &auth.User{}, &course.Course{}, &review.Review{Content: "bad text"})
+	err := p.CanCreate(context.Background(), &auth.User{}, &course.CourseView{}, &review.Review{Content: "bad text"})
 	if !errors.Is(err, policy.ErrContentSensitive) {
 		t.Fatalf("expected ErrContentSensitive, got %v", err)
 	}
@@ -196,7 +196,7 @@ func TestSafetyPolicy_Sensitive(t *testing.T) {
 
 func TestSafetyPolicy_Clean(t *testing.T) {
 	p := policy.NewSafetyPolicy(&fakeModerator{sensitive: false})
-	if err := p.CanCreate(context.Background(), &auth.User{}, &course.Course{}, &review.Review{Content: "good"}); err != nil {
+	if err := p.CanCreate(context.Background(), &auth.User{}, &course.CourseView{}, &review.Review{Content: "good"}); err != nil {
 		t.Fatalf("expected nil, got %v", err)
 	}
 }
@@ -204,7 +204,7 @@ func TestSafetyPolicy_Clean(t *testing.T) {
 func TestSafetyPolicy_ModeratorError(t *testing.T) {
 	want := errors.New("network down")
 	p := policy.NewSafetyPolicy(&fakeModerator{err: want})
-	err := p.CanCreate(context.Background(), &auth.User{}, &course.Course{}, &review.Review{Content: "x"})
+	err := p.CanCreate(context.Background(), &auth.User{}, &course.CourseView{}, &review.Review{Content: "x"})
 	if !errors.Is(err, want) {
 		t.Fatalf("expected %v, got %v", want, err)
 	}
