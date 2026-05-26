@@ -127,7 +127,7 @@ func (s *Service) Update(ctx context.Context, u *auth.User, cmd UpdateReview) er
 		return ErrOfferedCourseMissing
 	}
 
-	rv := r.MakeRevision()
+	rv := r.MakeRevision(u.ID)
 	r.ApplyUpdate(Update{
 		Semester: cmd.Semester,
 		Rating:   cmd.Rating,

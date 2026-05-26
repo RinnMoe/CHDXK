@@ -31,7 +31,7 @@ type ReviewRevisionDTO struct {
 	ID        int       `json:"id"`
 	ReviewID  int       `json:"review_id"`
 	CourseID  int       `json:"course_id"`
-	UserID    int       `json:"user_id"`
+	CreatedBy int       `json:"created_by"`
 	Semester  string    `json:"semester"`
 	Score     string    `json:"score"`
 	Rating    int       `json:"rating"`
@@ -70,7 +70,7 @@ func newReviewRevisionDTO(r *review.RevisionView) ReviewRevisionDTO {
 		ID:        r.ID,
 		ReviewID:  r.ReviewID,
 		CourseID:  r.CourseID,
-		UserID:    r.UserID,
+		CreatedBy: r.CreatedBy,
 		Semester:  r.Semester,
 		Score:     r.Score,
 		Rating:    r.Rating,

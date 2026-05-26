@@ -43,6 +43,8 @@ type ServiceContainer struct {
 	ApiKeyCommand         *application.ApiKeyCommandService
 	UserSettingsQuery     *application.UserSettingsQueryService
 	UserSettingsCommand   *application.UserSettingsCommandService
+	AuditLogQuery         *application.AuditLogQueryService
+	AuditLogCommand       *application.AuditLogCommandService
 	EmailSender           email.Sender
 }
 
@@ -63,6 +65,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	userRepo := repository.NewUserRepository(db, redisClient)
 	userSettingsRepo := repository.NewUserSettingsRepository(db, redisClient)
 	apiKeyRepo := repository.NewApiKeyRepository(db)
+	auditLogRepo := repository.NewAuditLogRepository(db)
 	accessTracker := repository.NewAccessTrackerRepository(db, redisClient, conf.Auth.Access.FlushBatchSize)
 	statRepo := repository.NewSiteDailyStatRepository(db, redisClient)
 	courseHotRepo := repository.NewGormCourseHotRepository(db, redisClient)
@@ -144,6 +147,8 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc)
 	userSettingsQuery := application.NewUserSettingsQueryService(userSettingsRepo, courseRepo)
 	userSettingsCommand := application.NewUserSettingsCommandService(userSettingsRepo, courseRepo)
+	auditLogQuery := application.NewAuditLogQueryService(auditLogRepo)
+	auditLogCommand := application.NewAuditLogCommandService(auditLogRepo)
 
 	return &ServiceContainer{
 		ReviewQuery:           reviewQuery,
@@ -169,6 +174,8 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		ApiKeyCommand:         apiKeyCommand,
 		UserSettingsQuery:     userSettingsQuery,
 		UserSettingsCommand:   userSettingsCommand,
+		AuditLogQuery:         auditLogQuery,
+		AuditLogCommand:       auditLogCommand,
 		EmailSender:           smtpSender,
 	}
 }

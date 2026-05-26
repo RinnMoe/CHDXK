@@ -79,7 +79,7 @@ func TestReviewRepository_Update(t *testing.T) {
 		t.Fatalf("Get: %v", err)
 	}
 	originalContent := r.Content
-	rv := r.MakeRevision()
+	rv := r.MakeRevision(user.ID)
 	r.Content = "更新后的评价"
 	r.Rating = 4
 	r.Score = "B"
@@ -503,7 +503,7 @@ func TestReviewRepository_SearchVector(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Get: %v", err)
 		}
-		rv := r.MakeRevision()
+		rv := r.MakeRevision(users[4].ID)
 		r.Content = "线性代数的内容很有趣"
 		r.UpdatedAt = time.Now()
 
@@ -640,13 +640,13 @@ func TestReviewRepository_FindRevisions(t *testing.T) {
 	entity := seedReview(t, db, course.ID, user.ID)
 
 	r, _ := repo.Get(ctx, entity.ID)
-	rv1 := r.MakeRevision()
+	rv1 := r.MakeRevision(user.ID)
 	r.Content = "第一次更新"
 	r.Rating = 4
 	r.UpdatedAt = time.Now()
 	repo.Update(ctx, r, rv1)
 
-	rv2 := r.MakeRevision()
+	rv2 := r.MakeRevision(user.ID)
 	r.Content = "第二次更新"
 	r.Rating = 3
 	r.UpdatedAt = time.Now()

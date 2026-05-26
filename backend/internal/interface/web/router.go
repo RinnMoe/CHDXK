@@ -59,6 +59,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	siteStatsController := controller.NewSiteStatsController(container.SiteStatsQuery)
 	announcementController := controller.NewAnnouncementController(container.AnnouncementQuery)
 	adminUserController := controller.NewAdminUserController(container.AdminUserQuery, container.AdminUserCommand)
+	auditLogController := controller.NewAuditLogController(container.AuditLogQuery)
 
 	apiGroup := g.Group("/api")
 	publicAuthGroup := apiGroup.Group("/auth")
@@ -161,6 +162,10 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		adminApiKeyGroup.GET("/system", apiKeyController.ListSystemApiKeys)
 		adminApiKeyGroup.POST("/system", apiKeyController.CreateSystemApiKey)
 		adminApiKeyGroup.DELETE("/system/:apiKeyID", apiKeyController.DeleteSystemApiKey)
+	}
+	adminAuditGroup := apiGroup.Group("/admin/audit-log", middleware.RequireAdmin())
+	{
+		adminAuditGroup.GET("", auditLogController.ListAuditLogs)
 	}
 	announcementGroup := apiGroup.Group("/announcement")
 	{

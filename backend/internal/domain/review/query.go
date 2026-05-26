@@ -75,7 +75,7 @@ type RevisionView struct {
 	ReviewID  int
 	CourseID  int
 	Semester  string
-	UserID    int
+	CreatedBy int
 	Rating    int
 	Content   string
 	Score     string

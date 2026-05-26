@@ -5,6 +5,7 @@ import (
 
 	"jcourse/config"
 	"jcourse/internal/app"
+	"jcourse/internal/domain/audit"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	domainemail "jcourse/internal/domain/email"
@@ -22,6 +23,7 @@ func NewMux(container *app.ServiceContainer) *asynq.ServeMux {
 	mux.Handle(course.TaskTypeRefreshRatingScores, asynchandler.NewRefreshCourseRatingScoresHandler(container.CourseCommand))
 	mux.Handle(domainemail.TaskTypeSendEmail, asynchandler.NewSendEmailHandler(container.EmailSender))
 	mux.Handle(stat.TaskTypeCollectDailySiteStats, asynchandler.NewCollectDailySiteStatsHandler(container.SiteStatsCommand))
+	mux.Handle(audit.TaskTypeRecordLog, asynchandler.NewRecordAuditLogHandler(container.AuditLogCommand))
 	return mux
 }
 

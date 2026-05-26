@@ -36,7 +36,7 @@ function buildRevisions(review: ReviewDTO): ReviewRevisionDTO[] {
       id: review.id * 100 + i,
       review_id: review.id,
       course_id: review.course_id,
-      user_id: review.user_id ?? 0,
+      created_by: review.user_id ?? 0,
       semester: review.semester ?? "",
       score: review.score,
       rating: Math.max(1, review.rating - i),

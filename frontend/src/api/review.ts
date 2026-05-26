@@ -34,7 +34,7 @@ export interface ReviewRevisionDTO {
   id: number
   review_id: number
   course_id: number
-  user_id: number
+  created_by: number
   semester: string
   score: string
   rating: number

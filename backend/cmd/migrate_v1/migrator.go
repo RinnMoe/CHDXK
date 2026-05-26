@@ -538,7 +538,7 @@ func (m *Migrator) migrateReviewRevisions(ctx *migrationContext) error {
 				ReviewID:  int(row.ReviewID.Int64),
 				CourseID:  int(row.CourseID.Int64),
 				Semester:  nullStringValue(row.SemesterName),
-				UserID:    int(row.UserID.Int64),
+				CreatedBy: int(row.UserID.Int64),
 				Rating:    row.Rating,
 				Content:   row.Comment,
 				Score:     nullStringValue(row.Score),

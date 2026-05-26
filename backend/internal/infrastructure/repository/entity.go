@@ -105,7 +105,7 @@ type ReviewRevisionEntity struct {
 	ReviewID  int       `gorm:"column:review_id;index"`
 	CourseID  int       `gorm:"column:course_id;index"`
 	Semester  string    `gorm:"column:semester"`
-	UserID    int       `gorm:"column:user_id"`
+	CreatedBy int       `gorm:"column:created_by"`
 	Rating    int       `gorm:"column:rating"`
 	Content   string    `gorm:"column:content"`
 	Score     string    `gorm:"column:score"`
@@ -249,4 +249,19 @@ type AnnouncementEntity struct {
 
 func (AnnouncementEntity) TableName() string {
 	return "announcements"
+}
+
+type AuditLogEntity struct {
+	ID          int64             `gorm:"column:id"`
+	OccurredAt  time.Time         `gorm:"column:occurred_at"`
+	ActorUserID int               `gorm:"column:actor_user_id;index"`
+	Action      string            `gorm:"column:action;index"`
+	TargetType  string            `gorm:"column:target_type"`
+	TargetID    string            `gorm:"column:target_id"`
+	Details     datatypes.JSONMap `gorm:"column:details;type:jsonb"`
+	CreatedAt   time.Time         `gorm:"column:created_at"`
+}
+
+func (AuditLogEntity) TableName() string {
+	return "audit_logs"
 }

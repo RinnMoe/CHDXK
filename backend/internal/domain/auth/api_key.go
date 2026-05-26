@@ -205,6 +205,10 @@ func (s *ApiKeyService) ListSystemKeys(ctx context.Context) ([]ApiKey, error) {
 	return s.query.ListSystem(ctx)
 }
 
+func (s *ApiKeyService) GetKey(ctx context.Context, id int64) (*ApiKey, error) {
+	return s.query.GetByID(ctx, id)
+}
+
 func (s *ApiKeyService) CreateSystemKey(ctx context.Context, name string) (*ApiKey, *ApiKeyCredential, error) {
 	credential, err := s.generateCredential()
 	if err != nil {

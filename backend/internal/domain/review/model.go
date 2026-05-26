@@ -19,12 +19,12 @@ type Review struct {
 	UpdatedAt       time.Time
 }
 
-func (r *Review) MakeRevision() Revision {
+func (r *Review) MakeRevision(createdBy int) Revision {
 	return Revision{
 		ReviewID:  r.ID,
 		CourseID:  r.CourseID,
 		Semester:  r.Semester,
-		UserID:    r.UserID,
+		CreatedBy: createdBy,
 		Rating:    r.Rating,
 		Content:   r.Content,
 		Score:     r.Score,
@@ -66,7 +66,7 @@ type Revision struct {
 	ReviewID  int
 	CourseID  int
 	Semester  string
-	UserID    int
+	CreatedBy int
 	Rating    int
 	Content   string
 	Score     string

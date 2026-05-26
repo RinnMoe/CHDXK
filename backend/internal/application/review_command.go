@@ -3,8 +3,10 @@ package application
 import (
 	"context"
 	"errors"
+	"strconv"
 	"time"
 
+	"jcourse/internal/domain/audit"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	domainemail "jcourse/internal/domain/email"
@@ -85,18 +87,77 @@ func (s *ReviewCommandService) UpdateReview(ctx context.Context, u *auth.User, c
 		return err
 	}
 	s.enqueueHotCourseActivity(ctx, u.ID, course.HotCourseActivityReviewUpdate, existing.CourseID)
+	if u.IsAdmin() && u.ID != existing.UserID {
+		audit.EnqueueLog(ctx, audit.Log{
+			OccurredAt:  now,
+			ActorUserID: u.ID,
+			Action:      audit.ActionReviewUpdate,
+			TargetType:  audit.TargetTypeReview,
+			TargetID:    strconv.Itoa(existing.ID),
+			Details: audit.Details{
+				"course_id":        existing.CourseID,
+				"review_author_id": existing.UserID,
+			},
+		})
+	}
 	return nil
 }
 
 func (s *ReviewCommandService) DeleteReview(ctx context.Context, u *auth.User, reviewID int) error {
-	return s.reviewService.Delete(ctx, u, reviewID)
+	existing, err := s.reviewRepo.Get(ctx, reviewID)
+	if err != nil {
+		return err
+	}
+	if existing == nil {
+		return review.ErrReviewNotFound
+	}
+	if err := s.reviewService.Delete(ctx, u, reviewID); err != nil {
+		return err
+	}
+	if u.IsAdmin() && u.ID != existing.UserID {
+		audit.EnqueueLog(ctx, audit.Log{
+			OccurredAt:  time.Now(),
+			ActorUserID: u.ID,
+			Action:      audit.ActionReviewDelete,
+			TargetType:  audit.TargetTypeReview,
+			TargetID:    strconv.Itoa(existing.ID),
+			Details: audit.Details{
+				"course_id":        existing.CourseID,
+				"review_author_id": existing.UserID,
+			},
+		})
+	}
+	return nil
 }
 
 func (s *ReviewCommandService) UpdateModeratorRemark(ctx context.Context, u *auth.User, reviewID int, cmd *UpdateReviewModeratorRemarkCommand) error {
-	return s.reviewService.UpdateModeratorRemark(ctx, u, review.UpdateModeratorRemark{
+	existing, err := s.reviewRepo.Get(ctx, reviewID)
+	if err != nil {
+		return err
+	}
+	if existing == nil {
+		return review.ErrReviewNotFound
+	}
+	if err := s.reviewService.UpdateModeratorRemark(ctx, u, review.UpdateModeratorRemark{
 		ReviewID:        reviewID,
 		ModeratorRemark: cmd.ModeratorRemark,
-	})
+	}); err != nil {
+		return err
+	}
+	if u.IsAdmin() && u.ID != existing.UserID {
+		audit.EnqueueLog(ctx, audit.Log{
+			OccurredAt:  time.Now(),
+			ActorUserID: u.ID,
+			Action:      audit.ActionReviewModeratorRemarkEdit,
+			TargetType:  audit.TargetTypeReview,
+			TargetID:    strconv.Itoa(existing.ID),
+			Details: audit.Details{
+				"course_id":        existing.CourseID,
+				"review_author_id": existing.UserID,
+			},
+		})
+	}
+	return nil
 }
 
 func (s *ReviewCommandService) VoteReview(ctx context.Context, userID int, reviewID int, voteType int) error {

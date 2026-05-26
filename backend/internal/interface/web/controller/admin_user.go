@@ -75,7 +75,7 @@ func (ctrl *AdminUserController) SuspendUser(c *gin.Context) {
 		return
 	}
 
-	if err := ctrl.command.SuspendUserForDays(c.Request.Context(), actor.ID, userID, cmd.Days); err != nil {
+	if err := ctrl.command.SuspendUserForDays(c.Request.Context(), actor, userID, cmd.Days); err != nil {
 		handleAdminUserCommandError(c, err)
 		return
 	}
@@ -94,7 +94,7 @@ func (ctrl *AdminUserController) ClearSuspension(c *gin.Context) {
 		return
 	}
 
-	if err := ctrl.command.ClearSuspension(c.Request.Context(), actor.ID, userID); err != nil {
+	if err := ctrl.command.ClearSuspension(c.Request.Context(), actor, userID); err != nil {
 		handleAdminUserCommandError(c, err)
 		return
 	}
@@ -112,7 +112,7 @@ func (ctrl *AdminUserController) GrantAdmin(c *gin.Context) {
 		return
 	}
 
-	if err := ctrl.command.GrantAdmin(c.Request.Context(), actor.ID, userID); err != nil {
+	if err := ctrl.command.GrantAdmin(c.Request.Context(), actor, userID); err != nil {
 		handleAdminUserCommandError(c, err)
 		return
 	}
@@ -130,7 +130,7 @@ func (ctrl *AdminUserController) RevokeAdmin(c *gin.Context) {
 		return
 	}
 
-	if err := ctrl.command.RevokeAdmin(c.Request.Context(), actor.ID, userID); err != nil {
+	if err := ctrl.command.RevokeAdmin(c.Request.Context(), actor, userID); err != nil {
 		handleAdminUserCommandError(c, err)
 		return
 	}

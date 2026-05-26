@@ -70,13 +70,19 @@ func (ctrl *ApiKeyController) CreateMyApiKey(c *gin.Context) {
 }
 
 func (ctrl *ApiKeyController) CreateSystemApiKey(c *gin.Context) {
+	u := auth.GetUserFromCtx(c.Request.Context())
+	if u == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	var cmd application.CreateApiKeyCommand
 	if err := c.ShouldBindJSON(&cmd); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	key, err := ctrl.command.CreateSystemApiKey(c.Request.Context(), cmd)
+	key, err := ctrl.command.CreateSystemApiKey(c.Request.Context(), u, cmd)
 	if err != nil {
 		if errors.Is(err, auth.ErrApiKeyNameRequired) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -113,13 +119,19 @@ func (ctrl *ApiKeyController) DeleteMyApiKey(c *gin.Context) {
 }
 
 func (ctrl *ApiKeyController) DeleteSystemApiKey(c *gin.Context) {
+	u := auth.GetUserFromCtx(c.Request.Context())
+	if u == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	id, err := strconv.ParseInt(c.Param("apiKeyID"), 10, 64)
 	if err != nil || id <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid api key id"})
 		return
 	}
 
-	if err := ctrl.command.DeleteSystemApiKey(c.Request.Context(), id); err != nil {
+	if err := ctrl.command.DeleteSystemApiKey(c.Request.Context(), u, id); err != nil {
 		if errors.Is(err, auth.ErrApiKeyNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
