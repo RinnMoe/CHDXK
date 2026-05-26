@@ -142,21 +142,28 @@ func (s *ReviewCommandService) enqueueFrequencyViolationTasks(ctx context.Contex
 		logx.Warn(ctx, "enqueue frequency violation suspension", "user_id", userID, "err", err)
 	}
 	for _, to := range s.config.FrequencyViolationAdminEmails {
-		if err := task.Enqueue(ctx, domainemail.NewSendEmailTask(
-			spamSuspensionEmailType,
-			to,
-			spamSuspensionEmailSubject,
-			spamSuspensionEmailTemplate,
-			map[string]string{
-				"UserID":        strconv.Itoa(userID),
-				"CourseCode":    courseCode,
-				"CourseName":    courseName,
-				"ReviewContent": violation.Review.Content,
-				"Duration":      violation.SuspendDuration.String(),
-				"Reason":        violation.Reason.Error(),
-			},
-		)); err != nil {
+		mail, err := newSpamSuspensionEmail(to, userID, courseCode, courseName, violation)
+		if err != nil {
+			logx.Warn(ctx, "render frequency violation email", "user_id", userID, "to", to, "err", err)
+			continue
+		}
+		if err := task.Enqueue(ctx, domainemail.NewSendEmailTask(spamSuspensionEmailType, mail)); err != nil {
 			logx.Warn(ctx, "enqueue frequency violation email", "user_id", userID, "to", to, "err", err)
 		}
 	}
+}
+
+func newSpamSuspensionEmail(to string, userID int, courseCode string, courseName string, violation *review.FrequencyViolation) (domainemail.Email, error) {
+	body, err := domainemail.RenderTemplate(spamSuspensionEmailTemplate, map[string]string{
+		"UserID":        strconv.Itoa(userID),
+		"CourseCode":    courseCode,
+		"CourseName":    courseName,
+		"ReviewContent": violation.Review.Content,
+		"Duration":      violation.SuspendDuration.String(),
+		"Reason":        violation.Reason.Error(),
+	})
+	if err != nil {
+		return domainemail.Email{}, err
+	}
+	return domainemail.Email{To: to, Subject: spamSuspensionEmailSubject, Body: body}, nil
 }

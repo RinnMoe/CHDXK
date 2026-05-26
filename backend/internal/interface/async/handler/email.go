@@ -10,11 +10,11 @@ import (
 )
 
 type sendEmailHandler struct {
-	service *domainemail.Service
+	sender domainemail.Sender
 }
 
-func NewSendEmailHandler(service *domainemail.Service) asynq.Handler {
-	return &sendEmailHandler{service: service}
+func NewSendEmailHandler(sender domainemail.Sender) asynq.Handler {
+	return &sendEmailHandler{sender: sender}
 }
 
 func (h *sendEmailHandler) ProcessTask(ctx context.Context, t *asynq.Task) error {
@@ -22,5 +22,5 @@ func (h *sendEmailHandler) ProcessTask(ctx context.Context, t *asynq.Task) error
 	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
 		return err
 	}
-	return h.service.SendTemplatedEmail(ctx, payload)
+	return h.sender.SendEmail(ctx, payload.Email)
 }

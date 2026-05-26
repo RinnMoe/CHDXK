@@ -1,10 +1,8 @@
 package notification
 
 import (
-	"bytes"
 	"embed"
 	"fmt"
-	"text/template"
 	"time"
 
 	"jcourse/internal/domain/email"
@@ -54,16 +52,15 @@ func NewAccountBannedEmail(to string, data AccountBannedEmailData) (email.Email,
 }
 
 func renderEmailTemplate(name EmailTemplateName, data any) (string, error) {
-	tmpl, err := template.ParseFS(emailTemplateFS, "templates/"+string(name)+".txt")
+	tmpl, err := emailTemplateFS.ReadFile("templates/" + string(name) + ".txt")
 	if err != nil {
-		return "", fmt.Errorf("parse email template %s: %w", name, err)
+		return "", fmt.Errorf("read email template %s: %w", name, err)
 	}
-
-	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, data); err != nil {
+	body, err := email.RenderTemplate(string(tmpl), data)
+	if err != nil {
 		return "", fmt.Errorf("render email template %s: %w", name, err)
 	}
-	return buf.String(), nil
+	return body, nil
 }
 
 func formatEmailDuration(d time.Duration) string {

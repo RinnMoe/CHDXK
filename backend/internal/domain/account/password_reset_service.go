@@ -10,13 +10,13 @@ import (
 	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/account/notification"
 	"jcourse/internal/domain/account/verification"
-	"jcourse/internal/domain/email"
+	domainemail "jcourse/internal/domain/email"
+	"jcourse/internal/domain/task"
 )
 
 type PasswordResetService struct {
 	accountRepo  identity.Repository
 	codes        verification.CodeRepository
-	sender       email.Sender
 	hasher       credential.PasswordHasher
 	usernames    identity.UsernameDeriver
 	verification verification.Config
@@ -25,7 +25,6 @@ type PasswordResetService struct {
 func NewPasswordResetService(
 	accountRepo identity.Repository,
 	codes verification.CodeRepository,
-	sender email.Sender,
 	hasher credential.PasswordHasher,
 	usernames identity.UsernameDeriver,
 	verificationConfig verification.Config,
@@ -33,7 +32,6 @@ func NewPasswordResetService(
 	return &PasswordResetService{
 		accountRepo:  accountRepo,
 		codes:        codes,
-		sender:       sender,
 		hasher:       hasher,
 		usernames:    usernames,
 		verification: verificationConfig.WithDefaults(),
@@ -74,7 +72,7 @@ func (s *PasswordResetService) SendResetCode(ctx context.Context, email string) 
 	if err != nil {
 		return err
 	}
-	return s.sender.SendEmail(ctx, mail)
+	return task.Enqueue(ctx, domainemail.NewSendEmailTask(string(notification.EmailTemplateVerificationCode), mail))
 }
 
 func (s *PasswordResetService) ResetPassword(ctx context.Context, email, code, newPassword string) error {

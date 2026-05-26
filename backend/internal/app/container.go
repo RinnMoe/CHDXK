@@ -43,7 +43,7 @@ type ServiceContainer struct {
 	ApiKeyCommand         *application.ApiKeyCommandService
 	UserSettingsQuery     *application.UserSettingsQueryService
 	UserSettingsCommand   *application.UserSettingsCommandService
-	EmailService          *email.Service
+	EmailSender           email.Sender
 }
 
 func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
@@ -110,11 +110,9 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	adminUserCommand := application.NewAdminUserCommandService(userRepo, conf.Admin)
 	hasher := credential.NewDjangoPBKDF2SHA256PasswordHasher(conf.Auth.PasswordHash)
 	smtpSender := smtp.NewSMTPSender(conf.SMTP)
-	emailService := email.NewService(smtpSender)
 	registrationService := account.NewRegistrationService(
 		accountRepo,
 		verificationRepo,
-		smtpSender,
 		hasher,
 		usernameDeriver,
 		conf.Auth.Registration,
@@ -130,7 +128,6 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	passwordResetService := account.NewPasswordResetService(
 		accountRepo,
 		resetCodeRepo,
-		smtpSender,
 		hasher,
 		usernameDeriver,
 		conf.Auth.Verification,
@@ -172,6 +169,6 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		ApiKeyCommand:         apiKeyCommand,
 		UserSettingsQuery:     userSettingsQuery,
 		UserSettingsCommand:   userSettingsCommand,
-		EmailService:          emailService,
+		EmailSender:           smtpSender,
 	}
 }

@@ -2,6 +2,7 @@ package application_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"testing"
 	"time"
@@ -20,12 +21,16 @@ import (
 func TestAccountCommandService_SendRegisterCode(t *testing.T) {
 	accountRepo := newFakeAccountRepo(nil)
 	userRepo := newFakeAuthUserRepo(nil)
-	svc := newAccountService(accountRepo, userRepo, newFakeCodeRepo(), &fakeCodeSender{})
+	enqueuer := &fakeEnqueuer{}
+	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
+	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
+	svc := newAccountService(accountRepo, userRepo, newFakeCodeRepo())
 
 	err := svc.SendRegisterCode(context.Background(), application.SendRegisterCodeCommand{Email: "alice@example.edu"})
 	if err != nil {
 		t.Fatalf("SendRegisterCode: %v", err)
 	}
+	assertVerificationEmailTask(t, enqueuer.tasks[0], "alice@example.edu")
 
 	err = svc.SendRegisterCode(context.Background(), application.SendRegisterCodeCommand{Email: "alice@example.edu"})
 	if !errors.Is(err, verification.ErrSendTooSoon) {
@@ -34,7 +39,7 @@ func TestAccountCommandService_SendRegisterCode(t *testing.T) {
 }
 
 func TestAccountCommandService_SendRegisterCodeRejectsEmailOutsideWhitelist(t *testing.T) {
-	svc := newAccountService(newFakeAccountRepo(nil), newFakeAuthUserRepo(nil), newFakeCodeRepo(), &fakeCodeSender{})
+	svc := newAccountService(newFakeAccountRepo(nil), newFakeAuthUserRepo(nil), newFakeCodeRepo())
 
 	err := svc.SendRegisterCode(context.Background(), application.SendRegisterCodeCommand{Email: "alice@example.com"})
 	if !errors.Is(err, identity.ErrEmailNotAllowed) {
@@ -46,8 +51,7 @@ func TestAccountCommandService_RegisterAndLogin(t *testing.T) {
 	accountRepo := newFakeAccountRepo(nil)
 	userRepo := newFakeAuthUserRepo(nil)
 	codes := newFakeCodeRepo()
-	sender := &fakeCodeSender{}
-	svc := newAccountService(accountRepo, userRepo, codes, sender)
+	svc := newAccountService(accountRepo, userRepo, codes)
 	ctx := context.Background()
 
 	if err := svc.SendRegisterCode(ctx, application.SendRegisterCodeCommand{Email: "alice@example.edu"}); err != nil {
@@ -76,7 +80,7 @@ func TestAccountCommandService_RegisterAndLogin(t *testing.T) {
 func TestAccountCommandService_RegisterRejectsWrongCode(t *testing.T) {
 	codes := newFakeCodeRepo()
 	codes.Saved["alice@example.edu"] = verification.Code{Email: "alice@example.edu", Code: "123456", ExpiresAt: time.Now().Add(time.Minute)}
-	svc := newAccountService(newFakeAccountRepo(nil), newFakeAuthUserRepo(nil), codes, &fakeCodeSender{})
+	svc := newAccountService(newFakeAccountRepo(nil), newFakeAuthUserRepo(nil), codes)
 
 	_, err := svc.Register(context.Background(), application.RegisterCommand{Email: "alice@example.edu", Code: "000000", Password: "secret"})
 	if !errors.Is(err, verification.ErrCodeInvalid) {
@@ -90,7 +94,7 @@ func TestAccountCommandService_LoginRejectsWrongPassword(t *testing.T) {
 		"alice@example.edu": {ID: 1, Username: username, PasswordHash: mustHash(t, "secret")},
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
-	svc := newAccountService(accountRepo, userRepo, newFakeCodeRepo(), &fakeCodeSender{})
+	svc := newAccountService(accountRepo, userRepo, newFakeCodeRepo())
 
 	_, err := svc.Login(context.Background(), application.LoginCommand{Email: "alice@example.edu", Password: "wrong"})
 	if !errors.Is(err, security.ErrInvalidCredentials) {
@@ -107,7 +111,7 @@ func TestAccountCommandService_LoginRejectsSuspendedUser(t *testing.T) {
 		"alice@example.edu": {ID: 1, Username: username, PasswordHash: mustHash(t, "secret")},
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser, SuspendedAt: &suspendedAt, SuspendTill: &suspendTill}})
-	svc := newAccountService(accountRepo, userRepo, newFakeCodeRepo(), &fakeCodeSender{})
+	svc := newAccountService(accountRepo, userRepo, newFakeCodeRepo())
 
 	_, err := svc.Login(context.Background(), application.LoginCommand{Email: "alice@example.edu", Password: "secret"})
 	if !errors.Is(err, auth.ErrUserSuspended) {
@@ -127,7 +131,7 @@ func TestAccountCommandService_LoginAllowsExpiredSuspensionAndEnqueuesCleanup(t 
 	enqueuer := &fakeEnqueuer{}
 	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
 	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
-	svc := newAccountService(accountRepo, userRepo, newFakeCodeRepo(), &fakeCodeSender{})
+	svc := newAccountService(accountRepo, userRepo, newFakeCodeRepo())
 
 	loggedIn, err := svc.Login(context.Background(), application.LoginCommand{Email: "alice@example.edu", Password: "secret"})
 	if err != nil {
@@ -151,7 +155,7 @@ func TestAccountCommandService_LoginLockedAfterMaxAttempts(t *testing.T) {
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
 	attempts := security.NewMockLoginAttemptRepository(map[string]int{"alice@example.edu": 5})
-	svc := newAccountServiceWithAttempts(accountRepo, userRepo, newFakeCodeRepo(), newFakeCodeRepo(), &fakeCodeSender{}, 5, attempts)
+	svc := newAccountServiceWithAttempts(accountRepo, userRepo, newFakeCodeRepo(), newFakeCodeRepo(), 5, attempts)
 
 	_, err := svc.Login(context.Background(), application.LoginCommand{Email: "alice@example.edu", Password: "secret"})
 	if !errors.Is(err, security.ErrLoginLocked) {
@@ -166,16 +170,16 @@ func TestAccountCommandService_SendResetCodeAndResetPassword(t *testing.T) {
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
 	codes := newFakeCodeRepo()
-	sender := &fakeCodeSender{}
-	svc := newAccountServiceWithAttempts(accountRepo, userRepo, newFakeCodeRepo(), codes, sender, 5, security.NewMockLoginAttemptRepository(nil))
+	enqueuer := &fakeEnqueuer{}
+	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
+	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
+	svc := newAccountServiceWithAttempts(accountRepo, userRepo, newFakeCodeRepo(), codes, 5, security.NewMockLoginAttemptRepository(nil))
 	ctx := context.Background()
 
 	if err := svc.SendResetCode(ctx, application.SendResetCodeCommand{Email: "alice@example.edu"}); err != nil {
 		t.Fatalf("SendResetCode: %v", err)
 	}
-	if sender.email.To != "alice@example.edu" {
-		t.Fatalf("sender email.To = %q, want alice@example.edu", sender.email.To)
-	}
+	assertVerificationEmailTask(t, enqueuer.tasks[0], "alice@example.edu")
 
 	if err := svc.ResetPassword(ctx, application.ResetPasswordCommand{Email: "alice@example.edu", Code: codes.Saved["alice@example.edu"].Code, NewPassword: "newpass"}); err != nil {
 		t.Fatalf("ResetPassword: %v", err)
@@ -191,7 +195,7 @@ func TestAccountCommandService_SendResetCodeAndResetPassword(t *testing.T) {
 }
 
 func TestAccountCommandService_SendResetCodeRejectsUnknownEmail(t *testing.T) {
-	svc := newAccountService(newFakeAccountRepo(nil), newFakeAuthUserRepo(nil), newFakeCodeRepo(), &fakeCodeSender{})
+	svc := newAccountService(newFakeAccountRepo(nil), newFakeAuthUserRepo(nil), newFakeCodeRepo())
 
 	err := svc.SendResetCode(context.Background(), application.SendResetCodeCommand{Email: "nobody@example.edu"})
 	if !errors.Is(err, identity.ErrNotFound) {
@@ -205,7 +209,7 @@ func TestAccountCommandService_ResetPasswordRejectsWrongCode(t *testing.T) {
 		"alice@example.edu": {ID: 1, Username: username, PasswordHash: mustHash(t, "oldpass")},
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
-	svc := newAccountService(accountRepo, userRepo, newFakeCodeRepo(), &fakeCodeSender{})
+	svc := newAccountService(accountRepo, userRepo, newFakeCodeRepo())
 
 	err := svc.ResetPassword(context.Background(), application.ResetPasswordCommand{Email: "alice@example.edu", Code: "000000", NewPassword: "newpass"})
 	if !errors.Is(err, verification.ErrCodeInvalid) {
@@ -220,7 +224,7 @@ func TestAccountCommandService_LoginFailedIncrementsAndLocks(t *testing.T) {
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
 	attempts := security.NewMockLoginAttemptRepository(map[string]int{})
-	svc := newAccountServiceWithAttempts(accountRepo, userRepo, newFakeCodeRepo(), newFakeCodeRepo(), &fakeCodeSender{}, 3, attempts)
+	svc := newAccountServiceWithAttempts(accountRepo, userRepo, newFakeCodeRepo(), newFakeCodeRepo(), 3, attempts)
 	ctx := context.Background()
 
 	for i := 1; i <= 3; i++ {
@@ -236,8 +240,8 @@ func TestAccountCommandService_LoginFailedIncrementsAndLocks(t *testing.T) {
 	}
 }
 
-func newAccountService(accountRepo *identity.MockRepository, userRepo *auth.MockUserRepository, codes *verification.MockCodeRepository, sender *fakeCodeSender) *application.AccountCommandService {
-	return newAccountServiceWithAttempts(accountRepo, userRepo, codes, newFakeCodeRepo(), sender, 5, security.NewMockLoginAttemptRepository(nil))
+func newAccountService(accountRepo *identity.MockRepository, userRepo *auth.MockUserRepository, codes *verification.MockCodeRepository) *application.AccountCommandService {
+	return newAccountServiceWithAttempts(accountRepo, userRepo, codes, newFakeCodeRepo(), 5, security.NewMockLoginAttemptRepository(nil))
 }
 
 func newAccountServiceWithAttempts(
@@ -245,7 +249,6 @@ func newAccountServiceWithAttempts(
 	userRepo *auth.MockUserRepository,
 	registerCodes *verification.MockCodeRepository,
 	resetCodes *verification.MockCodeRepository,
-	sender *fakeCodeSender,
 	maxLoginAttempts int,
 	attempts security.LoginAttemptRepository,
 ) *application.AccountCommandService {
@@ -255,9 +258,9 @@ func newAccountServiceWithAttempts(
 	hasher := credential.NewDjangoPBKDF2SHA256PasswordHasher(credential.PasswordHashConfig{Iterations: 1})
 	usernames := testUsernameDeriver()
 	return application.NewAccountCommandService(
-		account.NewRegistrationService(accountRepo, registerCodes, sender, hasher, usernames, testRegistrationConfig(), testVerificationConfig()),
+		account.NewRegistrationService(accountRepo, registerCodes, hasher, usernames, testRegistrationConfig(), testVerificationConfig()),
 		account.NewLoginService(accountRepo, hasher, attempts, usernames, testLoginConfig(maxLoginAttempts)),
-		account.NewPasswordResetService(accountRepo, resetCodes, sender, hasher, usernames, testVerificationConfig()),
+		account.NewPasswordResetService(accountRepo, resetCodes, hasher, usernames, testVerificationConfig()),
 		auth.NewCurrentUserService(userRepo),
 	)
 }
@@ -336,18 +339,30 @@ func newFakeCodeRepo() *verification.MockCodeRepository {
 	return verification.NewMockCodeRepository()
 }
 
-type fakeCodeSender struct {
-	email domainemail.Email
+type fakeEnqueuer struct {
+	enqueued bool
+	tasks    []task.Task
 }
 
-func (s *fakeCodeSender) SendEmail(_ context.Context, email domainemail.Email) error {
-	s.email = email
-	return nil
-}
-
-type fakeEnqueuer struct{ enqueued bool }
-
-func (f *fakeEnqueuer) Enqueue(context.Context, task.Task, ...task.EnqueueOption) error {
+func (f *fakeEnqueuer) Enqueue(_ context.Context, taskItem task.Task, _ ...task.EnqueueOption) error {
 	f.enqueued = true
+	f.tasks = append(f.tasks, taskItem)
 	return nil
+}
+
+func assertVerificationEmailTask(t *testing.T, taskItem task.Task, to string) {
+	t.Helper()
+	if taskItem == nil {
+		t.Fatal("expected email task to be enqueued")
+	}
+	if got := taskItem.Type(); got != domainemail.TaskTypeSendEmail {
+		t.Fatalf("task type = %q, want %q", got, domainemail.TaskTypeSendEmail)
+	}
+	var payload domainemail.SendEmailPayload
+	if err := json.Unmarshal(taskItem.Payload(), &payload); err != nil {
+		t.Fatalf("unmarshal email payload: %v", err)
+	}
+	if payload.EmailType != "verification_code" || payload.Email.To != to || payload.Email.Subject != "选课社区验证码" || payload.Email.Body == "" {
+		t.Fatalf("email payload = %+v", payload)
+	}
 }

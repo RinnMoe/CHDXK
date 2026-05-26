@@ -10,7 +10,8 @@ import (
 	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/account/notification"
 	"jcourse/internal/domain/account/verification"
-	"jcourse/internal/domain/email"
+	domainemail "jcourse/internal/domain/email"
+	"jcourse/internal/domain/task"
 )
 
 type RegistrationConfig struct {
@@ -22,7 +23,6 @@ var DefaultRegistrationConfig = RegistrationConfig{}
 type RegistrationService struct {
 	accountRepo  identity.Repository
 	codes        verification.CodeRepository
-	sender       email.Sender
 	hasher       credential.PasswordHasher
 	usernames    identity.UsernameDeriver
 	whitelist    identity.EmailWhitelist
@@ -33,7 +33,6 @@ type RegistrationService struct {
 func NewRegistrationService(
 	accountRepo identity.Repository,
 	codes verification.CodeRepository,
-	sender email.Sender,
 	hasher credential.PasswordHasher,
 	usernames identity.UsernameDeriver,
 	config RegistrationConfig,
@@ -42,7 +41,6 @@ func NewRegistrationService(
 	return &RegistrationService{
 		accountRepo:  accountRepo,
 		codes:        codes,
-		sender:       sender,
 		hasher:       hasher,
 		usernames:    usernames,
 		whitelist:    identity.NewEmailWhitelist(config.EmailWhitelist),
@@ -87,7 +85,7 @@ func (s *RegistrationService) SendRegisterCode(ctx context.Context, email string
 	if err != nil {
 		return err
 	}
-	return s.sender.SendEmail(ctx, mail)
+	return task.Enqueue(ctx, domainemail.NewSendEmailTask(string(notification.EmailTemplateVerificationCode), mail))
 }
 
 func (s *RegistrationService) Register(ctx context.Context, email, code, password string) (*identity.Account, error) {
