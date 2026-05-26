@@ -39,7 +39,6 @@ import {
   formatReviewCardTime,
   isReviewCardTimeRelative,
 } from "@/lib/date"
-import { cn } from "@/lib/utils"
 import { VoteButtons } from "./vote-buttons"
 import { ReviewContent } from "./review-content"
 import { ReviewRevisionsDialog } from "./review-revisions-dialog"
@@ -268,7 +267,6 @@ export function ReviewCard({
   )
   const manageMenuTriggerRef = useRef<HTMLButtonElement | null>(null)
   const resetCopiedTimer = useRef<number | undefined>(undefined)
-  const isOwnReview = review.user_id != null && user?.id === review.user_id
   const isAdmin = user?.role === "admin"
   const canEdit =
     review.user_id != null &&
@@ -302,12 +300,7 @@ export function ReviewCard({
   }
 
   return (
-    <article
-      className={cn(
-        "border-b px-4 py-3 transition-colors",
-        isOwnReview ? "bg-primary/5 hover:bg-primary/10" : "hover:bg-muted/30"
-      )}
-    >
+    <article className="border-b px-4 py-3 transition-colors hover:bg-muted/30">
       <div className="space-y-2">
         {showCourse && review.course && (
           <Link
