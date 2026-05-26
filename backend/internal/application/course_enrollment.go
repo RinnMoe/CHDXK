@@ -8,6 +8,8 @@ type CreateCourseEnrollmentCommand struct {
 }
 
 var (
-	ErrSemesterRequired      = course.ErrSemesterRequired
-	ErrOfferedCourseNotFound = course.ErrOfferedCourseNotFound
+	ErrSemesterRequired       = course.ErrSemesterRequired
+	ErrOfferedCourseNotFound  = course.ErrOfferedCourseNotFound
+	ErrInvalidSyncSemester    = course.ErrInvalidSyncSemester
+	ErrEnrollmentSyncDisabled = course.ErrEnrollmentSyncDisabled
 )

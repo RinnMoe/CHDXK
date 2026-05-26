@@ -211,9 +211,9 @@ func TestReviewCommandService_VoteReviewRecordsOnlyChangedVote(t *testing.T) {
 	}
 }
 
-func TestCourseHotCommandService_RecordActivityUsesConfiguredScore(t *testing.T) {
+func TestCourseHotService_RecordActivityUsesConfiguredScore(t *testing.T) {
 	hotRepo := &course.MockHotCourseRepository{}
-	svc := application.NewCourseHotCommandService(hotRepo, course.HotScoreConfig{
+	svc := course.NewCourseHotService(hotRepo, course.HotScoreConfig{
 		ReviewCreateScore: 5,
 		ReviewUpdateScore: 2,
 		ReviewVoteScore:   1,

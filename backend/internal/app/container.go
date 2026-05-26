@@ -5,6 +5,7 @@ import (
 	"jcourse/internal/application"
 	"jcourse/internal/domain/account"
 	"jcourse/internal/domain/auth"
+	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/email"
 	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/review"
@@ -17,34 +18,30 @@ import (
 )
 
 type ServiceContainer struct {
-	ReviewQuery             *application.ReviewQueryService
-	ReviewCommand           *application.ReviewCommandService
-	CourseHotCommand        *application.CourseHotCommandService
-	CourseRatingCommand     *application.CourseRatingCommandService
-	CourseQuery             *application.CourseQueryService
-	CourseCommand           *application.CourseCommandService
-	CourseEnrollmentQuery   *application.CourseEnrollmentQueryService
-	CourseEnrollmentCommand *application.CourseEnrollmentCommandService
-	CourseEnrollmentSync    *application.CourseEnrollmentSyncService
-	TeacherQuery            *application.TeacherQueryService
-	PointQuery              *application.PointQueryService
-	PointCommand            *application.PointCommandService
-	SiteStatsQuery          *application.SiteStatsQueryService
-	SiteStatsCommand        *application.SiteStatsCommandService
-	AccountQuery            *application.AccountQueryService
-	AccountCommand          *application.AccountCommandService
-	AdminUserQuery          *application.AdminUserQueryService
-	AdminUserCommand        *application.AdminUserCommandService
-	AuthUserService         *auth.AuthUserService
-	AuthResolution          *application.AuthResolutionService
-	AccessTracker           auth.AccessTracker
-	AnnouncementQuery       *application.AnnouncementQueryService
-	ApiKeySvc               *auth.ApiKeyService
-	ApiKeyQuery             *application.ApiKeyQueryService
-	ApiKeyCommand           *application.ApiKeyCommandService
-	UserSettingsQuery       *application.UserSettingsQueryService
-	UserSettingsCommand     *application.UserSettingsCommandService
-	EmailService            *email.Service
+	ReviewQuery           *application.ReviewQueryService
+	ReviewCommand         *application.ReviewCommandService
+	CourseQuery           *application.CourseQueryService
+	CourseCommand         *application.CourseCommandService
+	CourseEnrollmentQuery *application.CourseEnrollmentQueryService
+	TeacherQuery          *application.TeacherQueryService
+	PointQuery            *application.PointQueryService
+	PointCommand          *application.PointCommandService
+	SiteStatsQuery        *application.SiteStatsQueryService
+	SiteStatsCommand      *application.SiteStatsCommandService
+	AccountQuery          *application.AccountQueryService
+	AccountCommand        *application.AccountCommandService
+	AdminUserQuery        *application.AdminUserQueryService
+	AdminUserCommand      *application.AdminUserCommandService
+	AuthUserService       *auth.AuthUserService
+	AuthResolution        *application.AuthResolutionService
+	AccessTracker         auth.AccessTracker
+	AnnouncementQuery     *application.AnnouncementQueryService
+	ApiKeySvc             *auth.ApiKeyService
+	ApiKeyQuery           *application.ApiKeyQueryService
+	ApiKeyCommand         *application.ApiKeyCommandService
+	UserSettingsQuery     *application.UserSettingsQueryService
+	UserSettingsCommand   *application.UserSettingsCommandService
+	EmailService          *email.Service
 }
 
 func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
@@ -85,14 +82,19 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		conf.Review.Command,
 		[]review.CreatePolicy{freqPolicy, safetyPolicy},
 	)
-	courseHotCommand := application.NewCourseHotCommandService(courseHotRepo, conf.Review.Command.HotScores)
-	courseRatingCommand := application.NewCourseRatingCommandService(courseRepo, conf.Course.RatingScore)
+	courseHotService := course.NewCourseHotService(courseHotRepo, conf.Review.Command.HotScores)
+	courseRatingCommand := course.NewCourseRatingCommandService(courseRepo, conf.Course.RatingScore)
 	courseQuery := application.NewCourseQueryService(courseRepo, teacherRepo, reviewRepo, notificationRepo, courseEnrollmentRepo, courseHotRepo)
-	courseCommand := application.NewCourseCommandService(courseRepo, notificationRepo)
 	jaccountClient := jaccount.NewOAuthClient(conf.JAccount)
+	courseEnrollmentSync := course.NewCourseEnrollmentSyncService(courseEnrollmentRepo, courseRepo, jaccountClient)
+	courseCommand := application.NewCourseCommandService(
+		course.NewNotificationService(courseRepo, notificationRepo),
+		course.NewEnrollmentService(courseRepo, courseEnrollmentRepo),
+		courseHotService,
+		courseEnrollmentSync,
+		courseRatingCommand,
+	)
 	courseEnrollmentQuery := application.NewCourseEnrollmentQueryService(courseEnrollmentRepo)
-	courseEnrollmentCommand := application.NewCourseEnrollmentCommandService(courseRepo, courseEnrollmentRepo)
-	courseEnrollmentSync := application.NewCourseEnrollmentSyncService(courseEnrollmentRepo, courseRepo, jaccountClient)
 	teacherQuery := application.NewTeacherQueryService(teacherRepo)
 	announcementQuery := application.NewAnnouncementQueryService(announcementRepo)
 	transferService := point.NewTransferService(conf.Point)
@@ -145,33 +147,29 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	userSettingsCommand := application.NewUserSettingsCommandService(userSettingsRepo, courseRepo)
 
 	return &ServiceContainer{
-		ReviewQuery:             reviewQuery,
-		ReviewCommand:           reviewCommand,
-		CourseHotCommand:        courseHotCommand,
-		CourseRatingCommand:     courseRatingCommand,
-		CourseQuery:             courseQuery,
-		CourseCommand:           courseCommand,
-		CourseEnrollmentQuery:   courseEnrollmentQuery,
-		CourseEnrollmentCommand: courseEnrollmentCommand,
-		CourseEnrollmentSync:    courseEnrollmentSync,
-		TeacherQuery:            teacherQuery,
-		PointQuery:              pointQuery,
-		PointCommand:            pointCommand,
-		SiteStatsQuery:          siteStatsQuery,
-		SiteStatsCommand:        siteStatsCommand,
-		AccountQuery:            accountQuery,
-		AccountCommand:          accountCommand,
-		AdminUserQuery:          adminUserQuery,
-		AdminUserCommand:        adminUserCommand,
-		AuthUserService:         currentUserService,
-		AuthResolution:          authResolution,
-		AccessTracker:           accessTracker,
-		AnnouncementQuery:       announcementQuery,
-		ApiKeySvc:               apiKeySvc,
-		ApiKeyQuery:             apiKeyQuery,
-		ApiKeyCommand:           apiKeyCommand,
-		UserSettingsQuery:       userSettingsQuery,
-		UserSettingsCommand:     userSettingsCommand,
-		EmailService:            emailService,
+		ReviewQuery:           reviewQuery,
+		ReviewCommand:         reviewCommand,
+		CourseQuery:           courseQuery,
+		CourseCommand:         courseCommand,
+		CourseEnrollmentQuery: courseEnrollmentQuery,
+		TeacherQuery:          teacherQuery,
+		PointQuery:            pointQuery,
+		PointCommand:          pointCommand,
+		SiteStatsQuery:        siteStatsQuery,
+		SiteStatsCommand:      siteStatsCommand,
+		AccountQuery:          accountQuery,
+		AccountCommand:        accountCommand,
+		AdminUserQuery:        adminUserQuery,
+		AdminUserCommand:      adminUserCommand,
+		AuthUserService:       currentUserService,
+		AuthResolution:        authResolution,
+		AccessTracker:         accessTracker,
+		AnnouncementQuery:     announcementQuery,
+		ApiKeySvc:             apiKeySvc,
+		ApiKeyQuery:           apiKeyQuery,
+		ApiKeyCommand:         apiKeyCommand,
+		UserSettingsQuery:     userSettingsQuery,
+		UserSettingsCommand:   userSettingsCommand,
+		EmailService:          emailService,
 	}
 }

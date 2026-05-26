@@ -1,17 +1,13 @@
-package application
+package course
 
-import (
-	"context"
-
-	"jcourse/internal/domain/course"
-)
+import "context"
 
 type CourseRatingCommandService struct {
-	query  course.CourseQuery
-	config course.RatingScoreConfig
+	query  CourseQuery
+	config RatingScoreConfig
 }
 
-func NewCourseRatingCommandService(query course.CourseQuery, config course.RatingScoreConfig) *CourseRatingCommandService {
+func NewCourseRatingCommandService(query CourseQuery, config RatingScoreConfig) *CourseRatingCommandService {
 	return &CourseRatingCommandService{query: query, config: config.Normalized()}
 }
 

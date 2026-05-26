@@ -23,13 +23,13 @@ import (
 const enrollmentSyncSessionKey = "course_enrollment_sync_state"
 
 type CourseEnrollmentSyncController struct {
-	service             *application.CourseEnrollmentSyncService
+	command             *application.CourseCommandService
 	frontendCallbackURL string
 }
 
-func NewCourseEnrollmentSyncController(service *application.CourseEnrollmentSyncService, conf config.JAccountConfig) *CourseEnrollmentSyncController {
+func NewCourseEnrollmentSyncController(command *application.CourseCommandService, conf config.JAccountConfig) *CourseEnrollmentSyncController {
 	return &CourseEnrollmentSyncController{
-		service:             service,
+		command:             command,
 		frontendCallbackURL: strings.TrimSpace(conf.FrontendCallbackURL),
 	}
 }
@@ -50,7 +50,7 @@ func (ctrl *CourseEnrollmentSyncController) Start(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	semester, authURL, err := ctrl.service.Start(c.Request.Context(), semester, state)
+	semester, authURL, err := ctrl.command.StartEnrollmentSync(c.Request.Context(), semester, state)
 	if err != nil {
 		switch {
 		case errors.Is(err, application.ErrSemesterRequired), errors.Is(err, application.ErrInvalidSyncSemester):
@@ -97,7 +97,7 @@ func (ctrl *CourseEnrollmentSyncController) Callback(c *gin.Context) {
 		return
 	}
 
-	result, err := ctrl.service.SyncFromCode(c.Request.Context(), stored.UserID, stored.Semester, code)
+	result, err := ctrl.command.SyncEnrollmentFromCode(c.Request.Context(), stored.UserID, stored.Semester, code)
 	if err != nil {
 		ctrl.redirectResult(c, stored.Semester, "error", "同步选课记录失败", 0, 0)
 		return

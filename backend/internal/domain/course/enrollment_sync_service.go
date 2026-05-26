@@ -1,12 +1,16 @@
-package application
+package course
 
 import (
 	"context"
 	"errors"
 	"strings"
 
-	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/jaccount"
+)
+
+var (
+	ErrInvalidSyncSemester    = errors.New("invalid semester")
+	ErrEnrollmentSyncDisabled = errors.New("course enrollment sync disabled")
 )
 
 type CourseEnrollmentSyncResult struct {
@@ -15,12 +19,12 @@ type CourseEnrollmentSyncResult struct {
 }
 
 type CourseEnrollmentSyncService struct {
-	enrollmentRepo course.CourseEnrollmentRepository
-	courseRepo     course.CourseRepository
+	enrollmentRepo CourseEnrollmentRepository
+	courseRepo     CourseRepository
 	jaccountClient jaccount.Client
 }
 
-func NewCourseEnrollmentSyncService(enrollmentRepo course.CourseEnrollmentRepository, courseRepo course.CourseRepository, jaccountClient jaccount.Client) *CourseEnrollmentSyncService {
+func NewCourseEnrollmentSyncService(enrollmentRepo CourseEnrollmentRepository, courseRepo CourseRepository, jaccountClient jaccount.Client) *CourseEnrollmentSyncService {
 	return &CourseEnrollmentSyncService{enrollmentRepo: enrollmentRepo, courseRepo: courseRepo, jaccountClient: jaccountClient}
 }
 
@@ -77,14 +81,14 @@ func (s *CourseEnrollmentSyncService) SyncLessons(ctx context.Context, userID in
 	if semester == "" {
 		return nil, ErrSemesterRequired
 	}
-	pairs := make([]course.CourseCodeTeacher, 0, len(lessons))
+	pairs := make([]CourseCodeTeacher, 0, len(lessons))
 	for _, lesson := range lessons {
 		code := strings.TrimSpace(lesson.Code)
 		teacherName := strings.TrimSpace(lesson.TeacherName)
 		if code == "" || teacherName == "" {
 			continue
 		}
-		pairs = append(pairs, course.CourseCodeTeacher{Code: code, TeacherName: teacherName})
+		pairs = append(pairs, CourseCodeTeacher{Code: code, TeacherName: teacherName})
 	}
 	matched, err := s.enrollmentRepo.SyncFromCoursePairs(ctx, userID, semester, pairs)
 	if err != nil {
@@ -92,8 +96,3 @@ func (s *CourseEnrollmentSyncService) SyncLessons(ctx context.Context, userID in
 	}
 	return &CourseEnrollmentSyncResult{Matched: matched, Total: len(pairs)}, nil
 }
-
-var (
-	ErrInvalidSyncSemester    = errors.New("invalid semester")
-	ErrEnrollmentSyncDisabled = errors.New("course enrollment sync disabled")
-)

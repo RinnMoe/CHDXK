@@ -52,8 +52,8 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 
 	reviewController := controller.NewReviewController(container.ReviewQuery, container.ReviewCommand)
 	courseController := controller.NewCourseController(container.CourseQuery, container.CourseCommand)
-	courseEnrollmentController := controller.NewCourseEnrollmentController(container.CourseEnrollmentQuery, container.CourseEnrollmentCommand)
-	courseEnrollmentSyncController := controller.NewCourseEnrollmentSyncController(container.CourseEnrollmentSync, conf.JAccount)
+	courseEnrollmentController := controller.NewCourseEnrollmentController(container.CourseEnrollmentQuery, container.CourseCommand)
+	courseEnrollmentSyncController := controller.NewCourseEnrollmentSyncController(container.CourseCommand, conf.JAccount)
 	teacherController := controller.NewTeacherController(container.TeacherQuery, container.CourseQuery)
 	pointController := controller.NewPointController(container.PointQuery, container.PointCommand)
 	accountController := controller.NewAccountController(container.AccountCommand, container.AccountQuery)

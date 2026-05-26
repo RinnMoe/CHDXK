@@ -11,10 +11,10 @@ import (
 )
 
 type recordHotCourseActivityHandler struct {
-	command *application.CourseHotCommandService
+	command *application.CourseCommandService
 }
 
-func NewRecordHotCourseActivityHandler(command *application.CourseHotCommandService) asynq.Handler {
+func NewRecordHotCourseActivityHandler(command *application.CourseCommandService) asynq.Handler {
 	return &recordHotCourseActivityHandler{command: command}
 }
 

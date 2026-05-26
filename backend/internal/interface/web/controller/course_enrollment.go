@@ -13,10 +13,10 @@ import (
 
 type CourseEnrollmentController struct {
 	query   *application.CourseEnrollmentQueryService
-	command *application.CourseEnrollmentCommandService
+	command *application.CourseCommandService
 }
 
-func NewCourseEnrollmentController(query *application.CourseEnrollmentQueryService, command *application.CourseEnrollmentCommandService) *CourseEnrollmentController {
+func NewCourseEnrollmentController(query *application.CourseEnrollmentQueryService, command *application.CourseCommandService) *CourseEnrollmentController {
 	return &CourseEnrollmentController{query: query, command: command}
 }
 
@@ -56,7 +56,7 @@ func (ctrl *CourseEnrollmentController) CreateEnrollment(c *gin.Context) {
 		return
 	}
 
-	err = ctrl.command.Create(c.Request.Context(), u.ID, application.CreateCourseEnrollmentCommand{
+	err = ctrl.command.CreateEnrollment(c.Request.Context(), u.ID, application.CreateCourseEnrollmentCommand{
 		CourseID: courseID,
 		Semester: req.Semester,
 	})
@@ -87,7 +87,7 @@ func (ctrl *CourseEnrollmentController) DeleteEnrollment(c *gin.Context) {
 		return
 	}
 
-	if err := ctrl.command.Delete(c.Request.Context(), u.ID, enrollmentID); err != nil {
+	if err := ctrl.command.DeleteEnrollment(c.Request.Context(), u.ID, enrollmentID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

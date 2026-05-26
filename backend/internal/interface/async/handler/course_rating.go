@@ -9,10 +9,10 @@ import (
 )
 
 type refreshCourseRatingScoresHandler struct {
-	command *application.CourseRatingCommandService
+	command *application.CourseCommandService
 }
 
-func NewRefreshCourseRatingScoresHandler(command *application.CourseRatingCommandService) asynq.Handler {
+func NewRefreshCourseRatingScoresHandler(command *application.CourseCommandService) asynq.Handler {
 	return &refreshCourseRatingScoresHandler{command: command}
 }
 
