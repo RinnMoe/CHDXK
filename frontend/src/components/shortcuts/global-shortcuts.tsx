@@ -133,7 +133,7 @@ const pageShortcuts: PageShortcut[] = [
   {
     keys: "G P",
     title: "积分",
-    description: "查看积分流水和转账",
+    description: "查看积分流水",
     path: "/point",
     requiresAuth: true,
   },
