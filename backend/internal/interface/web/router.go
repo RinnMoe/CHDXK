@@ -1,18 +1,21 @@
 package web
 
 import (
+	stdslog "log/slog"
 	"net/http"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/slog"
+	ginslog "github.com/gin-contrib/slog"
 	"github.com/gin-gonic/gin"
 
 	"jcourse/config"
 	"jcourse/internal/app"
 	"jcourse/internal/interface/web/controller"
 	"jcourse/internal/interface/web/middleware"
+	"jcourse/pkg/logx"
+	"jcourse/pkg/requestid"
 )
 
 func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engine {
@@ -22,8 +25,20 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	g := gin.Default()
-	g.Use(slog.SetLogger())
+	g := gin.New()
+	g.Use(middleware.RequestID())
+	g.Use(ginslog.SetLogger(
+		ginslog.WithLogger(func(_ *gin.Context, _ *stdslog.Logger) *stdslog.Logger {
+			return logx.Logger()
+		}),
+		ginslog.WithContext(func(c *gin.Context, rec *stdslog.Record) *stdslog.Record {
+			if id, ok := requestid.FromContext(c.Request.Context()); ok {
+				rec.Add(requestid.GinKey, id)
+			}
+			return rec
+		}),
+	))
+	g.Use(gin.Recovery())
 	g.Use(cors.New(cors.Config{
 		AllowOrigins: conf.Server.Cors.AllowedOrigins,
 		AllowMethods: []string{
@@ -49,11 +64,11 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	if err != nil {
 		panic(err)
 	}
+	g.Use(middleware.GlobalRateLimit())
 	g.Use(sessions.Sessions("jcourse_session", store))
 	g.Use(middleware.ResolveCurrentUser(container.AuthResolution))
-	g.Use(middleware.CSRF())
-	g.Use(middleware.GlobalRateLimit())
 	g.Use(middleware.UserIDRateLimit())
+	g.Use(middleware.CSRF())
 
 	reviewController := controller.NewReviewController(container.ReviewQuery, container.ReviewCommand)
 	courseController := controller.NewCourseController(container.CourseQuery, container.CourseCommand)
