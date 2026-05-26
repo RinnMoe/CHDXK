@@ -1,4 +1,4 @@
-package account
+package verification
 
 import (
 	"crypto/rand"

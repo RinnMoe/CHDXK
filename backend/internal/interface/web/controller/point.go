@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"jcourse/internal/application"
-	"jcourse/internal/domain/account"
+	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/point"
 )
@@ -79,7 +79,7 @@ func (ctrl *PointController) CreateTransfer(c *gin.Context) {
 			errors.Is(err, application.ErrPointTransferInvalidFeePayer),
 			errors.Is(err, application.ErrPointTransferSelf),
 			errors.Is(err, application.ErrPointTransferRecipientAmountSmall),
-			errors.Is(err, account.ErrEmailNotAllowed):
+			errors.Is(err, identity.ErrEmailNotAllowed):
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		case errors.Is(err, application.ErrPointTransferRecipientNotFound):
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})

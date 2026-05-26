@@ -4,20 +4,20 @@ import (
 	"context"
 	"strings"
 
-	"jcourse/internal/domain/account"
+	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 )
 
 type AdminUserQueryService struct {
-	accountRepo account.AccountRepository
+	accountRepo identity.Repository
 	userRepo    auth.UserRepository
-	usernames   account.UsernameDeriver
+	usernames   identity.UsernameDeriver
 }
 
 func NewAdminUserQueryService(
-	accountRepo account.AccountRepository,
+	accountRepo identity.Repository,
 	userRepo auth.UserRepository,
-	usernames account.UsernameDeriver,
+	usernames identity.UsernameDeriver,
 ) *AdminUserQueryService {
 	return &AdminUserQueryService{accountRepo: accountRepo, userRepo: userRepo, usernames: usernames}
 }
@@ -38,7 +38,7 @@ func (s *AdminUserQueryService) FindByEmail(ctx context.Context, email string) (
 			return nil, err
 		}
 		if acct == nil {
-			return nil, account.ErrUserNotFound
+			return nil, identity.ErrNotFound
 		}
 	}
 
@@ -47,7 +47,7 @@ func (s *AdminUserQueryService) FindByEmail(ctx context.Context, email string) (
 		return nil, err
 	}
 	if u == nil {
-		return nil, account.ErrUserNotFound
+		return nil, identity.ErrNotFound
 	}
 
 	return newAdminUserDTO(acct, u, normalized), nil

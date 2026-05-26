@@ -5,12 +5,12 @@ import (
 	"testing"
 
 	"jcourse/internal/application"
-	"jcourse/internal/domain/account"
+	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 )
 
 func TestAccountQueryService_CurrentUser(t *testing.T) {
-	accountRepo := newFakeAccountRepo(map[string]*account.Account{
+	accountRepo := newFakeAccountRepo(map[string]*identity.Account{
 		"alice@example.edu": {ID: 1, Username: "alice@example.edu", Email: "alice@example.edu"},
 	})
 	svc := application.NewAccountQueryService(accountRepo)

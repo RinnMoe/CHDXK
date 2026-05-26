@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"jcourse/internal/domain/account"
+	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 )
 
@@ -42,7 +43,7 @@ func (s *AccountCommandService) Register(ctx context.Context, cmd RegisterComman
 		return nil, err
 	}
 	if u == nil {
-		return nil, account.ErrUserNotFound
+		return nil, identity.ErrNotFound
 	}
 	return newAccountDTO(acct, u), nil
 }
@@ -57,7 +58,7 @@ func (s *AccountCommandService) Login(ctx context.Context, cmd LoginCommand) (*A
 		return nil, err
 	}
 	if u == nil {
-		return nil, account.ErrUserNotFound
+		return nil, identity.ErrNotFound
 	}
 	if err := s.login.MarkLogin(ctx, acct.ID); err != nil {
 		return nil, err
@@ -73,7 +74,7 @@ func (s *AccountCommandService) ResetPassword(ctx context.Context, cmd ResetPass
 	return s.passwordReset.ResetPassword(ctx, cmd.Email, cmd.Code, cmd.NewPassword)
 }
 
-func newAccountDTO(acct *account.Account, u *auth.User) *AccountDTO {
+func newAccountDTO(acct *identity.Account, u *auth.User) *AccountDTO {
 	role := ""
 	if u != nil {
 		role = u.Role

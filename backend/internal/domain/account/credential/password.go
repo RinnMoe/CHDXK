@@ -1,16 +1,19 @@
-package account
+package credential
 
 import (
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"golang.org/x/crypto/pbkdf2"
 )
+
+var ErrPasswordRequired = errors.New("password is required")
 
 const (
 	djangoPBKDF2SHA256Algorithm  = "pbkdf2_sha256"

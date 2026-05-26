@@ -8,6 +8,10 @@ import (
 
 	"jcourse/internal/application"
 	"jcourse/internal/domain/account"
+	"jcourse/internal/domain/account/credential"
+	"jcourse/internal/domain/account/identity"
+	"jcourse/internal/domain/account/security"
+	"jcourse/internal/domain/account/verification"
 	"jcourse/internal/domain/auth"
 	domainemail "jcourse/internal/domain/email"
 	"jcourse/internal/domain/task"
@@ -24,7 +28,7 @@ func TestAccountCommandService_SendRegisterCode(t *testing.T) {
 	}
 
 	err = svc.SendRegisterCode(context.Background(), application.SendRegisterCodeCommand{Email: "alice@example.edu"})
-	if !errors.Is(err, account.ErrVerificationTooSoon) {
+	if !errors.Is(err, verification.ErrSendTooSoon) {
 		t.Fatalf("second SendRegisterCode error = %v, want ErrVerificationTooSoon", err)
 	}
 }
@@ -33,7 +37,7 @@ func TestAccountCommandService_SendRegisterCodeRejectsEmailOutsideWhitelist(t *t
 	svc := newAccountService(newFakeAccountRepo(nil), newFakeAuthUserRepo(nil), newFakeCodeRepo(), &fakeCodeSender{})
 
 	err := svc.SendRegisterCode(context.Background(), application.SendRegisterCodeCommand{Email: "alice@example.com"})
-	if !errors.Is(err, account.ErrEmailNotAllowed) {
+	if !errors.Is(err, identity.ErrEmailNotAllowed) {
 		t.Fatalf("SendRegisterCode error = %v, want ErrEmailNotAllowed", err)
 	}
 }
@@ -71,25 +75,25 @@ func TestAccountCommandService_RegisterAndLogin(t *testing.T) {
 
 func TestAccountCommandService_RegisterRejectsWrongCode(t *testing.T) {
 	codes := newFakeCodeRepo()
-	codes.Saved["alice@example.edu"] = account.VerificationCode{Email: "alice@example.edu", Code: "123456", ExpiresAt: time.Now().Add(time.Minute)}
+	codes.Saved["alice@example.edu"] = verification.Code{Email: "alice@example.edu", Code: "123456", ExpiresAt: time.Now().Add(time.Minute)}
 	svc := newAccountService(newFakeAccountRepo(nil), newFakeAuthUserRepo(nil), codes, &fakeCodeSender{})
 
 	_, err := svc.Register(context.Background(), application.RegisterCommand{Email: "alice@example.edu", Code: "000000", Password: "secret"})
-	if !errors.Is(err, account.ErrVerificationCodeInvalid) {
+	if !errors.Is(err, verification.ErrCodeInvalid) {
 		t.Fatalf("Register error = %v, want ErrVerificationCodeInvalid", err)
 	}
 }
 
 func TestAccountCommandService_LoginRejectsWrongPassword(t *testing.T) {
 	username := accountUsername(t, "alice@example.edu")
-	accountRepo := newFakeAccountRepo(map[string]*account.Account{
+	accountRepo := newFakeAccountRepo(map[string]*identity.Account{
 		"alice@example.edu": {ID: 1, Username: username, PasswordHash: mustHash(t, "secret")},
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
 	svc := newAccountService(accountRepo, userRepo, newFakeCodeRepo(), &fakeCodeSender{})
 
 	_, err := svc.Login(context.Background(), application.LoginCommand{Email: "alice@example.edu", Password: "wrong"})
-	if !errors.Is(err, account.ErrInvalidCredentials) {
+	if !errors.Is(err, security.ErrInvalidCredentials) {
 		t.Fatalf("Login error = %v, want ErrInvalidCredentials", err)
 	}
 }
@@ -99,7 +103,7 @@ func TestAccountCommandService_LoginRejectsSuspendedUser(t *testing.T) {
 	suspendedAt := now.Add(-time.Hour)
 	suspendTill := now.Add(time.Hour)
 	username := accountUsername(t, "alice@example.edu")
-	accountRepo := newFakeAccountRepo(map[string]*account.Account{
+	accountRepo := newFakeAccountRepo(map[string]*identity.Account{
 		"alice@example.edu": {ID: 1, Username: username, PasswordHash: mustHash(t, "secret")},
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser, SuspendedAt: &suspendedAt, SuspendTill: &suspendTill}})
@@ -116,7 +120,7 @@ func TestAccountCommandService_LoginAllowsExpiredSuspensionAndEnqueuesCleanup(t 
 	suspendedAt := now.Add(-2 * time.Hour)
 	suspendTill := now.Add(-time.Hour)
 	username := accountUsername(t, "alice@example.edu")
-	accountRepo := newFakeAccountRepo(map[string]*account.Account{
+	accountRepo := newFakeAccountRepo(map[string]*identity.Account{
 		"alice@example.edu": {ID: 1, Username: username, PasswordHash: mustHash(t, "secret")},
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser, SuspendedAt: &suspendedAt, SuspendTill: &suspendTill}})
@@ -142,28 +146,28 @@ func TestAccountCommandService_LoginAllowsExpiredSuspensionAndEnqueuesCleanup(t 
 
 func TestAccountCommandService_LoginLockedAfterMaxAttempts(t *testing.T) {
 	username := accountUsername(t, "alice@example.edu")
-	accountRepo := newFakeAccountRepo(map[string]*account.Account{
+	accountRepo := newFakeAccountRepo(map[string]*identity.Account{
 		"alice@example.edu": {ID: 1, Username: username, PasswordHash: mustHash(t, "secret")},
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
-	attempts := account.NewMockLoginAttemptRepository(map[string]int{"alice@example.edu": 5})
+	attempts := security.NewMockLoginAttemptRepository(map[string]int{"alice@example.edu": 5})
 	svc := newAccountServiceWithAttempts(accountRepo, userRepo, newFakeCodeRepo(), newFakeCodeRepo(), &fakeCodeSender{}, 5, attempts)
 
 	_, err := svc.Login(context.Background(), application.LoginCommand{Email: "alice@example.edu", Password: "secret"})
-	if !errors.Is(err, account.ErrLoginLocked) {
+	if !errors.Is(err, security.ErrLoginLocked) {
 		t.Fatalf("Login error = %v, want ErrLoginLocked", err)
 	}
 }
 
 func TestAccountCommandService_SendResetCodeAndResetPassword(t *testing.T) {
 	username := accountUsername(t, "alice@example.edu")
-	accountRepo := newFakeAccountRepo(map[string]*account.Account{
+	accountRepo := newFakeAccountRepo(map[string]*identity.Account{
 		"alice@example.edu": {ID: 1, Username: username, PasswordHash: mustHash(t, "oldpass")},
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
 	codes := newFakeCodeRepo()
 	sender := &fakeCodeSender{}
-	svc := newAccountServiceWithAttempts(accountRepo, userRepo, newFakeCodeRepo(), codes, sender, 5, account.NewMockLoginAttemptRepository(nil))
+	svc := newAccountServiceWithAttempts(accountRepo, userRepo, newFakeCodeRepo(), codes, sender, 5, security.NewMockLoginAttemptRepository(nil))
 	ctx := context.Background()
 
 	if err := svc.SendResetCode(ctx, application.SendResetCodeCommand{Email: "alice@example.edu"}); err != nil {
@@ -190,77 +194,77 @@ func TestAccountCommandService_SendResetCodeRejectsUnknownEmail(t *testing.T) {
 	svc := newAccountService(newFakeAccountRepo(nil), newFakeAuthUserRepo(nil), newFakeCodeRepo(), &fakeCodeSender{})
 
 	err := svc.SendResetCode(context.Background(), application.SendResetCodeCommand{Email: "nobody@example.edu"})
-	if !errors.Is(err, account.ErrUserNotFound) {
+	if !errors.Is(err, identity.ErrNotFound) {
 		t.Fatalf("SendResetCode error = %v, want ErrUserNotFound", err)
 	}
 }
 
 func TestAccountCommandService_ResetPasswordRejectsWrongCode(t *testing.T) {
 	username := accountUsername(t, "alice@example.edu")
-	accountRepo := newFakeAccountRepo(map[string]*account.Account{
+	accountRepo := newFakeAccountRepo(map[string]*identity.Account{
 		"alice@example.edu": {ID: 1, Username: username, PasswordHash: mustHash(t, "oldpass")},
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
 	svc := newAccountService(accountRepo, userRepo, newFakeCodeRepo(), &fakeCodeSender{})
 
 	err := svc.ResetPassword(context.Background(), application.ResetPasswordCommand{Email: "alice@example.edu", Code: "000000", NewPassword: "newpass"})
-	if !errors.Is(err, account.ErrVerificationCodeInvalid) {
+	if !errors.Is(err, verification.ErrCodeInvalid) {
 		t.Fatalf("ResetPassword error = %v, want ErrVerificationCodeInvalid", err)
 	}
 }
 
 func TestAccountCommandService_LoginFailedIncrementsAndLocks(t *testing.T) {
 	username := accountUsername(t, "alice@example.edu")
-	accountRepo := newFakeAccountRepo(map[string]*account.Account{
+	accountRepo := newFakeAccountRepo(map[string]*identity.Account{
 		"alice@example.edu": {ID: 1, Username: username, PasswordHash: mustHash(t, "secret")},
 	})
 	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
-	attempts := account.NewMockLoginAttemptRepository(map[string]int{})
+	attempts := security.NewMockLoginAttemptRepository(map[string]int{})
 	svc := newAccountServiceWithAttempts(accountRepo, userRepo, newFakeCodeRepo(), newFakeCodeRepo(), &fakeCodeSender{}, 3, attempts)
 	ctx := context.Background()
 
 	for i := 1; i <= 3; i++ {
 		_, err := svc.Login(ctx, application.LoginCommand{Email: "alice@example.edu", Password: "wrong"})
-		if !errors.Is(err, account.ErrInvalidCredentials) {
+		if !errors.Is(err, security.ErrInvalidCredentials) {
 			t.Fatalf("attempt %d error = %v, want ErrInvalidCredentials", i, err)
 		}
 	}
 
 	_, err := svc.Login(ctx, application.LoginCommand{Email: "alice@example.edu", Password: "secret"})
-	if !errors.Is(err, account.ErrLoginLocked) {
+	if !errors.Is(err, security.ErrLoginLocked) {
 		t.Fatalf("error after 3 failures = %v, want ErrLoginLocked", err)
 	}
 }
 
-func newAccountService(accountRepo *account.MockAccountRepository, userRepo *auth.MockUserRepository, codes *account.MockVerificationCodeRepository, sender *fakeCodeSender) *application.AccountCommandService {
-	return newAccountServiceWithAttempts(accountRepo, userRepo, codes, newFakeCodeRepo(), sender, 5, account.NewMockLoginAttemptRepository(nil))
+func newAccountService(accountRepo *identity.MockRepository, userRepo *auth.MockUserRepository, codes *verification.MockCodeRepository, sender *fakeCodeSender) *application.AccountCommandService {
+	return newAccountServiceWithAttempts(accountRepo, userRepo, codes, newFakeCodeRepo(), sender, 5, security.NewMockLoginAttemptRepository(nil))
 }
 
 func newAccountServiceWithAttempts(
-	accountRepo *account.MockAccountRepository,
+	accountRepo *identity.MockRepository,
 	userRepo *auth.MockUserRepository,
-	registerCodes *account.MockVerificationCodeRepository,
-	resetCodes *account.MockVerificationCodeRepository,
+	registerCodes *verification.MockCodeRepository,
+	resetCodes *verification.MockCodeRepository,
 	sender *fakeCodeSender,
 	maxLoginAttempts int,
-	attempts account.LoginAttemptRepository,
+	attempts security.LoginAttemptRepository,
 ) *application.AccountCommandService {
-	accountRepo.AfterCreate = func(acct *account.Account) {
+	accountRepo.AfterCreate = func(acct *identity.Account) {
 		userRepo.Users[acct.ID] = &auth.User{ID: acct.ID, Role: auth.RoleUser}
 	}
-	hasher := account.NewDjangoPBKDF2SHA256PasswordHasher(account.PasswordHashConfig{Iterations: 1})
+	hasher := credential.NewDjangoPBKDF2SHA256PasswordHasher(credential.PasswordHashConfig{Iterations: 1})
 	usernames := testUsernameDeriver()
 	return application.NewAccountCommandService(
-		account.NewRegistrationService(accountRepo, registerCodes, sender, hasher, usernames, testRegistrationConfig()),
+		account.NewRegistrationService(accountRepo, registerCodes, sender, hasher, usernames, testRegistrationConfig(), testVerificationConfig()),
 		account.NewLoginService(accountRepo, hasher, attempts, usernames, testLoginConfig(maxLoginAttempts)),
-		account.NewPasswordResetService(accountRepo, resetCodes, sender, hasher, usernames, testPasswordResetConfig()),
+		account.NewPasswordResetService(accountRepo, resetCodes, sender, hasher, usernames, testVerificationConfig()),
 		auth.NewCurrentUserService(userRepo),
 	)
 }
 
 func mustHash(t *testing.T, password string) string {
 	t.Helper()
-	hash, err := account.NewDjangoPBKDF2SHA256PasswordHasher(account.PasswordHashConfig{Iterations: 1}).Hash(password)
+	hash, err := credential.NewDjangoPBKDF2SHA256PasswordHasher(credential.PasswordHashConfig{Iterations: 1}).Hash(password)
 	if err != nil {
 		t.Fatalf("Hash: %v", err)
 	}
@@ -270,14 +274,11 @@ func mustHash(t *testing.T, password string) string {
 func testRegistrationConfig() account.RegistrationConfig {
 	return account.RegistrationConfig{
 		EmailWhitelist: []string{"@example.edu"},
-		CodeInterval:   time.Minute,
-		CodeTTL:        10 * time.Minute,
-		CodeLength:     6,
 	}
 }
 
-func testPasswordResetConfig() account.PasswordResetConfig {
-	return account.PasswordResetConfig{
+func testVerificationConfig() verification.Config {
+	return verification.Config{
 		CodeInterval: time.Minute,
 		CodeTTL:      10 * time.Minute,
 		CodeLength:   6,
@@ -291,11 +292,11 @@ func testLoginConfig(maxLoginAttempts int) account.LoginConfig {
 	}
 }
 
-func newFakeAccountRepo(accounts map[string]*account.Account) *account.MockAccountRepository {
+func newFakeAccountRepo(accounts map[string]*identity.Account) *identity.MockRepository {
 	if accounts == nil {
-		accounts = map[string]*account.Account{}
+		accounts = map[string]*identity.Account{}
 	}
-	repo := account.NewMockAccountRepository(nil)
+	repo := identity.NewMockRepository(nil)
 	for email, acct := range accounts {
 		copy := *acct
 		if copy.Username == "" {
@@ -323,16 +324,16 @@ func accountUsernameFromEmail(email string) string {
 	return username
 }
 
-func testUsernameDeriver() account.UsernameDeriver {
-	return account.NewBLAKE2bUsernameDeriver(account.UsernameDeriverConfig{Salt: "SALT"})
+func testUsernameDeriver() identity.UsernameDeriver {
+	return identity.NewBLAKE2bUsernameDeriver(identity.UsernameDeriverConfig{Salt: "SALT"})
 }
 
 func newFakeAuthUserRepo(users map[int]*auth.User) *auth.MockUserRepository {
 	return auth.NewMockUserRepository(users)
 }
 
-func newFakeCodeRepo() *account.MockVerificationCodeRepository {
-	return account.NewMockVerificationCodeRepository()
+func newFakeCodeRepo() *verification.MockCodeRepository {
+	return verification.NewMockCodeRepository()
 }
 
 type fakeCodeSender struct {

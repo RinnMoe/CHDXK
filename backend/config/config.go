@@ -10,6 +10,9 @@ import (
 
 	"jcourse/internal/application"
 	"jcourse/internal/domain/account"
+	"jcourse/internal/domain/account/credential"
+	"jcourse/internal/domain/account/identity"
+	"jcourse/internal/domain/account/verification"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/point"
@@ -42,11 +45,11 @@ type AppConfig struct {
 
 type AuthConfig struct {
 	Registration    account.RegistrationConfig
-	PasswordReset   account.PasswordResetConfig
+	Verification    verification.Config
 	Login           account.LoginConfig
 	Access          auth.AccessConfig
-	PasswordHash    account.PasswordHashConfig
-	UsernameDeriver account.UsernameDeriverConfig
+	PasswordHash    credential.PasswordHashConfig
+	UsernameDeriver identity.UsernameDeriverConfig
 }
 
 type CourseConfig struct {
@@ -145,14 +148,11 @@ func setDefaults(v *viper.Viper) {
 	})
 	setSectionDefaults(v, "auth.registration", map[string]any{
 		"email_whitelist": account.DefaultRegistrationConfig.EmailWhitelist,
-		"code_interval":   account.DefaultRegistrationConfig.CodeInterval.String(),
-		"code_ttl":        account.DefaultRegistrationConfig.CodeTTL.String(),
-		"code_length":     account.DefaultRegistrationConfig.CodeLength,
 	})
-	setSectionDefaults(v, "auth.password_reset", map[string]any{
-		"code_interval": account.DefaultPasswordResetConfig.CodeInterval.String(),
-		"code_ttl":      account.DefaultPasswordResetConfig.CodeTTL.String(),
-		"code_length":   account.DefaultPasswordResetConfig.CodeLength,
+	setSectionDefaults(v, "auth.verification", map[string]any{
+		"code_interval": verification.DefaultConfig.CodeInterval.String(),
+		"code_ttl":      verification.DefaultConfig.CodeTTL.String(),
+		"code_length":   verification.DefaultConfig.CodeLength,
 	})
 	setSectionDefaults(v, "auth.login", map[string]any{
 		"max_attempts": account.DefaultLoginConfig.MaxAttempts,
@@ -164,8 +164,8 @@ func setDefaults(v *viper.Viper) {
 		"flush_batch_size":  auth.DefaultAccessConfig.FlushBatchSize,
 	})
 	setSectionDefaults(v, "auth.password_hash", map[string]any{
-		"iterations":  account.DefaultPasswordHashConfig.Iterations,
-		"salt_length": account.DefaultPasswordHashConfig.SaltLength,
+		"iterations":  credential.DefaultPasswordHashConfig.Iterations,
+		"salt_length": credential.DefaultPasswordHashConfig.SaltLength,
 	})
 	setSectionDefaults(v, "point", map[string]any{
 		"rate_bps": point.DefaultTransferFeeConfig.RateBps,

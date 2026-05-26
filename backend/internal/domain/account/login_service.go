@@ -4,6 +4,10 @@ import (
 	"context"
 	"fmt"
 	"time"
+
+	"jcourse/internal/domain/account/credential"
+	"jcourse/internal/domain/account/identity"
+	"jcourse/internal/domain/account/security"
 )
 
 type LoginConfig struct {
@@ -17,18 +21,18 @@ var DefaultLoginConfig = LoginConfig{
 }
 
 type LoginService struct {
-	accountRepo AccountRepository
-	hasher      PasswordHasher
-	attempts    LoginAttemptRepository
-	usernames   UsernameDeriver
+	accountRepo identity.Repository
+	hasher      credential.PasswordHasher
+	attempts    security.LoginAttemptRepository
+	usernames   identity.UsernameDeriver
 	config      LoginConfig
 }
 
 func NewLoginService(
-	userRepo AccountRepository,
-	hasher PasswordHasher,
-	attempts LoginAttemptRepository,
-	usernames UsernameDeriver,
+	accountRepo identity.Repository,
+	hasher credential.PasswordHasher,
+	attempts security.LoginAttemptRepository,
+	usernames identity.UsernameDeriver,
 	config LoginConfig,
 ) *LoginService {
 	defaults := DefaultLoginConfig
@@ -39,7 +43,7 @@ func NewLoginService(
 		config.Lockout = defaults.Lockout
 	}
 	return &LoginService{
-		accountRepo: userRepo,
+		accountRepo: accountRepo,
 		hasher:      hasher,
 		attempts:    attempts,
 		usernames:   usernames,
@@ -47,27 +51,27 @@ func NewLoginService(
 	}
 }
 
-func (s *LoginService) Login(ctx context.Context, email, password string) (*Account, error) {
-	normalized := normalizeEmail(email)
+func (s *LoginService) Login(ctx context.Context, email, password string) (*identity.Account, error) {
+	normalized := identity.NormalizeEmail(email)
 	username, err := s.usernames.UsernameFromEmail(normalized)
 	if err != nil {
-		return nil, ErrInvalidCredentials
+		return nil, security.ErrInvalidCredentials
 	}
 
 	if s.isLocked(ctx, normalized) {
-		return nil, ErrLoginLocked
+		return nil, security.ErrLoginLocked
 	}
 
-	u, err := s.accountRepo.FindByUsername(ctx, username)
+	acct, err := s.accountRepo.FindByUsername(ctx, username)
 	if err != nil {
 		return nil, err
 	}
-	if u == nil || !s.hasher.Verify(password, u.PasswordHash) {
+	if acct == nil || !s.hasher.Verify(password, acct.PasswordHash) {
 		_ = s.recordFailure(ctx, normalized)
-		return nil, ErrInvalidCredentials
+		return nil, security.ErrInvalidCredentials
 	}
 	_ = s.attempts.Reset(ctx, normalized)
-	return u, nil
+	return acct, nil
 }
 
 func (s *LoginService) MarkLogin(ctx context.Context, accountID int) error {
@@ -91,7 +95,7 @@ func (s *LoginService) recordFailure(ctx context.Context, email string) error {
 		return err
 	}
 	if count >= s.config.MaxAttempts && s.config.Lockout > 0 {
-		return fmt.Errorf("%w: locked for %s", ErrLoginLocked, s.config.Lockout.Round(time.Minute))
+		return fmt.Errorf("%w: locked for %s", security.ErrLoginLocked, s.config.Lockout.Round(time.Minute))
 	}
 	return nil
 }

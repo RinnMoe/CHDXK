@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"jcourse/internal/application"
-	"jcourse/internal/domain/account"
+	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 )
 
@@ -37,7 +37,7 @@ func (ctrl *AdminUserController) GetUserByEmail(c *gin.Context) {
 
 	result, err := ctrl.query.FindByEmail(c.Request.Context(), email)
 	if err != nil {
-		if errors.Is(err, account.ErrUserNotFound) {
+		if errors.Is(err, identity.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 			return
 		}
@@ -147,7 +147,7 @@ func bindAdminUserID(c *gin.Context) (int, bool) {
 }
 
 func handleAdminUserCommandError(c *gin.Context, err error) {
-	if errors.Is(err, account.ErrUserNotFound) {
+	if errors.Is(err, identity.ErrNotFound) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 		return
 	}

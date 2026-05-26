@@ -1,11 +1,14 @@
-package account
+package identity
 
 import (
 	"encoding/hex"
+	"errors"
 	"strings"
 
 	"golang.org/x/crypto/blake2b"
 )
+
+var ErrEmailNotAllowed = errors.New("email is not allowed")
 
 type EmailWhitelist struct {
 	entries []string
@@ -53,7 +56,7 @@ func (d *BLAKE2bUsernameDeriver) UsernameFromEmail(email string) (string, error)
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-func normalizeEmail(email string) string {
+func NormalizeEmail(email string) string {
 	return strings.ToLower(strings.TrimSpace(email))
 }
 

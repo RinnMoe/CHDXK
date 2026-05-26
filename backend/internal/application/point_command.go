@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"jcourse/internal/domain/account"
+	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/point"
 )
@@ -26,13 +26,13 @@ type CreatePointTransferCommand struct {
 }
 
 type PointCommandService struct {
-	accountRepo     account.AccountRepository
+	accountRepo     identity.Repository
 	transferRepo    point.TransferRepository
 	transferService *point.TransferService
-	usernames       account.UsernameDeriver
+	usernames       identity.UsernameDeriver
 }
 
-func NewPointCommandService(accountRepo account.AccountRepository, transferRepo point.TransferRepository, transferService *point.TransferService, usernames account.UsernameDeriver) *PointCommandService {
+func NewPointCommandService(accountRepo identity.Repository, transferRepo point.TransferRepository, transferService *point.TransferService, usernames identity.UsernameDeriver) *PointCommandService {
 	return &PointCommandService{
 		accountRepo:     accountRepo,
 		transferRepo:    transferRepo,

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"jcourse/internal/domain/account"
+	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/point"
 )
 
@@ -15,12 +15,12 @@ type PointRecordListFilter struct {
 
 type PointQueryService struct {
 	query           point.Query
-	accountRepo     account.AccountRepository
+	accountRepo     identity.Repository
 	transferService *point.TransferService
-	usernames       account.UsernameDeriver
+	usernames       identity.UsernameDeriver
 }
 
-func NewPointQueryService(query point.Query, accountRepo account.AccountRepository, transferService *point.TransferService, usernames account.UsernameDeriver) *PointQueryService {
+func NewPointQueryService(query point.Query, accountRepo identity.Repository, transferService *point.TransferService, usernames identity.UsernameDeriver) *PointQueryService {
 	return &PointQueryService{query: query, accountRepo: accountRepo, transferService: transferService, usernames: usernames}
 }
 

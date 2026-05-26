@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"jcourse/internal/application"
-	"jcourse/internal/domain/account"
+	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/point"
 )
 
@@ -20,7 +20,7 @@ func TestPointQueryService_GetUserPoints(t *testing.T) {
 		},
 		recordTotal: 2,
 	}
-	svc := application.NewPointQueryService(repo, account.NewMockAccountRepository(nil), point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), account.NewBLAKE2bUsernameDeriver(account.UsernameDeriverConfig{Salt: "SALT"}))
+	svc := application.NewPointQueryService(repo, identity.NewMockRepository(nil), point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), identity.NewBLAKE2bUsernameDeriver(identity.UsernameDeriverConfig{Salt: "SALT"}))
 
 	result, err := svc.GetUserPoints(context.Background(), 7, application.PointRecordListFilter{Page: 1, PageSize: 20})
 	if err != nil {
@@ -42,7 +42,7 @@ func TestPointQueryService_GetUserPoints(t *testing.T) {
 
 func TestPointQueryService_PreviewTransfer(t *testing.T) {
 	repo := &fakePointQuery{total: 500}
-	svc := application.NewPointQueryService(repo, account.NewMockAccountRepository(nil), point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), account.NewBLAKE2bUsernameDeriver(account.UsernameDeriverConfig{Salt: "SALT"}))
+	svc := application.NewPointQueryService(repo, identity.NewMockRepository(nil), point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), identity.NewBLAKE2bUsernameDeriver(identity.UsernameDeriverConfig{Salt: "SALT"}))
 
 	got, err := svc.PreviewTransfer(context.Background(), 7, application.PreviewTransferParams{Amount: 100, FeePayer: point.FeePayerRecipient})
 	if err != nil {

@@ -3,7 +3,7 @@ package application
 import (
 	"time"
 
-	"jcourse/internal/domain/account"
+	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 )
 
@@ -19,7 +19,7 @@ type AdminUserDTO struct {
 	SuspendTill *time.Time `json:"suspend_till,omitempty"`
 }
 
-func newAdminUserDTO(acct *account.Account, u *auth.User, lookupEmail string) *AdminUserDTO {
+func newAdminUserDTO(acct *identity.Account, u *auth.User, lookupEmail string) *AdminUserDTO {
 	email := acct.Email
 	if email == "" {
 		email = lookupEmail

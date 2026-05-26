@@ -7,7 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"jcourse/internal/application"
-	"jcourse/internal/domain/account"
+	"jcourse/internal/domain/account/credential"
+	"jcourse/internal/domain/account/identity"
+	"jcourse/internal/domain/account/security"
+	"jcourse/internal/domain/account/verification"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/interface/web/middleware"
 )
@@ -30,11 +33,11 @@ func (ctrl *AccountController) SendRegisterCode(c *gin.Context) {
 
 	if err := ctrl.command.SendRegisterCode(c.Request.Context(), cmd); err != nil {
 		switch {
-		case errors.Is(err, account.ErrEmailNotAllowed):
+		case errors.Is(err, identity.ErrEmailNotAllowed):
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-		case errors.Is(err, account.ErrUserAlreadyExists):
+		case errors.Is(err, identity.ErrAlreadyExists):
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
-		case errors.Is(err, account.ErrVerificationTooSoon):
+		case errors.Is(err, verification.ErrSendTooSoon):
 			c.JSON(http.StatusTooManyRequests, gin.H{"error": err.Error()})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -54,9 +57,9 @@ func (ctrl *AccountController) Register(c *gin.Context) {
 	u, err := ctrl.command.Register(c.Request.Context(), cmd)
 	if err != nil {
 		switch {
-		case errors.Is(err, account.ErrEmailNotAllowed), errors.Is(err, account.ErrVerificationCodeInvalid), errors.Is(err, account.ErrPasswordRequired):
+		case errors.Is(err, identity.ErrEmailNotAllowed), errors.Is(err, verification.ErrCodeInvalid), errors.Is(err, credential.ErrPasswordRequired):
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		case errors.Is(err, account.ErrUserAlreadyExists):
+		case errors.Is(err, identity.ErrAlreadyExists):
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -79,11 +82,11 @@ func (ctrl *AccountController) Login(c *gin.Context) {
 
 	u, err := ctrl.command.Login(c.Request.Context(), cmd)
 	if err != nil {
-		if errors.Is(err, account.ErrInvalidCredentials) {
+		if errors.Is(err, security.ErrInvalidCredentials) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			return
 		}
-		if errors.Is(err, account.ErrLoginLocked) {
+		if errors.Is(err, security.ErrLoginLocked) {
 			c.JSON(http.StatusTooManyRequests, gin.H{"error": err.Error()})
 			return
 		}
@@ -132,11 +135,11 @@ func (ctrl *AccountController) SendResetCode(c *gin.Context) {
 
 	if err := ctrl.command.SendResetCode(c.Request.Context(), cmd); err != nil {
 		switch {
-		case errors.Is(err, account.ErrEmailNotAllowed):
+		case errors.Is(err, identity.ErrEmailNotAllowed):
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-		case errors.Is(err, account.ErrUserNotFound):
+		case errors.Is(err, identity.ErrNotFound):
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		case errors.Is(err, account.ErrVerificationTooSoon):
+		case errors.Is(err, verification.ErrSendTooSoon):
 			c.JSON(http.StatusTooManyRequests, gin.H{"error": err.Error()})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -155,9 +158,9 @@ func (ctrl *AccountController) ResetPassword(c *gin.Context) {
 
 	if err := ctrl.command.ResetPassword(c.Request.Context(), cmd); err != nil {
 		switch {
-		case errors.Is(err, account.ErrEmailNotAllowed), errors.Is(err, account.ErrVerificationCodeInvalid), errors.Is(err, account.ErrPasswordRequired):
+		case errors.Is(err, identity.ErrEmailNotAllowed), errors.Is(err, verification.ErrCodeInvalid), errors.Is(err, credential.ErrPasswordRequired):
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		case errors.Is(err, account.ErrUserNotFound):
+		case errors.Is(err, identity.ErrNotFound):
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

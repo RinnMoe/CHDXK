@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"jcourse/internal/domain/account"
+	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/infrastructure/repository"
 )
@@ -15,7 +15,7 @@ func TestAccountRepository_CreateAndFind(t *testing.T) {
 	repo := repository.NewAccountRepository(db)
 	ctx := context.Background()
 
-	acct := &account.Account{
+	acct := &identity.Account{
 		Username:     "alice",
 		Email:        "alice@example.com",
 		PasswordHash: "secret",
@@ -75,7 +75,7 @@ func TestAccountRepository_CreateWithoutEmail(t *testing.T) {
 	repo := repository.NewAccountRepository(db)
 	ctx := context.Background()
 
-	acct := &account.Account{
+	acct := &identity.Account{
 		Username:     "hashedusername",
 		PasswordHash: "secret",
 		CreatedAt:    time.Now(),
@@ -114,7 +114,7 @@ func TestAccountRepository_UpdatePasswordHashAndTouchLastSeen(t *testing.T) {
 	ctx := context.Background()
 	e := seedUser(t, db)
 
-	acct := &account.Account{ID: e.ID, Username: e.Username, Email: e.Email.String, PasswordHash: "new_password", LastSeenAt: e.LastSeenAt.Add(time.Hour)}
+	acct := &identity.Account{ID: e.ID, Username: e.Username, Email: e.Email.String, PasswordHash: "new_password", LastSeenAt: e.LastSeenAt.Add(time.Hour)}
 	if err := repo.Update(ctx, acct); err != nil {
 		t.Fatalf("Update: %v", err)
 	}

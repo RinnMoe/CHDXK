@@ -9,7 +9,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
-	"jcourse/internal/domain/account"
+	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 )
 
@@ -29,7 +29,7 @@ type UserRepository struct {
 
 const accountCacheTTL = 5 * time.Minute
 
-func newAccountEntity(u *account.Account) UserEntity {
+func newAccountEntity(u *identity.Account) UserEntity {
 	return UserEntity{
 		ID:           u.ID,
 		Username:     u.Username,
@@ -41,8 +41,8 @@ func newAccountEntity(u *account.Account) UserEntity {
 	}
 }
 
-func newAccountDomain(e *UserEntity) account.Account {
-	return account.Account{
+func newAccountDomain(e *UserEntity) identity.Account {
+	return identity.Account{
 		ID:           e.ID,
 		Username:     e.Username,
 		Email:        e.Email.String,
@@ -79,7 +79,7 @@ func (r *AccountRepository) cachedEmailByID(ctx context.Context, userID int) str
 	return e.Email.String
 }
 
-func (r *AccountRepository) Create(ctx context.Context, u *account.Account) error {
+func (r *AccountRepository) Create(ctx context.Context, u *identity.Account) error {
 	e := newAccountEntity(u)
 	if err := gorm.G[UserEntity](r.db).Create(ctx, &e); err != nil {
 		return err
@@ -89,7 +89,7 @@ func (r *AccountRepository) Create(ctx context.Context, u *account.Account) erro
 	return nil
 }
 
-func (r *AccountRepository) Update(ctx context.Context, u *account.Account) error {
+func (r *AccountRepository) Update(ctx context.Context, u *identity.Account) error {
 	oldEmail := r.cachedEmailByID(ctx, u.ID)
 	if err := r.db.WithContext(ctx).
 		Model(&UserEntity{}).
@@ -118,9 +118,9 @@ func (r *AccountRepository) TouchLastSeen(ctx context.Context, userID int, at ti
 	return nil
 }
 
-func (r *AccountRepository) FindByID(ctx context.Context, id int) (*account.Account, error) {
+func (r *AccountRepository) FindByID(ctx context.Context, id int) (*identity.Account, error) {
 	key := cacheKey("account", id)
-	if cached, ok := cacheGetJSON[account.Account](ctx, r.cache, key); ok {
+	if cached, ok := cacheGetJSON[identity.Account](ctx, r.cache, key); ok {
 		return cached, nil
 	}
 
@@ -136,7 +136,7 @@ func (r *AccountRepository) FindByID(ctx context.Context, id int) (*account.Acco
 	return &d, nil
 }
 
-func (r *AccountRepository) FindByUsername(ctx context.Context, username string) (*account.Account, error) {
+func (r *AccountRepository) FindByUsername(ctx context.Context, username string) (*identity.Account, error) {
 	e, err := gorm.G[UserEntity](r.db).Where("username = ?", username).Take(ctx)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -148,9 +148,9 @@ func (r *AccountRepository) FindByUsername(ctx context.Context, username string)
 	return &d, nil
 }
 
-func (r *AccountRepository) FindByEmail(ctx context.Context, email string) (*account.Account, error) {
+func (r *AccountRepository) FindByEmail(ctx context.Context, email string) (*identity.Account, error) {
 	key := cacheKey("account", "email", email)
-	if cached, ok := cacheGetJSON[account.Account](ctx, r.cache, key); ok {
+	if cached, ok := cacheGetJSON[identity.Account](ctx, r.cache, key); ok {
 		return cached, nil
 	}
 
@@ -236,5 +236,5 @@ func NewUserRepository(db *gorm.DB, cache ...*redis.Client) *UserRepository {
 	return &UserRepository{db: db, cache: client}
 }
 
-var _ account.AccountRepository = (*AccountRepository)(nil)
+var _ identity.Repository = (*AccountRepository)(nil)
 var _ auth.UserRepository = (*UserRepository)(nil)

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"jcourse/internal/application"
-	"jcourse/internal/domain/account"
+	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/point"
 )
@@ -65,24 +65,24 @@ func TestPointCommandService_CreateTransferRejectsInvalidCases(t *testing.T) {
 	}
 }
 
-func newPointCommandService(accountRepo *account.MockAccountRepository, transferRepo point.TransferRepository) *application.PointCommandService {
+func newPointCommandService(accountRepo *identity.MockRepository, transferRepo point.TransferRepository) *application.PointCommandService {
 	return application.NewPointCommandService(accountRepo, transferRepo, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), testPointUsernameDeriver())
 }
 
-func seedFakePointAccount(repo *account.MockAccountRepository, id int, email string) *auth.User {
+func seedFakePointAccount(repo *identity.MockRepository, id int, email string) *auth.User {
 	username, err := testPointUsernameDeriver().UsernameFromEmail(email)
 	if err != nil {
 		panic(err)
 	}
-	acct := &account.Account{ID: id, Username: username, Email: email}
+	acct := &identity.Account{ID: id, Username: username, Email: email}
 	repo.PutAccount("", acct)
 	return &auth.User{ID: id, Role: auth.RoleUser}
 }
 
-func newFakePointAccountRepo() *account.MockAccountRepository {
-	return account.NewMockAccountRepository(nil)
+func newFakePointAccountRepo() *identity.MockRepository {
+	return identity.NewMockRepository(nil)
 }
 
-func testPointUsernameDeriver() account.UsernameDeriver {
-	return account.NewBLAKE2bUsernameDeriver(account.UsernameDeriverConfig{Salt: "SALT"})
+func testPointUsernameDeriver() identity.UsernameDeriver {
+	return identity.NewBLAKE2bUsernameDeriver(identity.UsernameDeriverConfig{Salt: "SALT"})
 }

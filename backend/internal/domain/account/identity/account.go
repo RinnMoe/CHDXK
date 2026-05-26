@@ -1,8 +1,14 @@
-package account
+package identity
 
 import (
 	"context"
+	"errors"
 	"time"
+)
+
+var (
+	ErrAlreadyExists = errors.New("user already exists")
+	ErrNotFound      = errors.New("user not found")
 )
 
 type Account struct {
@@ -24,10 +30,10 @@ func NewRegisteredAccount(username, passwordHash string, now time.Time) *Account
 	}
 }
 
-type AccountRepository interface {
-	Create(ctx context.Context, u *Account) error
-	Update(ctx context.Context, u *Account) error
-	TouchLastSeen(ctx context.Context, userID int, at time.Time) error
+type Repository interface {
+	Create(ctx context.Context, account *Account) error
+	Update(ctx context.Context, account *Account) error
+	TouchLastSeen(ctx context.Context, accountID int, at time.Time) error
 	FindByID(ctx context.Context, id int) (*Account, error)
 	FindByUsername(ctx context.Context, username string) (*Account, error)
 	FindByEmail(ctx context.Context, email string) (*Account, error)

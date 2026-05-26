@@ -14,6 +14,9 @@ session:
   secret: "replace-with-at-least-32-random-characters"
 auth:
   registration:
+    email_whitelist:
+      - "@example.edu"
+  verification:
     code_interval: "2m"
     code_length: 8
   username_deriver:
@@ -34,11 +37,11 @@ review:
 		t.Fatalf("Load: %v", err)
 	}
 
-	if conf.Auth.Registration.CodeInterval != 2*time.Minute {
-		t.Fatalf("auth override code interval = %s, want %s", conf.Auth.Registration.CodeInterval, 2*time.Minute)
+	if conf.Auth.Verification.CodeInterval != 2*time.Minute {
+		t.Fatalf("auth override code interval = %s, want %s", conf.Auth.Verification.CodeInterval, 2*time.Minute)
 	}
-	if conf.Auth.Registration.CodeLength != 8 {
-		t.Fatalf("auth override code length = %d, want 8", conf.Auth.Registration.CodeLength)
+	if conf.Auth.Verification.CodeLength != 8 {
+		t.Fatalf("auth override code length = %d, want 8", conf.Auth.Verification.CodeLength)
 	}
 	if len(conf.Server.Cors.AllowedOrigins) != 2 || conf.Server.Cors.AllowedOrigins[0] != "http://localhost:5173" || conf.Server.Cors.AllowedOrigins[1] != "http://127.0.0.1:5173" {
 		t.Fatalf("server default cors origins = %#v", conf.Server.Cors.AllowedOrigins)

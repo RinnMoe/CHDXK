@@ -1,4 +1,4 @@
-package account
+package notification
 
 import (
 	"bytes"

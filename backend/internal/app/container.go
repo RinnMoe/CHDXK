@@ -4,6 +4,8 @@ import (
 	"jcourse/config"
 	"jcourse/internal/application"
 	"jcourse/internal/domain/account"
+	"jcourse/internal/domain/account/credential"
+	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/email"
@@ -67,7 +69,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	verificationRepo := repository.NewVerificationCodeRepository(redisClient)
 	resetCodeRepo := repository.NewVerificationCodeRepositoryWithPrefix(redisClient, "reset")
 	loginAttemptRepo := repository.NewLoginAttemptRepository(redisClient, conf.Auth.Login.Lockout)
-	usernameDeriver := account.NewBLAKE2bUsernameDeriver(conf.Auth.UsernameDeriver)
+	usernameDeriver := identity.NewBLAKE2bUsernameDeriver(conf.Auth.UsernameDeriver)
 
 	reviewQuery := application.NewReviewQueryService(reviewRepo, voteRepo, notificationRepo)
 
@@ -107,7 +109,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	accountQuery := application.NewAccountQueryService(accountRepo)
 	adminUserQuery := application.NewAdminUserQueryService(accountRepo, userRepo, usernameDeriver)
 	adminUserCommand := application.NewAdminUserCommandService(userRepo, conf.Admin)
-	hasher := account.NewDjangoPBKDF2SHA256PasswordHasher(conf.Auth.PasswordHash)
+	hasher := credential.NewDjangoPBKDF2SHA256PasswordHasher(conf.Auth.PasswordHash)
 	smtpSender := smtp.NewSMTPSender(conf.SMTP)
 	emailService := email.NewService(smtpSender)
 	registrationService := account.NewRegistrationService(
@@ -117,6 +119,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		hasher,
 		usernameDeriver,
 		conf.Auth.Registration,
+		conf.Auth.Verification,
 	)
 	loginService := account.NewLoginService(
 		accountRepo,
@@ -131,7 +134,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		smtpSender,
 		hasher,
 		usernameDeriver,
-		conf.Auth.PasswordReset,
+		conf.Auth.Verification,
 	)
 	accountCommand := application.NewAccountCommandService(
 		registrationService,

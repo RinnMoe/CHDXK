@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"jcourse/internal/application"
-	"jcourse/internal/domain/account"
+	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/point"
 	"jcourse/internal/interface/web/controller"
@@ -105,9 +105,9 @@ func newPointControllerCommand() *application.PointCommandService {
 		panic(err)
 	}
 	return application.NewPointCommandService(
-		&pointControllerFakeAccountRepo{accountsByID: map[int]*account.Account{
+		&pointControllerFakeAccountRepo{accountsByID: map[int]*identity.Account{
 			1: {ID: 1, Username: "alice@example.edu", Email: "alice@example.edu"},
-		}, accountsByUsername: map[string]*account.Account{
+		}, accountsByUsername: map[string]*identity.Account{
 			bobUsername: {ID: 2, Username: bobUsername, Email: "bob@example.edu"},
 		}},
 		&pointControllerFakeTransferRepo{},
@@ -116,32 +116,32 @@ func newPointControllerCommand() *application.PointCommandService {
 	)
 }
 
-func testPointUsernameDeriver() account.UsernameDeriver {
-	return account.NewBLAKE2bUsernameDeriver(account.UsernameDeriverConfig{Salt: "SALT"})
+func testPointUsernameDeriver() identity.UsernameDeriver {
+	return identity.NewBLAKE2bUsernameDeriver(identity.UsernameDeriverConfig{Salt: "SALT"})
 }
 
 type pointControllerFakeAccountRepo struct {
-	accountsByID       map[int]*account.Account
-	accountsByUsername map[string]*account.Account
-	accountsByEmail    map[string]*account.Account
+	accountsByID       map[int]*identity.Account
+	accountsByUsername map[string]*identity.Account
+	accountsByEmail    map[string]*identity.Account
 }
 
-func (r *pointControllerFakeAccountRepo) Create(_ context.Context, _ *account.Account) error {
+func (r *pointControllerFakeAccountRepo) Create(_ context.Context, _ *identity.Account) error {
 	return nil
 }
-func (r *pointControllerFakeAccountRepo) Update(_ context.Context, _ *account.Account) error {
+func (r *pointControllerFakeAccountRepo) Update(_ context.Context, _ *identity.Account) error {
 	return nil
 }
 func (r *pointControllerFakeAccountRepo) TouchLastSeen(_ context.Context, _ int, _ time.Time) error {
 	return nil
 }
-func (r *pointControllerFakeAccountRepo) FindByID(_ context.Context, id int) (*account.Account, error) {
+func (r *pointControllerFakeAccountRepo) FindByID(_ context.Context, id int) (*identity.Account, error) {
 	return r.accountsByID[id], nil
 }
-func (r *pointControllerFakeAccountRepo) FindByUsername(_ context.Context, username string) (*account.Account, error) {
+func (r *pointControllerFakeAccountRepo) FindByUsername(_ context.Context, username string) (*identity.Account, error) {
 	return r.accountsByUsername[username], nil
 }
-func (r *pointControllerFakeAccountRepo) FindByEmail(_ context.Context, email string) (*account.Account, error) {
+func (r *pointControllerFakeAccountRepo) FindByEmail(_ context.Context, email string) (*identity.Account, error) {
 	return r.accountsByEmail[email], nil
 }
 
@@ -164,7 +164,7 @@ func TestPointController_GetPointsByEmail(t *testing.T) {
 		balances: map[int]int{1: 42},
 	}
 	fakeAccountRepo := &pointControllerFakeAccountRepo{
-		accountsByUsername: map[string]*account.Account{
+		accountsByUsername: map[string]*identity.Account{
 			username: {ID: 1, Username: username},
 		},
 	}

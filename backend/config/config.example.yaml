@@ -30,10 +30,7 @@ auth:
   registration:
     email_whitelist:
       - "@example.edu"
-    code_interval: "1m"
-    code_ttl: "10m"
-    code_length: 6
-  password_reset:
+  verification:
     code_interval: "1m"
     code_ttl: "10m"
     code_length: 6

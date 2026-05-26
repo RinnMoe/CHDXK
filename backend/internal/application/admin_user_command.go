@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"jcourse/internal/domain/account"
+	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 )
 
@@ -43,7 +43,7 @@ func (s *AdminUserCommandService) RevokeAdmin(ctx context.Context, actorUserID i
 
 func mapAuthUserNotFound(err error) error {
 	if errors.Is(err, auth.ErrUserNotFound) {
-		return account.ErrUserNotFound
+		return identity.ErrNotFound
 	}
 	return err
 }
