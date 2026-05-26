@@ -46,7 +46,6 @@ export function CodeButton({ email, onSend, disabled }: CodeButtonProps) {
       <Button
         type="button"
         variant="outline"
-        size="sm"
         className="w-full"
         onClick={handleClick}
         disabled={disabled || isSending || seconds > 0}
