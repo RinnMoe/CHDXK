@@ -10,26 +10,23 @@ import (
 var ErrCourseNotFound = course.ErrCourseNotFound
 
 type CourseCommandService struct {
-	notificationService   *course.NotificationService
-	enrollmentService     *course.EnrollmentService
-	hotService            *course.CourseHotService
-	enrollmentSyncService *course.CourseEnrollmentSyncService
-	ratingCommandService  *course.CourseRatingCommandService
+	notificationService  *course.NotificationService
+	enrollmentService    *course.EnrollmentService
+	hotService           *course.CourseHotService
+	ratingCommandService *course.CourseRatingCommandService
 }
 
 func NewCourseCommandService(
 	notificationService *course.NotificationService,
 	enrollmentService *course.EnrollmentService,
 	hotService *course.CourseHotService,
-	enrollmentSyncService *course.CourseEnrollmentSyncService,
 	ratingCommandService *course.CourseRatingCommandService,
 ) *CourseCommandService {
 	return &CourseCommandService{
-		notificationService:   notificationService,
-		enrollmentService:     enrollmentService,
-		hotService:            hotService,
-		enrollmentSyncService: enrollmentSyncService,
-		ratingCommandService:  ratingCommandService,
+		notificationService:  notificationService,
+		enrollmentService:    enrollmentService,
+		hotService:           hotService,
+		ratingCommandService: ratingCommandService,
 	}
 }
 
@@ -50,11 +47,11 @@ func (s *CourseCommandService) RecordActivity(ctx context.Context, payload cours
 }
 
 func (s *CourseCommandService) StartEnrollmentSync(ctx context.Context, semester, state string) (string, string, error) {
-	return s.enrollmentSyncService.Start(ctx, semester, state)
+	return s.enrollmentService.StartSync(ctx, semester, state)
 }
 
 func (s *CourseCommandService) SyncEnrollmentFromCode(ctx context.Context, userID int, semester, code string) (*course.CourseEnrollmentSyncResult, error) {
-	return s.enrollmentSyncService.SyncFromCode(ctx, userID, semester, code)
+	return s.enrollmentService.SyncFromCode(ctx, userID, semester, code)
 }
 
 func (s *CourseCommandService) RefreshRatingScores(ctx context.Context) error {

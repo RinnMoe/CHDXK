@@ -88,12 +88,11 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	courseRatingCommand := course.NewCourseRatingCommandService(courseRepo, conf.Course.RatingScore)
 	courseQuery := application.NewCourseQueryService(courseRepo, teacherRepo, reviewRepo, notificationRepo, courseEnrollmentRepo, courseHotRepo)
 	jaccountClient := jaccount.NewOAuthClient(conf.JAccount)
-	courseEnrollmentSync := course.NewCourseEnrollmentSyncService(courseEnrollmentRepo, courseRepo, jaccountClient)
+	courseEnrollmentService := course.NewEnrollmentService(courseRepo, courseEnrollmentRepo, jaccountClient)
 	courseCommand := application.NewCourseCommandService(
 		course.NewNotificationService(courseRepo, notificationRepo),
-		course.NewEnrollmentService(courseRepo, courseEnrollmentRepo),
+		courseEnrollmentService,
 		courseHotService,
-		courseEnrollmentSync,
 		courseRatingCommand,
 	)
 	courseEnrollmentQuery := application.NewCourseEnrollmentQueryService(courseEnrollmentRepo)
