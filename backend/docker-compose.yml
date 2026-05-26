@@ -1,0 +1,28 @@
+services:
+  api:
+    build:
+      dockerfile: api.Dockerfile
+    image: dujiajun/jcourse_api
+    container_name: jcourse_api
+    environment:
+      TZ: Asia/Shanghai
+      ARMS_ENABLE: true
+      ARMS_APP_NAME: jcourse_api
+      ARMS_REGION_ID: cn-shanghai
+      ARMS_LICENSE_KEY: ""
+    ports:
+      - "8080:8080"
+
+  task_worker:
+    build:
+      dockerfile: taskworker.Dockerfile
+    image: dujiajun/jcourse_task_worker
+    container_name: jcourse_task_worker
+    environment:
+      TZ: Asia/Shanghai
+      ARMS_ENABLE: true
+      ARMS_APP_NAME: jcourse_task_worker
+      ARMS_REGION_ID: cn-shanghai
+      ARMS_LICENSE_KEY: ""
+    ports:
+      - "8080:8080"

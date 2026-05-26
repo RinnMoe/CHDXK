@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1
-
 ARG GO_VERSION=1.26
 
 FROM golang:${GO_VERSION}-alpine AS builder
@@ -14,7 +12,11 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/jcourse-taskworker ./cmd/taskworker
+RUN wget "http://arms-apm-cn-hangzhou.oss-cn-hangzhou.aliyuncs.com/instgo/instgo-linux-amd64" -O instgo
+
+RUN chmod +x instgo
+
+RUN instgo go build -trimpath -ldflags="-s -w" -o /out/jcourse-taskworker ./cmd/taskworker
 
 FROM alpine:3.22
 
