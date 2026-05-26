@@ -46,6 +46,9 @@ review:
 	if len(conf.Server.Cors.AllowedOrigins) != 2 || conf.Server.Cors.AllowedOrigins[0] != "http://localhost:5173" || conf.Server.Cors.AllowedOrigins[1] != "http://127.0.0.1:5173" {
 		t.Fatalf("server default cors origins = %#v", conf.Server.Cors.AllowedOrigins)
 	}
+	if conf.Server.Debug {
+		t.Fatal("server default debug = true, want false")
+	}
 	if conf.Auth.Login.Lockout != 15*time.Minute {
 		t.Fatalf("auth default lockout = %s, want %s", conf.Auth.Login.Lockout, 15*time.Minute)
 	}
@@ -109,5 +112,31 @@ auth:
 		if conf.Server.Cors.AllowedOrigins[i] != want[i] {
 			t.Fatalf("cors origin[%d] = %q, want %q", i, conf.Server.Cors.AllowedOrigins[i], want[i])
 		}
+	}
+}
+
+func TestLoadServerOverrides(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	contents := []byte(`
+server:
+  port: 9090
+  debug: true
+session:
+  secret: "replace-with-at-least-32-random-characters"
+auth:
+  username_deriver:
+    salt: "SALT"
+`)
+	if err := os.WriteFile(path, contents, 0o600); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	conf, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+
+	if !conf.Server.Debug {
+		t.Fatal("server debug = false, want true")
 	}
 }

@@ -63,8 +63,9 @@ type ReviewConfig struct {
 }
 
 type ServerConfig struct {
-	Addr string     `mapstructure:"addr"`
-	Cors CorsConfig `mapstructure:"cors"`
+	Addr  string     `mapstructure:"addr"`
+	Debug bool       `mapstructure:"debug"`
+	Cors  CorsConfig `mapstructure:"cors"`
 }
 
 type CorsConfig struct {
@@ -131,6 +132,10 @@ func Load(configPath string) (AppConfig, error) {
 }
 
 func setDefaults(v *viper.Viper) {
+	setSectionDefaults(v, "server", map[string]any{
+		"addr":  ":8080",
+		"debug": false,
+	})
 	setSectionDefaults(v, "server.cors", map[string]any{
 		"allowed_origins": []string{
 			"http://localhost:5173",

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/slog"
 	"github.com/gin-gonic/gin"
 
 	"jcourse/config"
@@ -15,7 +16,14 @@ import (
 )
 
 func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engine {
+	if conf.Server.Debug {
+		gin.SetMode(gin.DebugMode)
+	} else {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	g := gin.Default()
+	g.Use(slog.SetLogger())
 	g.Use(cors.New(cors.Config{
 		AllowOrigins: conf.Server.Cors.AllowedOrigins,
 		AllowMethods: []string{

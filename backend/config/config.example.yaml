@@ -7,6 +7,7 @@
 
 server:
   addr: ":8080"
+  debug: false
   cors:
     allowed_origins:
       - "http://localhost:5173"
