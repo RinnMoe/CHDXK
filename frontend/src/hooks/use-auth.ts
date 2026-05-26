@@ -13,11 +13,39 @@ import {
   type SendRegisterCodeCommand,
   type SendResetCodeCommand,
 } from "@/api/auth"
+import {
+  loadAuthSnapshot,
+  removeAuthSnapshot,
+  saveAuthSnapshot,
+} from "@/lib/auth-snapshot"
+
+function isNetworkFailure(err: unknown) {
+  return err instanceof TypeError
+}
+
+async function getCurrentUserWithOfflineFallback() {
+  try {
+    const user = await getCurrentUser()
+    if (user) {
+      saveAuthSnapshot(user)
+    } else {
+      removeAuthSnapshot()
+    }
+    return user
+  } catch (err) {
+    if (isNetworkFailure(err)) {
+      const snapshot = loadAuthSnapshot()
+      if (snapshot) return snapshot
+    }
+
+    throw err
+  }
+}
 
 export function useCurrentUser() {
   return useQuery({
     queryKey: ["auth", "me"],
-    queryFn: getCurrentUser,
+    queryFn: getCurrentUserWithOfflineFallback,
     retry: false,
     staleTime: 1000 * 60 * 5,
   })

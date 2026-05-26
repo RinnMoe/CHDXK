@@ -9,6 +9,7 @@ import { CourseHeaderMeta } from "@/components/course/course-header-meta"
 import { ReviewForm } from "@/components/review/review-form"
 import { useCourseDetail } from "@/hooks/use-course"
 import { useReview, useUpdateReview } from "@/hooks/use-review"
+import { useAuth } from "@/contexts/auth-context"
 import { getCourseSemesters } from "@/lib/course-semesters"
 import type { CreateReviewCommand, UpdateReviewCommand } from "@/api/review"
 
@@ -16,6 +17,7 @@ export function EditReviewPage() {
   const { reviewID } = useParams<{ reviewID: string }>()
   const id = Number(reviewID)
   const navigate = useNavigate()
+  const { user } = useAuth()
   const { data: review, isLoading } = useReview(id)
   const { data: course } = useCourseDetail(review?.course_id ?? 0)
   const { mutateAsync, isPending } = useUpdateReview()
@@ -65,6 +67,7 @@ export function EditReviewPage() {
               onSubmit={handleSubmit}
               onCancel={() => navigate(`/review/${id}`)}
               isSubmitting={isPending}
+              draftUserID={user?.id}
             />
           </CardContent>
         </Card>

@@ -56,6 +56,7 @@ export function NewReviewPage() {
               onSubmit={handleSubmit}
               onCancel={() => navigate(`/course/${id}`)}
               isSubmitting={isPending}
+              draftUserID={user?.id}
             />
           </CardContent>
         </Card>

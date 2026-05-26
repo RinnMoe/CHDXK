@@ -1,9 +1,15 @@
-import { useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import { useForm } from "@tanstack/react-form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  loadReviewDraft,
+  removeReviewDraft,
+  saveReviewDraft,
+  type ReviewDraftValues,
+} from "@/lib/review-draft"
 import {
   Select,
   SelectContent,
@@ -30,6 +36,7 @@ interface ReviewFormProps {
   ) => Promise<void> | void
   onCancel?: () => void
   isSubmitting?: boolean
+  draftUserID?: number
 }
 
 const SCORE_MAX_LENGTH = 10
@@ -54,6 +61,15 @@ function fieldError(errors: unknown[]) {
   return errors.length > 0 ? String(errors[0]) : null
 }
 
+function reviewValuesEqual(a: ReviewFormValues, b: ReviewFormValues) {
+  return (
+    a.rating === b.rating &&
+    a.semester === b.semester &&
+    a.score === b.score &&
+    a.content === b.content
+  )
+}
+
 export function ReviewForm({
   courseID,
   initialReview,
@@ -62,42 +78,105 @@ export function ReviewForm({
   onSubmit,
   onCancel,
   isSubmitting,
+  draftUserID,
 }: ReviewFormProps) {
   const isEdit = !!initialReview
   const availableSemesters = semesters ?? []
   const resolvedDefaultSemester = initialReview?.semester ?? defaultSemester ?? ""
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const draftKey = useMemo(() => {
+    const owner = draftUserID ? `user:${draftUserID}` : "anonymous"
+    if (initialReview) return `jcourse:review-draft:${owner}:edit:${initialReview.id}`
+    if (courseID) return `jcourse:review-draft:${owner}:create:${courseID}`
+    return null
+  }, [courseID, draftUserID, initialReview])
+  const baseValues = useMemo(
+    () =>
+      ({
+        rating: initialReview?.rating ?? 0,
+        semester: initialReview?.semester ?? "",
+        score: initialReview?.score ?? "",
+        content: initialReview?.content ?? DEFAULT_REVIEW_TEMPLATE,
+      }) as ReviewFormValues,
+    [initialReview]
+  )
+  const restoredDraft = useMemo(
+    () => (draftKey ? loadReviewDraft(draftKey) : null),
+    [draftKey]
+  )
+  const initialValues = useMemo(
+    () => restoredDraft?.values ?? baseValues,
+    [baseValues, restoredDraft]
+  )
+  const draftValuesRef = useRef<ReviewFormValues>(initialValues)
+  const [draftSavedAt, setDraftSavedAt] = useState<number | null>(
+    restoredDraft?.updatedAt ?? null
+  )
+  const [draftRestored, setDraftRestored] = useState(!!restoredDraft)
+
+  function clearDraftState() {
+    if (draftKey) removeReviewDraft(draftKey)
+    setDraftSavedAt(null)
+    setDraftRestored(false)
+  }
+
+  const updateDraft = useCallback(
+    (patch: Partial<ReviewDraftValues>) => {
+      const next = { ...draftValuesRef.current, ...patch }
+      draftValuesRef.current = next
+      if (!draftKey) return
+
+      if (reviewValuesEqual(next, baseValues)) {
+        removeReviewDraft(draftKey)
+        setDraftSavedAt(null)
+        setDraftRestored(false)
+        return
+      }
+
+      const savedAt = saveReviewDraft(draftKey, next)
+      if (savedAt) {
+        setDraftSavedAt(savedAt)
+        setDraftRestored(false)
+      }
+    },
+    [baseValues, draftKey]
+  )
 
   const form = useForm({
-    defaultValues: {
-      rating: initialReview?.rating ?? 0,
-      semester: initialReview?.semester ?? "",
-      score: initialReview?.score ?? "",
-      content: initialReview?.content ?? DEFAULT_REVIEW_TEMPLATE,
-    } as ReviewFormValues,
+    defaultValues: initialValues,
     onSubmit: async ({ value }) => {
       const selectedSemester = getSelectedSemester(value.semester)
       if (!selectedSemester) return
 
+      let cmd: CreateReviewCommand | UpdateReviewCommand
       if (isEdit) {
-        await onSubmit({
+        cmd = {
           semester: selectedSemester,
           rating: value.rating,
           content: value.content,
           score: value.score || undefined,
-        } as UpdateReviewCommand)
+        } as UpdateReviewCommand
       } else {
         if (!courseID) throw new Error("missing courseID")
-        await onSubmit({
+        cmd = {
           course_id: courseID,
           semester: selectedSemester,
           rating: value.rating,
           content: value.content,
           score: value.score || undefined,
-        } as CreateReviewCommand)
+        } as CreateReviewCommand
       }
+
+      await onSubmit(cmd)
+      clearDraftState()
     },
   })
+
+  function handleClearDraft() {
+    clearDraftState()
+    draftValuesRef.current = baseValues
+    form.reset(baseValues)
+  }
 
   function getSelectedSemester(semester: string) {
     const selectedSemester = semester || resolvedDefaultSemester
@@ -132,7 +211,10 @@ export function ReviewForm({
               <div>
                 <RatingStars
                   value={field.state.value}
-                  onChange={(value) => field.handleChange(value)}
+                  onChange={(value) => {
+                    field.handleChange(value)
+                    updateDraft({ rating: value })
+                  }}
                   size="lg"
                 />
               </div>
@@ -162,7 +244,10 @@ export function ReviewForm({
                 <Label>学期</Label>
                 <Select
                   value={selectedSemester}
-                  onValueChange={(value) => field.handleChange(value)}
+                  onValueChange={(value) => {
+                    field.handleChange(value)
+                    updateDraft({ semester: value })
+                  }}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="选择学期" />
@@ -205,7 +290,10 @@ export function ReviewForm({
                   id="score"
                   placeholder="如 A、92、中期退课（W）"
                   value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
+                  onChange={(e) => {
+                    field.handleChange(e.target.value)
+                    updateDraft({ score: e.target.value })
+                  }}
                   onBlur={field.handleBlur}
                   maxLength={SCORE_MAX_LENGTH}
                 />
@@ -250,7 +338,10 @@ export function ReviewForm({
                     id="content"
                     placeholder="分享你对这门课程的看法...（支持 Markdown）"
                     value={content}
-                    onChange={(e) => field.handleChange(e.target.value)}
+                    onChange={(e) => {
+                      field.handleChange(e.target.value)
+                      updateDraft({ content: e.target.value })
+                    }}
                     onBlur={field.handleBlur}
                     maxLength={CONTENT_MAX_LENGTH}
                     rows={10}
@@ -310,6 +401,15 @@ export function ReviewForm({
         <p className="text-sm text-destructive" role="alert">
           {submitError}
         </p>
+      )}
+
+      {draftKey && (draftRestored || draftSavedAt) && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+          <span>{draftRestored ? "已恢复本地草稿" : "本地草稿已保存"}</span>
+          <Button type="button" variant="ghost" size="sm" onClick={handleClearDraft}>
+            清除草稿
+          </Button>
+        </div>
       )}
 
       <div className="flex justify-end gap-2">

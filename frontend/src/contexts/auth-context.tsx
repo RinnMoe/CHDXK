@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useRef, type ReactNode } from "react"
 import {
   useCurrentUser,
   useLogin,
@@ -14,6 +14,8 @@ import type {
   RegisterCommand,
   ResetPasswordCommand,
 } from "@/api/auth"
+import { removeAuthSnapshot, saveAuthSnapshot } from "@/lib/auth-snapshot"
+import { clearOfflineReadCaches } from "@/lib/offline-cache"
 
 interface AuthContextValue {
   user: AuthUserDTO | null | undefined
@@ -30,6 +32,7 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { data: user, isLoading } = useCurrentUser()
+  const previousUserID = useRef<number | null | undefined>(undefined)
   const loginMutation = useLogin()
   const logoutMutation = useLogout()
   const registerMutation = useRegister()
@@ -37,14 +40,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const sendResetCodeMutation = useSendResetCode()
   const resetPasswordMutation = useResetPassword()
 
+  useEffect(() => {
+    if (isLoading) return
+
+    const currentUserID = user?.id ?? null
+    if (previousUserID.current === undefined) {
+      previousUserID.current = currentUserID
+      return
+    }
+
+    if (previousUserID.current !== currentUserID) {
+      previousUserID.current = currentUserID
+      void clearOfflineReadCaches()
+    }
+  }, [isLoading, user?.id])
+
   const value: AuthContextValue = {
     user,
     isLoading,
-    login: (cmd) => loginMutation.mutateAsync(cmd),
+    login: async (cmd) => {
+      const loggedInUser = await loginMutation.mutateAsync(cmd)
+      saveAuthSnapshot(loggedInUser)
+      await clearOfflineReadCaches()
+      return loggedInUser
+    },
     logout: async () => {
       await logoutMutation.mutateAsync()
+      removeAuthSnapshot()
+      await clearOfflineReadCaches()
     },
-    register: (cmd) => registerMutation.mutateAsync(cmd),
+    register: async (cmd) => {
+      const registeredUser = await registerMutation.mutateAsync(cmd)
+      saveAuthSnapshot(registeredUser)
+      await clearOfflineReadCaches()
+      return registeredUser
+    },
     sendRegisterCode: async (email) => {
       await sendRegisterCodeMutation.mutateAsync({ email })
     },
