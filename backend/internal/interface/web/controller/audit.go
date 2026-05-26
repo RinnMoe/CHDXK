@@ -22,12 +22,7 @@ func (ctrl *AuditLogController) ListAuditLogs(c *gin.Context) {
 		respondBindError(c, err)
 		return
 	}
-	if f.Page <= 0 {
-		f.Page = 1
-	}
-	if f.PageSize <= 0 {
-		f.PageSize = 20
-	}
+	normalizePagination(&f.Page, &f.PageSize)
 
 	result, err := ctrl.query.List(c.Request.Context(), f)
 	if err != nil {

@@ -33,12 +33,7 @@ func (ctrl *TeacherController) ListTeachers(c *gin.Context) {
 		respondBindError(c, err)
 		return
 	}
-	if f.Page <= 0 {
-		f.Page = 1
-	}
-	if f.PageSize <= 0 {
-		f.PageSize = 20
-	}
+	normalizePagination(&f.Page, &f.PageSize)
 
 	result, err := ctrl.teacherQuery.ListTeachers(c.Request.Context(), f)
 	if err != nil {
@@ -77,12 +72,7 @@ func (ctrl *TeacherController) ListTeacherCourses(c *gin.Context) {
 		respondBindError(c, err)
 		return
 	}
-	if f.Page <= 0 {
-		f.Page = 1
-	}
-	if f.PageSize <= 0 {
-		f.PageSize = 20
-	}
+	normalizePagination(&f.Page, &f.PageSize)
 
 	result, err := ctrl.courseQuery.ListTeacherCourses(c.Request.Context(), teacherID, f)
 	if err != nil {

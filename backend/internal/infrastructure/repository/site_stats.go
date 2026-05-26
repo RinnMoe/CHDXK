@@ -197,34 +197,25 @@ func (r *SiteDailyStatRepository) GetByDate(ctx context.Context, statDate time.T
 	return &v, nil
 }
 
-func (r *SiteDailyStatRepository) FindByDateRange(ctx context.Context, filter stat.DailyStatFilter) ([]stat.DailyStatView, int64, error) {
+func (r *SiteDailyStatRepository) FindByDateRange(ctx context.Context, filter stat.DailyStatFilter) ([]stat.DailyStatView, error) {
 	db := r.db.WithContext(ctx).Model(&SiteDailyStatEntity{}).
 		Where("stat_date >= ? AND stat_date <= ?", filter.StartDate, filter.EndDate)
-
-	var total int64
-	if err := db.Count(&total).Error; err != nil {
-		return nil, 0, err
-	}
 
 	db = db.Order(clause.OrderByColumn{
 		Column: clause.Column{Table: "site_daily_stats", Name: "stat_date"},
 		Desc:   true,
 	})
-	if filter.Page > 0 && filter.PageSize > 0 {
-		offset := (filter.Page - 1) * filter.PageSize
-		db = db.Offset(offset).Limit(filter.PageSize)
-	}
 
 	var entities []SiteDailyStatEntity
 	if err := db.Find(&entities).Error; err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	items := make([]stat.DailyStatView, len(entities))
 	for i, e := range entities {
 		items[i] = newDailyStatView(&e)
 	}
-	return items, total, nil
+	return items, nil
 }
 
 var _ stat.DailyStatCollector = (*SiteDailyStatRepository)(nil)

@@ -23,9 +23,6 @@ import { useAuth } from "@/contexts/auth-context"
 import { useLoginRedirectPath } from "@/hooks/use-login-redirect"
 import { formatDateInputValue, formatRelativeDateInputValue } from "@/lib/date"
 
-const tablePageSize = 20
-const chartPageSize = 10000
-
 type DateRangeParams = {
   start_date?: string
   end_date?: string
@@ -104,7 +101,6 @@ export function SiteStatsPage() {
   const defaultRange = getDefaultDateRange()
   const startDate = searchParams.get("start_date") || defaultRange.startDate
   const endDate = searchParams.get("end_date") || defaultRange.endDate
-  const [page, setPage] = useState(1)
   const dateFilter = {
     start_date: startDate || undefined,
     end_date: endDate || undefined,
@@ -121,7 +117,6 @@ export function SiteStatsPage() {
       },
       { replace: true }
     )
-    setPage(1)
   }
 
   function clearDateRange() {
@@ -134,20 +129,10 @@ export function SiteStatsPage() {
       },
       { replace: true }
     )
-    setPage(1)
   }
 
   const { data: yesterday, isLoading: yLoading } = useYesterdayStats()
-  const { data: daily, isLoading: dLoading } = useDailyStats({
-    ...dateFilter,
-    page,
-    page_size: tablePageSize,
-  })
-  const { data: chartDaily, isLoading: chartLoading } = useDailyStats({
-    ...dateFilter,
-    page: 1,
-    page_size: chartPageSize,
-  })
+  const { data: daily, isLoading: dLoading } = useDailyStats(dateFilter)
 
   if (authLoading) return null
   if (!user) return <Navigate to={loginRedirectPath} replace />
@@ -222,10 +207,10 @@ export function SiteStatsPage() {
               <TabsTrigger value="detail">明细</TabsTrigger>
             </TabsList>
             <TabsContent value="chart">
-              {chartLoading ? (
+              {dLoading ? (
                 <Skeleton className="h-96 w-full" />
-              ) : chartDaily && chartDaily.items.length > 0 ? (
-                <DailyStatsChart stats={chartDaily.items} />
+              ) : daily && daily.length > 0 ? (
+                <DailyStatsChart stats={daily} />
               ) : (
                 <p className="text-sm text-muted-foreground">暂无统计数据</p>
               )}
@@ -234,34 +219,8 @@ export function SiteStatsPage() {
               {dLoading ? (
                 <Skeleton className="h-96 w-full" />
               ) : daily ? (
-                <DailyStatsTable
-                  stats={daily.items}
-                  page={daily.page}
-                  pageSize={daily.page_size}
-                  total={daily.total}
-                />
+                <DailyStatsTable stats={daily} />
               ) : null}
-
-              {daily && daily.total > tablePageSize && (
-                <div className="flex justify-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page <= 1}
-                  >
-                    上一页
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage((p) => p + 1)}
-                    disabled={page * tablePageSize >= daily.total}
-                  >
-                    下一页
-                  </Button>
-                </div>
-              )}
             </TabsContent>
           </Tabs>
         </div>

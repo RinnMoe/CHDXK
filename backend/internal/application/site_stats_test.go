@@ -52,15 +52,12 @@ func TestSiteStatsQueryService_ListDaily(t *testing.T) {
 			{StatDate: time.Date(2026, 5, 20, 0, 0, 0, 0, loc), ActiveUserCount: 5},
 			{StatDate: time.Date(2026, 5, 19, 0, 0, 0, 0, loc), ActiveUserCount: 4},
 		},
-		total: 2,
 	}
 	svc := application.NewSiteStatsQueryService(query, stat.DefaultConfig)
 
 	got, err := svc.ListDaily(context.Background(), application.SiteDailyStatListFilter{
 		StartDate: "2026-05-01",
 		EndDate:   "2026-05-20",
-		Page:      2,
-		PageSize:  10,
 	})
 	if err != nil {
 		t.Fatalf("ListDaily: %v", err)
@@ -69,10 +66,7 @@ func TestSiteStatsQueryService_ListDaily(t *testing.T) {
 	if query.filter.StartDate.Format("2006-01-02") != "2026-05-01" || query.filter.EndDate.Format("2006-01-02") != "2026-05-20" {
 		t.Fatalf("filter date range = %s..%s", query.filter.StartDate, query.filter.EndDate)
 	}
-	if query.filter.Page != 2 || query.filter.PageSize != 10 {
-		t.Fatalf("filter page = %+v", query.filter)
-	}
-	if got.Total != 2 || len(got.Items) != 2 || got.Items[0].StatDate != "2026-05-20" || got.Items[0].ActiveUserCount != 5 {
+	if len(got) != 2 || got[0].StatDate != "2026-05-20" || got[0].ActiveUserCount != 5 {
 		t.Fatalf("result = %+v", got)
 	}
 }
@@ -103,16 +97,15 @@ func (c *fakeDailyStatCollector) Collect(_ context.Context, periodStart, periodE
 type fakeDailyStatQuery struct {
 	filter stat.DailyStatFilter
 	items  []stat.DailyStatView
-	total  int64
 }
 
 func (q *fakeDailyStatQuery) GetByDate(_ context.Context, statDate time.Time) (*stat.DailyStatView, error) {
 	return &stat.DailyStatView{StatDate: statDate}, nil
 }
 
-func (q *fakeDailyStatQuery) FindByDateRange(_ context.Context, filter stat.DailyStatFilter) ([]stat.DailyStatView, int64, error) {
+func (q *fakeDailyStatQuery) FindByDateRange(_ context.Context, filter stat.DailyStatFilter) ([]stat.DailyStatView, error) {
 	q.filter = filter
-	return q.items, q.total, nil
+	return q.items, nil
 }
 
 func mustTestStatsLocation(t *testing.T) *time.Location {

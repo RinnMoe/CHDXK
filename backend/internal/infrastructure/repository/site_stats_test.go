@@ -95,23 +95,18 @@ func TestSiteDailyStatRepository_UpsertAndFindByDateRange(t *testing.T) {
 		t.Fatalf("upserted stat = %+v", got)
 	}
 
-	items, total, err := repo.FindByDateRange(ctx, stat.DailyStatFilter{
+	items, err := repo.FindByDateRange(ctx, stat.DailyStatFilter{
 		StartDate: date18,
 		EndDate:   date20,
-		Page:      1,
-		PageSize:  2,
 	})
 	if err != nil {
 		t.Fatalf("FindByDateRange: %v", err)
 	}
-	if total != 3 {
-		t.Fatalf("total = %d, want 3", total)
+	if len(items) != 3 {
+		t.Fatalf("items count = %d, want 3", len(items))
 	}
-	if len(items) != 2 {
-		t.Fatalf("items count = %d, want 2", len(items))
-	}
-	if items[0].StatDate.Format("2006-01-02") != "2026-05-20" || items[1].StatDate.Format("2006-01-02") != "2026-05-19" {
-		t.Fatalf("dates = %s, %s; want 2026-05-20, 2026-05-19", items[0].StatDate, items[1].StatDate)
+	if items[0].StatDate.Format("2006-01-02") != "2026-05-20" || items[1].StatDate.Format("2006-01-02") != "2026-05-19" || items[2].StatDate.Format("2006-01-02") != "2026-05-18" {
+		t.Fatalf("dates = %s, %s, %s; want 2026-05-20, 2026-05-19, 2026-05-18", items[0].StatDate, items[1].StatDate, items[2].StatDate)
 	}
 	if items[1].ActiveUserCount != 190 || items[1].NewReviewCount != 191 {
 		t.Fatalf("flattened item = %+v", items[1])

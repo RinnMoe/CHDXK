@@ -1,4 +1,3 @@
-import type { PaginatedResult } from "./types"
 import { apiClient } from "./client"
 import { BASE_URL } from "./constants"
 
@@ -20,8 +19,6 @@ export interface SiteDailyStatDTO {
 export interface SiteDailyStatListFilter {
   start_date?: string
   end_date?: string
-  page?: number
-  page_size?: number
   [key: string]: unknown
 }
 
@@ -41,6 +38,6 @@ export function getDailyStat(date: string): Promise<SiteDailyStatDTO> {
 
 export function listDailyStats(
   filter: SiteDailyStatListFilter = {}
-): Promise<PaginatedResult<SiteDailyStatDTO>> {
+): Promise<SiteDailyStatDTO[]> {
   return apiClient(`${BASE_URL}/site-stat/daily${buildQuery(filter)}`)
 }

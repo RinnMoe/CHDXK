@@ -12,17 +12,9 @@ import {
 
 interface DailyStatsTableProps {
   stats: SiteDailyStatDTO[]
-  page: number
-  pageSize: number
-  total: number
 }
 
-export function DailyStatsTable({
-  stats,
-  page,
-  pageSize,
-  total,
-}: DailyStatsTableProps) {
+export function DailyStatsTable({ stats }: DailyStatsTableProps) {
   return (
     <Card>
       <CardHeader>
@@ -65,9 +57,6 @@ export function DailyStatsTable({
             </TableBody>
           </Table>
         </div>
-        <p className="px-6 py-3 text-sm text-muted-foreground">
-          第 {page} 页，共 {Math.ceil(total / pageSize)} 页，总计 {total} 条
-        </p>
       </CardContent>
     </Card>
   )

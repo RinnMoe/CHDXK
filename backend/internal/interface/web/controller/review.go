@@ -28,12 +28,7 @@ func bindReviewListFilter(c *gin.Context) (application.ReviewListFilter, error) 
 	if err := c.ShouldBindQuery(&f); err != nil {
 		return f, err
 	}
-	if f.Page <= 0 {
-		f.Page = 1
-	}
-	if f.PageSize <= 0 {
-		f.PageSize = 20
-	}
+	normalizePagination(&f.Page, &f.PageSize)
 	if f.OrderBy == "" && f.Order != "" {
 		f.OrderBy = f.Order
 	}

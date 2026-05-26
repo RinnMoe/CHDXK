@@ -153,8 +153,6 @@ type DailyStatView struct {
 type DailyStatFilter struct {
 	StartDate time.Time
 	EndDate   time.Time
-	Page      int
-	PageSize  int
 }
 
 type DailyStatCollector interface {
@@ -167,5 +165,5 @@ type DailyStatCommandRepository interface {
 
 type DailyStatQuery interface {
 	GetByDate(ctx context.Context, statDate time.Time) (*DailyStatView, error)
-	FindByDateRange(ctx context.Context, filter DailyStatFilter) ([]DailyStatView, int64, error)
+	FindByDateRange(ctx context.Context, filter DailyStatFilter) ([]DailyStatView, error)
 }

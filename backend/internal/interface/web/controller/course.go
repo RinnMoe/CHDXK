@@ -35,12 +35,7 @@ func (ctrl *CourseController) ListCourses(c *gin.Context) {
 		respondBindError(c, err)
 		return
 	}
-	if f.Page <= 0 {
-		f.Page = 1
-	}
-	if f.PageSize <= 0 {
-		f.PageSize = 20
-	}
+	normalizePagination(&f.Page, &f.PageSize)
 
 	result, err := ctrl.query.ListCourses(c.Request.Context(), f)
 	if err != nil {
@@ -127,12 +122,7 @@ func (ctrl *CourseController) ListFollowedCourses(c *gin.Context) {
 		respondBindError(c, err)
 		return
 	}
-	if f.Page <= 0 {
-		f.Page = 1
-	}
-	if f.PageSize <= 0 {
-		f.PageSize = 20
-	}
+	normalizePagination(&f.Page, &f.PageSize)
 
 	result, err := ctrl.query.ListCoursesByNotificationLevel(c.Request.Context(), u.ID, course.NotificationLevelFollow, f)
 	if err != nil {
@@ -154,12 +144,7 @@ func (ctrl *CourseController) ListIgnoredCourses(c *gin.Context) {
 		respondBindError(c, err)
 		return
 	}
-	if f.Page <= 0 {
-		f.Page = 1
-	}
-	if f.PageSize <= 0 {
-		f.PageSize = 20
-	}
+	normalizePagination(&f.Page, &f.PageSize)
 
 	result, err := ctrl.query.ListCoursesByNotificationLevel(c.Request.Context(), u.ID, course.NotificationLevelIgnored, f)
 	if err != nil {

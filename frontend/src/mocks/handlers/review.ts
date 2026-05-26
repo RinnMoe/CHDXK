@@ -4,7 +4,22 @@ import { findUserByID, mockSession } from "../fixtures/auth"
 import { randomDelay } from "../utils"
 import type { ReviewDTO, ReviewRevisionDTO } from "@/api/review"
 
+const DEFAULT_PAGE = 1
+const DEFAULT_PAGE_SIZE = 20
+const MAX_PAGE_SIZE = 100
+
+function normalizePage(value: number) {
+  return value > 0 ? value : DEFAULT_PAGE
+}
+
+function normalizePageSize(value: number) {
+  if (value <= 0) return DEFAULT_PAGE_SIZE
+  return Math.min(value, MAX_PAGE_SIZE)
+}
+
 function paginate<T>(items: T[], page: number, pageSize: number) {
+  page = normalizePage(page)
+  pageSize = normalizePageSize(pageSize)
   const start = (page - 1) * pageSize
   return {
     items: items.slice(start, start + pageSize),

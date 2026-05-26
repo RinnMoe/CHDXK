@@ -13,8 +13,6 @@ var ErrInvalidDateRange = stat.ErrInvalidDateRange
 type SiteDailyStatListFilter struct {
 	StartDate string `form:"start_date"`
 	EndDate   string `form:"end_date"`
-	Page      int    `form:"page"`
-	PageSize  int    `form:"page_size"`
 }
 
 type SiteStatsCommandService struct {
@@ -72,17 +70,15 @@ func (s *SiteStatsQueryService) GetByDateString(ctx context.Context, dateStr str
 	return &dto, nil
 }
 
-func (s *SiteStatsQueryService) ListDaily(ctx context.Context, f SiteDailyStatListFilter) (*PaginatedResult[SiteDailyStatDTO], error) {
+func (s *SiteStatsQueryService) ListDaily(ctx context.Context, f SiteDailyStatListFilter) ([]SiteDailyStatDTO, error) {
 	startDate, endDate, err := s.calendar.ParseDateRange(f.StartDate, f.EndDate)
 	if err != nil {
 		return nil, err
 	}
 
-	items, total, err := s.query.FindByDateRange(ctx, stat.DailyStatFilter{
+	items, err := s.query.FindByDateRange(ctx, stat.DailyStatFilter{
 		StartDate: startDate,
 		EndDate:   endDate,
-		Page:      f.Page,
-		PageSize:  f.PageSize,
 	})
 	if err != nil {
 		return nil, err
@@ -93,12 +89,7 @@ func (s *SiteStatsQueryService) ListDaily(ctx context.Context, f SiteDailyStatLi
 		dtos[i] = newSiteDailyStatViewDTO(&item)
 	}
 
-	return &PaginatedResult[SiteDailyStatDTO]{
-		Items:    dtos,
-		Total:    total,
-		Page:     f.Page,
-		PageSize: f.PageSize,
-	}, nil
+	return dtos, nil
 }
 
 func mustStatsLocation(config stat.Config) *time.Location {
