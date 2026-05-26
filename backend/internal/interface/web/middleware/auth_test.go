@@ -140,6 +140,46 @@ func TestResolveCurrentUserRejectsSuspendedSessionUser(t *testing.T) {
 	}
 }
 
+func TestRequireSelfOrAdmin(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	tests := []struct {
+		name       string
+		current    *auth.User
+		path       string
+		wantStatus int
+	}{
+		{name: "unauthorized", current: nil, path: "/user/7/review", wantStatus: http.StatusUnauthorized},
+		{name: "invalid user id", current: &auth.User{ID: 7, Role: auth.RoleUser}, path: "/user/not-a-number/review", wantStatus: http.StatusBadRequest},
+		{name: "forbidden", current: &auth.User{ID: 7, Role: auth.RoleUser}, path: "/user/8/review", wantStatus: http.StatusForbidden},
+		{name: "self", current: &auth.User{ID: 7, Role: auth.RoleUser}, path: "/user/7/review", wantStatus: http.StatusNoContent},
+		{name: "admin", current: &auth.User{ID: 1, Role: auth.RoleAdmin}, path: "/user/7/review", wantStatus: http.StatusNoContent},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := gin.New()
+			r.Use(func(c *gin.Context) {
+				if tt.current != nil {
+					c.Request = c.Request.WithContext(auth.WithUser(c.Request.Context(), tt.current))
+				}
+				c.Next()
+			})
+			r.GET("/user/:userID/review", RequireSelfOrAdmin("userID"), func(c *gin.Context) {
+				c.Status(http.StatusNoContent)
+			})
+
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, tt.path, nil)
+			r.ServeHTTP(w, req)
+
+			if w.Code != tt.wantStatus {
+				t.Fatalf("status = %d, want %d", w.Code, tt.wantStatus)
+			}
+		})
+	}
+}
+
 func TestCSRFMiddleware(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

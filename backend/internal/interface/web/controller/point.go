@@ -29,16 +29,6 @@ func (ctrl *PointController) GetUserPoints(c *gin.Context) {
 		return
 	}
 
-	u := auth.GetUserFromCtx(c.Request.Context())
-	if u == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	if u.ID != userID && !u.IsAdmin() {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
-		return
-	}
-
 	var f application.PointRecordListFilter
 	if err := c.ShouldBindQuery(&f); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

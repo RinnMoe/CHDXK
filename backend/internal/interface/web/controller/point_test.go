@@ -17,19 +17,16 @@ import (
 	"jcourse/internal/interface/web/controller"
 )
 
-func TestPointController_GetUserPointsAuth(t *testing.T) {
+func TestPointController_GetUserPoints(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	tests := []struct {
 		name       string
-		current    *auth.User
 		targetID   string
 		wantStatus int
 	}{
-		{name: "unauthorized", current: nil, targetID: "1", wantStatus: http.StatusUnauthorized},
-		{name: "forbidden", current: &auth.User{ID: 1, Role: auth.RoleUser}, targetID: "2", wantStatus: http.StatusForbidden},
-		{name: "self", current: &auth.User{ID: 1, Role: auth.RoleUser}, targetID: "1", wantStatus: http.StatusOK},
-		{name: "admin", current: &auth.User{ID: 1, Role: auth.RoleAdmin}, targetID: "2", wantStatus: http.StatusOK},
+		{name: "invalid user id", targetID: "bad", wantStatus: http.StatusBadRequest},
+		{name: "valid user id", targetID: "1", wantStatus: http.StatusOK},
 	}
 
 	for _, tt := range tests {
@@ -38,12 +35,7 @@ func TestPointController_GetUserPointsAuth(t *testing.T) {
 			cmd := newPointControllerCommand()
 			ctrl := controller.NewPointController(application.NewPointQueryService(repo, &pointControllerFakeAccountRepo{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), testPointUsernameDeriver()), cmd)
 			r := gin.New()
-			r.GET("/api/user/:userID/point", func(c *gin.Context) {
-				if tt.current != nil {
-					c.Request = c.Request.WithContext(auth.WithUser(c.Request.Context(), tt.current))
-				}
-				ctrl.GetUserPoints(c)
-			})
+			r.GET("/api/user/:userID/point", ctrl.GetUserPoints)
 
 			w := httptest.NewRecorder()
 			req := httptest.NewRequest(http.MethodGet, "/api/user/"+tt.targetID+"/point?page=1&page_size=20", nil)

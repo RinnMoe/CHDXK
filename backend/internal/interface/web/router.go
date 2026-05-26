@@ -128,8 +128,8 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	{
 		userGroup.GET("/settings", userSettingsController.GetMySettings)
 		userGroup.PUT("/settings", userSettingsController.UpdateMySettings)
-		userGroup.GET("/:userID/point", pointController.GetUserPoints)
-		userGroup.GET("/:userID/review", reviewController.ListUserReviews)
+		userGroup.GET("/:userID/point", middleware.RequireSelfOrAdmin("userID"), pointController.GetUserPoints)
+		userGroup.GET("/:userID/review", middleware.RequireSelfOrAdmin("userID"), reviewController.ListUserReviews)
 	}
 	apiKeyGroup := apiGroup.Group("/api-key")
 	{
