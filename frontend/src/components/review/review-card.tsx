@@ -292,9 +292,7 @@ export function ReviewCard({
   function handleManageMenuOpenChange(open: boolean) {
     if (open && manageMenuTriggerRef.current) {
       const rect = manageMenuTriggerRef.current.getBoundingClientRect()
-      setManageMenuSide(
-        rect.top < window.innerHeight / 2 ? "bottom" : "top"
-      )
+      setManageMenuSide(rect.top < window.innerHeight / 2 ? "bottom" : "top")
     }
     setManageMenuOpen(open)
   }
@@ -310,9 +308,7 @@ export function ReviewCard({
             <span className="font-mono text-sm text-muted-foreground">
               {review.course.code}
             </span>
-            <span className="font-semibold">
-              {review.course.name}
-            </span>
+            <span className="font-semibold">{review.course.name}</span>
             <span className="text-sm text-muted-foreground">
               {review.course.main_teacher.name}
             </span>

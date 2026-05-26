@@ -59,7 +59,7 @@ export function AnnouncementBanner() {
               {title && <p className="font-medium text-primary">{title}</p>}
               {body && (
                 <p
-                  className={`whitespace-pre-line text-sm ${title ? "mt-1" : ""}`}
+                  className={`text-sm whitespace-pre-line ${title ? "mt-1" : ""}`}
                 >
                   {body}
                 </p>

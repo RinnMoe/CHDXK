@@ -19,7 +19,8 @@ export async function apiClient<T>(
 ): Promise<T> {
   const method = requestMethod(input, init)
   const headers = new Headers(init?.headers)
-  if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json")
+  if (!headers.has("Content-Type"))
+    headers.set("Content-Type", "application/json")
   if (requiresCsrfToken(method) && !headers.has("X-CSRF-Token")) {
     headers.set("X-CSRF-Token", await fetchCsrfToken())
   }
@@ -52,7 +53,9 @@ export async function apiClient<T>(
 }
 
 function requestMethod(input: RequestInfo, init?: RequestInit) {
-  return (init?.method ?? (input instanceof Request ? input.method : "GET")).toUpperCase()
+  return (
+    init?.method ?? (input instanceof Request ? input.method : "GET")
+  ).toUpperCase()
 }
 
 function requiresCsrfToken(method: string) {

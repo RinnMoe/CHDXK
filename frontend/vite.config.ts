@@ -42,11 +42,7 @@ function isNodePackage(id: string, packages: Set<string>) {
 }
 
 export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss(),
-    VitePWA(pwaOptions),
-  ],
+  plugins: [react(), tailwindcss(), VitePWA(pwaOptions)],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

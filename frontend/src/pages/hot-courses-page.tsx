@@ -20,10 +20,7 @@ function formatHotPeriodDescription(
 export function HotCoursesPage() {
   const [period, setPeriod] = useState<"week" | "month">("week")
   const { data, isLoading } = useHotCourses(period, 50)
-  const periodDescription = formatHotPeriodDescription(
-    period,
-    data?.period_key
-  )
+  const periodDescription = formatHotPeriodDescription(period, data?.period_key)
 
   return (
     <>

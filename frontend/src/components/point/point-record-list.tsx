@@ -30,9 +30,7 @@ export function PointRecordList({ records }: { records: PointRecordDTO[] }) {
         <TableBody>
           {records.map((r, i) => (
             <TableRow key={`${r.created_at}-${i}`}>
-              <TableCell className="font-medium">
-                {r.description}
-              </TableCell>
+              <TableCell className="font-medium">{r.description}</TableCell>
               <TableCell
                 className={
                   r.amount >= 0

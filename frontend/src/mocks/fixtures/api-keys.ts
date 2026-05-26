@@ -137,7 +137,9 @@ export function listMockUserApiKeys(userID: number): ApiKeyDTO[] {
 
 export function createMockUserApiKey(userID: number, name: string): ApiKeyDTO {
   const now = new Date().toISOString()
-  const id = String(Math.max(0, ...mockApiKeys.map((key) => Number(key.id))) + 1)
+  const id = String(
+    Math.max(0, ...mockApiKeys.map((key) => Number(key.id))) + 1
+  )
   const key: MockApiKey = {
     id,
     name,

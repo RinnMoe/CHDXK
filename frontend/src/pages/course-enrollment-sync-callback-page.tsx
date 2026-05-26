@@ -50,9 +50,7 @@ export function CourseEnrollmentSyncCallbackPage() {
             : (message ?? "请关闭窗口后重试。")}
         </p>
         <Button asChild variant="outline">
-          <Link to={returnURL}>
-            返回我的课程
-          </Link>
+          <Link to={returnURL}>返回我的课程</Link>
         </Button>
       </div>
     </div>

@@ -1,9 +1,5 @@
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { brand } from "@/config/brand"
 
 const agreementSections = [
@@ -31,8 +27,12 @@ const agreementSections = [
   {
     title: "隐私",
     paragraphs: [
-      <>当您访问选课社区时，我们使用百度统计收集您的访问信息，便于统计用户使用情况。</>,
-      <>当您登录选课社区时，我们会收集您的身份类型（在校生、教职工、校友等），但不收集除此以外的其他信息。</>,
+      <>
+        当您访问选课社区时，我们使用百度统计收集您的访问信息，便于统计用户使用情况。
+      </>,
+      <>
+        当您登录选课社区时，我们会收集您的身份类型（在校生、教职工、校友等），但不收集除此以外的其他信息。
+      </>,
       <>
         选课社区部分功能可能需要使用 jAccount
         接口获取并存储选课等信息，我们将在您使用此类功能前予以提示。
@@ -47,7 +47,9 @@ function AgreementSections({ compact = false }: { compact?: boolean }) {
       {agreementSections.map((section) => (
         <section key={section.title} className="space-y-3">
           <h2
-            className={compact ? "text-base font-semibold" : "text-lg font-semibold"}
+            className={
+              compact ? "text-base font-semibold" : "text-lg font-semibold"
+            }
           >
             {section.title}
           </h2>

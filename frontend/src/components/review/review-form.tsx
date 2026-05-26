@@ -82,11 +82,13 @@ export function ReviewForm({
 }: ReviewFormProps) {
   const isEdit = !!initialReview
   const availableSemesters = semesters ?? []
-  const resolvedDefaultSemester = initialReview?.semester ?? defaultSemester ?? ""
+  const resolvedDefaultSemester =
+    initialReview?.semester ?? defaultSemester ?? ""
   const [submitError, setSubmitError] = useState<string | null>(null)
   const draftKey = useMemo(() => {
     const owner = draftUserID ? `user:${draftUserID}` : "anonymous"
-    if (initialReview) return `jcourse:review-draft:${owner}:edit:${initialReview.id}`
+    if (initialReview)
+      return `jcourse:review-draft:${owner}:edit:${initialReview.id}`
     if (courseID) return `jcourse:review-draft:${owner}:create:${courseID}`
     return null
   }, [courseID, draftUserID, initialReview])
@@ -180,7 +182,9 @@ export function ReviewForm({
 
   function getSelectedSemester(semester: string) {
     const selectedSemester = semester || resolvedDefaultSemester
-    return semesters && selectedSemester && !semesters.includes(selectedSemester)
+    return semesters &&
+      selectedSemester &&
+      !semesters.includes(selectedSemester)
       ? ""
       : selectedSemester
   }
@@ -266,7 +270,8 @@ export function ReviewForm({
                   </p>
                 )}
                 <p className="text-sm leading-6 text-muted-foreground">
-                  2026-2027 代表 2026-2027 学年度（2026.9-2027.8）。1代表秋季学期，2代表春季学期，3代表夏季学期/小学期。
+                  2026-2027 代表 2026-2027
+                  学年度（2026.9-2027.8）。1代表秋季学期，2代表春季学期，3代表夏季学期/小学期。
                 </p>
               </div>
             )
@@ -362,8 +367,8 @@ export function ReviewForm({
                 </div>
               </div>
               <p className="text-sm text-muted-foreground">
-                {content.length} / {CONTENT_MAX_LENGTH} 字，至少 {CONTENT_MIN_LENGTH}{" "}
-                字
+                {content.length} / {CONTENT_MAX_LENGTH} 字，至少{" "}
+                {CONTENT_MIN_LENGTH} 字
               </p>
               {error && (
                 <p className="text-sm text-destructive" role="alert">
@@ -406,7 +411,12 @@ export function ReviewForm({
       {draftKey && (draftRestored || draftSavedAt) && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
           <span>{draftRestored ? "已恢复本地草稿" : "本地草稿已保存"}</span>
-          <Button type="button" variant="ghost" size="sm" onClick={handleClearDraft}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleClearDraft}
+          >
             清除草稿
           </Button>
         </div>

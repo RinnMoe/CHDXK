@@ -45,7 +45,9 @@ const actionLabels = Object.fromEntries(
 
 function detailText(details: Record<string, unknown>) {
   const parts = Object.entries(details)
-    .filter(([, value]) => value !== undefined && value !== null && value !== "")
+    .filter(
+      ([, value]) => value !== undefined && value !== null && value !== ""
+    )
     .map(([key, value]) => `${key}: ${String(value)}`)
   return parts.length ? parts.join("; ") : "-"
 }
@@ -157,7 +159,10 @@ export function AuditLogsTab() {
         <div className="flex w-52 flex-col gap-1">
           <Label htmlFor="audit-action">行为</Label>
           <Select value={action || allActionsValue} onValueChange={setAction}>
-            <SelectTrigger id="audit-action" className="h-9 w-full items-center">
+            <SelectTrigger
+              id="audit-action"
+              className="h-9 w-full items-center"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -209,8 +214,12 @@ export function AuditLogsTab() {
                     <TableCell className="whitespace-nowrap">
                       {formatDateTime(log.occurred_at)}
                     </TableCell>
-                    <TableCell>{actionLabels[log.action] ?? log.action}</TableCell>
-                    <TableCell className="font-mono">{log.actor_user_id}</TableCell>
+                    <TableCell>
+                      {actionLabels[log.action] ?? log.action}
+                    </TableCell>
+                    <TableCell className="font-mono">
+                      {log.actor_user_id}
+                    </TableCell>
                     <TableCell className="font-mono">
                       {log.target_type}:{log.target_id}
                     </TableCell>
@@ -221,7 +230,10 @@ export function AuditLogsTab() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={5}
+                    className="py-10 text-center text-muted-foreground"
+                  >
                     暂无审计日志
                   </TableCell>
                 </TableRow>

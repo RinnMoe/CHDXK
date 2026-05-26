@@ -51,7 +51,10 @@ export function CourseSemesterBadge({
   className,
 }: CourseSemesterBadgeProps) {
   return (
-    <CourseBadge kind="targetYear" className={cn("font-mono font-medium", className)}>
+    <CourseBadge
+      kind="targetYear"
+      className={cn("font-mono font-medium", className)}
+    >
       {semester}
     </CourseBadge>
   )

@@ -17,9 +17,12 @@ function registerPwaServiceWorker() {
     onRegisteredSW(_scriptUrl, registration) {
       if (!registration) return
 
-      window.setInterval(() => {
-        void registration.update()
-      }, 60 * 60 * 1000)
+      window.setInterval(
+        () => {
+          void registration.update()
+        },
+        60 * 60 * 1000
+      )
     },
   })
 }

@@ -34,7 +34,9 @@ export function ApiKeysPage() {
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold">API Keys</h1>
             <p className="text-sm text-muted-foreground">
-              API Key 可用于脚本或外部工具访问选课社区接口，请妥善保管并定期清理不再使用的 Key。
+              API Key
+              可用于脚本或外部工具访问选课社区接口，请妥善保管并定期清理不再使用的
+              Key。
             </p>
           </div>
 

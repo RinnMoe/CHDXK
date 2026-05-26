@@ -116,9 +116,7 @@ export function UserCoursesPage() {
       if (payload.status === "ok") {
         void enrolledCourses.refetch()
         const matched = payload.matched ?? 0
-        setSyncMessage(
-          `已同步 ${payload.semester}，匹配 ${matched} 条记录。`
-        )
+        setSyncMessage(`已同步 ${payload.semester}，匹配 ${matched} 条记录。`)
         const next = new URLSearchParams(searchParams)
         next.set("type", "enrolled")
         if (matched > 0 && payload.semester) {

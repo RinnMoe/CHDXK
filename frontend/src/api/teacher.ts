@@ -34,7 +34,8 @@ function buildQuery(filter: Record<string, unknown>): string {
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(filter)) {
     if (value === undefined || value === null) continue
-    const normalized = key === "q" && typeof value === "string" ? value.trim() : value
+    const normalized =
+      key === "q" && typeof value === "string" ? value.trim() : value
     if (normalized === "") continue
     if (Array.isArray(value)) {
       for (const v of value) params.append(key, String(v))
@@ -64,5 +65,7 @@ export function listTeacherCourses(
   teacherID: number,
   filter: Record<string, unknown> = {}
 ): Promise<PaginatedResult<CourseListItemDTO>> {
-  return apiClient(`${BASE_URL}/teacher/${teacherID}/course${buildQuery(filter)}`)
+  return apiClient(
+    `${BASE_URL}/teacher/${teacherID}/course${buildQuery(filter)}`
+  )
 }

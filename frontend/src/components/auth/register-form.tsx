@@ -98,9 +98,13 @@ export function RegisterForm() {
                       <CodeInputWithButton
                         id="code"
                         label="验证码"
-                        email={emailPrefix.trim() ? buildAuthEmail(emailPrefix) : ""}
+                        email={
+                          emailPrefix.trim() ? buildAuthEmail(emailPrefix) : ""
+                        }
                         code={field.state.value}
-                        onCodeChange={(value) => field.handleChange(value.trim())}
+                        onCodeChange={(value) =>
+                          field.handleChange(value.trim())
+                        }
                         onBlur={field.handleBlur}
                         onSend={sendRegisterCode}
                       />
@@ -118,10 +122,8 @@ export function RegisterForm() {
           <form.Field
             name="password"
             validators={{
-              onChange: ({ value }) =>
-                validateAuthPassword(value) ?? undefined,
-              onSubmit: ({ value }) =>
-                validateAuthPassword(value) ?? undefined,
+              onChange: ({ value }) => validateAuthPassword(value) ?? undefined,
+              onSubmit: ({ value }) => validateAuthPassword(value) ?? undefined,
             }}
           >
             {(field) => {
@@ -198,7 +200,11 @@ export function RegisterForm() {
           <form.Subscribe selector={(state) => state.isSubmitting}>
             {(isSubmitting) => (
               <>
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isSubmitting}
+                >
                   {isSubmitting ? "注册中..." : "注册"}
                 </Button>
               </>

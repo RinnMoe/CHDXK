@@ -30,7 +30,10 @@ function replaceReviewReferences(value: string) {
     const referenceStart = match.index + prefix.length
 
     if (referenceStart > lastIndex) {
-      nodes.push({ type: "text", value: value.slice(lastIndex, referenceStart) })
+      nodes.push({
+        type: "text",
+        value: value.slice(lastIndex, referenceStart),
+      })
     }
 
     nodes.push({

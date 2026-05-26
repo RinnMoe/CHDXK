@@ -128,7 +128,11 @@ function ratingScore(avg: number, count: number): number {
   if (count === 0) return 0
   const globalAvg = 3.8
   const priorCount = 5
-  return Math.round(((avg * count + priorCount * globalAvg) / (count + priorCount)) * 100) / 100
+  return (
+    Math.round(
+      ((avg * count + priorCount * globalAvg) / (count + priorCount)) * 100
+    ) / 100
+  )
 }
 
 let courseIDSeed = 1

@@ -76,7 +76,11 @@ export function ApiKeyTable({
   }
 
   if (apiKeys.length === 0) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">{emptyText}</p>
+    return (
+      <p className="py-8 text-center text-sm text-muted-foreground">
+        {emptyText}
+      </p>
+    )
   }
 
   return (
@@ -120,7 +124,9 @@ export function ApiKeyTable({
                       disabled={isDeleting}
                     >
                       <RiDeleteBinLine />
-                      <span className="hidden md:inline">{deleteActionLabel}</span>
+                      <span className="hidden md:inline">
+                        {deleteActionLabel}
+                      </span>
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent size="sm">
