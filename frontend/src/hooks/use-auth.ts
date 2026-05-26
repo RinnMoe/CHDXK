@@ -55,8 +55,8 @@ export function useLogin() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (cmd: LoginCommand) => loginApi(cmd),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["auth"] })
+    onSuccess: (user) => {
+      qc.setQueryData(["auth", "me"], user)
     },
   })
 }
@@ -75,8 +75,8 @@ export function useRegister() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (cmd: RegisterCommand) => registerApi(cmd),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["auth"] })
+    onSuccess: (user) => {
+      qc.setQueryData(["auth", "me"], user)
     },
   })
 }

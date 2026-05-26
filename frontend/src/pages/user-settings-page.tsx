@@ -18,6 +18,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/contexts/auth-context"
 import { useCourseFilters } from "@/hooks/use-course"
+import { useLoginRedirectPath } from "@/hooks/use-login-redirect"
 import {
   useUpdateUserSettings,
   useUserSettings,
@@ -146,6 +147,7 @@ function UserSettingsForm({
 
 export function UserSettingsPage() {
   const { user, isLoading: authLoading } = useAuth()
+  const loginRedirectPath = useLoginRedirectPath()
   const settingsQuery = useUserSettings(!!user)
   const filtersQuery = useCourseFilters()
 
@@ -155,7 +157,7 @@ export function UserSettingsPage() {
   )
 
   if (authLoading) return null
-  if (!user) return <Navigate to="/login" replace />
+  if (!user) return <Navigate to={loginRedirectPath} replace />
 
   const isLoading = settingsQuery.isLoading || filtersQuery.isLoading
   const savedSemester = settingsQuery.data?.current_semester ?? ""

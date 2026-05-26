@@ -8,6 +8,7 @@ import { PageTitle } from "@/components/common/page-title"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/contexts/auth-context"
+import { useLoginRedirectPath } from "@/hooks/use-login-redirect"
 import {
   useApiKeys,
   useCreateApiKey,
@@ -16,6 +17,7 @@ import {
 
 export function ApiKeysPage() {
   const { user, isLoading: authLoading } = useAuth()
+  const loginRedirectPath = useLoginRedirectPath()
   const { data: apiKeys = [], isLoading } = useApiKeys(!!user)
   const createMutation = useCreateApiKey()
   const deleteMutation = useDeleteApiKey()
@@ -23,7 +25,7 @@ export function ApiKeysPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
 
   if (authLoading) return null
-  if (!user) return <Navigate to="/login" replace />
+  if (!user) return <Navigate to={loginRedirectPath} replace />
 
   return (
     <>

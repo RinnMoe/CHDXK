@@ -20,6 +20,7 @@ import { DailyStatsChart } from "@/components/site-stats/daily-stats-chart"
 import { DailyStatsTable } from "@/components/site-stats/daily-stats-table"
 import { useDailyStats, useYesterdayStats } from "@/hooks/use-site-stats"
 import { useAuth } from "@/contexts/auth-context"
+import { useLoginRedirectPath } from "@/hooks/use-login-redirect"
 import { formatDateInputValue, formatRelativeDateInputValue } from "@/lib/date"
 
 const tablePageSize = 20
@@ -98,6 +99,7 @@ function DatePicker({ id, label, value, onChange }: DatePickerProps) {
 
 export function SiteStatsPage() {
   const { user, isLoading: authLoading } = useAuth()
+  const loginRedirectPath = useLoginRedirectPath()
   const [searchParams, setSearchParams] = useSearchParams()
   const defaultRange = getDefaultDateRange()
   const startDate = searchParams.get("start_date") || defaultRange.startDate
@@ -148,7 +150,7 @@ export function SiteStatsPage() {
   })
 
   if (authLoading) return null
-  if (!user) return <Navigate to="/login" replace />
+  if (!user) return <Navigate to={loginRedirectPath} replace />
   if (user.role !== "admin") {
     return (
       <>

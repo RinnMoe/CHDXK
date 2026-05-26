@@ -6,6 +6,7 @@ import { PageTitle } from "@/components/common/page-title"
 import { PageShell } from "@/components/layout/page-shell"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/contexts/auth-context"
+import { useLoginRedirectPath } from "@/hooks/use-login-redirect"
 
 const adminTabs = ["user", "admin", "system-api-key"] as const
 type AdminTab = (typeof adminTabs)[number]
@@ -16,6 +17,7 @@ function getAdminTab(value: string | null): AdminTab {
 
 export function UserAdminPage() {
   const { user, isLoading: authLoading } = useAuth()
+  const loginRedirectPath = useLoginRedirectPath()
   const [searchParams, setSearchParams] = useSearchParams()
   const activeTab = getAdminTab(searchParams.get("tab"))
 
@@ -31,7 +33,7 @@ export function UserAdminPage() {
   }
 
   if (authLoading) return null
-  if (!user) return <Navigate to="/login" replace />
+  if (!user) return <Navigate to={loginRedirectPath} replace />
   if (user.role !== "admin") {
     return (
       <>
