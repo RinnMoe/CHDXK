@@ -256,6 +256,9 @@ func assertEmailTask(t *testing.T, taskItem task.Task, to string, userID string,
 	if err := json.Unmarshal(taskItem.Payload(), &payload); err != nil {
 		t.Fatalf("unmarshal email payload: %v", err)
 	}
+	if payload.EmailType != review.SpamSuspensionEmailType {
+		t.Fatalf("email type = %q, want %q", payload.EmailType, review.SpamSuspensionEmailType)
+	}
 	if payload.Email.To != to || payload.Email.Subject == "" || !strings.Contains(payload.Email.Body, userID) || !strings.Contains(payload.Email.Body, courseCode) || !strings.Contains(payload.Email.Body, courseName) || !strings.Contains(payload.Email.Body, reviewContent) || !strings.Contains(payload.Email.Body, duration) {
 		t.Fatalf("email payload = %+v", payload)
 	}

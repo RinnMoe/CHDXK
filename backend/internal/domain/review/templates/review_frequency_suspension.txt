@@ -5,8 +5,7 @@
 系统检测到用户触发点评频率策略，已创建封禁任务。
 
 用户 ID：{{.UserID}}
-课程代码：{{.CourseCode}}
-课程名称：{{.CourseName}}
+课程：{{.CourseID}} {{.CourseCode}} {{.CourseName}} {{.MainTeacherName}}
 封禁时长：{{.Duration}}
 原因：{{.Reason}}
 点评内容：

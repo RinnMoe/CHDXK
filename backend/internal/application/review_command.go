@@ -2,9 +2,7 @@ package application
 
 import (
 	"context"
-	_ "embed"
 	"errors"
-	"strconv"
 	"time"
 
 	"jcourse/internal/domain/auth"
@@ -14,14 +12,6 @@ import (
 	"jcourse/internal/domain/task"
 	"jcourse/pkg/logx"
 )
-
-const (
-	spamSuspensionEmailType    = "account_banned"
-	spamSuspensionEmailSubject = "选课社区用户封禁通知"
-)
-
-//go:embed templates/review_frequency_suspension.txt
-var spamSuspensionEmailTemplate string
 
 type ReviewCommandConfig struct {
 	HotScores                     course.HotScoreConfig
@@ -132,38 +122,17 @@ func (s *ReviewCommandService) enqueueFrequencyViolationTasks(ctx context.Contex
 		return
 	}
 	userID := violation.Review.UserID
-	courseCode := ""
-	courseName := ""
-	if violation.Course != nil {
-		courseCode = violation.Course.Code
-		courseName = violation.Course.Name
-	}
 	if err := task.Enqueue(ctx, auth.NewSuspendUserTask(userID, violation.SuspendDuration)); err != nil {
 		logx.Warn(ctx, "enqueue frequency violation suspension", "user_id", userID, "err", err)
 	}
-	for _, to := range s.config.FrequencyViolationAdminEmails {
-		mail, err := newSpamSuspensionEmail(to, userID, courseCode, courseName, violation)
-		if err != nil {
-			logx.Warn(ctx, "render frequency violation email", "user_id", userID, "to", to, "err", err)
-			continue
-		}
-		if err := task.Enqueue(ctx, domainemail.NewSendEmailTask(spamSuspensionEmailType, mail)); err != nil {
-			logx.Warn(ctx, "enqueue frequency violation email", "user_id", userID, "to", to, "err", err)
-		}
-	}
-}
-
-func newSpamSuspensionEmail(to string, userID int, courseCode string, courseName string, violation *review.FrequencyViolation) (domainemail.Email, error) {
-	body, err := domainemail.RenderTemplate(spamSuspensionEmailTemplate, map[string]string{
-		"UserID":        strconv.Itoa(userID),
-		"CourseCode":    courseCode,
-		"CourseName":    courseName,
-		"ReviewContent": violation.Review.Content,
-		"Duration":      violation.SuspendDuration.String(),
-		"Reason":        violation.Reason.Error(),
-	})
+	mails, err := violation.NewSpamSuspensionEmails(s.config.FrequencyViolationAdminEmails)
 	if err != nil {
-		return domainemail.Email{}, err
+		logx.Warn(ctx, "render frequency violation email", "user_id", userID, "err", err)
+		return
 	}
-	return domainemail.Email{To: to, Subject: spamSuspensionEmailSubject, Body: body}, nil
+	for _, mail := range mails {
+		if err := task.Enqueue(ctx, domainemail.NewSendEmailTask(review.SpamSuspensionEmailType, mail)); err != nil {
+			logx.Warn(ctx, "enqueue frequency violation email", "user_id", userID, "to", mail.To, "err", err)
+		}
+	}
 }
