@@ -17,10 +17,7 @@ import (
 func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engine {
 	g := gin.Default()
 	g.Use(cors.New(cors.Config{
-		AllowOrigins: []string{
-			"http://localhost:5173",
-			"http://127.0.0.1:5173",
-		},
+		AllowOrigins: conf.Server.Cors.AllowedOrigins,
 		AllowMethods: []string{
 			http.MethodGet,
 			http.MethodPost,

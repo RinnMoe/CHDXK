@@ -7,6 +7,10 @@
 
 server:
   addr: ":8080"
+  cors:
+    allowed_origins:
+      - "http://localhost:5173"
+      - "http://127.0.0.1:5173"
 
 postgres:
   dsn: "host=localhost port=5432 user=postgres password=postgres dbname=jcourse sslmode=disable"

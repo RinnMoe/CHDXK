@@ -60,7 +60,12 @@ type ReviewConfig struct {
 }
 
 type ServerConfig struct {
-	Addr string `mapstructure:"addr"`
+	Addr string     `mapstructure:"addr"`
+	Cors CorsConfig `mapstructure:"cors"`
+}
+
+type CorsConfig struct {
+	AllowedOrigins []string `mapstructure:"allowed_origins"`
 }
 
 type JAccountConfig struct {
@@ -123,6 +128,12 @@ func Load(configPath string) (AppConfig, error) {
 }
 
 func setDefaults(v *viper.Viper) {
+	setSectionDefaults(v, "server.cors", map[string]any{
+		"allowed_origins": []string{
+			"http://localhost:5173",
+			"http://127.0.0.1:5173",
+		},
+	})
 	setSectionDefaults(v, "session", map[string]any{
 		"max_age": middleware.DefaultSessionConfig.MaxAge,
 		"secure":  middleware.DefaultSessionConfig.Secure,

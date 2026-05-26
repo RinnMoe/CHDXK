@@ -40,6 +40,9 @@ review:
 	if conf.Auth.Registration.CodeLength != 8 {
 		t.Fatalf("auth override code length = %d, want 8", conf.Auth.Registration.CodeLength)
 	}
+	if len(conf.Server.Cors.AllowedOrigins) != 2 || conf.Server.Cors.AllowedOrigins[0] != "http://localhost:5173" || conf.Server.Cors.AllowedOrigins[1] != "http://127.0.0.1:5173" {
+		t.Fatalf("server default cors origins = %#v", conf.Server.Cors.AllowedOrigins)
+	}
 	if conf.Auth.Login.Lockout != 15*time.Minute {
 		t.Fatalf("auth default lockout = %s, want %s", conf.Auth.Login.Lockout, 15*time.Minute)
 	}
@@ -69,5 +72,39 @@ review:
 	}
 	if conf.Review.Command.Vote.MaxDailyVotes != 100 {
 		t.Fatalf("review override max daily votes = %d, want 100", conf.Review.Command.Vote.MaxDailyVotes)
+	}
+}
+
+func TestLoadOverridesCORSAllowedOrigins(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	contents := []byte(`
+server:
+  cors:
+    allowed_origins:
+      - "https://jcourse.example.edu"
+      - "https://admin.example.edu"
+session:
+  secret: "replace-with-at-least-32-random-characters"
+auth:
+  username_deriver:
+    salt: "SALT"
+`)
+	if err := os.WriteFile(path, contents, 0o600); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	conf, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+
+	want := []string{"https://jcourse.example.edu", "https://admin.example.edu"}
+	if len(conf.Server.Cors.AllowedOrigins) != len(want) {
+		t.Fatalf("cors origins len = %d, want %d (%#v)", len(conf.Server.Cors.AllowedOrigins), len(want), conf.Server.Cors.AllowedOrigins)
+	}
+	for i := range want {
+		if conf.Server.Cors.AllowedOrigins[i] != want[i] {
+			t.Fatalf("cors origin[%d] = %q, want %q", i, conf.Server.Cors.AllowedOrigins[i], want[i])
+		}
 	}
 }
