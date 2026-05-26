@@ -29,13 +29,21 @@ func (ctrl *CourseController) GetCourseFilters(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-func (ctrl *CourseController) ListCourses(c *gin.Context) {
+func bindCourseListFilter(c *gin.Context) (application.CourseListFilter, bool) {
 	var f application.CourseListFilter
 	if err := c.ShouldBindQuery(&f); err != nil {
 		respondBindError(c, err)
-		return
+		return f, false
 	}
 	normalizePagination(&f.Page, &f.PageSize)
+	return f, true
+}
+
+func (ctrl *CourseController) ListCourses(c *gin.Context) {
+	f, ok := bindCourseListFilter(c)
+	if !ok {
+		return
+	}
 
 	result, err := ctrl.query.ListCourses(c.Request.Context(), f)
 	if err != nil {
@@ -117,12 +125,10 @@ func (ctrl *CourseController) ListFollowedCourses(c *gin.Context) {
 		return
 	}
 
-	var f application.CourseListFilter
-	if err := c.ShouldBindQuery(&f); err != nil {
-		respondBindError(c, err)
+	f, ok := bindCourseListFilter(c)
+	if !ok {
 		return
 	}
-	normalizePagination(&f.Page, &f.PageSize)
 
 	result, err := ctrl.query.ListCoursesByNotificationLevel(c.Request.Context(), u.ID, course.NotificationLevelFollow, f)
 	if err != nil {
@@ -139,12 +145,10 @@ func (ctrl *CourseController) ListIgnoredCourses(c *gin.Context) {
 		return
 	}
 
-	var f application.CourseListFilter
-	if err := c.ShouldBindQuery(&f); err != nil {
-		respondBindError(c, err)
+	f, ok := bindCourseListFilter(c)
+	if !ok {
 		return
 	}
-	normalizePagination(&f.Page, &f.PageSize)
 
 	result, err := ctrl.query.ListCoursesByNotificationLevel(c.Request.Context(), u.ID, course.NotificationLevelIgnored, f)
 	if err != nil {

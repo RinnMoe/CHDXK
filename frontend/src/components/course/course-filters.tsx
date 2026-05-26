@@ -5,7 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Sheet,
   SheetContent,
@@ -70,65 +76,53 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
         </Tabs>
       </div>
 
-      {filters.languages && (
-        <>
-          <FilterCheckGroup
-            label="授课语言"
-            items={filters.languages}
-            paramKey="language"
-            selected={searchParams.getAll("language")}
-            onToggle={toggleMulti}
-          />
-          <Separator />
-        </>
-      )}
-
-      {filters.departments && (
-        <>
-          <FilterCheckGroup
-            label="学院"
-            items={filters.departments}
-            paramKey="department"
-            selected={searchParams.getAll("department")}
-            onToggle={toggleMulti}
-          />
-          <Separator />
-        </>
-      )}
-
       {filters.categories && (
-        <>
-          <FilterCheckGroup
-            label="课程类别"
-            items={filters.categories}
-            paramKey="categories"
-            selected={searchParams.getAll("categories")}
-            onToggle={toggleMulti}
-          />
-          <Separator />
-        </>
-      )}
-
-      {filters.target_years && (
-        <>
-          <FilterCheckGroup
-            label="目标年级"
-            items={filters.target_years}
-            paramKey="target_years"
-            selected={searchParams.getAll("target_years")}
-            onToggle={toggleMulti}
-          />
-          <Separator />
-        </>
+        <FilterSelectGroup
+          label="课程类别"
+          items={filters.categories}
+          paramKey="categories"
+          selected={searchParams.get("categories")}
+          onChange={updateFilter}
+        />
       )}
 
       {filters.credits && (
-        <FilterCheckGroup
+        <FilterSelectGroup
           label="学分"
           items={filters.credits}
           paramKey="credit"
-          selected={searchParams.getAll("credit")}
+          selected={searchParams.get("credit")}
+          onChange={updateFilter}
+        />
+      )}
+
+      {filters.languages && (
+        <FilterSelectGroup
+          label="授课语言"
+          items={filters.languages}
+          paramKey="language"
+          selected={searchParams.get("language")}
+          onChange={updateFilter}
+        />
+      )}
+
+      {filters.target_years && (
+        <FilterCheckGroup
+          label="目标年级"
+          items={filters.target_years}
+          paramKey="target_years"
+          selected={searchParams.getAll("target_years")}
           onToggle={toggleMulti}
+        />
+      )}
+
+      {filters.departments && (
+        <FilterSelectGroup
+          label="开课单位"
+          items={filters.departments}
+          paramKey="department"
+          selected={searchParams.get("department")}
+          onChange={updateFilter}
         />
       )}
 
@@ -169,6 +163,59 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
         </Sheet>
       </div>
     </>
+  )
+}
+
+interface FilterSelectGroupProps {
+  label: string
+  paramKey: string
+  items?: FilterItem[]
+  selected: string | null
+  onChange: (key: string, value: string | null) => void
+}
+
+function FilterSelectGroup({
+  label,
+  paramKey,
+  items,
+  selected,
+  onChange,
+}: FilterSelectGroupProps) {
+  if (!items) return null
+  const itemClassName =
+    "px-2 [&>span:first-child]:hidden [&>span:last-child]:min-w-0 [&>span:last-child]:flex-1"
+
+  return (
+    <div className="space-y-3">
+      <Label>{label}</Label>
+      <Select
+        value={selected ?? ALL}
+        onValueChange={(value) => onChange(paramKey, value)}
+      >
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder={`全部${label}`} />
+        </SelectTrigger>
+        <SelectContent className="max-w-80">
+          <SelectItem value={ALL} className={itemClassName}>
+            全部{label}
+          </SelectItem>
+          {items.map((item) => (
+            <SelectItem
+              key={item.name}
+              value={item.name}
+              className={itemClassName}
+            >
+              <span className="flex w-full min-w-0 items-center justify-between gap-3">
+                <span className="min-w-0 truncate">{item.name}</span>
+                <span className="shrink-0 text-muted-foreground">
+                  {item.count}
+                </span>
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   )
 }
 

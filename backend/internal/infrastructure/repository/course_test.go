@@ -470,6 +470,30 @@ func TestCourseRepository_FindBy_DefaultSortByCode(t *testing.T) {
 	}
 }
 
+func TestCourseRepository_FindBy_ZeroCredit(t *testing.T) {
+	db := newTestDB(t)
+	repo := repository.NewCourseRepository(db)
+	ctx := context.Background()
+
+	cleanTables(t, db, "courses", "teachers")
+
+	teacher := seedTeacher(t, db)
+	seedCourseRaw(t, db, "PE001", "体育", 0, "体育部", teacher.ID, "zh", []string{"公共课"}, []string{"2021"})
+	seedCourseRaw(t, db, "CS101", "数据结构", 3.0, "计算机学院", teacher.ID, "zh", []string{"核心课"}, []string{"2021"})
+
+	credit := float32(0)
+	results, total, err := repo.FindBy(ctx, course.CourseFilter{Credit: &credit})
+	if err != nil {
+		t.Fatalf("FindBy: %v", err)
+	}
+	if total != 1 {
+		t.Errorf("total: got %d, want 1", total)
+	}
+	if len(results) != 1 || results[0].Code != "PE001" {
+		t.Errorf("results: got %+v, want PE001", results)
+	}
+}
+
 func TestCourseRepository_GetDetail(t *testing.T) {
 	db := newTestDB(t)
 	courseRepo := repository.NewCourseRepository(db)

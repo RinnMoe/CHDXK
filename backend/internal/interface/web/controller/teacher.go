@@ -67,12 +67,10 @@ func (ctrl *TeacherController) ListTeacherCourses(c *gin.Context) {
 		return
 	}
 
-	var f application.CourseListFilter
-	if err := c.ShouldBindQuery(&f); err != nil {
-		respondBindError(c, err)
+	f, ok := bindCourseListFilter(c)
+	if !ok {
 		return
 	}
-	normalizePagination(&f.Page, &f.PageSize)
 
 	result, err := ctrl.courseQuery.ListTeacherCourses(c.Request.Context(), teacherID, f)
 	if err != nil {

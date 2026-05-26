@@ -2,9 +2,14 @@ import { useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { RiFilterLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Sheet,
   SheetContent,
@@ -16,6 +21,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import type { FilterItem } from "@/api/teacher"
 import type { TeacherFilters as TeacherFiltersDTO } from "@/api/teacher"
 
+const ALL = "__all__"
+
 interface TeacherFiltersProps {
   filters: TeacherFiltersDTO
 }
@@ -26,38 +33,31 @@ export function TeacherFilters({ filters }: TeacherFiltersProps) {
 
   function updateFilter(key: string, value: string | null) {
     const next = new URLSearchParams(searchParams)
-    if (!value) next.delete(key)
+    if (!value || value === ALL) next.delete(key)
     else next.set(key, value)
     next.delete("page")
     setSearchParams(next)
   }
 
-  function toggleSingle(key: string, value: string) {
-    updateFilter(key, searchParams.get(key) === value ? null : value)
-  }
-
   const content = (
     <div className="space-y-6">
       {filters.departments && (
-        <>
-          <FilterCheckGroup
-            label="学院"
-            items={filters.departments}
-            paramKey="department"
-            selected={searchParams.get("department")}
-            onToggle={toggleSingle}
-          />
-          <Separator />
-        </>
+        <FilterSelectGroup
+          label="学院"
+          items={filters.departments}
+          paramKey="department"
+          selected={searchParams.get("department")}
+          onChange={updateFilter}
+        />
       )}
 
       {filters.titles && (
-        <FilterCheckGroup
+        <FilterSelectGroup
           label="职称"
           items={filters.titles}
           paramKey="title"
           selected={searchParams.get("title")}
-          onToggle={toggleSingle}
+          onChange={updateFilter}
         />
       )}
 
@@ -101,51 +101,55 @@ export function TeacherFilters({ filters }: TeacherFiltersProps) {
   )
 }
 
-interface FilterCheckGroupProps {
+interface FilterSelectGroupProps {
   label: string
   paramKey: string
   items?: FilterItem[]
   selected: string | null
-  onToggle: (key: string, value: string) => void
+  onChange: (key: string, value: string | null) => void
 }
 
-function FilterCheckGroup({
+function FilterSelectGroup({
   label,
   paramKey,
   items,
   selected,
-  onToggle,
-}: FilterCheckGroupProps) {
+  onChange,
+}: FilterSelectGroupProps) {
   if (!items) return null
+  const itemClassName =
+    "px-2 [&>span:first-child]:hidden [&>span:last-child]:min-w-0 [&>span:last-child]:flex-1"
 
   return (
     <div className="space-y-3">
       <Label>{label}</Label>
-      <div className="space-y-2">
-        {items.map((item) => {
-          const id = `${paramKey}-${item.name}`
-          const checked = selected === item.name
-          return (
-            <div key={item.name} className="flex items-start gap-2">
-              <Checkbox
-                id={id}
-                checked={checked}
-                className="mt-0.5"
-                onCheckedChange={() => onToggle(paramKey, item.name)}
-              />
-              <Label
-                htmlFor={id}
-                className="block min-w-0 flex-1 cursor-pointer text-sm leading-snug font-normal break-all whitespace-normal"
-              >
-                {item.name}
-              </Label>
-              <span className="mt-0.5 shrink-0 text-sm text-muted-foreground">
-                {item.count}
+      <Select
+        value={selected ?? ALL}
+        onValueChange={(value) => onChange(paramKey, value)}
+      >
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder={`全部${label}`} />
+        </SelectTrigger>
+        <SelectContent className="max-w-80">
+          <SelectItem value={ALL} className={itemClassName}>
+            全部{label}
+          </SelectItem>
+          {items.map((item) => (
+            <SelectItem
+              key={item.name}
+              value={item.name}
+              className={itemClassName}
+            >
+              <span className="flex w-full min-w-0 items-center justify-between gap-3">
+                <span className="min-w-0 truncate">{item.name}</span>
+                <span className="shrink-0 text-muted-foreground">
+                  {item.count}
+                </span>
               </span>
-            </div>
-          )
-        })}
-      </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   )
 }

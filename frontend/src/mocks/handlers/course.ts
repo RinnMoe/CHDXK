@@ -94,6 +94,8 @@ function applyCourseFilter(url: URL) {
   const q = (url.searchParams.get("q") ?? "").trim().toLowerCase()
   const department = url.searchParams.get("department") ?? ""
   const language = url.searchParams.get("language") ?? ""
+  const creditParam = url.searchParams.get("credit")
+  const credit = creditParam === null ? undefined : Number(creditParam)
   const categories = url.searchParams.getAll("categories")
   const targetYears = url.searchParams.getAll("target_years")
   const orderBy = url.searchParams.get("order_by") ?? ""
@@ -109,6 +111,9 @@ function applyCourseFilter(url: URL) {
     )
   if (department) list = list.filter((c) => c.department === department)
   if (language) list = list.filter((c) => c.language === language)
+  if (credit !== undefined && Number.isFinite(credit)) {
+    list = list.filter((c) => c.credit === credit)
+  }
   if (categories.length > 0)
     list = list.filter((c) =>
       c.categories?.some((cat) => categories.includes(cat))

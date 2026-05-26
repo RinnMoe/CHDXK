@@ -15,14 +15,15 @@ export function CoursesPage() {
     const categories = searchParams.getAll("categories")
     const target_years = searchParams.getAll("target_years")
     const departments = searchParams.getAll("department")
-    const credits = searchParams.getAll("credit").map(Number).filter(Boolean)
+    const creditParam = searchParams.get("credit")
+    const credit = creditParam === null ? undefined : Number(creditParam)
     return {
       q: searchParams.get("q")?.trim() || undefined,
       department: departments[0] ?? undefined,
       language: searchParams.get("language") ?? undefined,
       categories: categories.length > 0 ? categories : undefined,
       target_years: target_years.length > 0 ? target_years : undefined,
-      credit: credits[0],
+      credit: credit !== undefined && Number.isFinite(credit) ? credit : undefined,
       order_by:
         (searchParams.get("order_by") as
           | "rating_score"
