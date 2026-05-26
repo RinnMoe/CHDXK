@@ -1,7 +1,6 @@
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { RiArrowLeftLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { CourseHeaderMeta } from "@/components/course/course-header-meta"
@@ -43,23 +42,22 @@ export function NewReviewPage() {
           </Link>
         </Button>
 
-        <Card className="shadow-none ring-0">
-          <CardHeader className="gap-4">
-            <CardTitle>写点评</CardTitle>
+        <section className="space-y-4">
+          <div className="space-y-4">
+            <h1 className="text-lg font-medium">写点评</h1>
             {course && <CourseHeaderMeta course={course} />}
-          </CardHeader>
-          <CardContent>
-            <ReviewForm
-              courseID={id}
-              semesters={semesters}
-              defaultSemester={defaultSemester}
-              onSubmit={handleSubmit}
-              onCancel={() => navigate(`/course/${id}`)}
-              isSubmitting={isPending}
-              draftUserID={user?.id}
-            />
-          </CardContent>
-        </Card>
+          </div>
+
+          <ReviewForm
+            courseID={id}
+            semesters={semesters}
+            defaultSemester={defaultSemester}
+            onSubmit={handleSubmit}
+            onCancel={() => navigate(-1)}
+            isSubmitting={isPending}
+            draftUserID={user?.id}
+          />
+        </section>
       </PageShell>
     </>
   )

@@ -73,7 +73,7 @@ export function CourseNotificationControl({
         onValueChange={handleChange}
         disabled={mutation.isPending}
       >
-        <SelectTrigger size="sm" className="h-7 w-[112px]">
+        <SelectTrigger size="sm" className="h-7">
           <SelectValue>{notificationLabels[level]}</SelectValue>
         </SelectTrigger>
         <SelectContent className="min-w-64">
@@ -86,7 +86,9 @@ export function CourseNotificationControl({
             >
               <Icon className="mt-0.5" data-icon="inline-start" />
               <span className="flex min-w-0 flex-col gap-0.5">
-                <span>{notificationLabels[optionLevel]}</span>
+                <span className="font-medium">
+                  {notificationLabels[optionLevel]}
+                </span>
                 <span className="text-sm leading-4 text-muted-foreground">
                   {notificationDescriptions[optionLevel]}
                 </span>

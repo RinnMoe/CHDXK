@@ -212,7 +212,6 @@ export function SiteHeader() {
 
         <div className="ml-auto flex items-center gap-2">
           <HeaderSearch />
-          <UserMenu />
 
           {/* Mobile menu trigger */}
           <Sheet open={open} onOpenChange={setOpen}>
@@ -247,6 +246,8 @@ export function SiteHeader() {
               </nav>
             </SheetContent>
           </Sheet>
+
+          <UserMenu />
         </div>
       </div>
     </header>

@@ -301,7 +301,7 @@ export function CourseDetailPage() {
                     >
                       <a href={feedbackMailto}>
                         <RiMailLine data-icon="inline-start" />
-                        信息有误？
+                        反馈
                       </a>
                     </Button>
                   </div>

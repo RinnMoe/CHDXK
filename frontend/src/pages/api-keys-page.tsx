@@ -6,7 +6,6 @@ import { ApiKeyTable } from "@/components/api-key/api-key-table"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/contexts/auth-context"
 import { useLoginRedirectPath } from "@/hooks/use-login-redirect"
 import {
@@ -50,28 +49,27 @@ export function ApiKeysPage() {
             namePlaceholder="例如：本地脚本"
           />
 
-          <Card className="shadow-none ring-0">
-            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <CardTitle>我的 API Keys</CardTitle>
+          <section className="space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <h2 className="text-lg font-medium">我的 API Keys</h2>
               <Button onClick={() => setIsCreateOpen(true)}>
                 <RiAddLine data-icon="inline-start" />
                 新建 API Key
               </Button>
-            </CardHeader>
-            <CardContent>
-              <ApiKeyTable
-                apiKeys={apiKeys}
-                isLoading={isLoading}
-                isDeleting={deleteMutation.isPending}
-                emptyText="暂无 API Key"
-                deleteAriaLabel="删除 API Key"
-                deleteDialogTitle="删除 API Key"
-                deleteDialogDescription="删除后使用该 key 的请求会立即失效。"
-                deleteActionLabel="删除"
-                onDelete={(id) => deleteMutation.mutateAsync(id)}
-              />
-            </CardContent>
-          </Card>
+            </div>
+
+            <ApiKeyTable
+              apiKeys={apiKeys}
+              isLoading={isLoading}
+              isDeleting={deleteMutation.isPending}
+              emptyText="暂无 API Key"
+              deleteAriaLabel="删除 API Key"
+              deleteDialogTitle="删除 API Key"
+              deleteDialogDescription="删除后使用该 key 的请求会立即失效。"
+              deleteActionLabel="删除"
+              onDelete={(id) => deleteMutation.mutateAsync(id)}
+            />
+          </section>
         </div>
       </PageShell>
     </>
