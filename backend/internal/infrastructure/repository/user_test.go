@@ -108,7 +108,7 @@ func TestAccountRepository_NotFound(t *testing.T) {
 	}
 }
 
-func TestAccountRepository_UpdatePasswordHashAndTouchLastSeen(t *testing.T) {
+func TestAccountRepository_UpdatePasswordHash(t *testing.T) {
 	db := newTestDB(t)
 	repo := repository.NewAccountRepository(db)
 	ctx := context.Background()
@@ -125,18 +125,6 @@ func TestAccountRepository_UpdatePasswordHashAndTouchLastSeen(t *testing.T) {
 	}
 	if got.PasswordHash != "new_password" {
 		t.Fatalf("password_hash = %q, want new_password", got.PasswordHash)
-	}
-
-	newLastSeen := time.Now().Add(2 * time.Hour)
-	if err := repo.TouchLastSeen(ctx, e.ID, newLastSeen); err != nil {
-		t.Fatalf("TouchLastSeen: %v", err)
-	}
-	got, err = repo.FindByID(ctx, e.ID)
-	if err != nil {
-		t.Fatalf("FindByID after touch: %v", err)
-	}
-	if got.LastSeenAt.Before(newLastSeen.Add(-time.Second)) {
-		t.Fatalf("LastSeenAt was not refreshed: got %v, want around %v", got.LastSeenAt, newLastSeen)
 	}
 }
 

@@ -106,18 +106,6 @@ func (r *AccountRepository) Update(ctx context.Context, u *identity.Account) err
 	return nil
 }
 
-func (r *AccountRepository) TouchLastSeen(ctx context.Context, userID int, at time.Time) error {
-	email := r.cachedEmailByID(ctx, userID)
-	if err := r.db.WithContext(ctx).
-		Model(&UserEntity{}).
-		Where("id = ?", userID).
-		Update("last_seen_at", at).Error; err != nil {
-		return err
-	}
-	r.deleteAccountCache(ctx, userID, email)
-	return nil
-}
-
 func (r *AccountRepository) FindByID(ctx context.Context, id int) (*identity.Account, error) {
 	key := cacheKey("account", id)
 	if cached, ok := cacheGetJSON[identity.Account](ctx, r.cache, key); ok {

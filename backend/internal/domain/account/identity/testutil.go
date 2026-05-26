@@ -5,7 +5,6 @@ package identity
 import (
 	"context"
 	"errors"
-	"time"
 )
 
 type MockRepository struct {
@@ -13,11 +12,9 @@ type MockRepository struct {
 	AccountsByID       map[int]*Account
 	AccountsByEmail    map[string]*Account
 	AccountsByUsername map[string]*Account
-	TouchCount         int
 
 	OnCreate         func(context.Context, *Account) error
 	OnUpdate         func(context.Context, *Account) error
-	OnTouchLastSeen  func(context.Context, int, time.Time) error
 	OnFindByID       func(context.Context, int) (*Account, error)
 	OnFindByUsername func(context.Context, string) (*Account, error)
 	OnFindByEmail    func(context.Context, string) (*Account, error)
@@ -82,20 +79,6 @@ func (r *MockRepository) Update(ctx context.Context, acct *Account) error {
 		return r.OnUpdate(ctx, acct)
 	}
 	r.PutAccount("", acct)
-	return nil
-}
-
-func (r *MockRepository) TouchLastSeen(ctx context.Context, accountID int, at time.Time) error {
-	if r.OnTouchLastSeen != nil {
-		return r.OnTouchLastSeen(ctx, accountID, at)
-	}
-	r.ensureMaps()
-	r.TouchCount++
-	acct, ok := r.AccountsByID[accountID]
-	if !ok {
-		return errors.New("account not found")
-	}
-	acct.LastSeenAt = at
 	return nil
 }
 

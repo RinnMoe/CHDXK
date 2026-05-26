@@ -143,9 +143,6 @@ func TestAccountCommandService_LoginAllowsExpiredSuspensionAndEnqueuesCleanup(t 
 	if !enqueuer.enqueued {
 		t.Fatal("expected cleanup task to be enqueued")
 	}
-	if accountRepo.TouchCount != 1 {
-		t.Fatalf("TouchLastSeen count = %d, want 1", accountRepo.TouchCount)
-	}
 }
 
 func TestAccountCommandService_LoginLockedAfterMaxAttempts(t *testing.T) {

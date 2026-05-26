@@ -74,10 +74,6 @@ func (s *LoginService) Login(ctx context.Context, email, password string) (*iden
 	return acct, nil
 }
 
-func (s *LoginService) MarkLogin(ctx context.Context, accountID int) error {
-	return s.accountRepo.TouchLastSeen(ctx, accountID, time.Now())
-}
-
 func (s *LoginService) isLocked(ctx context.Context, email string) bool {
 	if s.config.MaxAttempts <= 0 {
 		return false

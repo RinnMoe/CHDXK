@@ -60,9 +60,6 @@ func (s *AccountCommandService) Login(ctx context.Context, cmd LoginCommand) (*A
 	if u == nil {
 		return nil, identity.ErrNotFound
 	}
-	if err := s.login.MarkLogin(ctx, acct.ID); err != nil {
-		return nil, err
-	}
 	return newAccountDTO(acct, u), nil
 }
 

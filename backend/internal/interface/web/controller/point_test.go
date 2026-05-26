@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -130,9 +129,6 @@ func (r *pointControllerFakeAccountRepo) Create(_ context.Context, _ *identity.A
 	return nil
 }
 func (r *pointControllerFakeAccountRepo) Update(_ context.Context, _ *identity.Account) error {
-	return nil
-}
-func (r *pointControllerFakeAccountRepo) TouchLastSeen(_ context.Context, _ int, _ time.Time) error {
 	return nil
 }
 func (r *pointControllerFakeAccountRepo) FindByID(_ context.Context, id int) (*identity.Account, error) {
