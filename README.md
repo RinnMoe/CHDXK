@@ -32,7 +32,7 @@ PostgreSQL 默认监听 `localhost:5432`，Redis 默认监听 `localhost:6379`�
 ### 2. 初始化数据库
 
 ```bash
-psql "host=localhost port=5432 user=postgres password=postgres dbname=jcourse sslmode=disable" -f backend/script/01-schema-pgsql.sql
+psql "host=localhost port=5432 user=postgres password=postgres dbname=jcourse sslmode=disable" -f backend/script/0001_schema_pgsql.up.sql
 ```
 
 ### 3. 配置并启动后端
@@ -107,7 +107,7 @@ go run cmd/importer/main.go --config config/config.yaml --semester 2025-2026-1
 
 - Go 代码使用 `gofmt`，后端按 domain、application、infrastructure、interface 分层。
 - 前端使用 TypeScript、React 函数组件、Tailwind CSS 和 `@/` 路径别名。
-- 修改数据库结构时，在 `backend/script` 下新增顺序编号 SQL 文件，不修改已有迁移。
+- 修改数据库结构时，在 `backend/script` 下新增四位顺序编号的 up/down SQL 迁移，例如 `0004_add_course_hot.up.sql` 和 `0004_add_course_hot.down.sql`，不修改已有迁移。
 - 提交前根据改动范围运行对应的测试、lint 和 typecheck。
 
 ## 安全提示

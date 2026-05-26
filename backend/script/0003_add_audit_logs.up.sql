@@ -1,5 +1,3 @@
-BEGIN;
-
 ALTER TABLE review_revisions
     RENAME COLUMN user_id TO created_by; -- PostgreSQL has no IF EXISTS for RENAME COLUMN before 17.
 
@@ -24,5 +22,3 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_occurred
     ON audit_logs (actor_user_id, occurred_at DESC, id DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_action_occurred
     ON audit_logs (action, occurred_at DESC, id DESC);
-
-COMMIT;

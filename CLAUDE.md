@@ -18,7 +18,7 @@ jcourse_v1 Legacy reference; ignore for active work
 ### Local dependencies (run from repo root)
 ```bash
 docker compose -f docker/docker-compose.yaml up -d postgres redis
-psql "host=localhost port=5432 user=postgres password=postgres dbname=jcourse sslmode=disable" -f backend/script/01-schema-pgsql.sql
+psql "host=localhost port=5432 user=postgres password=postgres dbname=jcourse sslmode=disable" -f backend/script/0001_schema_pgsql.up.sql
 ```
 
 PostgreSQL is `dujiajun/postgres-pg-jieba:17` (custom image with `pg_jieba` for Chinese full-text search). Redis is `redis:7`.
@@ -84,7 +84,7 @@ cmd/{api,taskworker,importer,migrate_v1}  entrypoints
 
 **Domain model overview:** `Course → OfferedCourse ↔ TeacherGroup`, `Review → ReviewRevision / ReviewVote`, `User → PointRecord / PointTransfer`, plus `Announcement`, `SiteDailyStat`, `Account` (JAccount link), `AuditLog`.
 
-**Database migrations:** `backend/script/` holds numbered SQL files (`01-schema-pgsql.sql`, `02-...`, `03-...`). When changing schema, **add a new numbered file — never edit an existing migration.**
+**Database migrations:** `backend/script/` holds four-digit numbered up/down SQL migration pairs (`0001_schema_pgsql.up.sql`, `0001_schema_pgsql.down.sql`, ...). When changing schema, **add a new numbered up/down pair — never edit an existing migration.**
 
 ## Frontend Architecture
 

@@ -61,7 +61,7 @@ JCOURSE_SERVER_ADDR=:9090 go run cmd/api/main.go --config config/config.yaml
 ### 3. 初始化数据库 schema
 
 ```bash
-psql "host=localhost port=5432 user=postgres password=postgres dbname=jcourse sslmode=disable" -f script/01-schema-pgsql.sql
+psql "host=localhost port=5432 user=postgres password=postgres dbname=jcourse sslmode=disable" -f script/0001_schema_pgsql.up.sql
 ```
 
 ### 4. 启动 API
@@ -133,7 +133,7 @@ go run cmd/importer/main.go --config config/config.yaml --semester 2025-2026-1
 
 ## 数据库变更
 
-`script/01-schema-pgsql.sql` 是初始 PostgreSQL schema。修改表结构、字段或索引时，请新增顺序编号 SQL 文件，例如 `02-add-course-hot.sql`，不要直接改旧迁移。
+`script/0001_schema_pgsql.up.sql` 是初始 PostgreSQL schema。修改表结构、字段或索引时，请新增四位顺序编号的 up/down SQL 迁移，例如 `0004_add_course_hot.up.sql` 和 `0004_add_course_hot.down.sql`，不要直接改旧迁移。
 
 ## 编码约定
 

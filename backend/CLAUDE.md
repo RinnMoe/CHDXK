@@ -18,7 +18,7 @@ go run cmd/migrate_v1/main.go --config config/config.yaml            # legacy v1
 
 **Always pass `-tags test` to `go test` and `go vet`.** Shared repository mocks live in `internal/domain/*/testutil.go` files guarded by `//go:build test`; without the tag, code that imports them fails to compile.
 
-Local dependencies (run from repo root): `docker compose -f docker/docker-compose.yaml up -d postgres redis`. PostgreSQL is `dujiajun/postgres-pg-jieba:17` (custom image with `pg_jieba`). Redis is `redis:7`. Initialize with `psql ... -f script/01-schema-pgsql.sql`.
+Local dependencies (run from repo root): `docker compose -f docker/docker-compose.yaml up -d postgres redis`. PostgreSQL is `dujiajun/postgres-pg-jieba:17` (custom image with `pg_jieba`). Redis is `redis:7`. Initialize with `psql ... -f script/0001_schema_pgsql.up.sql`.
 
 Config: copy `config/config.example.yaml` → `config/config.yaml`. Any field overridable via `JCOURSE_` env vars (e.g. `JCOURSE_SERVER_ADDR=:9090`, `JCOURSE_POSTGRES_DSN=...`). Never commit `config/config.yaml`.
 
@@ -35,7 +35,7 @@ cmd/
   importer/     CSV course importer (data/<semester>.csv)
   migrate_v1/   one-shot data migration from the v1 schema
 config/         AppConfig types + Viper loader (JCOURSE_ env override)
-script/         numbered SQL migrations (01-, 02-, 03-, ...)
+script/         four-digit numbered up/down SQL migrations (0001_, 0002_, 0003_, ...)
 internal/
   domain/       models, repository + query interfaces, policies, mocks (//go:build test)
     announcement, auth, course, point, review (incl. policy/), stat, task, teacher, account, audit
@@ -94,7 +94,7 @@ When adding a route, set the auth requirement here — handlers should not gate 
 
 ## Database migrations
 
-`script/01-schema-pgsql.sql` is the initial schema; subsequent changes are sequentially numbered (`02-add-course-rating-score.sql`, `03-add-audit-logs.sql`, ...). **Add a new numbered file rather than editing an existing migration**, even during development.
+`script/0001_schema_pgsql.up.sql` is the initial schema; subsequent changes are four-digit sequentially numbered up/down pairs (`0002_add_course_rating_score.up.sql`, `0002_add_course_rating_score.down.sql`, ...). **Add a new numbered pair rather than editing an existing migration**, even during development.
 
 ## Testing
 

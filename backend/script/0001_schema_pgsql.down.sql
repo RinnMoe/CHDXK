@@ -1,0 +1,16 @@
+DROP TABLE IF EXISTS announcements;
+DROP TABLE IF EXISTS site_daily_stats;
+DROP TABLE IF EXISTS course_hot_scores;
+DROP TABLE IF EXISTS course_notifications;
+DROP TABLE IF EXISTS review_votes;
+DROP TABLE IF EXISTS review_revisions;
+DROP TABLE IF EXISTS reviews;
+DROP TABLE IF EXISTS point_transfers;
+DROP TABLE IF EXISTS user_point_records;
+DROP TABLE IF EXISTS api_keys;
+DROP TABLE IF EXISTS user_settings;
+DROP TABLE IF EXISTS course_enrollments;
+DROP TABLE IF EXISTS offered_courses;
+DROP TABLE IF EXISTS courses;
+DROP TABLE IF EXISTS teachers;
+DROP TABLE IF EXISTS users;

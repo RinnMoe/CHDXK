@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This directory is the Go backend for `jcourse`. Entrypoints live in `cmd/api` for the HTTP server, `cmd/taskworker` for the Asynq worker, and `cmd/importer` for data import jobs. Configuration loading is in `config/`, with a template at `config/config.example.yaml`. Core code follows a clean/hexagonal layout under `internal/`: `domain/` defines models, policy, and interfaces; `application/` contains use-case services and DTOs; `infrastructure/` contains Gorm, Redis, email, repository, persistence, and Asynq adapters; `interface/web` contains Gin routes, controllers, and middleware; `interface/async` registers task handlers. SQL schemas are in `script/`, starting with `01-schema-pgsql.sql`.
+This directory is the Go backend for `jcourse`. Entrypoints live in `cmd/api` for the HTTP server, `cmd/taskworker` for the Asynq worker, and `cmd/importer` for data import jobs. Configuration loading is in `config/`, with a template at `config/config.example.yaml`. Core code follows a clean/hexagonal layout under `internal/`: `domain/` defines models, policy, and interfaces; `application/` contains use-case services and DTOs; `infrastructure/` contains Gorm, Redis, email, repository, persistence, and Asynq adapters; `interface/web` contains Gin routes, controllers, and middleware; `interface/async` registers task handlers. SQL schemas are in `script/`, starting with `0001_schema_pgsql.up.sql`.
 
 ## Build, Test, and Development Commands
 
@@ -21,7 +21,7 @@ Create `config/config.yaml` from `config/config.example.yaml` for local runs. Ov
 
 Use standard Go formatting: run `gofmt` on edited Go files and keep imports organized. Package names are short, lower-case nouns such as `course`, `review`, and `repository`. Exported types and methods use PascalCase; unexported helpers use camelCase. Backend code follows DDD and CQRS: keep domain interfaces and policy in `internal/domain/*`, use-case orchestration in `internal/application/*`, and adapter details in `internal/infrastructure/*`; do not leak Gorm, Gin, Redis, Asynq, or any infrastructure concerns into domain packages. Keep interfaces separate from their concrete implementations, and add a mock implementation whenever introducing a new interface.
 
-When changing database structure, fields, or indexes, add a new numbered SQL file under `script/` instead of editing an earlier migration. Keep numbering sequential: `01-schema-pgsql.sql` is the initial PostgreSQL schema, followed by `02-xxx.sql`, `03-xxx.sql`, and so on.
+When changing database structure, fields, or indexes, add a new four-digit numbered up/down SQL migration pair under `script/` instead of editing an earlier migration. Keep numbering sequential: `0001_schema_pgsql.up.sql` is the initial PostgreSQL schema, followed by pairs such as `0002_xxx.up.sql` and `0002_xxx.down.sql`.
 
 ## Testing Guidelines
 
