@@ -344,26 +344,26 @@ func TestCourseRepository_FindBy(t *testing.T) {
 	})
 
 	t.Run("sort by rating_count", func(t *testing.T) {
-		highAvg := seedCourseRaw(t, db, "RC100", "点评数相同均分更高", 3.0, "计算机学院", t1.ID, "zh", []string{"核心课"}, []string{"2021"})
+		highScore := seedCourseRaw(t, db, "RC100", "点评数相同综合评分更高", 3.0, "计算机学院", t1.ID, "zh", []string{"核心课"}, []string{"2021"})
 		highCount := seedCourseRaw(t, db, "RC101", "点评数更多", 3.0, "计算机学院", t1.ID, "zh", []string{"核心课"}, []string{"2021"})
 		codeFirst := seedCourseRaw(t, db, "RC102", "点评数相同code更后", 3.0, "计算机学院", t1.ID, "zh", []string{"核心课"}, []string{"2021"})
 		t.Cleanup(func() {
-			_ = db.Delete(&repository.CourseEntity{}, []int{highAvg.ID, highCount.ID, codeFirst.ID}).Error
+			_ = db.Delete(&repository.CourseEntity{}, []int{highScore.ID, highCount.ID, codeFirst.ID}).Error
 		})
 
 		for _, tc := range []struct {
 			courseID int
 			count    int
-			avg      float64
+			score    float64
 		}{
-			{courseID: c1.ID, count: 2, avg: 4},
-			{courseID: highAvg.ID, count: 2, avg: 5},
-			{courseID: highCount.ID, count: 3, avg: 1},
-			{courseID: codeFirst.ID, count: 2, avg: 4},
+			{courseID: c1.ID, count: 2, score: 4.0},
+			{courseID: highScore.ID, count: 2, score: 4.5},
+			{courseID: highCount.ID, count: 3, score: 1.0},
+			{courseID: codeFirst.ID, count: 2, score: 4.0},
 		} {
 			if err := db.Model(&repository.CourseEntity{}).
 				Where("id = ?", tc.courseID).
-				Updates(map[string]any{"rating_count": tc.count, "rating_avg": tc.avg}).Error; err != nil {
+				Updates(map[string]any{"rating_count": tc.count, "rating_score": tc.score}).Error; err != nil {
 				t.Fatalf("update course rating: %v", err)
 			}
 		}
@@ -378,8 +378,8 @@ func TestCourseRepository_FindBy(t *testing.T) {
 		if results[0].ID != highCount.ID {
 			t.Fatalf("desc first id: got %v, want %d", results, highCount.ID)
 		}
-		if results[1].ID != highAvg.ID {
-			t.Fatalf("desc second id: got %v, want %d", results, highAvg.ID)
+		if results[1].ID != highScore.ID {
+			t.Fatalf("desc second id: got %v, want %d", results, highScore.ID)
 		}
 		if results[2].ID != c1.ID {
 			t.Fatalf("desc third id: got %v, want %d", results, c1.ID)
@@ -397,20 +397,20 @@ func TestCourseRepository_FindBy(t *testing.T) {
 		}
 	})
 
-	t.Run("sort by rating_avg", func(t *testing.T) {
-		highAvg := seedCourseRaw(t, db, "CS099", "均分更高", 3.0, "计算机学院", t1.ID, "zh", []string{"核心课"}, []string{"2021"})
-		highCount := seedCourseRaw(t, db, "CS103", "均分相同点评更多", 3.0, "计算机学院", t1.ID, "zh", []string{"核心课"}, []string{"2021"})
-		codeFirst := seedCourseRaw(t, db, "CS104", "均分相同点评相同", 3.0, "计算机学院", t1.ID, "zh", []string{"核心课"}, []string{"2021"})
+	t.Run("rating_avg order is unsupported", func(t *testing.T) {
+		lowAvgCodeFirst := seedCourseRaw(t, db, "AA001", "均分低但编码靠前", 3.0, "计算机学院", t1.ID, "zh", []string{"核心课"}, []string{"2021"})
+		highAvgCodeLast := seedCourseRaw(t, db, "ZZ999", "均分高但编码靠后", 3.0, "计算机学院", t1.ID, "zh", []string{"核心课"}, []string{"2021"})
+		t.Cleanup(func() {
+			_ = db.Delete(&repository.CourseEntity{}, []int{lowAvgCodeFirst.ID, highAvgCodeLast.ID}).Error
+		})
 
 		for _, tc := range []struct {
 			courseID int
 			count    int
 			avg      float64
 		}{
-			{courseID: highAvg.ID, count: 1, avg: 5},
-			{courseID: c1.ID, count: 2, avg: 4},
-			{courseID: highCount.ID, count: 3, avg: 4},
-			{courseID: codeFirst.ID, count: 1, avg: 4},
+			{courseID: lowAvgCodeFirst.ID, count: 1, avg: 1},
+			{courseID: highAvgCodeLast.ID, count: 1, avg: 5},
 		} {
 			if err := db.Model(&repository.CourseEntity{}).
 				Where("id = ?", tc.courseID).
@@ -421,22 +421,10 @@ func TestCourseRepository_FindBy(t *testing.T) {
 
 		results, _, err := repo.FindBy(ctx, course.CourseFilter{OrderBy: "rating_avg"})
 		if err != nil {
-			t.Fatalf("FindBy rating_avg desc: %v", err)
+			t.Fatalf("FindBy unsupported rating_avg: %v", err)
 		}
-		if len(results) < 4 {
-			t.Fatalf("results: got %d, want at least 4", len(results))
-		}
-		if results[0].ID != highAvg.ID {
-			t.Fatalf("first id: got %d, want %d", results[0].ID, highAvg.ID)
-		}
-		if results[1].ID != highCount.ID {
-			t.Fatalf("second id: got %d, want %d", results[1].ID, highCount.ID)
-		}
-		if results[2].ID != c1.ID {
-			t.Fatalf("third id: got %d, want %d", results[2].ID, c1.ID)
-		}
-		if results[3].ID != codeFirst.ID {
-			t.Fatalf("fourth id: got %d, want %d", results[3].ID, codeFirst.ID)
+		if len(results) == 0 || results[0].ID != lowAvgCodeFirst.ID {
+			t.Fatalf("first id: got %v, want %d", results, lowAvgCodeFirst.ID)
 		}
 	})
 }

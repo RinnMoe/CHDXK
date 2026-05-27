@@ -273,7 +273,6 @@ export function makeCourseDetail(course: CourseListItemDTO): CourseDetailDTO {
   const byRatingScore = (a: CourseListItemDTO, b: CourseListItemDTO) =>
     b.rating.score - a.rating.score ||
     b.rating.count - a.rating.count ||
-    b.rating.avg - a.rating.avg ||
     a.code.localeCompare(b.code)
   const sameCode = mockCourses
     .filter((c) => c.code === course.code && c.id !== course.id)

@@ -103,7 +103,7 @@ export interface CourseListFilter {
   target_years?: string[]
   credit?: number
   has_review?: boolean
-  order_by?: "rating_score" | "rating_count" | "rating_avg"
+  order_by?: "rating_score" | "rating_count"
   ascend?: boolean
   page?: number
   page_size?: number

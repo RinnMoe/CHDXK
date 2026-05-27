@@ -12,8 +12,7 @@ import { displayTeacherTitle } from "@/lib/utils"
 import { useSearchParams } from "react-router-dom"
 import { useTeacher, useTeacherCourses } from "@/hooks/use-teacher"
 
-const ALL = "__all__"
-type CourseSort = "rating_count" | "rating_avg"
+type CourseSort = "rating_score" | "rating_count"
 
 export function TeacherDetailPage() {
   const { teacherID } = useParams<{ teacherID: string }>()
@@ -22,9 +21,10 @@ export function TeacherDetailPage() {
   const page = Number(searchParams.get("page") ?? "1")
   const orderByParam = searchParams.get("order_by")
   const orderBy: CourseSort | undefined =
-    orderByParam === "rating_count" || orderByParam === "rating_avg"
+    orderByParam === "rating_score" || orderByParam === "rating_count"
       ? orderByParam
       : undefined
+  const selectedOrderBy = orderBy ?? "rating_score"
   const { data: teacher, isLoading: isTeacherLoading } = useTeacher(id)
   const { data, isLoading } = useTeacherCourses(id, {
     order_by: orderBy,
@@ -35,7 +35,7 @@ export function TeacherDetailPage() {
 
   function updateCourseSort(value: string) {
     const next = new URLSearchParams(searchParams)
-    if (value === ALL) {
+    if (value === "rating_score") {
       next.delete("order_by")
     } else {
       next.set("order_by", value)
@@ -107,13 +107,12 @@ export function TeacherDetailPage() {
               </div>
               <div>
                 <Tabs
-                  value={searchParams.get("order_by") ?? ALL}
+                  value={selectedOrderBy}
                   onValueChange={updateCourseSort}
                 >
                   <TabsList>
-                    <TabsTrigger value={ALL}>默认</TabsTrigger>
+                    <TabsTrigger value="rating_score">综合评分</TabsTrigger>
                     <TabsTrigger value="rating_count">点评数量</TabsTrigger>
-                    <TabsTrigger value="rating_avg">平均评分</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>

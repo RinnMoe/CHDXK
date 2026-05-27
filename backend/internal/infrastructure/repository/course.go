@@ -86,19 +86,14 @@ func (r *CourseRepository) applySort(db gorm.ChainInterface[CourseEntity], f cou
 		return db.
 			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_score"}, Desc: desc}).
 			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_count"}, Desc: true}).
-			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_avg"}, Desc: true}).
 			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "code"}}).
 			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "id"}})
 	case "rating_count":
 		return db.
 			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_count"}, Desc: desc}).
-			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_avg"}, Desc: true}).
-			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "code"}})
-	case "rating_avg":
-		return db.
-			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_avg"}, Desc: true}).
-			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_count"}, Desc: true}).
-			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "code"}})
+			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "rating_score"}, Desc: true}).
+			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "code"}}).
+			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "id"}})
 	default:
 		return db.
 			Order(clause.OrderByColumn{Column: clause.Column{Table: "courses", Name: "code"}}).

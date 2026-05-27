@@ -45,10 +45,10 @@ import { cn } from "@/lib/utils"
 const REVIEW_PAGE_SIZE = 10
 
 function byRatingDesc(
-  a: { rating: { avg: number } },
-  b: { rating: { avg: number } }
+  a: { rating: { score: number } },
+  b: { rating: { score: number } }
 ) {
-  return b.rating.avg - a.rating.avg
+  return b.rating.score - a.rating.score
 }
 
 function buildFeedbackMailto(course: CourseDetailDTO) {

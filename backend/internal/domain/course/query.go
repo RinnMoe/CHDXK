@@ -27,7 +27,7 @@ type CourseFilter struct {
 	TargetYears     []string
 	Credit          *float32
 	HasReview       *bool
-	OrderBy         string // "rating_score" | "rating_count" | "rating_avg"
+	OrderBy         string // "rating_score" | "rating_count"
 	Ascend          bool
 	Page            int
 	PageSize        int

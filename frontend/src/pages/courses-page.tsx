@@ -17,6 +17,11 @@ export function CoursesPage() {
     const departments = searchParams.getAll("department")
     const creditParam = searchParams.get("credit")
     const credit = creditParam === null ? undefined : Number(creditParam)
+    const orderByParam = searchParams.get("order_by")
+    const orderBy =
+      orderByParam === "rating_score" || orderByParam === "rating_count"
+        ? orderByParam
+        : undefined
     return {
       q: searchParams.get("q")?.trim() || undefined,
       department: departments[0] ?? undefined,
@@ -24,11 +29,7 @@ export function CoursesPage() {
       categories: categories.length > 0 ? categories : undefined,
       target_years: target_years.length > 0 ? target_years : undefined,
       credit: credit !== undefined && Number.isFinite(credit) ? credit : undefined,
-      order_by:
-        (searchParams.get("order_by") as
-          | "rating_score"
-          | "rating_count"
-          | "rating_avg") ?? undefined,
+      order_by: orderBy,
       page: Number(searchParams.get("page") ?? "1"),
       page_size: 20,
     }

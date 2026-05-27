@@ -32,6 +32,10 @@ interface CourseFiltersProps {
 export function CourseFilters({ filters }: CourseFiltersProps) {
   const [searchParams, setSearchParams] = useSearchParams()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const orderBy =
+    searchParams.get("order_by") === "rating_count"
+      ? "rating_count"
+      : "rating_score"
 
   function updateFilter(key: string, value: string | string[] | null) {
     const next = new URLSearchParams(searchParams)
@@ -65,13 +69,12 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
       <div className="space-y-2">
         <Label>排序</Label>
         <Tabs
-          value={searchParams.get("order_by") ?? "rating_score"}
+          value={orderBy}
           onValueChange={(v) => updateFilter("order_by", v)}
         >
           <TabsList>
             <TabsTrigger value="rating_score">综合评分</TabsTrigger>
             <TabsTrigger value="rating_count">点评数量</TabsTrigger>
-            <TabsTrigger value="rating_avg">平均评分</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>

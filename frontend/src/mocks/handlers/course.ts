@@ -126,19 +126,11 @@ function applyCourseFilter(url: URL) {
       c.target_years?.some((y) => targetYears.includes(y))
     )
 
-  if (orderBy === "rating_avg") {
-    list.sort(
-      (a, b) =>
-        b.rating.avg - a.rating.avg ||
-        b.rating.count - a.rating.count ||
-        a.code.localeCompare(b.code)
-    )
-  } else if (orderBy === "rating_score" || !orderBy) {
+  if (orderBy === "rating_score" || !orderBy) {
     list.sort(
       (a, b) =>
         b.rating.score - a.rating.score ||
         b.rating.count - a.rating.count ||
-        b.rating.avg - a.rating.avg ||
         a.code.localeCompare(b.code)
     )
   } else if (orderBy === "rating_count") {
@@ -147,9 +139,11 @@ function applyCourseFilter(url: URL) {
         (ascend
           ? a.rating.count - b.rating.count
           : b.rating.count - a.rating.count) ||
-        b.rating.avg - a.rating.avg ||
+        b.rating.score - a.rating.score ||
         a.code.localeCompare(b.code)
     )
+  } else {
+    list.sort((a, b) => a.code.localeCompare(b.code))
   }
   return list
 }
