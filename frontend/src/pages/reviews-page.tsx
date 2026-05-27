@@ -27,6 +27,10 @@ function ReviewSearchInput({
   )
 
   useEffect(() => {
+    setSearchValue(initialValue)
+  }, [initialValue])
+
+  useEffect(() => {
     onSearchChange(debouncedSearchValue)
   }, [debouncedSearchValue, onSearchChange])
 
@@ -82,7 +86,6 @@ export function ReviewsPage() {
           </div>
 
           <ReviewSearchInput
-            key={q}
             initialValue={q}
             onSearchChange={handleSearchChange}
           />

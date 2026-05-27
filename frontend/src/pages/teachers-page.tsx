@@ -28,6 +28,10 @@ function TeacherSearchInput({
   )
 
   useEffect(() => {
+    setSearchValue(initialValue)
+  }, [initialValue])
+
+  useEffect(() => {
     onSearchChange(debouncedSearchValue)
   }, [debouncedSearchValue, onSearchChange])
 
@@ -90,7 +94,6 @@ export function TeachersPage() {
           </div>
 
           <TeacherSearchInput
-            key={q}
             initialValue={q}
             onSearchChange={handleSearchChange}
           />
