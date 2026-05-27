@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Link, useParams, useSearchParams } from "react-router-dom"
 import {
   RiAddLine,
@@ -129,10 +129,6 @@ export function CourseDetailPage() {
   const { courseID } = useParams<{ courseID: string }>()
   const id = Number(courseID)
   const [searchParams, setSearchParams] = useSearchParams()
-
-  useEffect(() => {
-    window.scrollTo({ top: 0, left: 0 })
-  }, [id])
 
   const reviewPage = Math.max(1, Number(searchParams.get("page") ?? "1") || 1)
   const semester = searchParams.get("semester") ?? undefined

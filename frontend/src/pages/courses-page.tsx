@@ -7,6 +7,7 @@ import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { useCourseFilters, useCourses } from "@/hooks/use-course"
 import { cn } from "@/lib/utils"
+import type { CourseListFilter } from "@/api/course"
 
 export function CoursesPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -18,7 +19,7 @@ export function CoursesPage() {
     const creditParam = searchParams.get("credit")
     const credit = creditParam === null ? undefined : Number(creditParam)
     const orderByParam = searchParams.get("order_by")
-    const orderBy =
+    const orderBy: CourseListFilter["order_by"] =
       orderByParam === "rating_score" || orderByParam === "rating_count"
         ? orderByParam
         : undefined

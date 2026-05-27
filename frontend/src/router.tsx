@@ -3,6 +3,7 @@ import { createBrowserRouter } from "react-router-dom"
 import { RequireAuth } from "@/components/auth/require-auth"
 import { Layout } from "@/components/layout/layout"
 import { PublicLayout } from "@/components/layout/public-layout"
+import { RouterRoot } from "@/components/layout/route-scroll-restoration"
 
 function lazyNamedPage<TModule extends Record<string, ComponentType>>(
   loader: () => Promise<TModule>,
@@ -106,44 +107,52 @@ const NotFoundPage = lazyNamedPage(
 
 export const router = createBrowserRouter([
   {
-    element: <PublicLayout />,
-    children: [
-      { path: "/login", element: <LoginPage /> },
-      { path: "/register", element: <RegisterPage /> },
-      { path: "/password-reset", element: <PasswordResetPage /> },
-      {
-        path: "/course/mine/sync-callback",
-        element: <CourseEnrollmentSyncCallbackPage />,
-      },
-    ],
-  },
-  {
-    element: <RequireAuth />,
+    element: <RouterRoot />,
     children: [
       {
-        element: <Layout />,
+        element: <PublicLayout />,
         children: [
-          { path: "/", element: <HomePage /> },
-          { path: "/course", element: <CoursesPage /> },
-          { path: "/course/hot", element: <HotCoursesPage /> },
-          { path: "/course/:courseID", element: <CourseDetailPage /> },
-          { path: "/course/:courseID/review/new", element: <NewReviewPage /> },
-          { path: "/review", element: <ReviewsPage /> },
-          { path: "/review/followed", element: <FollowedReviewsPage /> },
-          { path: "/review/mine", element: <UserReviewsPage /> },
-          { path: "/course/mine", element: <UserCoursesPage /> },
-          { path: "/review/:reviewID", element: <ReviewDetailPage /> },
-          { path: "/review/:reviewID/edit", element: <EditReviewPage /> },
-          { path: "/teacher", element: <TeachersPage /> },
-          { path: "/teacher/:teacherID", element: <TeacherDetailPage /> },
-          { path: "/point", element: <UserPointsPage /> },
-          { path: "/api-key", element: <ApiKeysPage /> },
-          { path: "/settings", element: <UserSettingsPage /> },
-          { path: "/admin/user", element: <UserAdminPage /> },
-          { path: "/admin/site-stat", element: <SiteStatsPage /> },
-          { path: "/about", element: <AboutPage /> },
-          { path: "/faq", element: <FaqPage /> },
-          { path: "*", element: <NotFoundPage /> },
+          { path: "/login", element: <LoginPage /> },
+          { path: "/register", element: <RegisterPage /> },
+          { path: "/password-reset", element: <PasswordResetPage /> },
+          {
+            path: "/course/mine/sync-callback",
+            element: <CourseEnrollmentSyncCallbackPage />,
+          },
+        ],
+      },
+      {
+        element: <RequireAuth />,
+        children: [
+          {
+            element: <Layout />,
+            children: [
+              { path: "/", element: <HomePage /> },
+              { path: "/course", element: <CoursesPage /> },
+              { path: "/course/hot", element: <HotCoursesPage /> },
+              { path: "/course/:courseID", element: <CourseDetailPage /> },
+              {
+                path: "/course/:courseID/review/new",
+                element: <NewReviewPage />,
+              },
+              { path: "/review", element: <ReviewsPage /> },
+              { path: "/review/followed", element: <FollowedReviewsPage /> },
+              { path: "/review/mine", element: <UserReviewsPage /> },
+              { path: "/course/mine", element: <UserCoursesPage /> },
+              { path: "/review/:reviewID", element: <ReviewDetailPage /> },
+              { path: "/review/:reviewID/edit", element: <EditReviewPage /> },
+              { path: "/teacher", element: <TeachersPage /> },
+              { path: "/teacher/:teacherID", element: <TeacherDetailPage /> },
+              { path: "/point", element: <UserPointsPage /> },
+              { path: "/api-key", element: <ApiKeysPage /> },
+              { path: "/settings", element: <UserSettingsPage /> },
+              { path: "/admin/user", element: <UserAdminPage /> },
+              { path: "/admin/site-stat", element: <SiteStatsPage /> },
+              { path: "/about", element: <AboutPage /> },
+              { path: "/faq", element: <FaqPage /> },
+              { path: "*", element: <NotFoundPage /> },
+            ],
+          },
         ],
       },
     ],
