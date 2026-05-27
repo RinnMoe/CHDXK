@@ -2,6 +2,7 @@ import { Link } from "react-router-dom"
 import { RatingDisplay } from "./rating-display"
 import { TitleBadge } from "@/components/ui/title-badge"
 import type { CourseListItemDTO } from "@/api/course"
+import { displayTeacherTitle } from "@/lib/utils"
 
 interface CourseCompactCardProps {
   course: CourseListItemDTO
@@ -37,6 +38,8 @@ interface SameCodeCourseCardProps {
 }
 
 export function SameCodeCourseCard({ course }: SameCodeCourseCardProps) {
+  const teacherTitle = displayTeacherTitle(course.main_teacher.title)
+
   return (
     <Link
       to={`/course/${course.id}`}
@@ -48,9 +51,7 @@ export function SameCodeCourseCard({ course }: SameCodeCourseCardProps) {
             <span className="shrink-0 font-mono text-sm text-muted-foreground">
               {course.main_teacher.code}
             </span>
-            {course.main_teacher.title && (
-              <TitleBadge>{course.main_teacher.title}</TitleBadge>
-            )}
+            {teacherTitle && <TitleBadge>{teacherTitle}</TitleBadge>}
           </div>
           <div className="leading-tight font-semibold">
             {course.main_teacher.name}
