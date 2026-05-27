@@ -21,7 +21,12 @@ export function ReviewContent({
       <div className="flex flex-wrap items-center gap-2">
         <RatingStars value={rating} readOnly size="sm" />
         {semester && <CourseSemesterBadge semester={semester} />}
-        {score && <Badge variant="secondary">{score}</Badge>}
+        {score && (
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <span>成绩</span>
+            <Badge variant="secondary">{score}</Badge>
+          </div>
+        )}
       </div>
 
       <div className="prose prose-sm max-w-none text-sm leading-relaxed dark:prose-invert">
