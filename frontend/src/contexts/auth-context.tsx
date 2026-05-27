@@ -5,6 +5,7 @@ import {
   useRef,
   type ReactNode,
 } from "react"
+import { useQueryClient, type QueryClient } from "@tanstack/react-query"
 import {
   useCurrentUser,
   useLogin,
@@ -36,7 +37,19 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+async function clearBackendInterfaceCaches(
+  queryClient: QueryClient,
+  currentUser: AuthUserDTO | null
+) {
+  queryClient.removeQueries({
+    predicate: (query) => query.queryKey[0] !== "auth",
+  })
+  queryClient.setQueryData(["auth", "me"], currentUser)
+  await clearOfflineReadCaches()
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient()
   const { data: user, isLoading } = useCurrentUser()
   const previousUserID = useRef<number | null | undefined>(undefined)
   const loginMutation = useLogin()
@@ -57,9 +70,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (previousUserID.current !== currentUserID) {
       previousUserID.current = currentUserID
-      void clearOfflineReadCaches()
+      void clearBackendInterfaceCaches(queryClient, user ?? null)
     }
-  }, [isLoading, user?.id])
+  }, [isLoading, queryClient, user])
 
   const value: AuthContextValue = {
     user,
@@ -67,18 +80,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login: async (cmd) => {
       const loggedInUser = await loginMutation.mutateAsync(cmd)
       saveAuthSnapshot(loggedInUser)
-      await clearOfflineReadCaches()
+      await clearBackendInterfaceCaches(queryClient, loggedInUser)
       return loggedInUser
     },
     logout: async () => {
       await logoutMutation.mutateAsync()
       removeAuthSnapshot()
-      await clearOfflineReadCaches()
+      await clearBackendInterfaceCaches(queryClient, null)
     },
     register: async (cmd) => {
       const registeredUser = await registerMutation.mutateAsync(cmd)
       saveAuthSnapshot(registeredUser)
-      await clearOfflineReadCaches()
+      await clearBackendInterfaceCaches(queryClient, registeredUser)
       return registeredUser
     },
     sendRegisterCode: async (email) => {
