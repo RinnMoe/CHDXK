@@ -23,9 +23,9 @@ const notificationLabels: Record<CourseNotificationLevel, string> = {
 }
 
 const notificationDescriptions: Record<CourseNotificationLevel, string> = {
-  0: "不特别关注，也不屏蔽动态",
-  1: "关注后可在关注动态中查看更新",
-  2: "屏蔽后点评会过滤这门课",
+  0: "不关注，也不从点评列表中隐藏",
+  1: "在关注课程和关注点评中查看",
+  2: "在最新点评和点评搜索中隐藏此课点评",
 }
 
 const notificationOptions = [
