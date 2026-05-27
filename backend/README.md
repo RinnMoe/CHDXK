@@ -129,7 +129,7 @@ go run cmd/importer/main.go --config config/config.yaml --semester 2025-2026-1
 
 路由集中定义在 `internal/interface/web/router.go`。公开接口包括注册、登录、密码重置、CSRF token 和课程同步 callback；大多数 `/api` 接口需要登录；后台用户、站点统计和部分点评管理接口需要管理员权限。
 
-前端开发服务器默认从 `http://localhost:5173` 访问后端。CORS 默认允许 `http://localhost:5173` 和 `http://127.0.0.1:5173`，可通过 `server.cors.allowed_origins` 或 `JCOURSE_SERVER_CORS_ALLOWED_ORIGINS` 覆盖，并启用 cookie 凭据。
+前端开发服务器默认从 `http://localhost:5173` 访问后端。CORS 默认允许 `*`，可通过 `server.cors.allowed_origins` 或 `JCOURSE_SERVER_CORS_ALLOWED_ORIGINS` 覆盖，并启用 cookie 凭据。
 
 ## 数据库变更
 

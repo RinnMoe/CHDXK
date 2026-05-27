@@ -43,7 +43,7 @@ review:
 	if conf.Auth.Verification.CodeLength != 8 {
 		t.Fatalf("auth override code length = %d, want 8", conf.Auth.Verification.CodeLength)
 	}
-	if len(conf.Server.Cors.AllowedOrigins) != 2 || conf.Server.Cors.AllowedOrigins[0] != "http://localhost:5173" || conf.Server.Cors.AllowedOrigins[1] != "http://127.0.0.1:5173" {
+	if len(conf.Server.Cors.AllowedOrigins) != 1 || conf.Server.Cors.AllowedOrigins[0] != "*" {
 		t.Fatalf("server default cors origins = %#v", conf.Server.Cors.AllowedOrigins)
 	}
 	if conf.Server.Debug {
