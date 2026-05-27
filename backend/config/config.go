@@ -137,10 +137,7 @@ func setDefaults(v *viper.Viper) {
 		"debug": false,
 	})
 	setSectionDefaults(v, "server.cors", map[string]any{
-		"allowed_origins": []string{
-			"http://localhost:5173",
-			"http://127.0.0.1:5173",
-		},
+		"allowed_origins": []string{"*"},
 	})
 	setSectionDefaults(v, "session", map[string]any{
 		"max_age": middleware.DefaultSessionConfig.MaxAge,
