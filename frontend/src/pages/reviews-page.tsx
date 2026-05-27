@@ -27,10 +27,6 @@ function ReviewSearchInput({
   )
 
   useEffect(() => {
-    setSearchValue(initialValue)
-  }, [initialValue])
-
-  useEffect(() => {
     onSearchChange(debouncedSearchValue)
   }, [debouncedSearchValue, onSearchChange])
 
