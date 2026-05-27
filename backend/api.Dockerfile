@@ -6,17 +6,13 @@ WORKDIR /src
 
 COPY go.mod go.sum ./
 
-ENV GOPROXY=https://goproxy.cn
+ENV GOPROXY=https://goproxy.cn,direct
 
 RUN go mod download
 
 COPY . .
 
-RUN wget "http://arms-apm-cn-hangzhou.oss-cn-hangzhou.aliyuncs.com/instgo/instgo-linux-amd64" -O instgo
-
-RUN chmod +x instgo
-
-RUN instgo go build -trimpath -ldflags="-s -w" -o /out/jcourse-api ./cmd/api
+RUN go build -trimpath -ldflags="-s -w" -o /out/jcourse-api ./cmd/api
 
 FROM alpine:3.22
 
