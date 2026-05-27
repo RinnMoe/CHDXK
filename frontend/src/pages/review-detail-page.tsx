@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import { RiArrowLeftLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -8,20 +8,34 @@ import { PageTitle } from "@/components/common/page-title"
 import { useReview } from "@/hooks/use-review"
 
 export function ReviewDetailPage() {
+  const navigate = useNavigate()
   const { reviewID } = useParams<{ reviewID: string }>()
   const id = Number(reviewID)
   const { data: review, isLoading } = useReview(id)
+
+  function handleBack() {
+    if ((window.history.state?.idx ?? 0) > 0) {
+      navigate(-1)
+      return
+    }
+
+    navigate("/review")
+  }
 
   if (isLoading) {
     return (
       <>
         <PageTitle>点评</PageTitle>
         <PageShell>
-          <Button asChild variant="ghost" size="sm" className="mb-4">
-            <Link to="/review">
-              <RiArrowLeftLine data-icon="inline-start" />
-              返回
-            </Link>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="mb-4"
+            onClick={handleBack}
+          >
+            <RiArrowLeftLine data-icon="inline-start" />
+            返回
           </Button>
           <div className="space-y-4">
             <Skeleton className="h-8 w-1/2" />
@@ -39,8 +53,13 @@ export function ReviewDetailPage() {
         <PageShell>
           <div className="py-16 text-center">
             <p className="text-muted-foreground">点评不存在</p>
-            <Button asChild variant="link" className="mt-4">
-              <Link to="/review">返回点评列表</Link>
+            <Button
+              type="button"
+              variant="link"
+              className="mt-4"
+              onClick={handleBack}
+            >
+              返回
             </Button>
           </div>
         </PageShell>
@@ -52,11 +71,15 @@ export function ReviewDetailPage() {
     <>
       <PageTitle>点评</PageTitle>
       <PageShell>
-        <Button asChild variant="ghost" size="sm" className="mb-4">
-          <Link to="/review">
-            <RiArrowLeftLine data-icon="inline-start" />
-            返回点评列表
-          </Link>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="mb-4"
+          onClick={handleBack}
+        >
+          <RiArrowLeftLine data-icon="inline-start" />
+          返回
         </Button>
 
         <div className="space-y-4">
