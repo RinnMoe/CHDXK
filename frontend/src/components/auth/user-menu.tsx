@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
+import { RiAccountCircleLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -39,15 +40,13 @@ export function UserMenu() {
     )
   }
 
-  const initials = user.username.slice(0, 2).toUpperCase()
-
   return (
     <div className="ml-auto">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" aria-label="打开用户菜单">
-            <span className="flex size-6 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
-              {initials}
+            <span className="flex size-6 items-center justify-center rounded-full text-muted-foreground">
+              <RiAccountCircleLine className="size-6" aria-hidden="true" />
             </span>
           </Button>
         </DropdownMenuTrigger>
