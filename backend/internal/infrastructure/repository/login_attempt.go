@@ -23,27 +23,37 @@ func (r *LoginAttemptRepository) Increment(ctx context.Context, email string) (i
 	key := r.key(email)
 	count, err := r.client.Incr(ctx, key).Result()
 	if err != nil {
+		logCacheAccessFailure(ctx, "incr", key, err)
 		return 0, err
 	}
 	if count == 1 && r.lockout > 0 {
-		_ = r.client.Expire(ctx, key, r.lockout)
+		if err := r.client.Expire(ctx, key, r.lockout).Err(); err != nil {
+			logCacheAccessFailure(ctx, "expire", key, err)
+		}
 	}
 	return int(count), nil
 }
 
 func (r *LoginAttemptRepository) Get(ctx context.Context, email string) (int, error) {
-	val, err := r.client.Get(ctx, r.key(email)).Int()
+	key := r.key(email)
+	val, err := r.client.Get(ctx, key).Int()
 	if err == redis.Nil {
 		return 0, nil
 	}
 	if err != nil {
+		logCacheAccessFailure(ctx, "get", key, err)
 		return 0, err
 	}
 	return val, nil
 }
 
 func (r *LoginAttemptRepository) Reset(ctx context.Context, email string) error {
-	return r.client.Del(ctx, r.key(email)).Err()
+	key := r.key(email)
+	if err := r.client.Del(ctx, key).Err(); err != nil {
+		logCacheAccessFailure(ctx, "del", key, err)
+		return err
+	}
+	return nil
 }
 
 func (r *LoginAttemptRepository) key(email string) string {

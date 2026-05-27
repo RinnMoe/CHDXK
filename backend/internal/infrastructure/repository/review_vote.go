@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"jcourse/internal/domain/review"
+	"jcourse/pkg/logx"
 )
 
 type ReviewVoteRepository struct {
@@ -114,6 +115,8 @@ func (r *ReviewVoteRepository) FindByReviewsAndUser(ctx context.Context, reviewI
 				}
 				votes[vote.ReviewID] = vote
 			}
+		} else {
+			logx.Warn(ctx, "cache access failed", "operation", "mget", "keys", keys, "err", err)
 		}
 	}
 

@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"jcourse/internal/domain/course"
+	"jcourse/pkg/logx"
 )
 
 type CourseHotRepository struct {
@@ -28,10 +29,16 @@ func (r *CourseHotRepository) AddScore(ctx context.Context, courseID int, score 
 
 	member := strconv.Itoa(courseID)
 	pipe := r.client.Pipeline()
+	keys := make([]string, 0, len(periods))
 	for _, period := range periods {
-		pipe.ZIncrBy(ctx, r.key(period), float64(score), member)
+		key := r.key(period)
+		keys = append(keys, key)
+		pipe.ZIncrBy(ctx, key, float64(score), member)
 	}
 	_, err := pipe.Exec(ctx)
+	if err != nil {
+		logx.Warn(ctx, "cache access failed", "operation", "zincrby_pipeline", "keys", keys, "err", err)
+	}
 	return err
 }
 
@@ -43,8 +50,10 @@ func (r *CourseHotRepository) Top(ctx context.Context, period course.HotCoursePe
 		return nil, course.ErrInvalidHotCoursePeriod
 	}
 
-	items, err := r.client.ZRevRangeWithScores(ctx, r.key(period), 0, limit-1).Result()
+	key := r.key(period)
+	items, err := r.client.ZRevRangeWithScores(ctx, key, 0, limit-1).Result()
 	if err != nil {
+		logCacheAccessFailure(ctx, "zrevrange_with_scores", key, err)
 		return nil, err
 	}
 

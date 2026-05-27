@@ -93,12 +93,17 @@ func (r *AccessTrackerRepository) record(ctx context.Context, key string, id int
 		Score:  float64(at.UnixMilli()),
 		Member: member,
 	}).Err(); err != nil {
+		logCacheAccessFailure(ctx, "zaddnx", key, err)
 		return err
 	}
-	return r.cache.ZAddGT(ctx, key, redis.Z{
+	if err := r.cache.ZAddGT(ctx, key, redis.Z{
 		Score:  float64(at.UnixMilli()),
 		Member: member,
-	}).Err()
+	}).Err(); err != nil {
+		logCacheAccessFailure(ctx, "zaddgt", key, err)
+		return err
+	}
+	return nil
 }
 
 func (r *AccessTrackerRepository) readRecords(ctx context.Context, key string, limit int) ([]accessRecord, error) {
@@ -107,6 +112,7 @@ func (r *AccessTrackerRepository) readRecords(ctx context.Context, key string, l
 	}
 	items, err := r.cache.ZRangeWithScores(ctx, key, 0, int64(limit)-1).Result()
 	if err != nil {
+		logCacheAccessFailure(ctx, "zrange_with_scores", key, err)
 		return nil, err
 	}
 	records := make([]accessRecord, 0, len(items))
@@ -170,7 +176,11 @@ func (r *AccessTrackerRepository) ackRecords(ctx context.Context, key string, re
 	for _, record := range records {
 		args = append(args, strconv.FormatInt(record.ID, 10), strconv.FormatInt(record.Score, 10))
 	}
-	return ackAccessScript.Run(ctx, r.cache, []string{key}, args...).Err()
+	if err := ackAccessScript.Run(ctx, r.cache, []string{key}, args...).Err(); err != nil {
+		logCacheAccessFailure(ctx, "eval_ack_access", key, err)
+		return err
+	}
+	return nil
 }
 
 func (r *AccessTrackerRepository) userKey() string {

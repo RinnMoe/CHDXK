@@ -30,6 +30,7 @@ func (r *VerificationCodeRepository) ReserveSend(ctx context.Context, email stri
 	key := r.cooldownKey(email)
 	ok, err := r.client.SetNX(ctx, key, "1", interval).Result()
 	if err != nil {
+		logCacheAccessFailure(ctx, "setnx", key, err)
 		return 0, err
 	}
 	if ok {
@@ -37,6 +38,7 @@ func (r *VerificationCodeRepository) ReserveSend(ctx context.Context, email stri
 	}
 	ttl, err := r.client.TTL(ctx, key).Result()
 	if err != nil {
+		logCacheAccessFailure(ctx, "ttl", key, err)
 		return 0, err
 	}
 	if ttl < 0 {
@@ -47,15 +49,22 @@ func (r *VerificationCodeRepository) ReserveSend(ctx context.Context, email stri
 
 func (r *VerificationCodeRepository) Save(ctx context.Context, code verification.Code, ttl time.Duration) error {
 	value := fmt.Sprintf("%s|%d", code.Code, code.ExpiresAt.Unix())
-	return r.client.Set(ctx, r.codeKey(code.Email), value, ttl).Err()
+	key := r.codeKey(code.Email)
+	if err := r.client.Set(ctx, key, value, ttl).Err(); err != nil {
+		logCacheAccessFailure(ctx, "set", key, err)
+		return err
+	}
+	return nil
 }
 
 func (r *VerificationCodeRepository) Get(ctx context.Context, email string) (*verification.Code, error) {
-	value, err := r.client.Get(ctx, r.codeKey(email)).Result()
+	key := r.codeKey(email)
+	value, err := r.client.Get(ctx, key).Result()
 	if errors.Is(err, redis.Nil) {
 		return nil, nil
 	}
 	if err != nil {
+		logCacheAccessFailure(ctx, "get", key, err)
 		return nil, err
 	}
 	parts := strings.Split(value, "|")
@@ -71,7 +80,12 @@ func (r *VerificationCodeRepository) Get(ctx context.Context, email string) (*ve
 }
 
 func (r *VerificationCodeRepository) Delete(ctx context.Context, email string) error {
-	return r.client.Del(ctx, r.codeKey(email)).Err()
+	key := r.codeKey(email)
+	if err := r.client.Del(ctx, key).Err(); err != nil {
+		logCacheAccessFailure(ctx, "del", key, err)
+		return err
+	}
+	return nil
 }
 
 func (r *VerificationCodeRepository) codeKey(email string) string {
