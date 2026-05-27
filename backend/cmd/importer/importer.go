@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/lib/pq"
@@ -224,6 +225,50 @@ type courseAgg struct {
 	language        string
 }
 
+type courseOfferingUpdate struct {
+	CourseID      int            `json:"id"`
+	MainTeacherID int            `json:"main_teacher_id"`
+	TargetYears   pq.StringArray `json:"target_years"`
+	Categories    pq.StringArray `json:"categories"`
+	TeacherIDs    pq.Int64Array  `json:"teacher_ids"`
+}
+
+func (imp *Importer) updateCoursesFromOfferingsBatch(ctx context.Context, updates []courseOfferingUpdate) {
+	if len(updates) == 0 {
+		return
+	}
+
+	payload, err := json.Marshal(updates)
+	if err != nil {
+		logx.Error(ctx, "failed to marshal course offering updates", "error", err)
+		return
+	}
+
+	result := imp.db.WithContext(ctx).Exec(`
+		WITH updates AS (
+			SELECT id, main_teacher_id, target_years, categories, teacher_ids
+			FROM jsonb_to_recordset(?::jsonb) AS v(
+				id integer,
+				main_teacher_id integer,
+				target_years text[],
+				categories text[],
+				teacher_ids integer[]
+			)
+		)
+		UPDATE courses AS c
+		SET main_teacher_id = v.main_teacher_id,
+		    target_years = v.target_years,
+		    categories = v.categories,
+		    teacher_ids = v.teacher_ids
+		FROM updates AS v
+		WHERE c.id = v.id
+		  AND c.last_semester = ?
+	`, string(payload), imp.semester)
+	if result.Error != nil {
+		logx.Error(ctx, "failed to batch update courses from offerings", "error", result.Error)
+	}
+}
+
 func (imp *Importer) upsertOfferedCourses(ctx context.Context, rows []CSVRow, teacherIDMap map[string]int, courseMap map[string]repository.CourseEntity) {
 	onConflict := clause.OnConflict{
 		Columns: []clause.Column{{Name: "course_id"}, {Name: "semester"}},
@@ -270,6 +315,7 @@ func (imp *Importer) upsertOfferedCourses(ctx context.Context, rows []CSVRow, te
 	}
 
 	var batch []repository.OfferedCourseEntity
+	var courseUpdateBatch []courseOfferingUpdate
 	processed := 0
 	skipped := 0
 	for key, agg := range aggMap {
@@ -298,12 +344,17 @@ func (imp *Importer) upsertOfferedCourses(ctx context.Context, rows []CSVRow, te
 		mainTeacherID := teacherIDMap[agg.mainTeacherCode]
 
 		if course.LastSemester == imp.semester {
-			imp.db.Model(&repository.CourseEntity{}).Where("id = ? AND last_semester = ?", course.ID, imp.semester).Updates(map[string]any{
-				"main_teacher_id": mainTeacherID,
-				"target_years":    targetYears,
-				"categories":      courseCats,
-				"teacher_ids":     allTIDs,
+			courseUpdateBatch = append(courseUpdateBatch, courseOfferingUpdate{
+				CourseID:      course.ID,
+				MainTeacherID: mainTeacherID,
+				TargetYears:   targetYears,
+				Categories:    courseCats,
+				TeacherIDs:    allTIDs,
 			})
+			if len(courseUpdateBatch) >= batchSize {
+				imp.updateCoursesFromOfferingsBatch(ctx, courseUpdateBatch)
+				courseUpdateBatch = courseUpdateBatch[:0]
+			}
 		}
 
 		batch = append(batch, repository.OfferedCourseEntity{
@@ -325,6 +376,9 @@ func (imp *Importer) upsertOfferedCourses(ctx context.Context, rows []CSVRow, te
 	}
 	if len(batch) > 0 {
 		imp.db.Clauses(onConflict).Create(&batch)
+	}
+	if len(courseUpdateBatch) > 0 {
+		imp.updateCoursesFromOfferingsBatch(ctx, courseUpdateBatch)
 	}
 	logx.Info(ctx, "offered courses imported", "imported", processed-skipped, "skipped", skipped)
 }
