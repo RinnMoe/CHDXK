@@ -12,7 +12,7 @@ export function RatingDistribution({ rating }: RatingDistributionProps) {
   const stars = Array.from({ length: 5 }, (_, i) => i < filled)
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-8 md:flex-col md:items-stretch md:gap-3 2xl:flex-row 2xl:items-center 2xl:gap-8">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-8 md:flex-col md:items-stretch md:gap-3">
       <div className="flex items-center justify-center gap-6">
         <div className="text-3xl font-bold tabular-nums">
           {rating.avg > 0 ? rating.avg.toFixed(1) : "—"}
