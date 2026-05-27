@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -52,6 +53,9 @@ export function ReviewRevisionsDialog({
       <DialogContent className="max-h-[80vh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>点评 #{review.id} 的修订历史</DialogTitle>
+          <DialogDescription>
+            查看这条点评保存过的历史版本内容。
+          </DialogDescription>
         </DialogHeader>
 
         <div className="min-h-0 overflow-y-auto pr-1">

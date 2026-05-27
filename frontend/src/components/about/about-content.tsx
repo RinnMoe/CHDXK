@@ -1,5 +1,11 @@
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { brand } from "@/config/brand"
 
 const agreementSections = [
@@ -108,6 +114,10 @@ export function AboutAgreementExcerpt() {
       </section>
 
       <DialogContent className="max-h-[calc(100dvh-4rem)] overflow-y-auto sm:max-w-3xl">
+        <DialogTitle className="sr-only">用户协议与站点说明</DialogTitle>
+        <DialogDescription className="sr-only">
+          阅读 {brand.name} 的用户协议、站点说明和隐私说明。
+        </DialogDescription>
         <AboutContent />
       </DialogContent>
     </Dialog>
