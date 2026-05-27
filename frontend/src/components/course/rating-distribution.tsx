@@ -1,5 +1,6 @@
 import type { RatingInfoDTO } from "@/api/course"
 import { RiStarFill, RiStarLine } from "@remixicon/react"
+import { Fragment } from "react"
 
 interface RatingDistributionProps {
   rating: RatingInfoDTO
@@ -30,30 +31,30 @@ export function RatingDistribution({ rating }: RatingDistributionProps) {
             )}
           </div>
           <span className="text-center text-sm text-muted-foreground">
-            {rating.count}条点评
+            {rating.count} 条点评
           </span>
         </div>
       </div>
 
-      <div className="max-w-xs flex-1 space-y-1.5">
+      <div className="grid max-w-xs flex-1 grid-cols-[2rem_minmax(0,1fr)_max-content] items-center gap-x-2 gap-y-1.5 text-sm">
         {[5, 4, 3, 2, 1].map((star) => {
           const count = rating.distribution[star - 1]
           const pct = (count / total) * 100
           return (
-            <div key={star} className="flex items-center gap-2 text-sm">
+            <Fragment key={star}>
               <span className="w-8 shrink-0 text-muted-foreground">
                 {star} 星
               </span>
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+              <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-muted">
                 <div
                   className="h-full bg-yellow-400"
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              <span className="w-16 text-right text-muted-foreground tabular-nums">
-                {count}条点评
+              <span className="shrink-0 whitespace-nowrap text-right text-muted-foreground tabular-nums">
+                {count} 条点评
               </span>
-            </div>
+            </Fragment>
           )
         })}
       </div>

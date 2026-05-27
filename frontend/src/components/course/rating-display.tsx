@@ -31,7 +31,7 @@ export function RatingDisplay({ rating, size = "md" }: RatingDisplayProps) {
         )}
       </div>
       <span className="text-center text-sm text-muted-foreground">
-        {rating.count}条点评
+        {rating.count} 条点评
       </span>
     </div>
   )

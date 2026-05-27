@@ -32,7 +32,7 @@ function OptionLabel({ label, count }: { label: string; count: number }) {
     <span className="flex min-w-0 items-center gap-1">
       <span className="truncate">{label}</span>
       <span className="shrink-0 text-sm text-muted-foreground">
-        （{count}条点评）
+        （{count} 条点评）
       </span>
     </span>
   )
