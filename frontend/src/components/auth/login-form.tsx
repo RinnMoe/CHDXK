@@ -96,7 +96,7 @@ export function LoginForm() {
                       to="/password-reset"
                       className="text-sm text-muted-foreground hover:text-foreground"
                     >
-                      忘记密码？
+                      忘记或未设密码？
                     </Link>
                   </div>
                   <Input
