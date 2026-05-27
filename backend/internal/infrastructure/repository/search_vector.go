@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"strings"
 
 	"gorm.io/gorm"
@@ -29,6 +30,16 @@ func applySearchVectorFilter(db *gorm.DB, config, column, q string) *gorm.DB {
 		return db
 	}
 	return db.Where(column+" @@ websearch_to_tsquery(?::regconfig, ?)", config, query)
+}
+
+func applySearchVectorOrNameChainFilter[T any](db gorm.ChainInterface[T], config, vectorColumn, nameColumn, q string) gorm.ChainInterface[T] {
+	query := searchQuery(q)
+	if query == "" {
+		return db
+	}
+	nameLike := "%" + query + "%"
+	condition := fmt.Sprintf("(%s @@ websearch_to_tsquery(?::regconfig, ?) OR %s ILIKE ?)", vectorColumn, nameColumn)
+	return db.Where(condition, config, query, nameLike)
 }
 
 func searchRankOrder(column string, q string) string {

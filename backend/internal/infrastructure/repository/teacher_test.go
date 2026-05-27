@@ -112,6 +112,19 @@ func TestTeacherRepository_FindBy(t *testing.T) {
 		}
 	})
 
+	t.Run("search by q name substring", func(t *testing.T) {
+		results, total, err := repo.FindBy(ctx, teacher.TeacherFilter{Q: "李"})
+		if err != nil {
+			t.Fatalf("FindBy: %v", err)
+		}
+		if total != 1 {
+			t.Errorf("total: got %d, want 1", total)
+		}
+		if len(results) == 0 || results[0].Name != "李四" {
+			t.Errorf("Name: got %v, want 李四", results)
+		}
+	})
+
 	t.Run("pagination", func(t *testing.T) {
 		results, total, err := repo.FindBy(ctx, teacher.TeacherFilter{Page: 1, PageSize: 2})
 		if err != nil {

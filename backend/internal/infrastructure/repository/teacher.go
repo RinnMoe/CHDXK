@@ -25,6 +25,10 @@ func NewTeacherRepository(db *gorm.DB, cache ...*redis.Client) *TeacherRepositor
 	return &TeacherRepository{db: db, cache: client, searchConfig: SearchConfig(db)}
 }
 
+func (r *TeacherRepository) baseTeacherQuery() gorm.ChainInterface[TeacherEntity] {
+	return gorm.G[TeacherEntity](r.db).Where("1 = 1")
+}
+
 func newTeacherViewFromEntity(e *TeacherEntity) teacher.TeacherView {
 	return teacher.TeacherView{
 		ID:         e.ID,
@@ -35,9 +39,7 @@ func newTeacherViewFromEntity(e *TeacherEntity) teacher.TeacherView {
 	}
 }
 
-func (r *TeacherRepository) FindBy(ctx context.Context, filter teacher.TeacherFilter) ([]teacher.TeacherView, int64, error) {
-	db := r.db.WithContext(ctx).Model(&TeacherEntity{})
-
+func (r *TeacherRepository) applyFilter(db gorm.ChainInterface[TeacherEntity], filter teacher.TeacherFilter) gorm.ChainInterface[TeacherEntity] {
 	if len(filter.TeacherIDs) > 0 {
 		db = db.Where("id IN ?", filter.TeacherIDs)
 	}
@@ -48,7 +50,7 @@ func (r *TeacherRepository) FindBy(ctx context.Context, filter teacher.TeacherFi
 		db = db.Where("title = ?", filter.Title)
 	}
 	if filter.Q != "" {
-		db = applySearchVectorFilter(db, r.searchConfig, "search_vector", filter.Q)
+		db = applySearchVectorOrNameChainFilter(db, r.searchConfig, "search_vector", "name", filter.Q)
 	}
 	if filter.Code != "" {
 		db = db.Where("LOWER(code) = LOWER(?)", filter.Code)
@@ -56,23 +58,37 @@ func (r *TeacherRepository) FindBy(ctx context.Context, filter teacher.TeacherFi
 	if filter.Name != "" {
 		db = db.Where("name = ?", filter.Name)
 	}
+	return db
+}
 
-	var total int64
-	if err := db.Count(&total).Error; err != nil {
-		return nil, 0, err
-	}
-
-	db = db.
+func (r *TeacherRepository) applySort(db gorm.ChainInterface[TeacherEntity]) gorm.ChainInterface[TeacherEntity] {
+	return db.
 		Order(clause.OrderByColumn{Column: clause.Column{Name: "code"}}).
 		Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}})
+}
 
+func (r *TeacherRepository) applyPagination(db gorm.ChainInterface[TeacherEntity], filter teacher.TeacherFilter) gorm.ChainInterface[TeacherEntity] {
 	if filter.Page > 0 && filter.PageSize > 0 {
 		offset := (filter.Page - 1) * filter.PageSize
 		db = db.Offset(offset).Limit(filter.PageSize)
 	}
+	return db
+}
 
-	var entities []TeacherEntity
-	if err := db.Find(&entities).Error; err != nil {
+func (r *TeacherRepository) FindBy(ctx context.Context, filter teacher.TeacherFilter) ([]teacher.TeacherView, int64, error) {
+	db := r.applyFilter(r.baseTeacherQuery(), filter)
+	countDB := r.applyFilter(r.baseTeacherQuery(), filter)
+
+	total, err := countDB.Count(ctx, "id")
+	if err != nil {
+		return nil, 0, err
+	}
+
+	db = r.applySort(db)
+	db = r.applyPagination(db, filter)
+
+	entities, err := db.Find(ctx)
+	if err != nil {
 		return nil, 0, err
 	}
 

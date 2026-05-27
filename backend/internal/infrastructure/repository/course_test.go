@@ -122,6 +122,19 @@ func TestCourseRepository_FindBy(t *testing.T) {
 		}
 	})
 
+	t.Run("search by q course name substring", func(t *testing.T) {
+		results, total, err := repo.FindBy(ctx, course.CourseFilter{Q: "数学"})
+		if err != nil {
+			t.Fatalf("FindBy: %v", err)
+		}
+		if total != 1 {
+			t.Errorf("total: got %d, want 1", total)
+		}
+		if len(results) == 0 || results[0].Code != "MA101" {
+			t.Errorf("Code: got %v, want MA101", results)
+		}
+	})
+
 	t.Run("search by q teacher name", func(t *testing.T) {
 		results, total, err := repo.FindBy(ctx, course.CourseFilter{Q: "张三"})
 		if err != nil {

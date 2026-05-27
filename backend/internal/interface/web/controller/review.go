@@ -3,6 +3,7 @@ package controller
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -32,7 +33,7 @@ func bindReviewListFilter(c *gin.Context) (application.ReviewListFilter, error) 
 	if f.OrderBy == "" && f.Order != "" {
 		f.OrderBy = f.Order
 	}
-	if f.OrderBy == "" {
+	if f.OrderBy == "" && strings.TrimSpace(f.Q) == "" {
 		f.OrderBy = "created_at"
 	}
 	return f, nil
