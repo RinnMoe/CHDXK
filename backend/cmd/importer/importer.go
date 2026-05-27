@@ -38,10 +38,10 @@ func (imp *Importer) Run(ctx context.Context, rows []CSVRow) error {
 	imp.upsertCourses(ctx, courses, teacherIDMap)
 
 	logx.Info(ctx, "resolving course ids")
-	courseIDMap := imp.resolveCourseIDs(ctx)
+	courseMap := imp.resolveCourseIDs(ctx)
 
 	logx.Info(ctx, "creating offered courses")
-	imp.upsertOfferedCourses(ctx, rows, teacherIDMap, courseIDMap)
+	imp.upsertOfferedCourses(ctx, rows, teacherIDMap, courseMap)
 
 	logx.Info(ctx, "syncing course languages from last offered courses")
 	if err := imp.syncCourseLanguagesFromLastOfferings(ctx); err != nil {
@@ -187,14 +187,14 @@ func (imp *Importer) upsertCourses(ctx context.Context, courses map[string]CSVRo
 	logx.Info(ctx, "courses imported", "imported", len(courses)-skipped, "skipped", skipped)
 }
 
-func (imp *Importer) resolveCourseIDs(ctx context.Context) map[string]int {
+func (imp *Importer) resolveCourseIDs(ctx context.Context) map[string]repository.CourseEntity {
 	var courses []repository.CourseEntity
 	imp.db.Model(&repository.CourseEntity{}).
 		Joins("MainTeacher").
 		Find(&courses)
-	m := make(map[string]int, len(courses))
+	m := make(map[string]repository.CourseEntity, len(courses))
 	for _, c := range courses {
-		m[courseKey(c.Code, c.MainTeacher.Code)] = c.ID
+		m[courseKey(c.Code, c.MainTeacher.Code)] = c
 	}
 	logx.Info(ctx, "resolved course ids", "count", len(m))
 	return m
@@ -224,7 +224,7 @@ type courseAgg struct {
 	language        string
 }
 
-func (imp *Importer) upsertOfferedCourses(ctx context.Context, rows []CSVRow, teacherIDMap map[string]int, courseIDMap map[string]int) {
+func (imp *Importer) upsertOfferedCourses(ctx context.Context, rows []CSVRow, teacherIDMap map[string]int, courseMap map[string]repository.CourseEntity) {
 	onConflict := clause.OnConflict{
 		Columns: []clause.Column{{Name: "course_id"}, {Name: "semester"}},
 		DoUpdates: clause.Assignments(map[string]any{
@@ -274,7 +274,7 @@ func (imp *Importer) upsertOfferedCourses(ctx context.Context, rows []CSVRow, te
 	skipped := 0
 	for key, agg := range aggMap {
 		processed++
-		courseID, ok := courseIDMap[key]
+		course, ok := courseMap[key]
 		if !ok {
 			skipped++
 			if processed%500 == 0 {
@@ -297,15 +297,17 @@ func (imp *Importer) upsertOfferedCourses(ctx context.Context, rows []CSVRow, te
 		}
 		mainTeacherID := teacherIDMap[agg.mainTeacherCode]
 
-		imp.db.Model(&repository.CourseEntity{}).Where("id = ? AND last_semester = ?", courseID, imp.semester).Updates(map[string]any{
-			"main_teacher_id": mainTeacherID,
-			"target_years":    targetYears,
-			"categories":      courseCats,
-			"teacher_ids":     allTIDs,
-		})
+		if course.LastSemester == imp.semester {
+			imp.db.Model(&repository.CourseEntity{}).Where("id = ? AND last_semester = ?", course.ID, imp.semester).Updates(map[string]any{
+				"main_teacher_id": mainTeacherID,
+				"target_years":    targetYears,
+				"categories":      courseCats,
+				"teacher_ids":     allTIDs,
+			})
+		}
 
 		batch = append(batch, repository.OfferedCourseEntity{
-			CourseID:    courseID,
+			CourseID:    course.ID,
 			Semester:    imp.semester,
 			Language:    agg.language,
 			TargetYears: targetYears,
