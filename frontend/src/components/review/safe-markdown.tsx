@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom"
 import Markdown from "react-markdown"
 import rehypeSanitize from "rehype-sanitize"
+import remarkBreaks from "remark-breaks"
 import remarkGfm from "remark-gfm"
 import type { Components } from "react-markdown"
 
@@ -108,7 +109,7 @@ export function SafeMarkdown({ content }: SafeMarkdownProps) {
   return (
     <Markdown
       components={markdownComponents}
-      remarkPlugins={[remarkGfm, remarkReviewReferences]}
+      remarkPlugins={[remarkGfm, remarkBreaks, remarkReviewReferences]}
       rehypePlugins={[rehypeSanitize]}
       skipHtml
     >
