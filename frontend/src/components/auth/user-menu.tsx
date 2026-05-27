@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { RiAccountCircleLine } from "@remixicon/react"
+import { RiUserLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -29,7 +29,7 @@ export function UserMenu() {
 
   if (!user) {
     return (
-      <div className="ml-auto flex gap-2">
+      <div className="flex gap-2">
         <Button variant="ghost" size="sm" asChild>
           <Link to="/login">登录</Link>
         </Button>
@@ -41,12 +41,17 @@ export function UserMenu() {
   }
 
   return (
-    <div className="ml-auto">
+    <div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label="打开用户菜单">
-            <span className="flex size-6 items-center justify-center rounded-full text-muted-foreground">
-              <RiAccountCircleLine className="size-6" aria-hidden="true" />
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="text-foreground"
+            aria-label="打开用户菜单"
+          >
+            <span className="flex items-center justify-center">
+              <RiUserLine aria-hidden="true" />
             </span>
           </Button>
         </DropdownMenuTrigger>

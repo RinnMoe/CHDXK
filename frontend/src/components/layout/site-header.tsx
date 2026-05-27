@@ -95,6 +95,7 @@ function HeaderSearch() {
           type="button"
           variant="ghost"
           size="icon-sm"
+          className="text-foreground"
           aria-expanded={open}
           aria-label="搜索"
           data-shortcut-target="site-search"
@@ -216,7 +217,11 @@ export function SiteHeader() {
           {/* Mobile menu trigger */}
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon-sm" className="md:hidden">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="text-foreground md:hidden"
+              >
                 <RiMenuLine />
                 <span className="sr-only">菜单</span>
               </Button>
