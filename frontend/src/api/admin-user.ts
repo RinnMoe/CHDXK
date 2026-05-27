@@ -11,15 +11,31 @@ export interface AdminUserDTO {
   suspended: boolean
   suspended_at?: string
   suspend_till?: string
+  is_admin: () => boolean
+  is_super_admin: () => boolean
+}
+
+type AdminUserResponse = Omit<AdminUserDTO, "is_admin" | "is_super_admin">
+
+function normalizeAdminUser(user: AdminUserResponse): AdminUserDTO {
+  return {
+    ...user,
+    is_admin: () => user.role === "admin" || user.role === "super_admin",
+    is_super_admin: () => user.role === "super_admin",
+  }
 }
 
 export function listAdminUsers(): Promise<AdminUserDTO[]> {
-  return apiClient(`${BASE_URL}/admin/user/admin`)
+  return apiClient<AdminUserResponse[]>(`${BASE_URL}/admin/user/admin`).then(
+    (users) => users.map(normalizeAdminUser)
+  )
 }
 
 export function getAdminUserByEmail(email: string): Promise<AdminUserDTO> {
   const params = new URLSearchParams({ email })
-  return apiClient(`${BASE_URL}/admin/user/by-email?${params.toString()}`)
+  return apiClient<AdminUserResponse>(
+    `${BASE_URL}/admin/user/by-email?${params.toString()}`
+  ).then(normalizeAdminUser)
 }
 
 export interface SuspendAdminUserCommand {

@@ -12,8 +12,10 @@ import (
 )
 
 var (
-	ErrCannotSuspendAdmin = auth.ErrCannotSuspendAdmin
-	ErrCannotOperateSelf  = auth.ErrCannotOperateSelf
+	ErrCannotSuspendAdmin     = auth.ErrCannotSuspendAdmin
+	ErrCannotOperateSelf      = auth.ErrCannotOperateSelf
+	ErrRequireSuperAdmin      = auth.ErrRequireSuperAdmin
+	ErrCannotModifySuperAdmin = auth.ErrCannotModifySuperAdmin
 )
 
 type AdminUserCommandService struct {
@@ -62,7 +64,7 @@ func (s *AdminUserCommandService) ClearSuspension(ctx context.Context, actor *au
 }
 
 func (s *AdminUserCommandService) GrantAdmin(ctx context.Context, actor *auth.User, userID int) error {
-	err := mapAuthUserNotFound(s.adminUsers.GrantAdmin(ctx, actor.ID, userID))
+	err := mapAuthUserNotFound(s.adminUsers.GrantAdmin(ctx, actor, userID))
 	if err != nil {
 		return err
 	}
@@ -77,7 +79,7 @@ func (s *AdminUserCommandService) GrantAdmin(ctx context.Context, actor *auth.Us
 }
 
 func (s *AdminUserCommandService) RevokeAdmin(ctx context.Context, actor *auth.User, userID int) error {
-	err := mapAuthUserNotFound(s.adminUsers.RevokeAdmin(ctx, actor.ID, userID))
+	err := mapAuthUserNotFound(s.adminUsers.RevokeAdmin(ctx, actor, userID))
 	if err != nil {
 		return err
 	}

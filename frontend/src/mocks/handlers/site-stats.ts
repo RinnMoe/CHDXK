@@ -8,7 +8,7 @@ function requireAdmin() {
     return HttpResponse.json({ error: "unauthorized" }, { status: 401 })
   }
   const u = findUserByID(mockSession.userID)
-  if (!u || u.role !== "admin") {
+  if (!u || !u.is_admin()) {
     return HttpResponse.json({ error: "forbidden" }, { status: 403 })
   }
   return null

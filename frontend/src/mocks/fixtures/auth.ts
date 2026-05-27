@@ -1,4 +1,4 @@
-import type { AuthUserDTO } from "@/api/auth"
+import { normalizeAuthUser, type AuthUserDTO } from "@/api/auth"
 
 interface MockUser {
   id: number
@@ -6,23 +6,35 @@ interface MockUser {
   email: string
   password: string
   role: string
+  is_admin: () => boolean
+  is_super_admin: () => boolean
+}
+
+type PersistedMockUser = Omit<MockUser, "is_admin" | "is_super_admin">
+
+function normalizeMockUser(user: PersistedMockUser): MockUser {
+  return {
+    ...user,
+    is_admin: () => user.role === "admin" || user.role === "super_admin",
+    is_super_admin: () => user.role === "super_admin",
+  }
 }
 
 const initialUsers: MockUser[] = [
-  {
+  normalizeMockUser({
     id: 1,
     username: "demo",
     email: "demo@sjtu.edu.cn",
     password: "password",
     role: "user",
-  },
-  {
+  }),
+  normalizeMockUser({
     id: 2,
     username: "admin",
     email: "admin@sjtu.edu.cn",
     password: "password",
-    role: "admin",
-  },
+    role: "super_admin",
+  }),
 ]
 
 interface MockAuthState {
@@ -33,7 +45,7 @@ interface MockAuthState {
 
 interface PersistedMockAuthState {
   version: 1
-  users: MockUser[]
+  users: PersistedMockUser[]
   session: { userID: number | null }
   codes: [string, { code: string; sentAt: number }][]
 }
@@ -65,7 +77,7 @@ function readStoredMockAuthState(): MockAuthState | null {
     }
 
     return {
-      users: parsed.users,
+      users: parsed.users.map(normalizeMockUser),
       session: { userID: parsed.session.userID ?? null },
       codes: new Map(parsed.codes ?? []),
     }
@@ -132,7 +144,7 @@ export function findUserByID(id: number): MockUser | undefined {
 export function addUser(email: string, password: string): MockUser {
   const id = Math.max(0, ...mockUsers.map((u) => u.id)) + 1
   const username = email.split("@")[0]
-  const user: MockUser = { id, username, email, password, role: "user" }
+  const user = normalizeMockUser({ id, username, email, password, role: "user" })
   mockUsers.push(user)
   persistMockAuthState()
   return user
@@ -149,5 +161,10 @@ export function setMockUserPassword(user: MockUser, password: string) {
 }
 
 export function toAuthUserDTO(u: MockUser): AuthUserDTO {
-  return { id: u.id, username: u.username, email: u.email, role: u.role }
+  return normalizeAuthUser({
+    id: u.id,
+    username: u.username,
+    email: u.email,
+    role: u.role,
+  })
 }

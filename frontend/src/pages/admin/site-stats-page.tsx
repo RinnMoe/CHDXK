@@ -136,7 +136,7 @@ export function SiteStatsPage() {
 
   if (authLoading) return null
   if (!user) return <Navigate to={loginRedirectPath} replace />
-  if (user.role !== "admin") {
+  if (!user.is_admin()) {
     return (
       <>
         <PageTitle>站点统计</PageTitle>

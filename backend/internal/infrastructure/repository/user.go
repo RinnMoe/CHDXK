@@ -196,8 +196,11 @@ func (r *UserRepository) FindByID(ctx context.Context, id int) (*auth.User, erro
 	return &d, nil
 }
 
-func (r *UserRepository) FindByRole(ctx context.Context, role string) ([]auth.User, error) {
-	es, err := gorm.G[UserEntity](r.db).Where("role = ?", role).Order("id ASC").Find(ctx)
+func (r *UserRepository) FindAdmin(ctx context.Context) ([]auth.User, error) {
+	es, err := gorm.G[UserEntity](r.db).
+		Where("role IN ?", []string{auth.RoleSuperAdmin, auth.RoleAdmin}).
+		Order("id ASC").
+		Find(ctx)
 	if err != nil {
 		return nil, err
 	}

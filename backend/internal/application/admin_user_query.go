@@ -54,10 +54,11 @@ func (s *AdminUserQueryService) FindByEmail(ctx context.Context, email string) (
 }
 
 func (s *AdminUserQueryService) ListAdmins(ctx context.Context) ([]AdminUserDTO, error) {
-	users, err := s.userRepo.FindByRole(ctx, auth.RoleAdmin)
+	users, err := s.userRepo.FindAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
+
 	items := make([]AdminUserDTO, 0, len(users))
 	for i := range users {
 		acct, err := s.accountRepo.FindByID(ctx, users[i].ID)

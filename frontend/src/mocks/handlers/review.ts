@@ -32,7 +32,7 @@ function paginate<T>(items: T[], page: number, pageSize: number) {
 function withPrivateFields(review: ReviewDTO): ReviewDTO {
   const user = mockSession.userID ? findUserByID(mockSession.userID) : undefined
   if (!user) return { ...review, user_id: undefined }
-  if (review.user_id === user.id || user.role === "admin") return { ...review }
+  if (review.user_id === user.id || user.is_admin()) return { ...review }
   return { ...review, user_id: undefined }
 }
 
@@ -63,7 +63,7 @@ function buildRevisions(review: ReviewDTO): ReviewRevisionDTO[] {
 
 function isCurrentUserAdmin() {
   const user = mockSession.userID ? findUserByID(mockSession.userID) : undefined
-  return user?.role === "admin"
+  return user?.is_admin() ?? false
 }
 
 function applyReviewFilter(url: URL, list: ReviewDTO[]): ReviewDTO[] {

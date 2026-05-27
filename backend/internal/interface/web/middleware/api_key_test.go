@@ -201,7 +201,7 @@ func (systemAuthUserRepo) Update(context.Context, *auth.User) error { return nil
 
 func (systemAuthUserRepo) FindByID(context.Context, int) (*auth.User, error) { return nil, nil }
 
-func (systemAuthUserRepo) FindByRole(context.Context, string) ([]auth.User, error) {
+func (systemAuthUserRepo) FindAdmin(context.Context) ([]auth.User, error) {
 	return nil, nil
 }
 

@@ -35,7 +35,7 @@ export function UserAdminPage() {
 
   if (authLoading) return null
   if (!user) return <Navigate to={loginRedirectPath} replace />
-  if (user.role !== "admin") {
+  if (!user.is_admin()) {
     return (
       <>
         <PageTitle>管理</PageTitle>
@@ -64,11 +64,17 @@ export function UserAdminPage() {
             </TabsList>
 
             <TabsContent value="user" className="space-y-6">
-              <AdminUserQueryTab currentUserID={user.id} />
+              <AdminUserQueryTab
+                currentUserID={user.id}
+                currentUserIsSuperAdmin={user.is_super_admin()}
+              />
             </TabsContent>
 
             <TabsContent value="admin" className="space-y-3">
-              <AdminUsersTab currentUserID={user.id} />
+              <AdminUsersTab
+                currentUserID={user.id}
+                currentUserIsSuperAdmin={user.is_super_admin()}
+              />
             </TabsContent>
 
             <TabsContent value="system-api-key" className="space-y-4">

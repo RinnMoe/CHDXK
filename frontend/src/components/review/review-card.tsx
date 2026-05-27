@@ -78,7 +78,7 @@ function ReviewCardTime({ review }: { review: ReviewDTO }) {
       : formatDateTime(displayTime)
   const displayTimeTitle = formatDateTime(displayTime)
   const createdTimeTitle = `创建于 ${formatDateTime(review.created_at)}`
-  const canViewRevisions = edited && user?.role === "admin"
+  const canViewRevisions = edited && (user?.is_admin() ?? false)
 
   const timeNode = hasRelativeTime ? (
     <button
@@ -266,7 +266,7 @@ export function ReviewCard({
   )
   const manageMenuTriggerRef = useRef<HTMLButtonElement | null>(null)
   const resetCopiedTimer = useRef<number | undefined>(undefined)
-  const isAdmin = user?.role === "admin"
+  const isAdmin = user?.is_admin() ?? false
   const canEdit =
     review.user_id != null &&
     user != null &&

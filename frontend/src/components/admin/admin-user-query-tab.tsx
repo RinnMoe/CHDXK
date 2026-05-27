@@ -33,6 +33,7 @@ const reviewPageSize = 20
 
 interface AdminUserQueryTabProps {
   currentUserID: number
+  currentUserIsSuperAdmin: boolean
 }
 
 function SuspensionText({
@@ -52,7 +53,10 @@ function SuspensionText({
   )
 }
 
-export function AdminUserQueryTab({ currentUserID }: AdminUserQueryTabProps) {
+export function AdminUserQueryTab({
+  currentUserID,
+  currentUserIsSuperAdmin,
+}: AdminUserQueryTabProps) {
   const [searchParams, setSearchParams] = useSearchParams()
   const email = searchParams.get("email") ?? ""
   const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1)
@@ -136,7 +140,8 @@ export function AdminUserQueryTab({ currentUserID }: AdminUserQueryTabProps) {
     clearSuspensionMutation.isPending ||
     grantAdminMutation.isPending ||
     revokeAdminMutation.isPending
-  const selectedUserIsAdmin = selectedUser?.role === "admin"
+  const selectedUserIsAdmin = selectedUser?.is_admin() ?? false
+  const selectedUserIsSuperAdmin = selectedUser?.is_super_admin() ?? false
   const selectedUserIsSelf = selectedUser?.id === currentUserID
 
   return (
@@ -225,6 +230,14 @@ export function AdminUserQueryTab({ currentUserID }: AdminUserQueryTabProps) {
             <div className="flex flex-wrap items-center justify-end gap-2">
               {selectedUserIsSelf ? (
                 <p className="text-sm text-muted-foreground">不能对自己操作</p>
+              ) : selectedUserIsSuperAdmin ? (
+                <p className="text-sm text-muted-foreground">
+                  不能修改超级管理员权限
+                </p>
+              ) : !currentUserIsSuperAdmin ? (
+                <p className="text-sm text-muted-foreground">
+                  需要超级管理员权限
+                </p>
               ) : selectedUserIsAdmin ? (
                 <Button
                   type="button"

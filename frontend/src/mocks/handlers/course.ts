@@ -294,7 +294,7 @@ export const courseHandlers = [
       const user = mockSession.userID
         ? findUserByID(mockSession.userID)
         : undefined
-      if (!user || user.role !== "admin") {
+      if (!user || !user.is_admin()) {
         return HttpResponse.json({ error: "forbidden" }, { status: 403 })
       }
       const id = Number(params.courseID)

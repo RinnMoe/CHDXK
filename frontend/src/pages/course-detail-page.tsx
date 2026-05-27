@@ -209,7 +209,7 @@ export function CourseDetailPage() {
   const hasSelectedCourse = selectedSemesters.length > 0
   const teacherGroup = course.teacher_group ?? []
   const feedbackMailto = buildFeedbackMailto(course)
-  const isAdmin = user?.role === "admin"
+  const isAdmin = user?.is_admin() ?? false
   const hasRelatedCourses =
     course.same_code_courses.length > 0 ||
     course.same_teacher_courses.length > 0

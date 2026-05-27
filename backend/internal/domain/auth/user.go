@@ -6,8 +6,9 @@ import (
 )
 
 const (
-	RoleAdmin = "admin"
-	RoleUser  = "user"
+	RoleAdmin      = "admin"
+	RoleSuperAdmin = "super_admin"
+	RoleUser       = "user"
 )
 
 type AdminConfig struct {
@@ -35,7 +36,11 @@ func (u *User) SuspensionExpired() bool {
 }
 
 func (u *User) IsAdmin() bool {
-	return u.Role == RoleAdmin
+	return u.Role == RoleAdmin || u.IsSuperAdmin()
+}
+
+func (u *User) IsSuperAdmin() bool {
+	return u.Role == RoleSuperAdmin
 }
 
 func (u *User) Suspend(d time.Duration) {
@@ -52,5 +57,5 @@ func (u *User) ClearSuspension() {
 type UserRepository interface {
 	Update(ctx context.Context, u *User) error
 	FindByID(ctx context.Context, id int) (*User, error)
-	FindByRole(ctx context.Context, role string) ([]User, error)
+	FindAdmin(ctx context.Context) ([]User, error)
 }

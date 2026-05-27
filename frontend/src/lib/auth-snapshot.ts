@@ -1,4 +1,8 @@
-import type { AuthUserDTO } from "@/api/auth"
+import {
+  normalizeAuthUser,
+  type AuthUserDTO,
+  type AuthUserResponse,
+} from "@/api/auth"
 
 const authSnapshotKey = "jcourse:last-auth-user"
 const maxSnapshotAgeMs = 7 * 24 * 60 * 60 * 1000
@@ -6,10 +10,10 @@ const maxSnapshotAgeMs = 7 * 24 * 60 * 60 * 1000
 type AuthSnapshot = {
   version: 1
   savedAt: number
-  user: AuthUserDTO
+  user: AuthUserResponse
 }
 
-function isAuthUser(value: unknown): value is AuthUserDTO {
+function isAuthUser(value: unknown): value is AuthUserResponse {
   if (!value || typeof value !== "object") return false
   const user = value as Partial<AuthUserDTO>
   return (
@@ -18,6 +22,15 @@ function isAuthUser(value: unknown): value is AuthUserDTO {
     typeof user.email === "string" &&
     typeof user.role === "string"
   )
+}
+
+function toAuthUserResponse(user: AuthUserDTO): AuthUserResponse {
+  return {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    role: user.role,
+  }
 }
 
 export function loadAuthSnapshot(): AuthUserDTO | null {
@@ -33,7 +46,7 @@ export function loadAuthSnapshot(): AuthUserDTO | null {
       return null
     }
 
-    return snapshot.user
+    return normalizeAuthUser(snapshot.user)
   } catch {
     return null
   }
@@ -43,7 +56,7 @@ export function saveAuthSnapshot(user: AuthUserDTO) {
   const snapshot: AuthSnapshot = {
     version: 1,
     savedAt: Date.now(),
-    user,
+    user: toAuthUserResponse(user),
   }
 
   try {

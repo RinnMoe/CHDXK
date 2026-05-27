@@ -354,7 +354,7 @@ export function GlobalShortcuts() {
   const availablePageShortcuts = useMemo(
     () =>
       pageShortcuts.filter((shortcut) => {
-        if (shortcut.requiresAdmin) return user?.role === "admin"
+        if (shortcut.requiresAdmin) return user?.is_admin() ?? false
         if (shortcut.requiresAuth) return Boolean(user)
         return true
       }),

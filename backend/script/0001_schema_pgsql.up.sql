@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS users
     id           SERIAL PRIMARY KEY,
     username     TEXT        NOT NULL UNIQUE,
     email        TEXT        UNIQUE,
-    role         TEXT        NOT NULL,
+    role         TEXT        NOT NULL CHECK (role IN ('user', 'admin', 'super_admin')),
     password_hash TEXT       NOT NULL,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

@@ -1276,7 +1276,10 @@ func resetSequence(db *gorm.DB, table, column string) error {
 }
 
 func userRole(row legacyUser) string {
-	if row.IsStaff || row.IsSuperuser {
+	if row.IsSuperuser {
+		return auth.RoleSuperAdmin
+	}
+	if row.IsStaff {
 		return auth.RoleAdmin
 	}
 	return auth.RoleUser

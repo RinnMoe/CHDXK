@@ -65,7 +65,7 @@ export const pointHandlers = [
     const userID = Number(params.userID)
     if (mockSession.userID !== userID) {
       const me = findUserByID(mockSession.userID)
-      if (!me || me.role !== "admin") {
+      if (!me || !me.is_admin()) {
         return HttpResponse.json({ error: "forbidden" }, { status: 403 })
       }
     }

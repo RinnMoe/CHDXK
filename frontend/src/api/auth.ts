@@ -6,6 +6,21 @@ export interface AuthUserDTO {
   username: string
   email: string
   role: string
+  is_admin: () => boolean
+  is_super_admin: () => boolean
+}
+
+export type AuthUserResponse = Omit<
+  AuthUserDTO,
+  "is_admin" | "is_super_admin"
+>
+
+export function normalizeAuthUser(user: AuthUserResponse): AuthUserDTO {
+  return {
+    ...user,
+    is_admin: () => user.role === "admin" || user.role === "super_admin",
+    is_super_admin: () => user.role === "super_admin",
+  }
 }
 
 export interface SendRegisterCodeCommand {
@@ -34,17 +49,19 @@ export interface ResetPasswordCommand {
 }
 
 export function getCurrentUser(): Promise<AuthUserDTO | null> {
-  return apiClient<AuthUserDTO | null>(`${BASE_URL}/auth/me`).catch((err) => {
-    if (
-      err &&
-      typeof err === "object" &&
-      "status" in err &&
-      err.status === 401
-    ) {
-      return null
-    }
-    throw err
-  })
+  return apiClient<AuthUserResponse | null>(`${BASE_URL}/auth/me`)
+    .then((user) => (user ? normalizeAuthUser(user) : null))
+    .catch((err) => {
+      if (
+        err &&
+        typeof err === "object" &&
+        "status" in err &&
+        err.status === 401
+      ) {
+        return null
+      }
+      throw err
+    })
 }
 
 export function sendRegisterCode(
@@ -57,17 +74,17 @@ export function sendRegisterCode(
 }
 
 export function register(cmd: RegisterCommand): Promise<AuthUserDTO> {
-  return apiClient(`${BASE_URL}/auth/register`, {
+  return apiClient<AuthUserResponse>(`${BASE_URL}/auth/register`, {
     method: "POST",
     body: JSON.stringify(cmd),
-  })
+  }).then(normalizeAuthUser)
 }
 
 export function login(cmd: LoginCommand): Promise<AuthUserDTO> {
-  return apiClient(`${BASE_URL}/auth/login`, {
+  return apiClient<AuthUserResponse>(`${BASE_URL}/auth/login`, {
     method: "POST",
     body: JSON.stringify(cmd),
-  })
+  }).then(normalizeAuthUser)
 }
 
 export function logout(): Promise<{ message: string }> {

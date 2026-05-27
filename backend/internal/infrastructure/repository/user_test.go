@@ -2,6 +2,7 @@ package repository_test
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 	"time"
 
@@ -183,5 +184,31 @@ func TestUserRepository_FindByID_NotFound(t *testing.T) {
 	}
 	if got != nil {
 		t.Fatalf("FindByID got %+v, want nil", got)
+	}
+}
+
+func TestUserRepository_FindAdmin(t *testing.T) {
+	db := newTestDB(t)
+	repo := repository.NewUserRepository(db)
+	ctx := context.Background()
+	now := time.Now()
+	users := []repository.UserEntity{
+		{Username: "regular", Email: sql.NullString{String: "regular@example.com", Valid: true}, Role: auth.RoleUser, PasswordHash: "hash", CreatedAt: now, LastSeenAt: now},
+		{Username: "admin", Email: sql.NullString{String: "admin@example.com", Valid: true}, Role: auth.RoleAdmin, PasswordHash: "hash", CreatedAt: now, LastSeenAt: now},
+		{Username: "super", Email: sql.NullString{String: "super@example.com", Valid: true}, Role: auth.RoleSuperAdmin, PasswordHash: "hash", CreatedAt: now, LastSeenAt: now},
+	}
+	if err := db.Create(&users).Error; err != nil {
+		t.Fatalf("seed users: %v", err)
+	}
+
+	got, err := repo.FindAdmin(ctx)
+	if err != nil {
+		t.Fatalf("FindAdmin: %v", err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("admin count = %d, want 2: %+v", len(got), got)
+	}
+	if got[0].Role != auth.RoleAdmin || got[1].Role != auth.RoleSuperAdmin {
+		t.Fatalf("admin roles = %q, %q", got[0].Role, got[1].Role)
 	}
 }

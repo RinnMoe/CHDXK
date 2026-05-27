@@ -8,9 +8,9 @@ type MockUserRepository struct {
 	Users         map[int]*User
 	FindByIDCalls int
 
-	OnUpdate     func(context.Context, *User) error
-	OnFindByID   func(context.Context, int) (*User, error)
-	OnFindByRole func(context.Context, string) ([]User, error)
+	OnUpdate    func(context.Context, *User) error
+	OnFindByID  func(context.Context, int) (*User, error)
+	OnFindAdmin func(context.Context) ([]User, error)
 }
 
 func NewMockUserRepository(users map[int]*User) *MockUserRepository {
@@ -44,14 +44,14 @@ func (r *MockUserRepository) FindByID(ctx context.Context, id int) (*User, error
 	return &copy, nil
 }
 
-func (r *MockUserRepository) FindByRole(ctx context.Context, role string) ([]User, error) {
-	if r.OnFindByRole != nil {
-		return r.OnFindByRole(ctx, role)
+func (r *MockUserRepository) FindAdmin(ctx context.Context) ([]User, error) {
+	if r.OnFindAdmin != nil {
+		return r.OnFindAdmin(ctx)
 	}
 	r.ensureMap()
 	users := make([]User, 0)
 	for _, u := range r.Users {
-		if u.Role == role {
+		if u.IsAdmin() {
 			users = append(users, *u)
 		}
 	}

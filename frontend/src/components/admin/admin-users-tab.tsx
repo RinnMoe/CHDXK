@@ -13,9 +13,13 @@ import { formatDateTime } from "@/lib/date"
 
 interface AdminUsersTabProps {
   currentUserID: number
+  currentUserIsSuperAdmin: boolean
 }
 
-export function AdminUsersTab({ currentUserID }: AdminUsersTabProps) {
+export function AdminUsersTab({
+  currentUserID,
+  currentUserIsSuperAdmin,
+}: AdminUsersTabProps) {
   const adminsQuery = useAdminUsers()
   const revokeAdminMutation = useRevokeAdminUser()
 
@@ -42,6 +46,7 @@ export function AdminUsersTab({ currentUserID }: AdminUsersTabProps) {
               <TableHead>ID</TableHead>
               <TableHead>用户名</TableHead>
               <TableHead>邮箱</TableHead>
+              <TableHead>角色</TableHead>
               <TableHead>活跃时间</TableHead>
               <TableHead className="text-right">操作</TableHead>
             </TableRow>
@@ -52,11 +57,20 @@ export function AdminUsersTab({ currentUserID }: AdminUsersTabProps) {
                 <TableCell className="font-mono">{admin.id}</TableCell>
                 <TableCell className="font-mono">{admin.username}</TableCell>
                 <TableCell>{admin.email || "-"}</TableCell>
+                <TableCell>{admin.role}</TableCell>
                 <TableCell>{formatDateTime(admin.last_seen_at)}</TableCell>
                 <TableCell className="text-right">
                   {admin.id === currentUserID ? (
                     <span className="inline-flex h-8 items-center text-sm text-muted-foreground">
                       当前用户
+                    </span>
+                  ) : admin.is_super_admin() ? (
+                    <span className="inline-flex h-8 items-center text-sm text-muted-foreground">
+                      超级管理员
+                    </span>
+                  ) : !currentUserIsSuperAdmin ? (
+                    <span className="inline-flex h-8 items-center text-sm text-muted-foreground">
+                      需要超级管理员权限
                     </span>
                   ) : (
                     <Button
