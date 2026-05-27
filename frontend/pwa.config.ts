@@ -83,36 +83,6 @@ export const pwaOptions: Parameters<typeof VitePWA>[0] = {
     cleanupOutdatedCaches: true,
     globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
     navigateFallback: "/index.html",
-    runtimeCaching: [
-      {
-        urlPattern: ({ request, url }) => {
-          if (request.method !== "GET") return false
-          return [
-            /^\/api\/course(?:\/?$|\/filter$|\/hot$|\/\d+$|\/\d+\/review(?:\/?$|\/filter$|\/trend$))$/,
-            /^\/api\/teacher(?:\/?$|\/filter$|\/\d+$|\/\d+\/course$)$/,
-            /^\/api\/review(?:\/?$|\/\d+$|\/\d+\/revision$)$/,
-          ].some((pattern) => pattern.test(url.pathname))
-        },
-        handler: "NetworkFirst",
-        options: {
-          cacheName: "read-api-cache",
-          networkTimeoutSeconds: 3,
-          expiration: {
-            maxEntries: 160,
-            maxAgeSeconds: 7 * 24 * 60 * 60,
-          },
-          cacheableResponse: {
-            statuses: [200],
-          },
-        },
-      },
-      {
-        urlPattern: ({ url }) => url.pathname.startsWith("/api/"),
-        handler: "NetworkOnly",
-        options: {
-          cacheName: "api-network-only",
-        },
-      },
-    ],
+    navigateFallbackDenylist: [/^\/api\//],
   },
 }

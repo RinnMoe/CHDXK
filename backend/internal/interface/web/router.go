@@ -84,7 +84,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	adminUserController := controller.NewAdminUserController(container.AdminUserQuery, container.AdminUserCommand)
 	auditLogController := controller.NewAuditLogController(container.AuditLogQuery)
 
-	apiGroup := g.Group("/api")
+	apiGroup := g.Group("/api", middleware.NoStore())
 	publicAuthGroup := apiGroup.Group("/auth")
 	{
 		publicAuthGroup.GET("/csrf", func(c *gin.Context) { c.Status(http.StatusNoContent) })

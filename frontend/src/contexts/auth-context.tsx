@@ -60,6 +60,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const resetPasswordMutation = useResetPassword()
 
   useEffect(() => {
+    void clearOfflineReadCaches()
+  }, [])
+
+  useEffect(() => {
     if (isLoading) return
 
     const currentUserID = user?.id ?? null
