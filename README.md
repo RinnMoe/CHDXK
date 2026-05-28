@@ -100,7 +100,7 @@ JCOURSE_SERVER_ADDR=:9090 go run cmd/api/main.go --config config/config.yaml
 
 ```bash
 cd backend
-go run cmd/importer/main.go --config config/config.yaml --semester 2025-2026-1
+go run cmd/importer/main.go --target-dsn "$TARGET_DSN" --semester 2025-2026-1
 ```
 
 ## 开发约定

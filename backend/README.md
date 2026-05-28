@@ -104,7 +104,7 @@ go test -tags test ./internal/infrastructure/repository -run TestCourseHotReposi
 课程导入工具默认读取 `data/<semester>.csv`：
 
 ```bash
-go run cmd/importer/main.go --config config/config.yaml --semester 2025-2026-1
+go run cmd/importer/main.go --target-dsn "$TARGET_DSN" --semester 2025-2026-1
 ```
 
 对应文件路径为 `backend/data/2025-2026-1.csv`。

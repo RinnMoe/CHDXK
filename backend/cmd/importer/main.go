@@ -5,8 +5,9 @@ import (
 	"flag"
 	"fmt"
 
-	"jcourse/config"
-	"jcourse/internal/infrastructure/persistence"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+
 	"jcourse/pkg/logx"
 )
 
@@ -15,19 +16,20 @@ func main() {
 	ctx := context.Background()
 
 	semester := flag.String("semester", "", "Semester to import (e.g. 2025-2026-1)")
-	configPath := flag.String("config", "config/config.yaml", "Config file path")
+	targetDSN := flag.String("target-dsn", "", "PostgreSQL DSN for the target database")
 	flag.Parse()
 
 	if *semester == "" {
 		logx.Fatal(ctx, "--semester flag is required")
 	}
-
-	conf, err := config.Load(*configPath)
-	if err != nil {
-		logx.Fatal(ctx, "load config", "err", err)
+	if *targetDSN == "" {
+		logx.Fatal(ctx, "--target-dsn flag is required")
 	}
 
-	db := persistence.NewPostgres(conf.Postgres)
+	db, err := gorm.Open(postgres.Open(*targetDSN), &gorm.Config{})
+	if err != nil {
+		logx.Fatal(ctx, "connect target database", "err", err)
+	}
 
 	filePath := fmt.Sprintf("data/%s.csv", *semester)
 	logx.Info(ctx, "importing course data", "semester", *semester, "file_path", filePath)
