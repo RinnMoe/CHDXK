@@ -4,6 +4,7 @@ import { useForm } from "@tanstack/react-form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
 import {
   loadReviewDraft,
   removeReviewDraft,
@@ -42,13 +43,79 @@ interface ReviewFormProps {
 const SCORE_MAX_LENGTH = 10
 const CONTENT_MIN_LENGTH = 4
 const CONTENT_MAX_LENGTH = 9681
-const DEFAULT_REVIEW_TEMPLATE = `课程内容：
+const REVIEW_TEMPLATE_LABELS: readonly string[] = [
+  "课程内容：",
+  "上课自由度：",
+  "考核标准：",
+  "授课质量：",
+] as const
+const DEFAULT_REVIEW_TEMPLATE = REVIEW_TEMPLATE_LABELS.join("\n\n")
 
-上课自由度：
+function findTemplateLineIndex(lines: string[], label: string) {
+  return lines.findIndex((line) => line.trimStart().startsWith(label))
+}
 
-考核标准：
+function hasTemplateLine(content: string, label: string) {
+  return findTemplateLineIndex(content.split("\n"), label) >= 0
+}
 
-授课质量：`
+function templateLineHasUserInput(line: string, label: string) {
+  const labelIndex = line.indexOf(label)
+  if (labelIndex < 0) return false
+  return line.slice(labelIndex + label.length).trim().length > 0
+}
+
+function addTemplateLine(content: string, label: string) {
+  if (hasTemplateLine(content, label)) return content
+
+  if (content.trim().length === 0) {
+    return label
+  }
+
+  const lines = content.replace(/\s*$/, "").split("\n")
+  const newLabelOrder = REVIEW_TEMPLATE_LABELS.indexOf(label)
+  const nextTemplateLineIndex = lines.findIndex((line) => {
+    const templateOrder = REVIEW_TEMPLATE_LABELS.findIndex((templateLabel) =>
+      line.trimStart().startsWith(templateLabel)
+    )
+    return templateOrder > newLabelOrder
+  })
+
+  if (nextTemplateLineIndex < 0) {
+    return `${lines.join("\n")}\n\n${label}`
+  }
+
+  lines.splice(nextTemplateLineIndex, 0, label, "")
+  return lines.join("\n")
+}
+
+function removeTemplateLine(content: string, label: string) {
+  const lines = content.split("\n")
+  const lineIndex = findTemplateLineIndex(lines, label)
+  if (lineIndex < 0) return content
+  if (templateLineHasUserInput(lines[lineIndex], label)) return content
+
+  lines.splice(lineIndex, 1)
+
+  while (
+    lineIndex < lines.length &&
+    lines[lineIndex] === "" &&
+    (lineIndex === 0 || lines[lineIndex - 1] === "")
+  ) {
+    lines.splice(lineIndex, 1)
+  }
+
+  while (
+    lineIndex > 0 &&
+    lineIndex === lines.length &&
+    lines[lineIndex - 1] === "" &&
+    (lineIndex - 1 === 0 || lines[lineIndex - 2] === "")
+  ) {
+    lines.splice(lineIndex - 1, 1)
+  }
+
+  return lines.join("\n")
+}
 
 type ReviewFormValues = {
   rating: number
@@ -333,9 +400,41 @@ export function ReviewForm({
         {(field) => {
           const error = fieldError(field.state.meta.errors)
           const content = field.state.value
+          function updateContent(nextContent: string) {
+            field.handleChange(nextContent)
+            updateDraft({ content: nextContent })
+          }
+
           return (
             <div className="space-y-2">
               <Label htmlFor="content">点评内容</Label>
+              <div className="flex flex-wrap gap-2">
+                {REVIEW_TEMPLATE_LABELS.map((label) => {
+                  const selected = hasTemplateLine(content, label)
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => {
+                        updateContent(
+                          selected
+                            ? removeTemplateLine(content, label)
+                            : addTemplateLine(content, label)
+                        )
+                      }}
+                      className={cn(
+                        "inline-flex h-6 items-center justify-center rounded-4xl border px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none",
+                        selected
+                          ? "border-primary/20 bg-primary/10 text-primary hover:bg-primary/15"
+                          : "border-transparent bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                      )}
+                    >
+                      <span>{label.replace(/：$/, "")}</span>
+                    </button>
+                  )
+                })}
+              </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">编辑</p>
@@ -344,8 +443,7 @@ export function ReviewForm({
                     placeholder="分享你对这门课程的看法...（支持 Markdown）"
                     value={content}
                     onChange={(e) => {
-                      field.handleChange(e.target.value)
-                      updateDraft({ content: e.target.value })
+                      updateContent(e.target.value)
                     }}
                     onBlur={field.handleBlur}
                     maxLength={CONTENT_MAX_LENGTH}
