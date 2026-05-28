@@ -10,6 +10,7 @@ import (
 
 	"jcourse/internal/application"
 	"jcourse/internal/domain/auth"
+	"jcourse/pkg/apperr"
 )
 
 func ResolveCurrentUser(authResolution *application.AuthResolutionService) gin.HandlerFunc {
@@ -59,6 +60,21 @@ func RequireAdmin() gin.HandlerFunc {
 		}
 		if !u.IsAdmin() {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
+		c.Next()
+	}
+}
+
+func RequireSuperAdmin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		u := auth.GetUserFromCtx(c.Request.Context())
+		if u == nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+		if !u.IsSuperAdmin() {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": apperr.ErrRequireSuperAdmin.Error()})
 			return
 		}
 		c.Next()

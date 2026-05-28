@@ -22,19 +22,9 @@ func TestAdminUserService_SuspendUserForDays(t *testing.T) {
 func TestAdminUserService_RejectsSelfOperation(t *testing.T) {
 	svc := NewAdminUserService(NewMockUserRepository(map[int]*User{1: {ID: 1, Role: RoleUser}}), AdminConfig{})
 
-	err := svc.GrantAdmin(context.Background(), &User{ID: 1, Role: RoleSuperAdmin}, 1)
+	err := svc.GrantAdmin(context.Background(), 1, 1)
 	if !errors.Is(err, ErrCannotOperateSelf) {
 		t.Fatalf("error = %v, want %v", err, ErrCannotOperateSelf)
-	}
-}
-
-func TestAdminUserService_RejectsAdminGrantByNonSuperAdmin(t *testing.T) {
-	repo := NewMockUserRepository(map[int]*User{2: {ID: 2, Role: RoleUser}})
-	svc := NewAdminUserService(repo, AdminConfig{})
-
-	err := svc.GrantAdmin(context.Background(), &User{ID: 1, Role: RoleAdmin}, 2)
-	if !errors.Is(err, ErrRequireSuperAdmin) {
-		t.Fatalf("error = %v, want %v", err, ErrRequireSuperAdmin)
 	}
 }
 
@@ -51,15 +41,14 @@ func TestAdminUserService_RejectsSuspendingAdmin(t *testing.T) {
 func TestAdminUserService_GrantAndRevokeAdmin(t *testing.T) {
 	repo := NewMockUserRepository(map[int]*User{2: {ID: 2, Role: RoleUser}})
 	svc := NewAdminUserService(repo, AdminConfig{})
-	actor := &User{ID: 1, Role: RoleSuperAdmin}
 
-	if err := svc.GrantAdmin(context.Background(), actor, 2); err != nil {
+	if err := svc.GrantAdmin(context.Background(), 1, 2); err != nil {
 		t.Fatalf("GrantAdmin: %v", err)
 	}
 	if repo.Users[2].Role != RoleAdmin {
 		t.Fatalf("role after grant = %q, want %q", repo.Users[2].Role, RoleAdmin)
 	}
-	if err := svc.RevokeAdmin(context.Background(), actor, 2); err != nil {
+	if err := svc.RevokeAdmin(context.Background(), 1, 2); err != nil {
 		t.Fatalf("RevokeAdmin: %v", err)
 	}
 	if repo.Users[2].Role != RoleUser {
@@ -71,7 +60,7 @@ func TestAdminUserService_RejectsModifyingSuperAdmin(t *testing.T) {
 	repo := NewMockUserRepository(map[int]*User{2: {ID: 2, Role: RoleSuperAdmin}})
 	svc := NewAdminUserService(repo, AdminConfig{})
 
-	err := svc.RevokeAdmin(context.Background(), &User{ID: 1, Role: RoleSuperAdmin}, 2)
+	err := svc.RevokeAdmin(context.Background(), 1, 2)
 	if !errors.Is(err, ErrCannotModifySuperAdmin) {
 		t.Fatalf("error = %v, want %v", err, ErrCannotModifySuperAdmin)
 	}

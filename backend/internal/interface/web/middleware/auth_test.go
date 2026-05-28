@@ -180,6 +180,44 @@ func TestRequireSelfOrAdmin(t *testing.T) {
 	}
 }
 
+func TestRequireSuperAdmin(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	tests := []struct {
+		name       string
+		current    *auth.User
+		wantStatus int
+	}{
+		{name: "unauthorized", current: nil, wantStatus: http.StatusUnauthorized},
+		{name: "user forbidden", current: &auth.User{ID: 7, Role: auth.RoleUser}, wantStatus: http.StatusForbidden},
+		{name: "admin forbidden", current: &auth.User{ID: 2, Role: auth.RoleAdmin}, wantStatus: http.StatusForbidden},
+		{name: "super admin", current: &auth.User{ID: 1, Role: auth.RoleSuperAdmin}, wantStatus: http.StatusNoContent},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := gin.New()
+			r.Use(func(c *gin.Context) {
+				if tt.current != nil {
+					c.Request = c.Request.WithContext(auth.WithUser(c.Request.Context(), tt.current))
+				}
+				c.Next()
+			})
+			r.PUT("/admin/user/:userID/admin", RequireSuperAdmin(), func(c *gin.Context) {
+				c.Status(http.StatusNoContent)
+			})
+
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodPut, "/admin/user/7/admin", nil)
+			r.ServeHTTP(w, req)
+
+			if w.Code != tt.wantStatus {
+				t.Fatalf("status = %d, want %d", w.Code, tt.wantStatus)
+			}
+		})
+	}
+}
+
 func TestCSRFMiddleware(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

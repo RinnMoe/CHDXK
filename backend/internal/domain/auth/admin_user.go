@@ -10,7 +10,6 @@ import (
 var (
 	ErrCannotSuspendAdmin     = apperr.ErrCannotSuspendAdmin
 	ErrCannotOperateSelf      = apperr.ErrCannotOperateSelf
-	ErrRequireSuperAdmin      = apperr.ErrRequireSuperAdmin
 	ErrCannotModifySuperAdmin = apperr.ErrCannotModifySuperAdmin
 	ErrUserNotFound           = apperr.ErrUserNotFound
 )
@@ -67,11 +66,8 @@ func (s *AdminUserService) ClearSuspension(ctx context.Context, actorUserID int,
 	return s.userRepo.Update(ctx, u)
 }
 
-func (s *AdminUserService) GrantAdmin(ctx context.Context, actor *User, userID int) error {
-	if actor == nil || !actor.IsSuperAdmin() {
-		return ErrRequireSuperAdmin
-	}
-	if actor.ID == userID {
+func (s *AdminUserService) GrantAdmin(ctx context.Context, actorUserID int, userID int) error {
+	if actorUserID == userID {
 		return ErrCannotOperateSelf
 	}
 
@@ -91,11 +87,8 @@ func (s *AdminUserService) GrantAdmin(ctx context.Context, actor *User, userID i
 	return s.userRepo.Update(ctx, u)
 }
 
-func (s *AdminUserService) RevokeAdmin(ctx context.Context, actor *User, userID int) error {
-	if actor == nil || !actor.IsSuperAdmin() {
-		return ErrRequireSuperAdmin
-	}
-	if actor.ID == userID {
+func (s *AdminUserService) RevokeAdmin(ctx context.Context, actorUserID int, userID int) error {
+	if actorUserID == userID {
 		return ErrCannotOperateSelf
 	}
 
