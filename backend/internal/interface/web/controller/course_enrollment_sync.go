@@ -19,7 +19,10 @@ import (
 	"jcourse/internal/domain/auth"
 )
 
-const enrollmentSyncSessionKey = "course_enrollment_sync_state"
+const (
+	enrollmentSyncSessionKey = "course_enrollment_sync_state"
+	enrollmentSyncStateTTL   = 10 * time.Minute
+)
 
 type CourseEnrollmentSyncController struct {
 	command             *application.CourseCommandService
@@ -142,8 +145,11 @@ func loadEnrollmentSyncState(c *gin.Context) (*enrollmentSyncState, error) {
 	if err := json.Unmarshal([]byte(v), &state); err != nil {
 		return nil, err
 	}
-	if state.State == "" || state.UserID == 0 || state.Semester == "" {
+	if state.State == "" || state.UserID == 0 || state.Semester == "" || state.CreatedAt == 0 {
 		return nil, fmt.Errorf("选课同步状态无效")
+	}
+	if time.Since(time.Unix(state.CreatedAt, 0)) > enrollmentSyncStateTTL {
+		return nil, fmt.Errorf("选课同步状态已过期")
 	}
 	return &state, nil
 }
