@@ -1,31 +1,36 @@
 import { useEffect, useState } from "react"
-import { useSearchParams } from "react-router-dom"
+import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { useDebounce } from "use-debounce"
 import { Input } from "@/components/ui/input"
 
 const SEARCH_DEBOUNCE_MS = 250
+const routeApi = getRouteApi("/app/course")
 
 export function CourseSearchBar() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const [value, setValue] = useState((searchParams.get("q") ?? "").trim())
+  const search = routeApi.useSearch()
+  const navigate = useNavigate({ from: "/course" })
+  const [value, setValue] = useState((search.q ?? "").trim())
   const [debouncedValue] = useDebounce(value, SEARCH_DEBOUNCE_MS)
 
   useEffect(() => {
     const nextQ = debouncedValue.trim()
-    const current = (searchParams.get("q") ?? "").trim()
+    const current = (search.q ?? "").trim()
     if (nextQ === current) return
-    const next = new URLSearchParams(searchParams)
-    if (nextQ) {
-      next.set("q", nextQ)
-    } else {
-      next.delete("q")
-    }
-    next.delete("page")
-    setSearchParams(next)
-  }, [debouncedValue, searchParams, setSearchParams])
+
+    void navigate({
+      search: (prev) => ({
+        ...prev,
+        q: nextQ || undefined,
+        page: 1,
+      }),
+      replace: true,
+      resetScroll: false,
+    })
+  }, [debouncedValue, navigate, search.q])
 
   return (
     <Input
+      key={search.q ?? ""}
       placeholder="搜索课程名、课程号或教师名..."
       value={value}
       onChange={(e) => setValue(e.target.value)}

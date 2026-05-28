@@ -42,13 +42,17 @@ async function getCurrentUserWithOfflineFallback() {
   }
 }
 
-export function useCurrentUser() {
-  return useQuery({
-    queryKey: ["auth", "me"],
+export function authMeQueryOptions() {
+  return {
+    queryKey: ["auth", "me"] as const,
     queryFn: getCurrentUserWithOfflineFallback,
     retry: false,
     staleTime: 1000 * 60 * 5,
-  })
+  }
+}
+
+export function useCurrentUser() {
+  return useQuery(authMeQueryOptions())
 }
 
 export function useLogin() {

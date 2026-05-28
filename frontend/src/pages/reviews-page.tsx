@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useSearchParams } from "react-router-dom"
+import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { useDebounce } from "use-debounce"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
@@ -10,6 +10,7 @@ import { useReviews } from "@/hooks/use-review"
 
 const REVIEW_PAGE_SIZE = 20
 const REVIEW_SEARCH_DEBOUNCE_MS = 250
+const routeApi = getRouteApi("/app/review")
 
 type ReviewSearchInputProps = {
   initialValue: string
@@ -40,9 +41,10 @@ function ReviewSearchInput({
 }
 
 export function ReviewsPage() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1)
-  const q = (searchParams.get("q") ?? "").trim()
+  const search = routeApi.useSearch()
+  const navigate = useNavigate({ from: "/review" })
+  const page = Math.max(1, search.page ?? 1)
+  const q = (search.q ?? "").trim()
   const { data, isLoading } = useReviews({
     q: q || undefined,
     page,
@@ -53,20 +55,22 @@ export function ReviewsPage() {
     const nextQ = value.trim()
     if (nextQ === q) return
 
-    const next = new URLSearchParams(searchParams)
-    if (nextQ) {
-      next.set("q", nextQ)
-    } else {
-      next.delete("q")
-    }
-    next.delete("page")
-    setSearchParams(next)
+    void navigate({
+      search: (prev) => ({
+        ...prev,
+        q: nextQ || undefined,
+        page: 1,
+      }),
+      replace: true,
+      resetScroll: false,
+    })
   }
 
   function handlePageChange(page: number) {
-    const next = new URLSearchParams(searchParams)
-    next.set("page", String(page))
-    setSearchParams(next)
+    void navigate({
+      search: (prev) => ({ ...prev, page }),
+      resetScroll: true,
+    })
   }
 
   return (

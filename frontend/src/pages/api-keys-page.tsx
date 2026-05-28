@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { Navigate } from "react-router-dom"
 import { RiAddLine } from "@remixicon/react"
 import { ApiKeyCreateDialog } from "@/components/api-key/api-key-create-dialog"
 import { ApiKeyTable } from "@/components/api-key/api-key-table"
@@ -7,7 +6,6 @@ import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
-import { useLoginRedirectPath } from "@/hooks/use-login-redirect"
 import {
   useApiKeys,
   useCreateApiKey,
@@ -15,16 +13,12 @@ import {
 } from "@/hooks/use-api-key"
 
 export function ApiKeysPage() {
-  const { user, isLoading: authLoading } = useAuth()
-  const loginRedirectPath = useLoginRedirectPath()
+  const { user } = useAuth()
   const { data: apiKeys = [], isLoading } = useApiKeys(!!user)
   const createMutation = useCreateApiKey()
   const deleteMutation = useDeleteApiKey()
 
   const [isCreateOpen, setIsCreateOpen] = useState(false)
-
-  if (authLoading) return null
-  if (!user) return <Navigate to={loginRedirectPath} replace />
 
   return (
     <>

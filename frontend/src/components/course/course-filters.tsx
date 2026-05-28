@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useSearchParams } from "react-router-dom"
+import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { RiFilterLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -24,40 +24,58 @@ import type { FilterItem } from "@/api/types"
 import type { CourseFilters as CourseFiltersDTO } from "@/api/course"
 
 const ALL = "__all__"
+const routeApi = getRouteApi("/app/course")
+type CourseSearch = ReturnType<typeof routeApi.useSearch>
+type FilterKey = keyof Pick<
+  CourseSearch,
+  | "categories"
+  | "credit"
+  | "department"
+  | "language"
+  | "order_by"
+  | "target_years"
+>
 
 interface CourseFiltersProps {
   filters: CourseFiltersDTO
 }
 
 export function CourseFilters({ filters }: CourseFiltersProps) {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const search = routeApi.useSearch()
+  const navigate = useNavigate({ from: "/course" })
   const [mobileOpen, setMobileOpen] = useState(false)
-  const orderBy =
-    searchParams.get("order_by") === "rating_count"
-      ? "rating_count"
-      : "rating_score"
+  const orderBy = search.order_by ?? "rating_score"
 
-  function updateFilter(key: string, value: string | string[] | null) {
-    const next = new URLSearchParams(searchParams)
+  function updateFilter(key: FilterKey, value: string | string[] | null) {
+    let nextValue: string | string[] | number | undefined
     if (
       value === null ||
       value === "" ||
       value === ALL ||
       (Array.isArray(value) && value.length === 0)
     ) {
-      next.delete(key)
+      nextValue = undefined
     } else if (Array.isArray(value)) {
-      next.delete(key)
-      value.forEach((v) => next.append(key, v))
+      nextValue = value
+    } else if (key === "credit") {
+      const credit = Number(value)
+      nextValue = Number.isFinite(credit) ? credit : undefined
     } else {
-      next.set(key, value)
+      nextValue = value
     }
-    next.delete("page")
-    setSearchParams(next)
+
+    void navigate({
+      search: (prev) => ({
+        ...prev,
+        [key]: nextValue,
+        page: 1,
+      }),
+      resetScroll: false,
+    })
   }
 
-  function toggleMulti(key: string, value: string) {
-    const cur = searchParams.getAll(key)
+  function toggleMulti(key: "categories" | "target_years", value: string) {
+    const cur = search[key] ?? []
     const next = cur.includes(value)
       ? cur.filter((v) => v !== value)
       : [...cur, value]
@@ -84,7 +102,7 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
           label="课程类别"
           items={filters.categories}
           paramKey="categories"
-          selected={searchParams.get("categories")}
+          selected={search.categories?.[0] ?? null}
           onChange={updateFilter}
         />
       )}
@@ -94,7 +112,7 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
           label="学分"
           items={filters.credits}
           paramKey="credit"
-          selected={searchParams.get("credit")}
+          selected={search.credit === undefined ? null : String(search.credit)}
           onChange={updateFilter}
         />
       )}
@@ -104,7 +122,7 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
           label="授课语言"
           items={filters.languages}
           paramKey="language"
-          selected={searchParams.get("language")}
+          selected={search.language ?? null}
           onChange={updateFilter}
         />
       )}
@@ -114,7 +132,7 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
           label="目标年级"
           items={filters.target_years}
           paramKey="target_years"
-          selected={searchParams.getAll("target_years")}
+          selected={search.target_years ?? []}
           onToggle={toggleMulti}
         />
       )}
@@ -124,7 +142,7 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
           label="开课单位"
           items={filters.departments}
           paramKey="department"
-          selected={searchParams.get("department")}
+          selected={search.department ?? null}
           onChange={updateFilter}
         />
       )}
@@ -133,10 +151,19 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
         variant="outline"
         className="w-full"
         onClick={() => {
-          const next = new URLSearchParams()
-          const q = searchParams.get("q")?.trim()
-          if (q) next.set("q", q)
-          setSearchParams(next)
+          void navigate({
+            search: {
+              q: search.q,
+              department: undefined,
+              language: undefined,
+              categories: undefined,
+              target_years: undefined,
+              credit: undefined,
+              order_by: undefined,
+              page: 1,
+            },
+            resetScroll: false,
+          })
         }}
       >
         清除筛选
@@ -171,10 +198,10 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
 
 interface FilterSelectGroupProps {
   label: string
-  paramKey: string
+  paramKey: FilterKey
   items?: FilterItem[]
   selected: string | null
-  onChange: (key: string, value: string | null) => void
+  onChange: (key: FilterKey, value: string | null) => void
 }
 
 function FilterSelectGroup({
@@ -224,10 +251,10 @@ function FilterSelectGroup({
 
 interface FilterCheckGroupProps {
   label: string
-  paramKey: string
+  paramKey: "categories" | "target_years"
   items?: FilterItem[]
   selected: string[]
-  onToggle: (key: string, value: string) => void
+  onToggle: (key: "categories" | "target_years", value: string) => void
 }
 
 function FilterCheckGroup({

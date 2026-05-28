@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link } from "@tanstack/react-router"
 import { useForm } from "@tanstack/react-form"
 import { EmailPrefixInput } from "@/components/auth/email-prefix-input"
 import { Button } from "@/components/ui/button"

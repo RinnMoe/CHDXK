@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link } from "@tanstack/react-router"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { ReviewList } from "@/components/review/review-list"
@@ -49,7 +49,8 @@ export function HomePage() {
             <div className="flex items-center justify-between pt-2">
               <h2 className="text-lg font-semibold">已关注课程</h2>
               <Link
-                to="/course/mine?type=followed"
+                to="/course/mine"
+                search={{ type: "followed" }}
                 className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
                 查看更多

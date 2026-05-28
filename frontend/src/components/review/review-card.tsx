@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Link } from "react-router-dom"
+import { Link } from "@tanstack/react-router"
 import { RiEditLine, RiShareLine, RiWrenchLine } from "@remixicon/react"
 import {
   AlertDialog,
@@ -301,7 +301,8 @@ export function ReviewCard({
       <div className="space-y-2">
         {showCourse && review.course && (
           <Link
-            to={`/course/${review.course.id}`}
+            to="/course/$courseID"
+            params={{ courseID: String(review.course.id) }}
             className="-m-2 mb-2 flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-muted/50"
           >
             <span className="font-mono text-sm text-muted-foreground">
@@ -316,7 +317,8 @@ export function ReviewCard({
 
         <div className="flex items-center gap-2">
           <Link
-            to={`/review/${review.id}`}
+            to="/review/$reviewID"
+            params={{ reviewID: String(review.id) }}
             className="font-mono text-sm text-muted-foreground hover:text-foreground"
           >
             #{review.id}
@@ -365,7 +367,10 @@ export function ReviewCard({
                 aria-label="修改点评"
                 title="修改点评"
               >
-                <Link to={`/review/${review.id}/edit`}>
+                <Link
+                  to="/review/$reviewID/edit"
+                  params={{ reviewID: String(review.id) }}
+                >
                   <RiEditLine className="size-4" />
                 </Link>
               </Button>

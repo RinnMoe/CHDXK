@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { RiUserLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import {
@@ -21,7 +21,7 @@ export function UserMenu() {
     setIsLoggingOut(true)
     try {
       await logout()
-      navigate("/")
+      await navigate({ to: "/" })
     } finally {
       setIsLoggingOut(false)
     }
@@ -61,7 +61,7 @@ export function UserMenu() {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link to={`/review/mine`}>我的点评</Link>
+            <Link to="/review/mine">我的点评</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link to="/course/mine">我的课程</Link>

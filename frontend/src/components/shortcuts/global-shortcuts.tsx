@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { useLocation, useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "@tanstack/react-router"
 
 import {
   Dialog,
@@ -65,7 +65,18 @@ type PageShortcut = {
   keys: string
   title: string
   description: string
-  path: string
+  path:
+    | "/"
+    | "/course"
+    | "/teacher"
+    | "/review"
+    | "/course/hot"
+    | "/review/followed"
+    | "/review/mine"
+    | "/course/mine"
+    | "/point"
+    | "/api-key"
+    | "/admin/site-stat"
   requiresAuth?: boolean
   requiresAdmin?: boolean
 }
@@ -349,7 +360,7 @@ export function GlobalShortcuts() {
   const [accessHints, setAccessHints] = useState<AccessHint[]>([])
   const pendingPrefixRef = useRef<string | null>(null)
   const prefixTimerRef = useRef<number | null>(null)
-  const accessMode = accessRouteKey === location.key
+  const accessMode = accessRouteKey === location.href
 
   const availablePageShortcuts = useMemo(
     () =>
@@ -377,7 +388,7 @@ export function GlobalShortcuts() {
       window.removeEventListener("resize", updateHints)
       window.removeEventListener("scroll", updateHints, true)
     }
-  }, [accessMode, location.key])
+  }, [accessMode, location.href])
 
   useEffect(() => {
     return () => {
@@ -462,7 +473,7 @@ export function GlobalShortcuts() {
       if (key === ".") {
         event.preventDefault()
         setAccessHints(collectAccessHints())
-        setAccessRouteKey(location.key)
+        setAccessRouteKey(location.href)
         clearPrefix()
         return
       }
@@ -476,7 +487,7 @@ export function GlobalShortcuts() {
         if (!shortcut) return
 
         event.preventDefault()
-        navigate(shortcut.path)
+        void navigate({ to: shortcut.path })
         return
       }
 
@@ -496,7 +507,7 @@ export function GlobalShortcuts() {
     accessMode,
     availablePageShortcuts,
     helpOpen,
-    location.key,
+    location.href,
     navigate,
   ])
 

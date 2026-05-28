@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { Link, useSearchParams } from "react-router-dom"
+import { getRouteApi, Link, useNavigate } from "@tanstack/react-router"
 import {
   RiDeleteBinLine,
   RiMessage3Line,
@@ -56,16 +56,18 @@ import { getDefaultSemester } from "@/lib/course-semesters"
 
 const PAGE_SIZE = 20
 const ALL = "__all__"
+const routeApi = getRouteApi("/app/course/mine")
 
 type View = "enrolled" | "followed" | "ignored"
 
 export function UserCoursesPage() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const typeParam = searchParams.get("type")
+  const search = routeApi.useSearch()
+  const navigate = useNavigate({ from: "/course/mine" })
+  const typeParam = search.type
   const view: View =
     typeParam === "followed" || typeParam === "ignored" ? typeParam : "enrolled"
-  const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1)
-  const semester = searchParams.get("semester") ?? undefined
+  const page = Math.max(1, search.page ?? 1)
+  const semester = search.semester
   const filter = { page, page_size: PAGE_SIZE }
   const { user, isLoading: authLoading } = useAuth()
   const [syncOpen, setSyncOpen] = useState(false)
@@ -117,12 +119,16 @@ export function UserCoursesPage() {
         void enrolledCourses.refetch()
         const matched = payload.matched ?? 0
         setSyncMessage(`已同步 ${payload.semester}，匹配 ${matched} 条记录。`)
-        const next = new URLSearchParams(searchParams)
-        next.set("type", "enrolled")
-        if (matched > 0 && payload.semester) {
-          next.set("semester", payload.semester)
-        }
-        setSearchParams(next, { replace: true })
+        void navigate({
+          search: (prev) => ({
+            ...prev,
+            type: "enrolled",
+            semester: matched > 0 && payload.semester ? payload.semester : prev.semester,
+            page: 1,
+          }),
+          replace: true,
+          resetScroll: false,
+        })
         return
       }
       setSyncMessage(payload.message ?? "同步失败，请重试。")
@@ -142,28 +148,38 @@ export function UserCoursesPage() {
       channel.close()
       window.removeEventListener("message", onWindowMessage)
     }
-  }, [enrolledCourses, searchParams, setSearchParams])
+  }, [enrolledCourses, navigate])
 
   function handleViewChange(nextView: string) {
-    const next = new URLSearchParams(searchParams)
-    next.set("type", nextView)
-    next.set("page", "1")
-    setSearchParams(next)
+    const nextType: View =
+      nextView === "followed" || nextView === "ignored" ? nextView : "enrolled"
+    void navigate({
+      search: (prev) => ({
+        ...prev,
+        type: nextType,
+        page: 1,
+      }),
+      resetScroll: false,
+    })
   }
 
   function handlePageChange(nextPage: number) {
-    const next = new URLSearchParams(searchParams)
-    next.set("page", String(nextPage))
-    setSearchParams(next)
+    void navigate({
+      search: (prev) => ({ ...prev, page: nextPage }),
+      resetScroll: false,
+    })
   }
 
   function handleSemesterChange(value: string) {
-    const next = new URLSearchParams(searchParams)
-    if (value !== ALL) next.set("semester", value)
-    else next.delete("semester")
-    next.set("type", "enrolled")
-    next.set("page", "1")
-    setSearchParams(next)
+    void navigate({
+      search: (prev) => ({
+        ...prev,
+        semester: value === ALL ? undefined : value,
+        type: "enrolled",
+        page: 1,
+      }),
+      resetScroll: false,
+    })
   }
 
   function handleOpenSyncDialog() {

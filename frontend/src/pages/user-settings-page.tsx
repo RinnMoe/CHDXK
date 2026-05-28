@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react"
-import { Navigate } from "react-router-dom"
 import { useForm } from "@tanstack/react-form"
 import { RiSaveLine } from "@remixicon/react"
 import { fieldError } from "@/components/auth/form-utils"
@@ -18,7 +17,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/contexts/auth-context"
 import { useCourseFilters } from "@/hooks/use-course"
-import { useLoginRedirectPath } from "@/hooks/use-login-redirect"
 import {
   useUpdateUserSettings,
   useUserSettings,
@@ -146,8 +144,7 @@ function UserSettingsForm({
 }
 
 export function UserSettingsPage() {
-  const { user, isLoading: authLoading } = useAuth()
-  const loginRedirectPath = useLoginRedirectPath()
+  const { user } = useAuth()
   const settingsQuery = useUserSettings(!!user)
   const filtersQuery = useCourseFilters()
 
@@ -155,9 +152,6 @@ export function UserSettingsPage() {
     () => filtersQuery.data?.semesters?.filter((item) => item.name) ?? [],
     [filtersQuery.data?.semesters]
   )
-
-  if (authLoading) return null
-  if (!user) return <Navigate to={loginRedirectPath} replace />
 
   const isLoading = settingsQuery.isLoading || filtersQuery.isLoading
   const savedSemester = settingsQuery.data?.current_semester ?? ""

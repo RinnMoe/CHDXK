@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link } from "@tanstack/react-router"
 import type { ReactNode } from "react"
 import { RatingDisplay } from "./rating-display"
 import { CourseBadges } from "./course-badges"
@@ -44,7 +44,8 @@ export function CourseCard({ course, action }: CourseCardProps) {
     return (
       <div className="flex items-center gap-3 border-b px-4 py-3">
         <Link
-          to={`/course/${course.id}`}
+          to="/course/$courseID"
+          params={{ courseID: String(course.id) }}
           className="min-w-0 flex-1 rounded-sm transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         >
           <CourseCardContent course={course} />
@@ -58,7 +59,8 @@ export function CourseCard({ course, action }: CourseCardProps) {
 
   return (
     <Link
-      to={`/course/${course.id}`}
+      to="/course/$courseID"
+      params={{ courseID: String(course.id) }}
       className="block border-b px-4 py-3 transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
     >
       <CourseCardContent course={course} />

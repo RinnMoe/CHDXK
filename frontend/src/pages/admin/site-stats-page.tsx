@@ -1,8 +1,8 @@
 import { useState } from "react"
+import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import dayjs from "dayjs"
 import { zhCN } from "date-fns/locale"
 import { RiCalendarLine } from "@remixicon/react"
-import { Navigate, useSearchParams } from "react-router-dom"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -20,13 +20,13 @@ import { DailyStatsChart } from "@/components/site-stats/daily-stats-chart"
 import { DailyStatsTable } from "@/components/site-stats/daily-stats-table"
 import { useDailyStats, useYesterdayStats } from "@/hooks/use-site-stats"
 import { useAuth } from "@/contexts/auth-context"
-import { useLoginRedirectPath } from "@/hooks/use-login-redirect"
 import { formatDateInputValue, formatRelativeDateInputValue } from "@/lib/date"
 
 type DateRangeParams = {
   start_date?: string
   end_date?: string
 }
+const routeApi = getRouteApi("/app/admin/site-stat")
 
 function getDefaultDateRange() {
   return {
@@ -95,47 +95,45 @@ function DatePicker({ id, label, value, onChange }: DatePickerProps) {
 }
 
 export function SiteStatsPage() {
-  const { user, isLoading: authLoading } = useAuth()
-  const loginRedirectPath = useLoginRedirectPath()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const { user } = useAuth()
+  const search = routeApi.useSearch()
+  const navigate = useNavigate({ from: "/admin/site-stat" })
   const defaultRange = getDefaultDateRange()
-  const startDate = searchParams.get("start_date") || defaultRange.startDate
-  const endDate = searchParams.get("end_date") || defaultRange.endDate
+  const startDate = search.start_date || defaultRange.startDate
+  const endDate = search.end_date || defaultRange.endDate
   const dateFilter = {
     start_date: startDate || undefined,
     end_date: endDate || undefined,
   }
 
   function updateDateRange(params: DateRangeParams) {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev)
-        if (params.start_date !== undefined)
-          next.set("start_date", params.start_date)
-        if (params.end_date !== undefined) next.set("end_date", params.end_date)
-        return next
-      },
-      { replace: true }
-    )
+    void navigate({
+      search: (prev) => ({
+        ...prev,
+        start_date: params.start_date ?? prev.start_date,
+        end_date: params.end_date ?? prev.end_date,
+      }),
+      replace: true,
+      resetScroll: false,
+    })
   }
 
   function clearDateRange() {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev)
-        next.delete("start_date")
-        next.delete("end_date")
-        return next
-      },
-      { replace: true }
-    )
+    void navigate({
+      search: (prev) => ({
+        ...prev,
+        start_date: undefined,
+        end_date: undefined,
+      }),
+      replace: true,
+      resetScroll: false,
+    })
   }
 
   const { data: yesterday, isLoading: yLoading } = useYesterdayStats()
   const { data: daily, isLoading: dLoading } = useDailyStats(dateFilter)
 
-  if (authLoading) return null
-  if (!user) return <Navigate to={loginRedirectPath} replace />
+  if (!user) return null
   if (!user.is_admin()) {
     return (
       <>
@@ -192,8 +190,7 @@ export function SiteStatsPage() {
               >
                 最近一年
               </Button>
-              {(searchParams.get("start_date") ||
-                searchParams.get("end_date")) && (
+              {(search.start_date || search.end_date) && (
                 <Button variant="ghost" size="sm" onClick={clearDateRange}>
                   重置
                 </Button>

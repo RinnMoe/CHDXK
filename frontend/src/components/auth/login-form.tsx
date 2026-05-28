@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { getRouteApi, Link, useNavigate } from "@tanstack/react-router"
 import { useForm } from "@tanstack/react-form"
 import { EmailPrefixInput } from "@/components/auth/email-prefix-input"
 import { Button } from "@/components/ui/button"
@@ -15,8 +15,12 @@ type LoginFormValues = {
   password: string
 }
 
+const routeApi = getRouteApi("/public/login")
+
 export function LoginForm() {
   const { login } = useAuth()
+  const navigate = useNavigate()
+  const search = routeApi.useSearch()
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const form = useForm({
@@ -29,6 +33,7 @@ export function LoginForm() {
         email: buildAuthEmail(value.emailPrefix),
         password: value.password,
       })
+      await navigate({ href: search.redirect ?? "/", replace: true })
     },
   })
 

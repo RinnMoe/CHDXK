@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link } from "@tanstack/react-router"
 import { RiDeleteBinLine } from "@remixicon/react"
 import {
   AlertDialog,
@@ -67,7 +67,8 @@ export function CourseEnrollmentList({
             className="flex items-center gap-3 border-b px-4 py-3 transition-colors hover:bg-muted/40"
           >
             <Link
-              to={`/course/${course.id}`}
+              to="/course/$courseID"
+              params={{ courseID: String(course.id) }}
               className="min-w-0 flex-1 space-y-2 rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             >
               <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">

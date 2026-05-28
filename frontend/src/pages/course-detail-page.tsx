@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link, useParams, useSearchParams } from "react-router-dom"
+import { getRouteApi, Link, useNavigate } from "@tanstack/react-router"
 import {
   RiAddLine,
   RiArrowLeftLine,
@@ -43,6 +43,7 @@ import { getCourseSemesters } from "@/lib/course-semesters"
 import { cn } from "@/lib/utils"
 
 const REVIEW_PAGE_SIZE = 10
+const routeApi = getRouteApi("/app/course/$courseID")
 
 function byRatingDesc(
   a: { rating: { score: number } },
@@ -126,20 +127,19 @@ function CourseModeratorRemarkButton({ course }: { course: CourseDetailDTO }) {
 }
 
 export function CourseDetailPage() {
-  const { courseID } = useParams<{ courseID: string }>()
+  const { courseID } = routeApi.useParams()
   const id = Number(courseID)
-  const [searchParams, setSearchParams] = useSearchParams()
+  const search = routeApi.useSearch()
+  const navigate = useNavigate({ from: "/course/$courseID" })
 
-  const reviewPage = Math.max(1, Number(searchParams.get("page") ?? "1") || 1)
-  const semester = searchParams.get("semester") ?? undefined
-  const ratingParam = searchParams.get("rating")
-  const parsedRating = ratingParam ? Number(ratingParam) : undefined
+  const reviewPage = Math.max(1, search.page ?? 1)
+  const semester = search.semester
+  const parsedRating = search.rating
   const rating =
     parsedRating && parsedRating >= 1 && parsedRating <= 5
       ? parsedRating
       : undefined
-  const orderBy =
-    searchParams.get("order_by") === "like_count" ? "like_count" : "created_at"
+  const orderBy = search.order_by === "like_count" ? "like_count" : "created_at"
 
   const { user } = useAuth()
   const { data: course, isLoading } = useCourseDetail(id)
@@ -154,19 +154,33 @@ export function CourseDetailPage() {
   })
 
   function updateReviewParams(next: Record<string, string | undefined>) {
-    const params = new URLSearchParams(searchParams)
-    for (const [key, value] of Object.entries(next)) {
-      if (!value) params.delete(key)
-      else params.set(key, value)
-    }
-    params.set("page", "1")
-    setSearchParams(params)
+    void navigate({
+      search: (prev) => ({
+        ...prev,
+        semester: "semester" in next ? next.semester : prev.semester,
+        rating:
+          "rating" in next
+            ? next.rating === undefined
+              ? undefined
+              : Number(next.rating)
+            : prev.rating,
+        order_by:
+          "order_by" in next
+            ? next.order_by === "like_count" || next.order_by === "created_at"
+              ? next.order_by
+              : undefined
+            : prev.order_by,
+        page: 1,
+      }),
+      resetScroll: false,
+    })
   }
 
   function handlePageChange(page: number) {
-    const params = new URLSearchParams(searchParams)
-    params.set("page", String(page))
-    setSearchParams(params)
+    void navigate({
+      search: (prev) => ({ ...prev, page }),
+      resetScroll: true,
+    })
   }
 
   if (isLoading) {
@@ -273,7 +287,8 @@ export function CourseDetailPage() {
                         >
                           {index > 0 && <span className="mr-2">/</span>}
                           <Link
-                            to={`/teacher/${teacher.id}`}
+                            to="/teacher/$teacherID"
+                            params={{ teacherID: String(teacher.id) }}
                             className="font-medium hover:text-primary hover:underline"
                           >
                             {teacher.name}
@@ -316,7 +331,12 @@ export function CourseDetailPage() {
                         size="sm"
                         className="h-7 px-2 text-muted-foreground hover:text-foreground"
                       >
-                        <Link to="/course/mine?type=enrolled">查看全部</Link>
+                        <Link
+                          to="/course/mine"
+                          search={{ type: "enrolled" }}
+                        >
+                          查看全部
+                        </Link>
                       </Button>
                     </section>
                   )}
@@ -385,7 +405,10 @@ export function CourseDetailPage() {
                   />
                   {!course.my_review && (
                     <Button asChild size="sm">
-                      <Link to={`/course/${course.id}/review/new`}>
+                      <Link
+                        to="/course/$courseID/review/new"
+                        params={{ courseID: String(course.id) }}
+                      >
                         <RiAddLine data-icon="inline-start" />
                         写点评
                       </Link>

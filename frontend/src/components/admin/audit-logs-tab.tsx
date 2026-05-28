@@ -1,4 +1,4 @@
-import { useSearchParams } from "react-router-dom"
+import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { RiSearchLine } from "@remixicon/react"
 import { PaginationComponent } from "@/components/common/pagination"
 import { Button } from "@/components/ui/button"
@@ -26,6 +26,7 @@ import { getErrorMessage, type FormSubmitEvent } from "./admin-utils"
 
 const pageSize = 20
 const allActionsValue = "__all__"
+const routeApi = getRouteApi("/app/admin/user")
 
 const actionOptions = [
   { value: "user.suspend", label: "封禁用户" },
@@ -53,15 +54,13 @@ function detailText(details: Record<string, unknown>) {
 }
 
 export function AuditLogsTab() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const page = Math.max(1, Number(searchParams.get("audit_page") ?? "1") || 1)
-  const startTime = searchParams.get("audit_start_time") ?? ""
-  const endTime = searchParams.get("audit_end_time") ?? ""
-  const action = searchParams.get("audit_action") ?? ""
-  const actorUserID = Math.max(
-    0,
-    Number(searchParams.get("audit_actor_user_id") ?? "0") || 0
-  )
+  const search = routeApi.useSearch()
+  const navigate = useNavigate({ from: "/admin/user" })
+  const page = Math.max(1, search.audit_page ?? 1)
+  const startTime = search.audit_start_time ?? ""
+  const endTime = search.audit_end_time ?? ""
+  const action = search.audit_action ?? ""
+  const actorUserID = Math.max(0, search.audit_actor_user_id ?? 0)
 
   const logsQuery = useAuditLogs({
     start_time: startTime || undefined,
@@ -78,44 +77,46 @@ export function AuditLogsTab() {
     const nextStart = String(formData.get("start_time") ?? "")
     const nextEnd = String(formData.get("end_time") ?? "")
     const nextActor = String(formData.get("actor_user_id") ?? "").trim()
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev)
-        next.set("tab", "audit-log")
-        next.set("audit_page", "1")
-        setOrDelete(next, "audit_start_time", nextStart)
-        setOrDelete(next, "audit_end_time", nextEnd)
-        setOrDelete(next, "audit_actor_user_id", nextActor)
-        return next
-      },
-      { replace: true }
-    )
+    const nextActorID = Number(nextActor)
+    void navigate({
+      search: (prev) => ({
+        ...prev,
+        tab: "audit-log",
+        audit_page: 1,
+        audit_start_time: nextStart || undefined,
+        audit_end_time: nextEnd || undefined,
+        audit_actor_user_id: Number.isFinite(nextActorID)
+          ? nextActorID
+          : undefined,
+      }),
+      replace: true,
+      resetScroll: false,
+    })
   }
 
   function setAction(value: string) {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev)
-        next.set("tab", "audit-log")
-        next.set("audit_page", "1")
-        if (value === allActionsValue) next.delete("audit_action")
-        else next.set("audit_action", value)
-        return next
-      },
-      { replace: true }
-    )
+    void navigate({
+      search: (prev) => ({
+        ...prev,
+        tab: "audit-log",
+        audit_page: 1,
+        audit_action: value === allActionsValue ? undefined : value,
+      }),
+      replace: true,
+      resetScroll: false,
+    })
   }
 
   function setPage(nextPage: number) {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev)
-        next.set("tab", "audit-log")
-        next.set("audit_page", String(nextPage))
-        return next
-      },
-      { replace: true }
-    )
+    void navigate({
+      search: (prev) => ({
+        ...prev,
+        tab: "audit-log",
+        audit_page: nextPage,
+      }),
+      replace: true,
+      resetScroll: false,
+    })
   }
 
   return (
@@ -253,9 +254,4 @@ export function AuditLogsTab() {
       ) : null}
     </section>
   )
-}
-
-function setOrDelete(params: URLSearchParams, key: string, value: string) {
-  if (value) params.set(key, value)
-  else params.delete(key)
 }

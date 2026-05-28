@@ -3,17 +3,21 @@ import { PageTitle } from "@/components/common/page-title"
 import { ReviewList } from "@/components/review/review-list"
 import { PaginationComponent } from "@/components/common/pagination"
 import { useFollowedReviews } from "@/hooks/use-review"
-import { useSearchParams } from "react-router-dom"
+import { getRouteApi, useNavigate } from "@tanstack/react-router"
+
+const routeApi = getRouteApi("/app/review/followed")
 
 export function FollowedReviewsPage() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const page = Number(searchParams.get("page") ?? "1")
+  const search = routeApi.useSearch()
+  const navigate = useNavigate({ from: "/review/followed" })
+  const page = search.page ?? 1
   const { data, isLoading } = useFollowedReviews({ page, page_size: 20 })
 
   function handlePageChange(page: number) {
-    const next = new URLSearchParams(searchParams)
-    next.set("page", String(page))
-    setSearchParams(next)
+    void navigate({
+      search: (prev) => ({ ...prev, page }),
+      resetScroll: false,
+    })
   }
 
   return (

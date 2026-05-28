@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useSearchParams } from "react-router-dom"
+import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { RiFilterLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -22,21 +22,28 @@ import type { FilterItem } from "@/api/teacher"
 import type { TeacherFilters as TeacherFiltersDTO } from "@/api/teacher"
 
 const ALL = "__all__"
+const routeApi = getRouteApi("/app/teacher")
+type TeacherSearch = ReturnType<typeof routeApi.useSearch>
+type FilterKey = keyof Pick<TeacherSearch, "department" | "title">
 
 interface TeacherFiltersProps {
   filters: TeacherFiltersDTO
 }
 
 export function TeacherFilters({ filters }: TeacherFiltersProps) {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const search = routeApi.useSearch()
+  const navigate = useNavigate({ from: "/teacher" })
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  function updateFilter(key: string, value: string | null) {
-    const next = new URLSearchParams(searchParams)
-    if (!value || value === ALL) next.delete(key)
-    else next.set(key, value)
-    next.delete("page")
-    setSearchParams(next)
+  function updateFilter(key: FilterKey, value: string | null) {
+    void navigate({
+      search: (prev) => ({
+        ...prev,
+        [key]: !value || value === ALL ? undefined : value,
+        page: 1,
+      }),
+      resetScroll: false,
+    })
   }
 
   const content = (
@@ -46,7 +53,7 @@ export function TeacherFilters({ filters }: TeacherFiltersProps) {
           label="学院"
           items={filters.departments}
           paramKey="department"
-          selected={searchParams.get("department")}
+          selected={search.department ?? null}
           onChange={updateFilter}
         />
       )}
@@ -56,7 +63,7 @@ export function TeacherFilters({ filters }: TeacherFiltersProps) {
           label="职称"
           items={filters.titles}
           paramKey="title"
-          selected={searchParams.get("title")}
+          selected={search.title ?? null}
           onChange={updateFilter}
         />
       )}
@@ -65,10 +72,15 @@ export function TeacherFilters({ filters }: TeacherFiltersProps) {
         variant="outline"
         className="w-full"
         onClick={() => {
-          const next = new URLSearchParams()
-          const q = searchParams.get("q")?.trim()
-          if (q) next.set("q", q)
-          setSearchParams(next)
+          void navigate({
+            search: {
+              q: search.q,
+              department: undefined,
+              title: undefined,
+              page: 1,
+            },
+            resetScroll: false,
+          })
         }}
       >
         清除筛选
@@ -103,10 +115,10 @@ export function TeacherFilters({ filters }: TeacherFiltersProps) {
 
 interface FilterSelectGroupProps {
   label: string
-  paramKey: string
+  paramKey: FilterKey
   items?: FilterItem[]
   selected: string | null
-  onChange: (key: string, value: string | null) => void
+  onChange: (key: FilterKey, value: string | null) => void
 }
 
 function FilterSelectGroup({

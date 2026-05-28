@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useSearchParams } from "react-router-dom"
+import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { useDebounce } from "use-debounce"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
@@ -11,6 +11,7 @@ import { useTeacherFilters, useTeachers } from "@/hooks/use-teacher"
 import { cn } from "@/lib/utils"
 
 const TEACHER_SEARCH_DEBOUNCE_MS = 250
+const routeApi = getRouteApi("/app/teacher")
 
 type TeacherSearchInputProps = {
   initialValue: string
@@ -41,11 +42,12 @@ function TeacherSearchInput({
 }
 
 export function TeachersPage() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const page = Number(searchParams.get("page") ?? "1")
-  const department = searchParams.get("department") ?? ""
-  const title = searchParams.get("title") ?? ""
-  const q = (searchParams.get("q") ?? "").trim()
+  const search = routeApi.useSearch()
+  const navigate = useNavigate({ from: "/teacher" })
+  const page = search.page ?? 1
+  const department = search.department ?? ""
+  const title = search.title ?? ""
+  const q = search.q ?? ""
 
   const filter = {
     department: department || undefined,
@@ -57,12 +59,16 @@ export function TeachersPage() {
   const { data: filters, isLoading: filtersLoading } = useTeacherFilters()
   const { data, isLoading } = useTeachers(filter)
 
-  function update(key: string, value: string | null) {
-    const next = new URLSearchParams(searchParams)
-    if (!value) next.delete(key)
-    else next.set(key, value)
-    next.delete("page")
-    setSearchParams(next)
+  function update(key: "q", value: string | null) {
+    void navigate({
+      search: (prev) => ({
+        ...prev,
+        [key]: value || undefined,
+        page: 1,
+      }),
+      replace: true,
+      resetScroll: false,
+    })
   }
 
   function handleSearchChange(value: string) {
@@ -72,9 +78,10 @@ export function TeachersPage() {
   }
 
   function handlePageChange(p: number) {
-    const next = new URLSearchParams(searchParams)
-    next.set("page", String(p))
-    setSearchParams(next)
+    void navigate({
+      search: (prev) => ({ ...prev, page: p }),
+      resetScroll: true,
+    })
   }
 
   return (

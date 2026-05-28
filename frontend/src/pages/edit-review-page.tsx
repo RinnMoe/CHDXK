@@ -1,4 +1,9 @@
-import { useParams, useNavigate, Link } from "react-router-dom"
+import {
+  getRouteApi,
+  Link,
+  useNavigate,
+  useRouter,
+} from "@tanstack/react-router"
 import { RiArrowLeftLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -12,10 +17,13 @@ import { useAuth } from "@/contexts/auth-context"
 import { getCourseSemesters } from "@/lib/course-semesters"
 import type { CreateReviewCommand, UpdateReviewCommand } from "@/api/review"
 
+const routeApi = getRouteApi("/app/review/$reviewID/edit")
+
 export function EditReviewPage() {
-  const { reviewID } = useParams<{ reviewID: string }>()
+  const { reviewID } = routeApi.useParams()
   const id = Number(reviewID)
   const navigate = useNavigate()
+  const router = useRouter()
   const { user } = useAuth()
   const { data: review, isLoading } = useReview(id)
   const { data: course } = useCourseDetail(review?.course_id ?? 0)
@@ -24,7 +32,10 @@ export function EditReviewPage() {
 
   async function handleSubmit(cmd: CreateReviewCommand | UpdateReviewCommand) {
     await mutateAsync({ reviewID: id, cmd: cmd as UpdateReviewCommand })
-    navigate(`/review/${id}`)
+    await navigate({
+      to: "/review/$reviewID",
+      params: { reviewID: String(id) },
+    })
   }
 
   if (isLoading || !review) {
@@ -48,7 +59,7 @@ export function EditReviewPage() {
       <PageTitle>编辑点评</PageTitle>
       <PageShell>
         <Button asChild variant="ghost" size="sm" className="mb-4">
-          <Link to={`/review/${id}`}>
+          <Link to="/review/$reviewID" params={{ reviewID: String(id) }}>
             <RiArrowLeftLine data-icon="inline-start" />
             返回点评
           </Link>
@@ -64,7 +75,7 @@ export function EditReviewPage() {
             initialReview={review}
             semesters={semesters}
             onSubmit={handleSubmit}
-            onCancel={() => navigate(-1)}
+            onCancel={() => router.history.back()}
             isSubmitting={isPending}
             draftUserID={user?.id}
           />

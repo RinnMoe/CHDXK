@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "@tanstack/react-router"
 import { useLayoutEffect, useRef, useState } from "react"
 import { RiMenuLine, RiSearchLine } from "@remixicon/react"
 import { UserMenu } from "@/components/auth/user-menu"
@@ -26,7 +26,14 @@ import {
 } from "@/components/ui/sheet"
 
 type NavLinkItem = {
-  to: string
+  to:
+    | "/"
+    | "/course"
+    | "/teacher"
+    | "/review"
+    | "/course/hot"
+    | "/admin/user"
+    | "/admin/site-stat"
   label: string
   match: (p: string) => boolean
 }
@@ -73,7 +80,7 @@ const searchTargets = [
   { label: "课程", path: "/course" },
   { label: "教师", path: "/teacher" },
   { label: "点评", path: "/review" },
-]
+] as const
 
 function HeaderSearch() {
   const navigate = useNavigate()
@@ -81,10 +88,13 @@ function HeaderSearch() {
   const [query, setQuery] = useState("")
   const keyword = query.trim()
 
-  function go(path: string) {
+  function go(path: (typeof searchTargets)[number]["path"]) {
     if (!keyword) return
 
-    navigate(`${path}?${new URLSearchParams({ q: keyword }).toString()}`)
+    void navigate({
+      to: path,
+      search: { q: keyword },
+    })
     setOpen(false)
   }
 

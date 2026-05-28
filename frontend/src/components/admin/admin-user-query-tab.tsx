@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { RiLockLine, RiLockUnlockLine, RiSearchLine } from "@remixicon/react"
 import { PaginationComponent } from "@/components/common/pagination"
 import { ReviewList } from "@/components/review/review-list"
@@ -26,10 +27,10 @@ import {
 } from "@/hooks/use-admin-user"
 import { useUserReviews } from "@/hooks/use-review"
 import { formatDateTime, formatNullableDateTime } from "@/lib/date"
-import { useSearchParams } from "react-router-dom"
 import { getErrorMessage, type FormSubmitEvent } from "./admin-utils"
 
 const reviewPageSize = 20
+const routeApi = getRouteApi("/app/admin/user")
 
 interface AdminUserQueryTabProps {
   currentUserID: number
@@ -57,9 +58,10 @@ export function AdminUserQueryTab({
   currentUserID,
   currentUserIsSuperAdmin,
 }: AdminUserQueryTabProps) {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const email = searchParams.get("email") ?? ""
-  const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1)
+  const search = routeApi.useSearch()
+  const navigate = useNavigate({ from: "/admin/user" })
+  const email = search.email ?? ""
+  const page = Math.max(1, search.page ?? 1)
   const [suspendDays, setSuspendDays] = useState(30)
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false)
 
@@ -81,33 +83,24 @@ export function AdminUserQueryTab({
     const nextEmail = String(formData.get("email") ?? "")
       .trim()
       .toLowerCase()
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev)
-        if (nextEmail) {
-          next.set("email", nextEmail)
-          next.set("page", "1")
-        } else {
-          next.delete("email")
-          next.delete("page")
-        }
-        next.set("tab", "user")
-        return next
-      },
-      { replace: true }
-    )
+    void navigate({
+      search: (prev) => ({
+        ...prev,
+        email: nextEmail || undefined,
+        page: nextEmail ? 1 : undefined,
+        tab: "user",
+      }),
+      replace: true,
+      resetScroll: false,
+    })
   }
 
   function setPage(nextPage: number) {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev)
-        next.set("page", String(nextPage))
-        next.set("tab", "user")
-        return next
-      },
-      { replace: true }
-    )
+    void navigate({
+      search: (prev) => ({ ...prev, page: nextPage, tab: "user" }),
+      replace: true,
+      resetScroll: false,
+    })
   }
 
   async function clearSuspension() {

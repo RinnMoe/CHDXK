@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom"
+import { getRouteApi, Link, useNavigate } from "@tanstack/react-router"
 import { RiArrowLeftLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { TitleBadge } from "@/components/ui/title-badge"
@@ -9,17 +9,18 @@ import { PaginationComponent } from "@/components/common/pagination"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { displayTeacherTitle } from "@/lib/utils"
-import { useSearchParams } from "react-router-dom"
 import { useTeacher, useTeacherCourses } from "@/hooks/use-teacher"
 
 type CourseSort = "rating_score" | "rating_count"
+const routeApi = getRouteApi("/app/teacher/$teacherID")
 
 export function TeacherDetailPage() {
-  const { teacherID } = useParams<{ teacherID: string }>()
+  const { teacherID } = routeApi.useParams()
   const id = Number(teacherID)
-  const [searchParams, setSearchParams] = useSearchParams()
-  const page = Number(searchParams.get("page") ?? "1")
-  const orderByParam = searchParams.get("order_by")
+  const search = routeApi.useSearch()
+  const navigate = useNavigate({ from: "/teacher/$teacherID" })
+  const page = search.page ?? 1
+  const orderByParam = search.order_by
   const orderBy: CourseSort | undefined =
     orderByParam === "rating_score" || orderByParam === "rating_count"
       ? orderByParam
@@ -34,20 +35,19 @@ export function TeacherDetailPage() {
   const teacherTitle = displayTeacherTitle(teacher?.title)
 
   function updateCourseSort(value: string) {
-    const next = new URLSearchParams(searchParams)
-    if (value === "rating_score") {
-      next.delete("order_by")
-    } else {
-      next.set("order_by", value)
-    }
-    next.delete("page")
-    setSearchParams(next)
+    const nextOrderBy: CourseSort | undefined =
+      value === "rating_count" ? "rating_count" : undefined
+    void navigate({
+      search: (prev) => ({ ...prev, order_by: nextOrderBy, page: 1 }),
+      resetScroll: false,
+    })
   }
 
   function handlePageChange(p: number) {
-    const next = new URLSearchParams(searchParams)
-    next.set("page", String(p))
-    setSearchParams(next)
+    void navigate({
+      search: (prev) => ({ ...prev, page: p }),
+      resetScroll: false,
+    })
   }
 
   return (

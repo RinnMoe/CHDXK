@@ -1,4 +1,4 @@
-import { Link, useSearchParams } from "react-router-dom"
+import { getRouteApi, Link, useNavigate } from "@tanstack/react-router"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { ReviewList } from "@/components/review/review-list"
@@ -8,10 +8,12 @@ import { useAuth } from "@/contexts/auth-context"
 import { useUserReviews } from "@/hooks/use-review"
 
 const PAGE_SIZE = 20
+const routeApi = getRouteApi("/app/review/mine")
 
 export function UserReviewsPage() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1)
+  const search = routeApi.useSearch()
+  const navigate = useNavigate({ from: "/review/mine" })
+  const page = Math.max(1, search.page ?? 1)
   const { user, isLoading: authLoading } = useAuth()
   const { data, isLoading } = useUserReviews(user?.id ?? 0, {
     page,
@@ -19,9 +21,10 @@ export function UserReviewsPage() {
   })
 
   function handlePageChange(page: number) {
-    const next = new URLSearchParams(searchParams)
-    next.set("page", String(page))
-    setSearchParams(next)
+    void navigate({
+      search: (prev) => ({ ...prev, page }),
+      resetScroll: false,
+    })
   }
 
   return (

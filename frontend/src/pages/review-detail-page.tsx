@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom"
+import { getRouteApi, useNavigate, useRouter } from "@tanstack/react-router"
 import { RiArrowLeftLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -7,19 +7,22 @@ import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { useReview } from "@/hooks/use-review"
 
+const routeApi = getRouteApi("/app/review/$reviewID")
+
 export function ReviewDetailPage() {
   const navigate = useNavigate()
-  const { reviewID } = useParams<{ reviewID: string }>()
+  const router = useRouter()
+  const { reviewID } = routeApi.useParams()
   const id = Number(reviewID)
   const { data: review, isLoading } = useReview(id)
 
   function handleBack() {
-    if ((window.history.state?.idx ?? 0) > 0) {
-      navigate(-1)
+    if (router.history.canGoBack()) {
+      router.history.back()
       return
     }
 
-    navigate("/review")
+    void navigate({ to: "/review" })
   }
 
   if (isLoading) {

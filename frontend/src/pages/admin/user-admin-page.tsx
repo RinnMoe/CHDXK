@@ -1,4 +1,4 @@
-import { Navigate, useSearchParams } from "react-router-dom"
+import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { AuditLogsTab } from "@/components/admin/audit-logs-tab"
 import { AdminUserQueryTab } from "@/components/admin/admin-user-query-tab"
 import { AdminUsersTab } from "@/components/admin/admin-users-tab"
@@ -7,34 +7,30 @@ import { PageTitle } from "@/components/common/page-title"
 import { PageShell } from "@/components/layout/page-shell"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/contexts/auth-context"
-import { useLoginRedirectPath } from "@/hooks/use-login-redirect"
 
 const adminTabs = ["user", "admin", "system-api-key", "audit-log"] as const
 type AdminTab = (typeof adminTabs)[number]
+const routeApi = getRouteApi("/app/admin/user")
 
 function getAdminTab(value: string | null): AdminTab {
   return adminTabs.includes(value as AdminTab) ? (value as AdminTab) : "user"
 }
 
 export function UserAdminPage() {
-  const { user, isLoading: authLoading } = useAuth()
-  const loginRedirectPath = useLoginRedirectPath()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const activeTab = getAdminTab(searchParams.get("tab"))
+  const { user } = useAuth()
+  const search = routeApi.useSearch()
+  const navigate = useNavigate({ from: "/admin/user" })
+  const activeTab = getAdminTab(search.tab ?? null)
 
   function setActiveTab(tab: string) {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev)
-        next.set("tab", getAdminTab(tab))
-        return next
-      },
-      { replace: true }
-    )
+    void navigate({
+      search: (prev) => ({ ...prev, tab: getAdminTab(tab) }),
+      replace: true,
+      resetScroll: false,
+    })
   }
 
-  if (authLoading) return null
-  if (!user) return <Navigate to={loginRedirectPath} replace />
+  if (!user) return null
   if (!user.is_admin()) {
     return (
       <>

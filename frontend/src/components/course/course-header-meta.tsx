@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link } from "@tanstack/react-router"
 
 import { TitleBadge } from "@/components/ui/title-badge"
 import type { TeacherDTO } from "@/api/types"
@@ -26,7 +26,8 @@ export function CourseHeaderMeta({ course, className }: CourseHeaderMetaProps) {
       </h1>
       <div className="inline-flex items-baseline gap-1.5">
         <Link
-          to={`/teacher/${course.main_teacher.id}`}
+          to="/teacher/$teacherID"
+          params={{ teacherID: String(course.main_teacher.id) }}
           className="text-lg font-semibold text-primary hover:underline"
         >
           {course.main_teacher.name}

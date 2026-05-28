@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link } from "@tanstack/react-router"
 import {
   RiEyeCloseLine,
   RiNotification3Line,
@@ -59,7 +59,7 @@ export function CourseNotificationControl({
       <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
         <span className="font-normal">通知等级：未登录</span>
         <Button asChild size="sm" variant="ghost" className="h-7 px-2">
-          <Link to={`/login`}>登录</Link>
+          <Link to="/login">登录</Link>
         </Button>
       </div>
     )

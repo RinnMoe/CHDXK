@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { useForm } from "@tanstack/react-form"
 import { EmailPrefixInput } from "@/components/auth/email-prefix-input"
 import { Button } from "@/components/ui/button"
@@ -36,7 +36,7 @@ export function PasswordResetForm() {
         code: value.code.trim(),
         new_password: value.password,
       })
-      navigate("/login")
+      await navigate({ to: "/login" })
     },
   })
 

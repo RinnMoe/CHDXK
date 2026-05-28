@@ -1,4 +1,9 @@
-import { useParams, useNavigate, Link } from "react-router-dom"
+import {
+  getRouteApi,
+  Link,
+  useNavigate,
+  useRouter,
+} from "@tanstack/react-router"
 import { RiArrowLeftLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { PageShell } from "@/components/layout/page-shell"
@@ -12,10 +17,13 @@ import { useAuth } from "@/contexts/auth-context"
 import { getCourseSemesters, getDefaultSemester } from "@/lib/course-semesters"
 import type { CreateReviewCommand, UpdateReviewCommand } from "@/api/review"
 
+const routeApi = getRouteApi("/app/course/$courseID/review/new")
+
 export function NewReviewPage() {
-  const { courseID } = useParams<{ courseID: string }>()
+  const { courseID } = routeApi.useParams()
   const id = Number(courseID)
   const navigate = useNavigate()
+  const router = useRouter()
   const { user } = useAuth()
   const { data: course } = useCourseDetail(id)
   const settingsQuery = useUserSettings(!!user)
@@ -28,7 +36,10 @@ export function NewReviewPage() {
 
   async function handleSubmit(cmd: CreateReviewCommand | UpdateReviewCommand) {
     await mutateAsync(cmd as CreateReviewCommand)
-    navigate(`/course/${id}`)
+    await navigate({
+      to: "/course/$courseID",
+      params: { courseID: String(id) },
+    })
   }
 
   return (
@@ -36,7 +47,7 @@ export function NewReviewPage() {
       <PageTitle>写点评</PageTitle>
       <PageShell>
         <Button asChild variant="ghost" size="sm" className="mb-4">
-          <Link to={`/course/${id}`}>
+          <Link to="/course/$courseID" params={{ courseID: String(id) }}>
             <RiArrowLeftLine data-icon="inline-start" />
             返回课程
           </Link>
@@ -53,7 +64,7 @@ export function NewReviewPage() {
             semesters={semesters}
             defaultSemester={defaultSemester}
             onSubmit={handleSubmit}
-            onCancel={() => navigate(-1)}
+            onCancel={() => router.history.back()}
             isSubmitting={isPending}
             draftUserID={user?.id}
           />

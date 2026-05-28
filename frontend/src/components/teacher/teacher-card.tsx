@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link } from "@tanstack/react-router"
 import { TitleBadge } from "@/components/ui/title-badge"
 import { displayTeacherTitle } from "@/lib/utils"
 import type { TeacherDTO } from "@/api/teacher"
@@ -12,7 +12,8 @@ export function TeacherCard({ teacher }: TeacherCardProps) {
 
   return (
     <Link
-      to={`/teacher/${teacher.id}`}
+      to="/teacher/$teacherID"
+      params={{ teacherID: String(teacher.id) }}
       className="block border-b px-4 py-3 transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
     >
       <div className="space-y-1">

@@ -1,21 +1,20 @@
 import { useEffect } from "react"
-import { Link, useSearchParams } from "react-router-dom"
+import { getRouteApi, Link } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import {
   COURSE_ENROLLMENT_SYNC_CHANNEL,
   type CourseEnrollmentSyncMessage,
 } from "@/lib/course-enrollment-sync"
 
+const routeApi = getRouteApi("/public/course/mine/sync-callback")
+
 export function CourseEnrollmentSyncCallbackPage() {
-  const [searchParams] = useSearchParams()
-  const status = searchParams.get("status") === "ok" ? "ok" : "error"
-  const semester = searchParams.get("semester") ?? ""
-  const message = searchParams.get("message") ?? undefined
-  const matched = Number(searchParams.get("matched") ?? "0") || 0
-  const total = Number(searchParams.get("total") ?? "0") || 0
-  const returnURL = `/course/mine?type=enrolled${
-    semester && matched > 0 ? `&semester=${semester}` : ""
-  }`
+  const search = routeApi.useSearch()
+  const status = search.status === "ok" ? "ok" : "error"
+  const semester = search.semester ?? ""
+  const message = search.message
+  const matched = search.matched ?? 0
+  const total = search.total ?? 0
 
   useEffect(() => {
     const payload: CourseEnrollmentSyncMessage = {
@@ -50,7 +49,15 @@ export function CourseEnrollmentSyncCallbackPage() {
             : (message ?? "请关闭窗口后重试。")}
         </p>
         <Button asChild variant="outline">
-          <Link to={returnURL}>返回我的课程</Link>
+          <Link
+            to="/course/mine"
+            search={{
+              type: "enrolled",
+              semester: semester && matched > 0 ? semester : undefined,
+            }}
+          >
+            返回我的课程
+          </Link>
         </Button>
       </div>
     </div>

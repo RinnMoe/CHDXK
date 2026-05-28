@@ -1,4 +1,4 @@
-import { useSearchParams } from "react-router-dom"
+import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { CourseSearchBar } from "@/components/course/course-search-bar"
 import { CourseList } from "@/components/course/course-list"
 import { CourseFilters } from "@/components/course/course-filters"
@@ -9,29 +9,22 @@ import { useCourseFilters, useCourses } from "@/hooks/use-course"
 import { cn } from "@/lib/utils"
 import type { CourseListFilter } from "@/api/course"
 
+const routeApi = getRouteApi("/app/course")
+
 export function CoursesPage() {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const search = routeApi.useSearch()
+  const navigate = useNavigate({ from: "/course" })
 
   function toFilter() {
-    const categories = searchParams.getAll("categories")
-    const target_years = searchParams.getAll("target_years")
-    const departments = searchParams.getAll("department")
-    const creditParam = searchParams.get("credit")
-    const credit = creditParam === null ? undefined : Number(creditParam)
-    const orderByParam = searchParams.get("order_by")
-    const orderBy: CourseListFilter["order_by"] =
-      orderByParam === "rating_score" || orderByParam === "rating_count"
-        ? orderByParam
-        : undefined
     return {
-      q: searchParams.get("q")?.trim() || undefined,
-      department: departments[0] ?? undefined,
-      language: searchParams.get("language") ?? undefined,
-      categories: categories.length > 0 ? categories : undefined,
-      target_years: target_years.length > 0 ? target_years : undefined,
-      credit: credit !== undefined && Number.isFinite(credit) ? credit : undefined,
-      order_by: orderBy,
-      page: Number(searchParams.get("page") ?? "1"),
+      q: search.q,
+      department: search.department,
+      language: search.language,
+      categories: search.categories,
+      target_years: search.target_years,
+      credit: search.credit,
+      order_by: search.order_by as CourseListFilter["order_by"] | undefined,
+      page: search.page,
       page_size: 20,
     }
   }
@@ -41,9 +34,10 @@ export function CoursesPage() {
   const { data, isLoading } = useCourses(filter)
 
   function handlePageChange(page: number) {
-    const next = new URLSearchParams(searchParams)
-    next.set("page", String(page))
-    setSearchParams(next)
+    void navigate({
+      search: (prev) => ({ ...prev, page }),
+      resetScroll: true,
+    })
   }
 
   return (

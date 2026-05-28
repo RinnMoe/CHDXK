@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link } from "@tanstack/react-router"
 import Markdown from "react-markdown"
 import rehypeSanitize from "rehype-sanitize"
 import remarkBreaks from "remark-breaks"
