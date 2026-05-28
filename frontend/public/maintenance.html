@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>SJTU选课社区 - 停机维护中</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --background: #f8fafc;
+        --foreground: #0f172a;
+        --muted: #64748b;
+        --border: #dbe3ea;
+        --panel: #ffffff;
+        --primary: #0f766e;
+        --primary-soft: #ccfbf1;
+        --warning: #b45309;
+        --warning-soft: #fef3c7;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        background:
+          radial-gradient(circle at top left, rgba(15, 118, 110, 0.12), transparent 34rem),
+          linear-gradient(180deg, #ffffff 0%, var(--background) 100%);
+        color: var(--foreground);
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "Noto Sans SC",
+          sans-serif;
+      }
+
+      main {
+        display: grid;
+        min-height: 100vh;
+        place-items: center;
+        padding: 32px 18px;
+      }
+
+      .shell {
+        width: min(100%, 760px);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 24px;
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 40px;
+        height: 40px;
+        place-items: center;
+        border: 1px solid rgba(15, 118, 110, 0.24);
+        border-radius: 8px;
+        background: var(--primary-soft);
+        color: var(--primary);
+        font-size: 18px;
+      }
+
+      .panel {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
+        overflow: hidden;
+      }
+
+      .header {
+        display: grid;
+        gap: 16px;
+        padding: clamp(28px, 6vw, 48px);
+      }
+
+      .status {
+        display: inline-flex;
+        width: fit-content;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid rgba(180, 83, 9, 0.24);
+        border-radius: 999px;
+        background: var(--warning-soft);
+        color: var(--warning);
+        font-size: 14px;
+        font-weight: 600;
+        padding: 7px 12px;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: currentColor;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 680px;
+        font-size: clamp(32px, 8vw, 54px);
+        line-height: 1.08;
+        letter-spacing: 0;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 17px;
+        line-height: 1.75;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 8px;
+      }
+
+      a,
+      button {
+        display: inline-flex;
+        min-height: 44px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        font: inherit;
+        font-weight: 600;
+        letter-spacing: 0;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .primary-action {
+        border: 1px solid var(--primary);
+        background: var(--primary);
+        color: #ffffff;
+        padding: 0 18px;
+      }
+
+      .secondary-action {
+        border: 1px solid var(--border);
+        background: #ffffff;
+        color: var(--foreground);
+        padding: 0 18px;
+      }
+
+      .meta {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        border-top: 1px solid var(--border);
+        background: #f8fafc;
+      }
+
+      .meta-item {
+        min-width: 0;
+        padding: 18px 22px;
+      }
+
+      .meta-item + .meta-item {
+        border-left: 1px solid var(--border);
+      }
+
+      .label {
+        margin-bottom: 6px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .value {
+        overflow-wrap: anywhere;
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      @media (max-width: 640px) {
+        main {
+          align-items: start;
+        }
+
+        .brand {
+          margin-bottom: 18px;
+        }
+
+        .meta {
+          grid-template-columns: 1fr;
+        }
+
+        .meta-item + .meta-item {
+          border-top: 1px solid var(--border);
+          border-left: 0;
+        }
+
+        .actions {
+          flex-direction: column;
+        }
+
+        a,
+        button {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="shell">
+        <div class="brand" aria-label="SJTU选课社区">
+          <div class="brand-mark" aria-hidden="true">课</div>
+          <span>SJTU选课社区</span>
+        </div>
+
+        <section class="panel" aria-labelledby="maintenance-title">
+          <div class="header">
+            <div class="status"><span class="dot" aria-hidden="true"></span>服务维护中</div>
+            <h1 id="maintenance-title">系统暂时无法访问</h1>
+            <p>
+              选课社区正在维护，或后端服务暂时不可用。请稍后刷新页面重试；已打开的页面内容可能仍可浏览，但登录、提交点评、同步课程等操作会暂时受影响。
+            </p>
+            <div class="actions">
+              <button class="primary-action" type="button" onclick="window.location.reload()">刷新页面</button>
+              <a class="secondary-action" href="/">返回首页</a>
+            </div>
+          </div>
+
+          <div class="meta" aria-label="故障信息">
+            <div class="meta-item">
+              <div class="label">状态</div>
+              <div class="value">上游服务不可用</div>
+            </div>
+            <div class="meta-item">
+              <div class="label">建议</div>
+              <div class="value">稍后重试</div>
+            </div>
+            <div class="meta-item">
+              <div class="label">时间</div>
+              <div class="value" id="current-time">-</div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      const timeElement = document.getElementById("current-time")
+      if (timeElement) {
+        timeElement.textContent = new Intl.DateTimeFormat("zh-CN", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        }).format(new Date())
+      }
+    </script>
+  </body>
+</html>
