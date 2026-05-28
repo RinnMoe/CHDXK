@@ -41,7 +41,7 @@ func (r *CourseRepository) applyFilter(db gorm.ChainInterface[CourseEntity], f c
 		db = db.Where("courses.id != ?", f.ExcludeID)
 	}
 	if f.Q != "" {
-		db = applySearchVectorOrNameChainFilter(db, r.searchConfig, "courses.search_vector", "courses.name", f.Q)
+		db = applyCourseSearchChainFilter(db, r.searchConfig, f.Q)
 	}
 	if f.Code != "" {
 		db = db.Where("LOWER(courses.code) = LOWER(?)", f.Code)

@@ -1,44 +1,15 @@
-import { useEffect, useState } from "react"
+import { useCallback } from "react"
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
-import { useDebounce } from "use-debounce"
+import { DebouncedSearchInput } from "@/components/common/debounced-search-input"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { ReviewList } from "@/components/review/review-list"
 import { PaginationComponent } from "@/components/common/pagination"
-import { Input } from "@/components/ui/input"
 import { useReviews } from "@/hooks/use-review"
 
 const REVIEW_PAGE_SIZE = 20
 const REVIEW_SEARCH_DEBOUNCE_MS = 250
 const routeApi = getRouteApi("/app/review")
-
-type ReviewSearchInputProps = {
-  initialValue: string
-  onSearchChange: (value: string) => void
-}
-
-function ReviewSearchInput({
-  initialValue,
-  onSearchChange,
-}: ReviewSearchInputProps) {
-  const [searchValue, setSearchValue] = useState(initialValue)
-  const [debouncedSearchValue] = useDebounce(
-    searchValue,
-    REVIEW_SEARCH_DEBOUNCE_MS
-  )
-
-  useEffect(() => {
-    onSearchChange(debouncedSearchValue)
-  }, [debouncedSearchValue, onSearchChange])
-
-  return (
-    <Input
-      placeholder="搜索点评内容..."
-      value={searchValue}
-      onChange={(e) => setSearchValue(e.target.value)}
-    />
-  )
-}
 
 export function ReviewsPage() {
   const search = routeApi.useSearch()
@@ -51,7 +22,7 @@ export function ReviewsPage() {
     page_size: REVIEW_PAGE_SIZE,
   })
 
-  function handleSearchChange(value: string) {
+  const handleSearchChange = useCallback((value: string) => {
     const nextQ = value.trim()
     if (nextQ === q) return
 
@@ -64,7 +35,7 @@ export function ReviewsPage() {
       replace: true,
       resetScroll: false,
     })
-  }
+  }, [navigate, q])
 
   function handlePageChange(page: number) {
     void navigate({
@@ -85,9 +56,11 @@ export function ReviewsPage() {
             </p>
           </div>
 
-          <ReviewSearchInput
-            initialValue={q}
-            onSearchChange={handleSearchChange}
+          <DebouncedSearchInput
+            placeholder="搜索点评内容..."
+            value={q}
+            debounceMs={REVIEW_SEARCH_DEBOUNCE_MS}
+            onDebouncedChange={handleSearchChange}
           />
 
           {data && (

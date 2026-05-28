@@ -42,6 +42,24 @@ func applySearchVectorOrNameChainFilter[T any](db gorm.ChainInterface[T], config
 	return db.Where(condition, config, query, nameLike)
 }
 
+func applyCourseSearchChainFilter[T any](db gorm.ChainInterface[T], config, q string) gorm.ChainInterface[T] {
+	query := searchQuery(q)
+	if query == "" {
+		return db
+	}
+	nameLike := "%" + query + "%"
+	prefixQuery := strings.ToLower(query) + ":*"
+	return db.Where(
+		`(courses.search_vector @@ websearch_to_tsquery(?::regconfig, ?)
+			OR courses.search_vector @@ to_tsquery('simple', ?)
+			OR courses.name ILIKE ?)`,
+		config,
+		query,
+		prefixQuery,
+		nameLike,
+	)
+}
+
 func searchRankOrder(column string, q string) string {
 	query := searchQuery(q)
 	if query == "" {

@@ -135,6 +135,23 @@ func TestCourseRepository_FindBy(t *testing.T) {
 		}
 	})
 
+	t.Run("search by q course code prefix", func(t *testing.T) {
+		results, total, err := repo.FindBy(ctx, course.CourseFilter{Q: "cs10"})
+		if err != nil {
+			t.Fatalf("FindBy: %v", err)
+		}
+		if total != 2 {
+			t.Errorf("total: got %d, want 2", total)
+		}
+		gotCodes := map[string]bool{}
+		for _, result := range results {
+			gotCodes[result.Code] = true
+		}
+		if !gotCodes["CS101"] || !gotCodes["CS102"] {
+			t.Errorf("codes: got %v, want CS101 and CS102", results)
+		}
+	})
+
 	t.Run("search by q teacher name", func(t *testing.T) {
 		results, total, err := repo.FindBy(ctx, course.CourseFilter{Q: "张三"})
 		if err != nil {

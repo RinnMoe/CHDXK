@@ -1,45 +1,16 @@
-import { useEffect, useState } from "react"
+import { useCallback } from "react"
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
-import { useDebounce } from "use-debounce"
+import { DebouncedSearchInput } from "@/components/common/debounced-search-input"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { TeacherFilters } from "@/components/teacher/teacher-filters"
 import { TeacherList } from "@/components/teacher/teacher-list"
 import { PaginationComponent } from "@/components/common/pagination"
-import { Input } from "@/components/ui/input"
 import { useTeacherFilters, useTeachers } from "@/hooks/use-teacher"
 import { cn } from "@/lib/utils"
 
 const TEACHER_SEARCH_DEBOUNCE_MS = 250
 const routeApi = getRouteApi("/app/teacher")
-
-type TeacherSearchInputProps = {
-  initialValue: string
-  onSearchChange: (value: string) => void
-}
-
-function TeacherSearchInput({
-  initialValue,
-  onSearchChange,
-}: TeacherSearchInputProps) {
-  const [searchValue, setSearchValue] = useState(initialValue)
-  const [debouncedSearchValue] = useDebounce(
-    searchValue,
-    TEACHER_SEARCH_DEBOUNCE_MS
-  )
-
-  useEffect(() => {
-    onSearchChange(debouncedSearchValue)
-  }, [debouncedSearchValue, onSearchChange])
-
-  return (
-    <Input
-      placeholder="搜索教师姓名、拼音或工号..."
-      value={searchValue}
-      onChange={(e) => setSearchValue(e.target.value)}
-    />
-  )
-}
 
 export function TeachersPage() {
   const search = routeApi.useSearch()
@@ -59,23 +30,20 @@ export function TeachersPage() {
   const { data: filters, isLoading: filtersLoading } = useTeacherFilters()
   const { data, isLoading } = useTeachers(filter)
 
-  function update(key: "q", value: string | null) {
+  const handleSearchChange = useCallback((value: string) => {
+    const nextQ = value.trim()
+    if (nextQ === q) return
+
     void navigate({
       search: (prev) => ({
         ...prev,
-        [key]: value || undefined,
+        q: nextQ || undefined,
         page: 1,
       }),
       replace: true,
       resetScroll: false,
     })
-  }
-
-  function handleSearchChange(value: string) {
-    const nextQ = value.trim()
-    if (nextQ === q) return
-    update("q", nextQ)
-  }
+  }, [navigate, q])
 
   function handlePageChange(p: number) {
     void navigate({
@@ -96,9 +64,11 @@ export function TeachersPage() {
             </p>
           </div>
 
-          <TeacherSearchInput
-            initialValue={q}
-            onSearchChange={handleSearchChange}
+          <DebouncedSearchInput
+            placeholder="搜索教师姓名、拼音或工号..."
+            value={q}
+            debounceMs={TEACHER_SEARCH_DEBOUNCE_MS}
+            onDebouncedChange={handleSearchChange}
           />
 
           <div className="flex flex-col gap-6 lg:flex-row">

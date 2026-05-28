@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react"
+import { useCallback } from "react"
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
-import { useDebounce } from "use-debounce"
-import { Input } from "@/components/ui/input"
+import { DebouncedSearchInput } from "@/components/common/debounced-search-input"
 
 const SEARCH_DEBOUNCE_MS = 250
 const routeApi = getRouteApi("/app/course")
@@ -9,31 +8,32 @@ const routeApi = getRouteApi("/app/course")
 export function CourseSearchBar() {
   const search = routeApi.useSearch()
   const navigate = useNavigate({ from: "/course" })
-  const [value, setValue] = useState((search.q ?? "").trim())
-  const [debouncedValue] = useDebounce(value, SEARCH_DEBOUNCE_MS)
+  const q = (search.q ?? "").trim()
 
-  useEffect(() => {
-    const nextQ = debouncedValue.trim()
-    const current = (search.q ?? "").trim()
-    if (nextQ === current) return
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      const nextQ = value.trim()
+      if (nextQ === q) return
 
-    void navigate({
-      search: (prev) => ({
-        ...prev,
-        q: nextQ || undefined,
-        page: 1,
-      }),
-      replace: true,
-      resetScroll: false,
-    })
-  }, [debouncedValue, navigate, search.q])
+      void navigate({
+        search: (prev) => ({
+          ...prev,
+          q: nextQ || undefined,
+          page: 1,
+        }),
+        replace: true,
+        resetScroll: false,
+      })
+    },
+    [navigate, q]
+  )
 
   return (
-    <Input
-      key={search.q ?? ""}
+    <DebouncedSearchInput
       placeholder="搜索课程名、课程号或教师名..."
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
+      value={q}
+      debounceMs={SEARCH_DEBOUNCE_MS}
+      onDebouncedChange={handleSearchChange}
     />
   )
 }
