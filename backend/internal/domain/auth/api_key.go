@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
-	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
@@ -56,11 +55,11 @@ func ParseApiKeyCredential(key string) (*ApiKeyCredential, error) {
 		return nil, ErrInvalidApiKey
 	}
 
-	keyIDBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
+	keyIDBytes, err := hex.DecodeString(parts[1])
 	if err != nil || len(keyIDBytes) != apiKeyIDLength {
 		return nil, ErrInvalidApiKey
 	}
-	secret, err := base64.RawURLEncoding.DecodeString(parts[2])
+	secret, err := hex.DecodeString(parts[2])
 	if err != nil || len(secret) != apiKeySecretLength {
 		return nil, ErrInvalidApiKey
 	}
@@ -77,7 +76,7 @@ func ParseApiKeyCredential(key string) (*ApiKeyCredential, error) {
 }
 
 func (c ApiKeyCredential) Key() string {
-	return fmt.Sprintf("%s_%s_%s", apiKeyPrefix, EncodeApiKeyID(c.KeyID), base64.RawURLEncoding.EncodeToString(c.Secret))
+	return fmt.Sprintf("%s_%s_%s", apiKeyPrefix, EncodeApiKeyID(c.KeyID), hex.EncodeToString(c.Secret))
 }
 
 func (c ApiKeyCredential) HashSecret() string {
@@ -88,7 +87,7 @@ func (c ApiKeyCredential) HashSecret() string {
 func EncodeApiKeyID(id int64) string {
 	var b [apiKeyIDLength]byte
 	binary.BigEndian.PutUint64(b[:], uint64(id))
-	return base64.RawURLEncoding.EncodeToString(b[:])
+	return hex.EncodeToString(b[:])
 }
 
 type ApiKey struct {

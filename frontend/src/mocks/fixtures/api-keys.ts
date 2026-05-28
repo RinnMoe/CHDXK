@@ -97,20 +97,19 @@ function mockEncodedKeyID(id: string) {
     bytes[i] = Number(value & 0xffn)
     value >>= 8n
   }
-  return base64URL(bytes)
+  return hex(bytes)
 }
 
 function mockSecret() {
   const bytes = new Uint8Array(16)
   crypto.getRandomValues(bytes)
-  return base64URL(bytes)
+  return hex(bytes)
 }
 
-function base64URL(bytes: Uint8Array) {
-  return btoa(String.fromCharCode(...bytes))
-    .replaceAll("+", "-")
-    .replaceAll("/", "_")
-    .replaceAll("=", "")
+function hex(bytes: Uint8Array) {
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join(
+    ""
+  )
 }
 
 export function toApiKeyDTO(key: MockApiKey, includeKey = false): ApiKeyDTO {
