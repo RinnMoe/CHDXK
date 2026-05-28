@@ -25,7 +25,7 @@ func TestBindReviewListFilter_DefaultOrderBy(t *testing.T) {
 		}
 	})
 
-	t.Run("defaults order_by to created_at when q is absent", func(t *testing.T) {
+	t.Run("defaults order_by to updated_at when q is absent", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
 		c.Request = httptest.NewRequest(http.MethodGet, "/api/reviews", nil)
@@ -34,8 +34,8 @@ func TestBindReviewListFilter_DefaultOrderBy(t *testing.T) {
 		if err != nil {
 			t.Fatalf("bindReviewListFilter: %v", err)
 		}
-		if f.OrderBy != "created_at" {
-			t.Fatalf("OrderBy = %q, want created_at", f.OrderBy)
+		if f.OrderBy != "updated_at" {
+			t.Fatalf("OrderBy = %q, want updated_at", f.OrderBy)
 		}
 	})
 }

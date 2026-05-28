@@ -9,6 +9,7 @@ import (
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/review"
+	"jcourse/pkg/apperr"
 )
 
 func newFakeReviewRepo() *review.MockReviewRepository {
@@ -49,6 +50,52 @@ func TestServiceCreateRejectsMissingSemester(t *testing.T) {
 	})
 	if !errors.Is(err, review.ErrOfferedCourseMissing) {
 		t.Fatalf("Create error = %v, want %v", err, review.ErrOfferedCourseMissing)
+	}
+}
+
+func TestServiceCreateRejectsScoreTooLong(t *testing.T) {
+	courseRepo := course.NewMockCourseRepository()
+	courseRepo.Courses[1] = &course.CourseView{ID: 1, LastSemester: "2025-2026-1"}
+	reviewRepo := newFakeReviewRepo()
+	svc := review.NewService(courseRepo, reviewRepo, nil)
+
+	err := svc.Create(context.Background(), &auth.User{ID: 10}, review.CreateReview{
+		CourseID: 1,
+		Semester: "2025-2026-1",
+		UserID:   10,
+		Rating:   5,
+		Content:  "good course",
+		Score:    "01234567890",
+		Now:      time.Now(),
+	})
+	if !errors.Is(err, apperr.ErrReviewScoreTooLong) {
+		t.Fatalf("Create error = %v, want %v", err, apperr.ErrReviewScoreTooLong)
+	}
+	if len(reviewRepo.Reviews) != 0 {
+		t.Fatalf("reviews created = %d, want 0", len(reviewRepo.Reviews))
+	}
+}
+
+func TestServiceUpdateRejectsScoreTooLong(t *testing.T) {
+	courseRepo := course.NewMockCourseRepository()
+	courseRepo.Courses[1] = &course.CourseView{ID: 1, LastSemester: "2025-2026-1"}
+	reviewRepo := newFakeReviewRepo()
+	reviewRepo.Reviews[1] = &review.Review{ID: 1, CourseID: 1, UserID: 10, Semester: "2025-2026-1", Rating: 4, Content: "old", Score: "A"}
+	svc := review.NewService(courseRepo, reviewRepo, nil)
+
+	err := svc.Update(context.Background(), &auth.User{ID: 10}, review.UpdateReview{
+		ReviewID: 1,
+		Semester: "2025-2026-1",
+		Rating:   5,
+		Content:  "updated",
+		Score:    "01234567890",
+		Now:      time.Now(),
+	})
+	if !errors.Is(err, apperr.ErrReviewScoreTooLong) {
+		t.Fatalf("Update error = %v, want %v", err, apperr.ErrReviewScoreTooLong)
+	}
+	if got := reviewRepo.Reviews[1].Score; got != "A" {
+		t.Fatalf("Score after failed update = %q, want A", got)
 	}
 }
 

@@ -98,7 +98,7 @@ export function CourseReviewFilters({
           className="gap-0"
         >
           <TabsList>
-            <TabsTrigger value="created_at" className="gap-1">
+            <TabsTrigger value="updated_at" className="gap-1">
               <RiTimeLine className="size-3" data-icon="inline-start" />
               最新
             </TabsTrigger>

@@ -46,8 +46,8 @@ export interface ReviewListFilter {
   q?: string
   semester?: string
   rating?: number
-  order?: "like_count" | "created_at"
-  order_by?: "like_count" | "created_at"
+  order?: "like_count" | "created_at" | "updated_at"
+  order_by?: "like_count" | "created_at" | "updated_at"
   ascend?: boolean
   page?: number
   page_size?: number

@@ -93,6 +93,7 @@ var (
 	ErrInvalidRating            = BadRequest("评分无效")
 	ErrReviewContentEmpty       = BadRequest("点评内容不能为空")
 	ErrReviewContentTooLong     = BadRequest("点评内容不能超过 9681 个字符")
+	ErrReviewScoreTooLong       = BadRequest("点评分数不能超过 10 个字符")
 
 	ErrInsufficientPointBalance          = Conflict("积分余额不足")
 	ErrPointTransferInvalidAmount        = BadRequest("转账积分必须大于 0")

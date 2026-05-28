@@ -34,7 +34,7 @@ func bindReviewListFilter(c *gin.Context) (application.ReviewListFilter, error) 
 		f.OrderBy = f.Order
 	}
 	if f.OrderBy == "" && strings.TrimSpace(f.Q) == "" {
-		f.OrderBy = "created_at"
+		f.OrderBy = "updated_at"
 	}
 	return f, nil
 }

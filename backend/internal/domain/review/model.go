@@ -59,6 +59,9 @@ func (r *Review) Validate() error {
 	if len(r.Content) > 9681 {
 		return apperr.ErrReviewContentTooLong
 	}
+	if len(r.Score) > 10 {
+		return apperr.ErrReviewScoreTooLong
+	}
 	return nil
 }
 

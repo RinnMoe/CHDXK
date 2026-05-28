@@ -42,7 +42,7 @@ export type CourseDetailSearch = {
   page?: number
   semester?: string
   rating?: number
-  order_by?: "created_at" | "like_count"
+  order_by?: "created_at" | "updated_at" | "like_count"
 }
 export type PageSearch = { page?: number }
 export type ReviewsSearch = PageSearch & { q?: string }
@@ -228,7 +228,11 @@ export const courseDetailRoute = createRoute({
     page: numberParam(search.page),
     semester: rawStringParam(search.semester),
     rating: numberParam(search.rating),
-    order_by: enumParam(search.order_by, ["created_at", "like_count"] as const),
+    order_by: enumParam(search.order_by, [
+      "created_at",
+      "updated_at",
+      "like_count",
+    ] as const),
   }),
   component: lazyRouteComponent(
     () => import("@/pages/course-detail-page"),

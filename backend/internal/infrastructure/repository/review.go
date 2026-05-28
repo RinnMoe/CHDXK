@@ -303,7 +303,7 @@ func (r2 *ReviewRepository) applySort(db *gorm.DB, filter review.ReviewFilter) *
 			Vars: []any{r2.searchConfig, searchQuery(filter.Q)},
 		})
 	}
-	order := clause.OrderByColumn{Column: clause.Column{Table: "reviews", Name: "id"}, Desc: desc}
+	order := clause.OrderByColumn{Column: clause.Column{Table: "reviews", Name: "updated_at"}, Desc: desc}
 	switch filter.OrderBy {
 	case "rating":
 		order = clause.OrderByColumn{Column: clause.Column{Table: "reviews", Name: "rating"}, Desc: desc}
@@ -311,8 +311,10 @@ func (r2 *ReviewRepository) applySort(db *gorm.DB, filter review.ReviewFilter) *
 		order = clause.OrderByColumn{Column: clause.Column{Table: "reviews", Name: "like_count"}, Desc: desc}
 	case "created_at":
 		order = clause.OrderByColumn{Column: clause.Column{Table: "reviews", Name: "created_at"}, Desc: desc}
+	case "updated_at":
+		order = clause.OrderByColumn{Column: clause.Column{Table: "reviews", Name: "updated_at"}, Desc: desc}
 	}
-	return db.Order(order)
+	return db.Order(order).Order(clause.OrderByColumn{Column: clause.Column{Table: "reviews", Name: "id"}, Desc: desc})
 }
 
 func (r2 *ReviewRepository) applyPagination(db *gorm.DB, filter review.ReviewFilter) *gorm.DB {

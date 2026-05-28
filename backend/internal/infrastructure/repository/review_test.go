@@ -209,7 +209,7 @@ func TestReviewRepository_FindBy(t *testing.T) {
 	r1 := repository.ReviewEntity{
 		CourseID: course.ID, Semester: "2024-2025-1", UserID: user.ID,
 		Rating: 5, Content: "很好", Score: "A",
-		CreatedAt: time.Now(), UpdatedAt: time.Now(),
+		CreatedAt: time.Now(), UpdatedAt: time.Now().Add(3 * time.Hour),
 	}
 	r2 := repository.ReviewEntity{
 		CourseID: course.ID, Semester: "2024-2025-2", UserID: otherUser.ID,
@@ -234,6 +234,9 @@ func TestReviewRepository_FindBy(t *testing.T) {
 		}
 		if len(results) != 2 {
 			t.Errorf("count: got %d, want 2", len(results))
+		}
+		if results[0].Content != "很好" {
+			t.Errorf("first review content: got %q, want 很好", results[0].Content)
 		}
 	})
 

@@ -139,7 +139,7 @@ export function CourseDetailPage() {
     parsedRating && parsedRating >= 1 && parsedRating <= 5
       ? parsedRating
       : undefined
-  const orderBy = search.order_by === "like_count" ? "like_count" : "created_at"
+  const orderBy = search.order_by === "like_count" ? "like_count" : "updated_at"
 
   const { user } = useAuth()
   const { data: course, isLoading } = useCourseDetail(id)
@@ -166,7 +166,9 @@ export function CourseDetailPage() {
             : prev.rating,
         order_by:
           "order_by" in next
-            ? next.order_by === "like_count" || next.order_by === "created_at"
+            ? next.order_by === "like_count" ||
+              next.order_by === "created_at" ||
+              next.order_by === "updated_at"
               ? next.order_by
               : undefined
             : prev.order_by,
