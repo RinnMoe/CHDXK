@@ -16,7 +16,7 @@ RUN wget "https://arms-apm-cn-hangzhou.oss-cn-hangzhou.aliyuncs.com/instgo/instg
 
 RUN chmod +x instgo
 
-RUN ./instgo go build -o /out/jcourse-api ./cmd/api
+RUN CGO_ENABLED=0 ./instgo go build -o /out/jcourse-api ./cmd/api
 
 FROM alpine:3.22
 
