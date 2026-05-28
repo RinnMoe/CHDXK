@@ -97,7 +97,7 @@ func (imp *Importer) upsertTeachers(ctx context.Context, teachers map[string]Tea
 		}),
 		Where: clause.Where{
 			Exprs: []clause.Expression{
-				clause.Expr{SQL: "teachers.last_semester < ?", Vars: []any{imp.semester}},
+				clause.Expr{SQL: "teachers.last_semester <= ?", Vars: []any{imp.semester}},
 			},
 		},
 	}
@@ -153,7 +153,7 @@ func (imp *Importer) upsertCourses(ctx context.Context, courses map[string]CSVRo
 		}),
 		Where: clause.Where{
 			Exprs: []clause.Expression{
-				clause.Expr{SQL: "courses.last_semester < ?", Vars: []any{imp.semester}},
+				clause.Expr{SQL: "courses.last_semester <= ?", Vars: []any{imp.semester}},
 			},
 		},
 	}
