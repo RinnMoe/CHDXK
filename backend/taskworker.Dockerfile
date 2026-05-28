@@ -1,6 +1,6 @@
 ARG GO_VERSION=1.26
 
-FROM golang:${GO_VERSION}-alpine AS builder
+FROM golang:${GO_VERSION} AS builder
 
 WORKDIR /src
 
@@ -12,7 +12,11 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -trimpath -ldflags="-s -w" -o /out/jcourse-taskworker ./cmd/taskworker
+RUN wget "https://arms-apm-cn-hangzhou.oss-cn-hangzhou.aliyuncs.com/instgo/instgo-linux-amd64" -O instgo
+
+RUN chmod +x instgo
+
+RUN ./instgo go build -o /out/jcourse-taskworker ./cmd/taskworker
 
 FROM alpine:3.22
 

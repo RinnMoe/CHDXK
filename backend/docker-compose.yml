@@ -24,5 +24,3 @@ services:
       ARMS_APP_NAME: jcourse_task_worker
       ARMS_REGION_ID: cn-shanghai
       ARMS_LICENSE_KEY: ""
-    ports:
-      - "8080:8080"
