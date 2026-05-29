@@ -14,7 +14,7 @@ func NewGormLogger() logger.Interface {
 	return logger.NewSlogLogger(logx.Logger(), logger.Config{
 		SlowThreshold:             200 * time.Millisecond,
 		LogLevel:                  logger.Warn,
-		IgnoreRecordNotFoundError: false,
+		IgnoreRecordNotFoundError: true,
 		ParameterizedQueries:      false,
 	})
 }
