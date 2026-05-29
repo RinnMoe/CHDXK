@@ -1,15 +1,15 @@
 import http from "k6/http";
 import { check, group, sleep } from "k6";
-import { Rate, Trend } from "k6/metrics";
+import { Counter, Rate, Trend } from "k6/metrics";
 
 // 运行示例：
-//   k6 run backend/loadtest/list_endpoints.js
-//   CONFIG_FILE=backend/loadtest/list_endpoints.local.json k6 run backend/loadtest/list_endpoints.js
-//   APIKEY="jc_xxx" VUS=50 HOLD=3m k6 run backend/loadtest/list_endpoints.js
-//   APIKEY="jc_xxx" VUS=200 SLEEP=0 EXPECT_429=true k6 run backend/loadtest/list_endpoints.js
+//   k6 run backend/loadtest/loadtest.js
+//   CONFIG_FILE=backend/loadtest/loadtest.local.json k6 run backend/loadtest/loadtest.js
+//   APIKEY="jc_xxx" VUS=50 HOLD=3m k6 run backend/loadtest/loadtest.js
+//   APIKEY="jc_xxx" VUS=200 SLEEP=0 EXPECT_429=true k6 run backend/loadtest/loadtest.js
 //
 // 配置文件：
-//   默认读取 backend/loadtest/list_endpoints.config.json；文件不存在时使用默认值。
+//   默认读取 backend/loadtest/loadtest.config.json；文件不存在时使用默认值。
 //   可用 CONFIG_FILE 指定其他 JSON 配置文件。
 //   环境变量仍可临时覆盖同名配置项，优先级：环境变量 > 配置文件 > 默认值。
 //
@@ -42,11 +42,18 @@ const defaultConfig = {
   expect429: false,
 };
 
-const fileConfig = readConfigFile(envString("CONFIG_FILE", "backend/loadtest/list_endpoints.config.json"));
-const config = normalizeConfig({ ...defaultConfig, ...fileConfig, ...envConfig() });
+const configFilePath = envString("CONFIG_FILE", "backend/loadtest/loadtest.config.json");
+const fileConfig = readConfigFile(configFilePath);
+const config = normalizeConfig({ ...defaultConfig, ...fileConfig.values, ...envConfig() });
 
 const endpointOK = new Rate("endpoint_ok");
 const rateLimited = new Rate("rate_limited");
+const status200 = new Counter("status_200");
+const status401 = new Counter("status_401");
+const status403 = new Counter("status_403");
+const status404 = new Counter("status_404");
+const status429 = new Counter("status_429");
+const statusOther = new Counter("status_other");
 const courseListDuration = new Trend("course_list_duration", true);
 const teacherListDuration = new Trend("teacher_list_duration", true);
 const reviewListDuration = new Trend("review_list_duration", true);
@@ -72,6 +79,8 @@ export const options = {
 };
 
 export function setup() {
+  logEffectiveConfig();
+
   const authModeCount = Number(Boolean(config.apiKey)) + Number(Boolean(config.cookie));
   if (authModeCount === 0) {
     throw new Error("set APIKEY or COOKIE for authenticated requests");
@@ -86,6 +95,26 @@ export function setup() {
       timeout: config.timeout,
     },
   };
+}
+
+function logEffectiveConfig() {
+  console.log(
+    JSON.stringify({
+      configFile: configFilePath,
+      configFileLoaded: fileConfig.loaded,
+      baseURL: config.baseURL,
+      authMode: config.apiKey ? "apiKey" : config.cookie ? "cookie" : "none",
+      vus: config.vus,
+      rampUp: config.rampUp,
+      hold: config.hold,
+      rampDown: config.rampDown,
+      pageSize: config.pageSize,
+      pages: config.pages,
+      sleep: config.sleep,
+      timeout: config.timeout,
+      expect429: config.expect429,
+    })
+  );
 }
 
 export default function (data) {
@@ -147,9 +176,32 @@ function recordResult(res, name) {
   const ok = res.status === 200 || (config.expect429 && res.status === 429);
   endpointOK.add(ok);
   rateLimited.add(res.status === 429);
+  recordStatus(res.status);
   check(res, {
     [`${name} status ok`]: () => ok,
   });
+}
+
+function recordStatus(status) {
+  switch (status) {
+    case 200:
+      status200.add(1);
+      return;
+    case 401:
+      status401.add(1);
+      return;
+    case 403:
+      status403.add(1);
+      return;
+    case 404:
+      status404.add(1);
+      return;
+    case 429:
+      status429.add(1);
+      return;
+    default:
+      statusOther.add(1, { status: String(status) });
+  }
 }
 
 function envString(name, fallback) {
@@ -160,10 +212,10 @@ function envString(name, fallback) {
 function readConfigFile(path) {
   try {
     const content = open(path);
-    if (!content.trim()) return {};
-    return JSON.parse(content);
+    if (!content.trim()) return { loaded: true, values: {} };
+    return { loaded: true, values: JSON.parse(content) };
   } catch (err) {
-    if (String(err).includes("no such file")) return {};
+    if (String(err).includes("no such file")) return { loaded: false, values: {} };
     throw new Error(`failed to read config file ${path}: ${err}`);
   }
 }
