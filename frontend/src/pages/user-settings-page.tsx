@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/contexts/auth-context"
 import { useCourseFilters } from "@/hooks/use-course"
@@ -21,6 +22,13 @@ import {
   useUpdateUserSettings,
   useUserSettings,
 } from "@/hooks/use-user-settings"
+import { useTheme } from "@/components/theme-provider"
+
+const themeOptions = [
+  { value: "system", label: "跟随系统" },
+  { value: "light", label: "亮色" },
+  { value: "dark", label: "暗色" },
+] as const
 
 type UserSettingsFormValues = {
   currentSemester: string
@@ -28,6 +36,37 @@ type UserSettingsFormValues = {
 
 type SemesterOption = {
   name: string
+}
+
+function ThemeSettings() {
+  const { theme, setTheme } = useTheme()
+
+  function handleThemeChange(value: string) {
+    if (value === "system" || value === "light" || value === "dark") {
+      setTheme(value)
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="theme-mode">外观模式</Label>
+      <Select value={theme} onValueChange={handleThemeChange}>
+        <SelectTrigger id="theme-mode" className="w-full">
+          <SelectValue placeholder="选择外观模式" />
+        </SelectTrigger>
+        <SelectContent>
+          {themeOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <p className="text-sm leading-6 text-muted-foreground">
+        仅保存在当前浏览器，不会同步到其他设备。
+      </p>
+    </div>
+  )
 }
 
 function UserSettingsForm({
@@ -165,20 +204,30 @@ export function UserSettingsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>课程</CardTitle>
+              <CardTitle>偏好设置</CardTitle>
             </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-5 w-20" />
-                  <Skeleton className="h-9 w-full" />
-                </div>
-              ) : (
-                <UserSettingsForm
-                  initialSemester={savedSemester}
-                  semesters={semesters}
-                />
-              )}
+            <CardContent className="space-y-6">
+              <section className="space-y-3">
+                <h2 className="text-sm font-medium">外观</h2>
+                <ThemeSettings />
+              </section>
+
+              <Separator />
+
+              <section className="space-y-3">
+                <h2 className="text-sm font-medium">课程</h2>
+                {isLoading ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-5 w-20" />
+                    <Skeleton className="h-9 w-full" />
+                  </div>
+                ) : (
+                  <UserSettingsForm
+                    initialSemester={savedSemester}
+                    semesters={semesters}
+                  />
+                )}
+              </section>
             </CardContent>
           </Card>
         </div>

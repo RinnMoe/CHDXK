@@ -31,12 +31,25 @@ function isTheme(value: string | null): value is Theme {
   return THEME_VALUES.includes(value as Theme)
 }
 
+function getStoredTheme(storageKey: string): Theme | null {
+  const storedTheme = localStorage.getItem(storageKey)
+  if (isTheme(storedTheme)) {
+    return storedTheme
+  }
+
+  return null
+}
+
 function getSystemTheme(): ResolvedTheme {
   if (window.matchMedia(COLOR_SCHEME_QUERY).matches) {
     return "dark"
   }
 
   return "light"
+}
+
+function syncBrowserColorScheme(resolvedTheme: ResolvedTheme) {
+  document.documentElement.style.colorScheme = resolvedTheme
 }
 
 function disableTransitionsTemporarily() {
@@ -85,12 +98,7 @@ export function ThemeProvider({
   ...props
 }: ThemeProviderProps) {
   const [theme, setThemeState] = React.useState<Theme>(() => {
-    const storedTheme = localStorage.getItem(storageKey)
-    if (isTheme(storedTheme)) {
-      return storedTheme
-    }
-
-    return defaultTheme
+    return getStoredTheme(storageKey) ?? defaultTheme
   })
 
   const setTheme = React.useCallback(
@@ -112,6 +120,7 @@ export function ThemeProvider({
 
       root.classList.remove("light", "dark")
       root.classList.add(resolvedTheme)
+      syncBrowserColorScheme(resolvedTheme)
 
       if (restoreTransitions) {
         restoreTransitions()
@@ -134,8 +143,16 @@ export function ThemeProvider({
 
     mediaQuery.addEventListener("change", handleChange)
 
+    document.addEventListener("visibilitychange", handleChange)
+    window.addEventListener("focus", handleChange)
+    window.addEventListener("pageshow", handleChange)
+
     return () => {
       mediaQuery.removeEventListener("change", handleChange)
+
+      document.removeEventListener("visibilitychange", handleChange)
+      window.removeEventListener("focus", handleChange)
+      window.removeEventListener("pageshow", handleChange)
     }
   }, [theme, applyTheme])
 
