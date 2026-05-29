@@ -1,0 +1,14 @@
+{
+  "baseURL": "https://course.sjtu.plus",
+  "apiKey": "",
+  "cookie": "",
+  "vus": 20,
+  "rampUp": "30s",
+  "hold": "1m",
+  "rampDown": "20s",
+  "pageSize": 20,
+  "pages": 5,
+  "sleep": 1,
+  "timeout": "10s",
+  "expect429": false
+}

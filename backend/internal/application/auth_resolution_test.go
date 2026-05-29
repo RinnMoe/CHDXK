@@ -54,8 +54,8 @@ func TestAuthResolutionServiceResolveSystemAPIKey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Resolve returned error: %v", err)
 	}
-	if resolved.User != nil {
-		t.Fatalf("resolved user = %+v, want nil", resolved.User)
+	if resolved.User == nil || resolved.User.Role != auth.RoleSystem {
+		t.Fatalf("resolved user = %+v, want system role", resolved.User)
 	}
 	if resolved.ApiKey == nil || resolved.ApiKey.ID != 1 {
 		t.Fatalf("resolved api key = %+v, want key 1", resolved.ApiKey)

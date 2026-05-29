@@ -45,6 +45,8 @@ func (s *AuthResolutionService) resolveAPIKey(ctx context.Context, token string)
 			return resolved, err
 		}
 		resolved.User = user
+	} else if apiKey.IsSystem() {
+		resolved.User = &auth.User{Role: auth.RoleSystem}
 	}
 	s.recordAccess(ctx, resolved)
 	return resolved, nil
@@ -69,6 +71,9 @@ func (s *AuthResolutionService) recordAccess(ctx context.Context, resolved *Reso
 		_ = s.accessTracker.RecordApiKeyAccess(ctx, resolved.ApiKey.ID, now)
 	}
 	if resolved.User != nil {
+		if resolved.User.IsSystemAPIKey() {
+			return
+		}
 		_ = s.accessTracker.RecordUserAccess(ctx, resolved.User.ID, now)
 	}
 }

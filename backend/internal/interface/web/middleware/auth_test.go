@@ -97,6 +97,51 @@ func TestResolveCurrentUserWithUserAPIKey(t *testing.T) {
 	}
 }
 
+func TestResolveCurrentUserWithSystemAPIKey(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	credential := testAuthMiddlewareCredential(1)
+	userRepo := auth.NewMockUserRepository(map[int]*auth.User{})
+	apiKeyRepo := &auth.MockApiKeyRepository{Key: &auth.ApiKey{ID: credential.KeyID, SecretHash: credential.SecretHash, Role: auth.ApiKeyRoleSystem, UserID: 0}}
+	tracker := &authMiddlewareAccessTracker{}
+	r := gin.New()
+	r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
+	r.Use(ResolveCurrentUser(application.NewAuthResolutionService(
+		auth.NewCurrentUserService(userRepo),
+		auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig),
+		tracker,
+	)))
+	r.GET("/protected", RequireAuth(), func(c *gin.Context) {
+		u := auth.GetUserFromCtx(c.Request.Context())
+		if u == nil || u.Role != auth.RoleSystem {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+		c.Status(http.StatusOK)
+	})
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/protected", nil)
+	req.Header.Set(HeaderAuthorization, PrefixBearer+credential.Key())
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", w.Code, http.StatusOK)
+	}
+	if apiKeyRepo.GetByIDCalls != 1 {
+		t.Fatalf("GetByID calls = %d, want 1", apiKeyRepo.GetByIDCalls)
+	}
+	if userRepo.FindByIDCalls != 0 {
+		t.Fatalf("FindByID calls = %d, want 0", userRepo.FindByIDCalls)
+	}
+	if tracker.apiKeyID != 1 {
+		t.Fatalf("recorded api key access id = %d, want 1", tracker.apiKeyID)
+	}
+	if tracker.userID != 0 {
+		t.Fatalf("recorded user access id = %d, want 0", tracker.userID)
+	}
+}
+
 func TestResolveCurrentUserRejectsSuspendedSessionUser(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

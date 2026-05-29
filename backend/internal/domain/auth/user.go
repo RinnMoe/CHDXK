@@ -8,6 +8,7 @@ import (
 const (
 	RoleAdmin      = "admin"
 	RoleSuperAdmin = "super_admin"
+	RoleSystem     = "system"
 	RoleUser       = "user"
 )
 
@@ -41,6 +42,10 @@ func (u *User) IsAdmin() bool {
 
 func (u *User) IsSuperAdmin() bool {
 	return u.Role == RoleSuperAdmin
+}
+
+func (u *User) IsSystemAPIKey() bool {
+	return u.Role == RoleSystem
 }
 
 func (u *User) Suspend(d time.Duration) {

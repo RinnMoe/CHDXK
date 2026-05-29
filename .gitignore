@@ -7,4 +7,5 @@ data/
 
 *.exe
 backend/config/config.yaml
+backend/loadtest/list_endpoints.config.json
 .pnpm-store/

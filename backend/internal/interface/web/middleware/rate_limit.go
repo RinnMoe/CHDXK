@@ -69,6 +69,11 @@ func (r *UserRateLimiter) Middleware() gin.HandlerFunc {
 	}
 
 	return func(c *gin.Context) {
+		if skipsUserRateLimit(c) {
+			c.Next()
+			return
+		}
+
 		limiter := r.limiterForRequest(c)
 		if !limiter.Allow() {
 			abortRateLimited(c)
@@ -76,6 +81,11 @@ func (r *UserRateLimiter) Middleware() gin.HandlerFunc {
 		}
 		c.Next()
 	}
+}
+
+func skipsUserRateLimit(c *gin.Context) bool {
+	u := auth.GetUserFromCtx(c.Request.Context())
+	return u != nil && (u.IsAdmin() || u.IsSystemAPIKey())
 }
 
 func abortRateLimited(c *gin.Context) {

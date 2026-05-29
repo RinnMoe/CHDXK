@@ -73,6 +73,16 @@ func TestCurrentUserService_SuspendUserSkipsAdmin(t *testing.T) {
 	}
 }
 
+func TestUserRoleHelpers(t *testing.T) {
+	system := &User{Role: RoleSystem}
+	if !system.IsSystemAPIKey() {
+		t.Fatal("expected system role to be system api key")
+	}
+	if system.IsAdmin() {
+		t.Fatal("system api key should not be admin")
+	}
+}
+
 func newCurrentUserServiceFakeRepo() *MockUserRepository {
 	return NewMockUserRepository(nil)
 }
