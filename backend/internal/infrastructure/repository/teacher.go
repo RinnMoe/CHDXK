@@ -79,9 +79,17 @@ func (r *TeacherRepository) FindBy(ctx context.Context, filter teacher.TeacherFi
 	db := r.applyFilter(r.baseTeacherQuery(), filter)
 	countDB := r.applyFilter(r.baseTeacherQuery(), filter)
 
-	total, err := countDB.Count(ctx, "id")
-	if err != nil {
-		return nil, 0, err
+	total := int64(0)
+	countKey := teacherFindByCountCacheKey(filter)
+	if cached, ok := cacheGetJSON[int64](ctx, r.cache, countKey); ok {
+		total = *cached
+	} else {
+		count, err := countDB.Count(ctx, "id")
+		if err != nil {
+			return nil, 0, err
+		}
+		total = count
+		cacheSetJSONWithTTL(ctx, r.cache, countKey, total, findByCountCacheTTL)
 	}
 
 	db = r.applySort(db)

@@ -155,8 +155,14 @@ func (r2 *ReviewRepository) FindBy(ctx context.Context, filter review.ReviewFilt
 	db = r2.applyFilter(db, filter)
 
 	var total int64
-	if err := db.Count(&total).Error; err != nil {
-		return nil, 0, err
+	countKey := reviewFindByCountCacheKey(filter)
+	if cached, ok := cacheGetJSON[int64](ctx, r2.cache, countKey); ok {
+		total = *cached
+	} else {
+		if err := db.Count(&total).Error; err != nil {
+			return nil, 0, err
+		}
+		cacheSetJSONWithTTL(ctx, r2.cache, countKey, total, findByCountCacheTTL)
 	}
 
 	db = r2.applySort(db, filter)

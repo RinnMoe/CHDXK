@@ -205,9 +205,17 @@ func (r *CourseRepository) FindBy(ctx context.Context, filter course.CourseFilte
 
 	countDB := r.baseCourseQuery()
 	countDB = r.applyFilter(countDB, filter)
-	total, err := countDB.Count(ctx, "courses.id")
-	if err != nil {
-		return nil, 0, err
+	countKey := courseFindByCountCacheKey(filter)
+	total := int64(0)
+	if cached, ok := cacheGetJSON[int64](ctx, r.cache, countKey); ok {
+		total = *cached
+	} else {
+		count, err := countDB.Count(ctx, "courses.id")
+		if err != nil {
+			return nil, 0, err
+		}
+		total = count
+		cacheSetJSONWithTTL(ctx, r.cache, countKey, total, findByCountCacheTTL)
 	}
 
 	db = r.applySort(db, filter)
