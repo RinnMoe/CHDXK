@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"jcourse/internal/domain/course"
+	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/review"
 )
 
@@ -344,7 +345,17 @@ func (r2 *ReviewRepository) FindRevisions(ctx context.Context, reviewID int) ([]
 }
 
 func (r2 *ReviewRepository) Create(ctx context.Context, r *review.Review) error {
+	_, err := r2.create(ctx, r, nil)
+	return err
+}
+
+func (r2 *ReviewRepository) CreateWithReward(ctx context.Context, r *review.Review, rewards []point.Reward) (review.CreateResult, error) {
+	return r2.create(ctx, r, rewards)
+}
+
+func (r2 *ReviewRepository) create(ctx context.Context, r *review.Review, rewards []point.Reward) (review.CreateResult, error) {
 	e := newReviewEntity(r)
+	createResult := review.CreateResult{}
 	if err := r2.db.Transaction(func(tx *gorm.DB) error {
 		if err := gorm.G[ReviewEntity](tx).Create(ctx, &e); err != nil {
 			return err
@@ -352,15 +363,32 @@ func (r2 *ReviewRepository) Create(ctx context.Context, r *review.Review) error 
 		if err := refreshReviewSearchVector(tx, r2.searchConfig, e.ID); err != nil {
 			return err
 		}
-		return r2.updateCourseStats(tx, r.CourseID)
+		if err := r2.updateCourseStats(tx, r.CourseID); err != nil {
+			return err
+		}
+		for i := range rewards {
+			rewardEntity := newPointRewardEntity(&rewards[i])
+			insertResult := tx.Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "reason"}, {Name: "source_type"}, {Name: "source_key"}},
+				DoNothing: true,
+			}).Create(&rewardEntity)
+			if insertResult.Error != nil {
+				return insertResult.Error
+			}
+			if insertResult.RowsAffected > 0 {
+				rewards[i].ID = rewardEntity.ID
+				createResult.RewardIDs = append(createResult.RewardIDs, rewardEntity.ID)
+			}
+		}
+		return nil
 	}); err != nil {
-		return err
+		return review.CreateResult{}, err
 	}
 
 	r.ID = e.ID
 	r2.deleteReviewCache(ctx, r.ID, r.CourseID)
 	cacheDelete(ctx, r2.cache, cacheKey("course", "filters"))
-	return nil
+	return createResult, nil
 }
 
 func (r2 *ReviewRepository) Update(ctx context.Context, r *review.Review, rv review.Revision) error {

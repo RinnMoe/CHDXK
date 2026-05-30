@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"jcourse/internal/domain/point"
 	"jcourse/pkg/apperr"
 )
 
@@ -77,8 +78,13 @@ type Revision struct {
 	CreatedAt time.Time
 }
 
+type CreateResult struct {
+	RewardIDs []int
+}
+
 type ReviewRepository interface {
 	Create(ctx context.Context, r *Review) error
+	CreateWithReward(ctx context.Context, r *Review, rewards []point.Reward) (CreateResult, error)
 	Update(ctx context.Context, r *Review, rv Revision) error
 	UpdateModeratorRemark(ctx context.Context, reviewID int, moderatorRemark string) error
 	Delete(ctx context.Context, r *Review) error

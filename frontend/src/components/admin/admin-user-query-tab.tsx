@@ -2,6 +2,7 @@ import { useState } from "react"
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { RiLockLine, RiLockUnlockLine, RiSearchLine } from "@remixicon/react"
 import { PaginationComponent } from "@/components/common/pagination"
+import { PointRecordList } from "@/components/point/point-record-list"
 import { ReviewList } from "@/components/review/review-list"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -17,6 +18,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   useAdminUserByEmail,
@@ -25,11 +27,13 @@ import {
   useRevokeAdminUser,
   useSuspendAdminUser,
 } from "@/hooks/use-admin-user"
+import { useUserPoints } from "@/hooks/use-point"
 import { useUserReviews } from "@/hooks/use-review"
 import { formatDateTime, formatNullableDateTime } from "@/lib/date"
 import { getErrorMessage, type FormSubmitEvent } from "./admin-utils"
 
 const reviewPageSize = 20
+const pointPageSize = 20
 const routeApi = getRouteApi("/app/admin/user")
 
 interface AdminUserQueryTabProps {
@@ -71,6 +75,10 @@ export function AdminUserQueryTab({
     page,
     page_size: reviewPageSize,
     order_by: "created_at",
+  })
+  const pointsQuery = useUserPoints(selectedUser?.id ?? 0, {
+    page: 1,
+    page_size: pointPageSize,
   })
   const suspendMutation = useSuspendAdminUser()
   const clearSuspensionMutation = useClearAdminUserSuspension()
@@ -333,6 +341,35 @@ export function AdminUserQueryTab({
                 ))}
             </div>
           </div>
+
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-medium">积分记录</h2>
+                {pointsQuery.data ? (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    当前 {pointsQuery.data.total} 分，共 {pointsQuery.data.records.total} 条记录
+                  </p>
+                ) : null}
+              </div>
+            </div>
+
+            {pointsQuery.isLoading ? (
+              <div className="space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} className="h-14 w-full" />
+                ))}
+              </div>
+            ) : pointsQuery.isError ? (
+              <p className="text-sm text-destructive">
+                {getErrorMessage(pointsQuery.error)}
+              </p>
+            ) : (
+              <PointRecordList records={pointsQuery.data?.records.items ?? []} />
+            )}
+          </div>
+
+          <Separator />
 
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-4">

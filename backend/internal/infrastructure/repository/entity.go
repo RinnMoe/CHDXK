@@ -159,6 +159,23 @@ func (UserPointRecordEntity) TableName() string {
 	return "user_point_records"
 }
 
+type PointRewardEntity struct {
+	ID          int        `gorm:"column:id"`
+	UserID      int        `gorm:"column:user_id;index"`
+	Reason      string     `gorm:"column:reason;uniqueIndex:uniq_point_rewards_reason_source"`
+	Amount      int        `gorm:"column:amount"`
+	SourceType  string     `gorm:"column:source_type;uniqueIndex:uniq_point_rewards_reason_source"`
+	SourceKey   string     `gorm:"column:source_key;uniqueIndex:uniq_point_rewards_reason_source"`
+	Description string     `gorm:"column:description"`
+	Status      string     `gorm:"column:status;index"`
+	CreatedAt   time.Time  `gorm:"column:created_at"`
+	GrantedAt   *time.Time `gorm:"column:granted_at"`
+}
+
+func (PointRewardEntity) TableName() string {
+	return "point_rewards"
+}
+
 type PointTransferEntity struct {
 	ID              int       `gorm:"column:id"`
 	SenderUserID    int       `gorm:"column:sender_user_id;index"`

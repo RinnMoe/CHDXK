@@ -6,6 +6,7 @@ import (
 
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
+	"jcourse/internal/domain/point"
 	"jcourse/pkg/apperr"
 )
 
@@ -54,20 +55,25 @@ func NewService(courseRepo course.CourseRepository, reviewRepo ReviewRepository,
 }
 
 func (s *Service) Create(ctx context.Context, u *auth.User, cmd CreateReview) error {
+	_, err := s.CreateWithReward(ctx, u, cmd, nil)
+	return err
+}
+
+func (s *Service) CreateWithReward(ctx context.Context, u *auth.User, cmd CreateReview, rewards []point.Reward) (CreateResult, error) {
 	c, err := s.courseRepo.Get(ctx, cmd.CourseID)
 	if err != nil {
-		return err
+		return CreateResult{}, err
 	}
 	if c == nil {
-		return ErrCourseNotFound
+		return CreateResult{}, ErrCourseNotFound
 	}
 
 	exists, err := s.semesterExists(ctx, cmd.CourseID, cmd.Semester, c.LastSemester)
 	if err != nil {
-		return err
+		return CreateResult{}, err
 	}
 	if !exists {
-		return ErrOfferedCourseMissing
+		return CreateResult{}, ErrOfferedCourseMissing
 	}
 
 	r := Review{
@@ -81,20 +87,23 @@ func (s *Service) Create(ctx context.Context, u *auth.User, cmd CreateReview) er
 		UpdatedAt: cmd.Now,
 	}
 	if err := r.Validate(); err != nil {
-		return err
+		return CreateResult{}, err
 	}
 
 	g := NewGuardian(u, &r)
 	if !g.CanCreate(ctx) {
-		return ErrUserCannotCreate
+		return CreateResult{}, ErrUserCannotCreate
 	}
 
 	for _, policy := range s.policies {
 		if err := policy.CanCreate(ctx, u, c, &r); err != nil {
-			return err
+			return CreateResult{}, err
 		}
 	}
-	return s.reviewRepo.Create(ctx, &r)
+	if len(rewards) > 0 {
+		return s.reviewRepo.CreateWithReward(ctx, &r, rewards)
+	}
+	return CreateResult{}, s.reviewRepo.Create(ctx, &r)
 }
 
 func (s *Service) Update(ctx context.Context, u *auth.User, cmd UpdateReview) error {

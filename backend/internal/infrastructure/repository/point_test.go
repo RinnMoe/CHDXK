@@ -170,6 +170,59 @@ func TestPointRepository_CreateTransferRejectsInsufficientBalance(t *testing.T) 
 	}
 }
 
+func TestPointRepository_GrantRewardIsIdempotent(t *testing.T) {
+	db := newTestDB(t)
+	cleanTables(t, db, "point_rewards", "user_point_records", "users")
+	repo := repository.NewPointRepository(db)
+	ctx := context.Background()
+	user := seedUser(t, db)
+	now := time.Now().Truncate(time.Second)
+	reward := repository.PointRewardEntity{
+		UserID:      user.ID,
+		Reason:      string(point.RewardReasonCourseFirstReview),
+		Amount:      10,
+		SourceType:  point.RewardSourceTypeCourse,
+		SourceKey:   "1",
+		Description: "课程首评奖励",
+		Status:      string(point.RewardStatusPending),
+		CreatedAt:   now,
+	}
+	if err := db.Create(&reward).Error; err != nil {
+		t.Fatalf("seed reward: %v", err)
+	}
+
+	if err := repo.GrantReward(ctx, reward.ID, now.Add(time.Minute)); err != nil {
+		t.Fatalf("GrantReward first: %v", err)
+	}
+	if err := repo.GrantReward(ctx, reward.ID, now.Add(2*time.Minute)); err != nil {
+		t.Fatalf("GrantReward second: %v", err)
+	}
+
+	var recordCount int64
+	if err := db.Model(&repository.UserPointRecordEntity{}).Where("user_id = ?", user.ID).Count(&recordCount).Error; err != nil {
+		t.Fatalf("count records: %v", err)
+	}
+	if recordCount != 1 {
+		t.Fatalf("point record count = %d, want 1", recordCount)
+	}
+
+	total, err := repo.SumByUser(ctx, user.ID)
+	if err != nil {
+		t.Fatalf("SumByUser: %v", err)
+	}
+	if total != 10 {
+		t.Fatalf("total = %d, want 10", total)
+	}
+
+	var got repository.PointRewardEntity
+	if err := db.Take(&got, reward.ID).Error; err != nil {
+		t.Fatalf("load reward: %v", err)
+	}
+	if got.Status != string(point.RewardStatusGranted) || got.GrantedAt == nil {
+		t.Fatalf("reward status=%q granted_at=%v, want granted", got.Status, got.GrantedAt)
+	}
+}
+
 func seedUserRaw(t *testing.T, db *gorm.DB, username, email string) repository.UserEntity {
 	t.Helper()
 	e := repository.UserEntity{

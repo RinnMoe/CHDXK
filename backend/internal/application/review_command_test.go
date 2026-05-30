@@ -12,6 +12,7 @@ import (
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	domainemail "jcourse/internal/domain/email"
+	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/review/policy"
 	"jcourse/internal/domain/task"
@@ -19,6 +20,13 @@ import (
 
 func newFakeCommandReviewRepo() *review.MockReviewRepository {
 	return review.NewMockReviewRepository()
+}
+
+func newReviewCommandTestServiceWithConfig(reviewRepo *review.MockReviewRepository, voteRepo *review.MockVoteRepository, config application.ReviewCommandConfig) *application.ReviewCommandService {
+	courseRepo := course.NewMockCourseRepository()
+	courseRepo.Courses[1] = &course.CourseView{ID: 1, Code: "CS101", LastSemester: "2025-2026-1"}
+	courseRepo.OfferedCourses[1] = map[string]bool{"2025-2026-1": true}
+	return application.NewReviewCommandService(courseRepo, reviewRepo, voteRepo, config, nil)
 }
 
 type fakeReviewCommandEnqueuer struct {
@@ -92,6 +100,82 @@ func TestReviewCommandService_CreateReviewEnqueuesHotCourseActivity(t *testing.T
 	want := course.RecordHotCourseActivityPayload{UserID: 10, Activity: course.HotCourseActivityReviewCreate, CourseID: 1}
 	if payload != want {
 		t.Fatalf("payload = %+v, want %+v", payload, want)
+	}
+}
+
+func TestReviewCommandService_CreateReviewEnqueuesGrantRewardWhenEnabled(t *testing.T) {
+	reviewRepo := newFakeCommandReviewRepo()
+	enqueuer := &fakeReviewCommandEnqueuer{}
+	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
+	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
+	svc := newReviewCommandTestServiceWithConfig(reviewRepo, &review.MockVoteRepository{}, application.ReviewCommandConfig{
+		Vote: review.DefaultVoteConfig,
+		Rewards: point.RewardConfig{
+			Enabled:                 true,
+			CourseFirstReviewPoints: 10,
+		},
+	})
+
+	err := svc.CreateReview(context.Background(), &auth.User{ID: 10}, &application.CreateReviewCommand{
+		CourseID: 1,
+		Semester: "2025-2026-1",
+		Rating:   5,
+		Content:  "good course",
+	})
+	if err != nil {
+		t.Fatalf("CreateReview: %v", err)
+	}
+	if len(enqueuer.tasks) != 2 {
+		t.Fatalf("tasks = %d, want 2", len(enqueuer.tasks))
+	}
+	if got := enqueuer.tasks[0].Type(); got != point.TaskTypeGrantReward {
+		t.Fatalf("first task type = %q, want %q", got, point.TaskTypeGrantReward)
+	}
+	var rewardPayload point.GrantRewardPayload
+	if err := json.Unmarshal(enqueuer.tasks[0].Payload(), &rewardPayload); err != nil {
+		t.Fatalf("unmarshal reward payload: %v", err)
+	}
+	if rewardPayload.RewardID == 0 {
+		t.Fatal("reward payload ID was not set")
+	}
+	if got := enqueuer.tasks[1].Type(); got != course.TaskTypeRecordHotCourseActivity {
+		t.Fatalf("second task type = %q, want %q", got, course.TaskTypeRecordHotCourseActivity)
+	}
+}
+
+func TestReviewCommandService_CreateReviewDoesNotEnqueueRewardWhenConflict(t *testing.T) {
+	reviewRepo := newFakeCommandReviewRepo()
+	reviewRepo.OnCreateWithReward = func(ctx context.Context, rv *review.Review, rewards []point.Reward) (review.CreateResult, error) {
+		if err := reviewRepo.Create(ctx, rv); err != nil {
+			return review.CreateResult{}, err
+		}
+		return review.CreateResult{}, nil
+	}
+	enqueuer := &fakeReviewCommandEnqueuer{}
+	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
+	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
+	svc := newReviewCommandTestServiceWithConfig(reviewRepo, &review.MockVoteRepository{}, application.ReviewCommandConfig{
+		Vote: review.DefaultVoteConfig,
+		Rewards: point.RewardConfig{
+			Enabled:                 true,
+			CourseFirstReviewPoints: 10,
+		},
+	})
+
+	err := svc.CreateReview(context.Background(), &auth.User{ID: 10}, &application.CreateReviewCommand{
+		CourseID: 1,
+		Semester: "2025-2026-1",
+		Rating:   5,
+		Content:  "good course",
+	})
+	if err != nil {
+		t.Fatalf("CreateReview: %v", err)
+	}
+	if len(enqueuer.tasks) != 1 {
+		t.Fatalf("tasks = %d, want hot course only", len(enqueuer.tasks))
+	}
+	if got := enqueuer.tasks[0].Type(); got != course.TaskTypeRecordHotCourseActivity {
+		t.Fatalf("task type = %q, want %q", got, course.TaskTypeRecordHotCourseActivity)
 	}
 }
 

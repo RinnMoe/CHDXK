@@ -28,6 +28,7 @@ type ServiceContainer struct {
 	TeacherQuery          *application.TeacherQueryService
 	PointQuery            *application.PointQueryService
 	PointCommand          *application.PointCommandService
+	PointRewardCommand    *application.PointRewardCommandService
 	SiteStatsQuery        *application.SiteStatsQueryService
 	SiteStatsCommand      *application.SiteStatsCommandService
 	AccountQuery          *application.AccountQueryService
@@ -106,6 +107,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	transferService := point.NewTransferService(conf.Point)
 	pointQuery := application.NewPointQueryService(pointRepo, accountRepo, transferService, usernameDeriver)
 	pointCommand := application.NewPointCommandService(accountRepo, pointRepo, transferService, usernameDeriver)
+	pointRewardCommand := application.NewPointRewardCommandService(pointRepo)
 	statsConfig := conf.Stats
 	siteStatsQuery := application.NewSiteStatsQueryService(statRepo, statsConfig)
 	siteStatsCommand := application.NewSiteStatsCommandService(statRepo, statRepo, statsConfig)
@@ -161,6 +163,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		TeacherQuery:          teacherQuery,
 		PointQuery:            pointQuery,
 		PointCommand:          pointCommand,
+		PointRewardCommand:    pointRewardCommand,
 		SiteStatsQuery:        siteStatsQuery,
 		SiteStatsCommand:      siteStatsCommand,
 		AccountQuery:          accountQuery,

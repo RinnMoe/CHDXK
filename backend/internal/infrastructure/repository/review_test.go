@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/review"
 	"jcourse/internal/infrastructure/repository"
 )
@@ -59,6 +60,114 @@ func TestReviewRepository_Create(t *testing.T) {
 	db.Model(&repository.CourseEntity{}).Where("id = ?", course.ID).Select("rating_count").Scan(&count)
 	if count != 1 {
 		t.Errorf("course rating_count: got %d, want 1", count)
+	}
+}
+
+func TestReviewRepository_CreateWithRewardCreatesSingleRewardPerCourse(t *testing.T) {
+	db := newTestDB(t)
+	repo := repository.NewReviewRepository(db)
+	ctx := context.Background()
+
+	cleanTables(t, db, "point_rewards", "reviews", "review_revisions", "courses", "teachers", "users")
+
+	teacher := seedTeacher(t, db)
+	course := seedCourse(t, db, teacher.ID)
+	user := seedUser(t, db)
+	otherUser := seedUserRaw(t, db, "reviewreward2", "reviewreward2@example.com")
+	now := time.Now()
+
+	firstReview := &review.Review{
+		CourseID:  course.ID,
+		Semester:  "2024-2025-1",
+		UserID:    user.ID,
+		Rating:    5,
+		Content:   "首评",
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	firstReward := point.NewCourseFirstReviewReward(user.ID, course.ID, 10, now)
+	result, err := repo.CreateWithReward(ctx, firstReview, []point.Reward{*firstReward})
+	if err != nil {
+		t.Fatalf("CreateWithReward first: %v", err)
+	}
+	if len(result.RewardIDs) != 1 || result.RewardIDs[0] == 0 {
+		t.Fatalf("first reward result=%+v, want reward ID", result)
+	}
+
+	secondReview := &review.Review{
+		CourseID:  course.ID,
+		Semester:  "2024-2025-1",
+		UserID:    otherUser.ID,
+		Rating:    4,
+		Content:   "第二条",
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	secondReward := point.NewCourseFirstReviewReward(otherUser.ID, course.ID, 10, now)
+	result, err = repo.CreateWithReward(ctx, secondReview, []point.Reward{*secondReward})
+	if err != nil {
+		t.Fatalf("CreateWithReward second: %v", err)
+	}
+	if len(result.RewardIDs) != 0 {
+		t.Fatalf("second reward result=%+v, want no reward IDs", result)
+	}
+
+	var count int64
+	if err := db.Model(&repository.PointRewardEntity{}).Count(&count).Error; err != nil {
+		t.Fatalf("count rewards: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("reward count = %d, want 1", count)
+	}
+}
+
+func TestReviewRepository_CreateWithRewardCreatesMultipleRewards(t *testing.T) {
+	db := newTestDB(t)
+	repo := repository.NewReviewRepository(db)
+	ctx := context.Background()
+
+	cleanTables(t, db, "point_rewards", "reviews", "review_revisions", "courses", "teachers", "users")
+
+	teacher := seedTeacher(t, db)
+	course := seedCourse(t, db, teacher.ID)
+	user := seedUser(t, db)
+	now := time.Now()
+	reviewToCreate := &review.Review{
+		CourseID:  course.ID,
+		Semester:  "2024-2025-1",
+		UserID:    user.ID,
+		Rating:    5,
+		Content:   "触发多个奖励",
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	result, err := repo.CreateWithReward(ctx, reviewToCreate, []point.Reward{
+		*point.NewCourseFirstReviewReward(user.ID, course.ID, 10, now),
+		{
+			UserID:      user.ID,
+			Reason:      point.RewardReason("review_create"),
+			Amount:      2,
+			SourceType:  "review",
+			SourceKey:   "pending-review-create-test",
+			Description: "发布点评奖励",
+			Status:      point.RewardStatusPending,
+			CreatedAt:   now,
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateWithReward: %v", err)
+	}
+	if len(result.RewardIDs) != 2 {
+		t.Fatalf("reward IDs = %+v, want 2 IDs", result.RewardIDs)
+	}
+
+	var count int64
+	if err := db.Model(&repository.PointRewardEntity{}).Count(&count).Error; err != nil {
+		t.Fatalf("count rewards: %v", err)
+	}
+	if count != 2 {
+		t.Fatalf("reward count = %d, want 2", count)
 	}
 }
 

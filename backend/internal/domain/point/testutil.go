@@ -2,7 +2,10 @@
 
 package point
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 type MockTransferRepository struct {
 	Transfer        *Transfer
@@ -24,5 +27,21 @@ func (r *MockTransferRepository) CreateTransfer(ctx context.Context, t *Transfer
 	r.Transfer = &copy
 	r.SenderRecord = senderRecord
 	r.RecipientRecord = recipientRecord
+	return nil
+}
+
+type MockRewardRepository struct {
+	GrantedRewardID int
+	GrantedAt       time.Time
+
+	OnGrantReward func(context.Context, int, time.Time) error
+}
+
+func (r *MockRewardRepository) GrantReward(ctx context.Context, rewardID int, now time.Time) error {
+	if r.OnGrantReward != nil {
+		return r.OnGrantReward(ctx, rewardID, now)
+	}
+	r.GrantedRewardID = rewardID
+	r.GrantedAt = now
 	return nil
 }

@@ -2,13 +2,18 @@
 
 package review
 
-import "context"
+import (
+	"context"
+
+	"jcourse/internal/domain/point"
+)
 
 type MockReviewRepository struct {
 	NextID  int
 	Reviews map[int]*Review
 
 	OnCreate                func(context.Context, *Review) error
+	OnCreateWithReward      func(context.Context, *Review, []point.Reward) (CreateResult, error)
 	OnUpdate                func(context.Context, *Review, Revision) error
 	OnUpdateModeratorRemark func(context.Context, int, string) error
 	OnDelete                func(context.Context, *Review) error
@@ -32,6 +37,26 @@ func (r *MockReviewRepository) Create(ctx context.Context, rv *Review) error {
 	r.Reviews[copy.ID] = &copy
 	rv.ID = copy.ID
 	return nil
+}
+
+func (r *MockReviewRepository) CreateWithReward(ctx context.Context, rv *Review, rewards []point.Reward) (CreateResult, error) {
+	if r.OnCreateWithReward != nil {
+		return r.OnCreateWithReward(ctx, rv, rewards)
+	}
+	if err := r.Create(ctx, rv); err != nil {
+		return CreateResult{}, err
+	}
+	if len(rewards) == 0 {
+		return CreateResult{}, nil
+	}
+	result := CreateResult{RewardIDs: make([]int, 0, len(rewards))}
+	for i := range rewards {
+		if rewards[i].ID == 0 {
+			rewards[i].ID = 1000 + rv.ID + i
+		}
+		result.RewardIDs = append(result.RewardIDs, rewards[i].ID)
+	}
+	return result, nil
 }
 
 func (r *MockReviewRepository) Update(ctx context.Context, rv *Review, revision Revision) error {

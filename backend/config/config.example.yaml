@@ -78,6 +78,9 @@ review:
       review_vote_score: 1
     vote:
       max_daily_votes: 50
+    rewards:
+      enabled: false
+      course_first_review_points: 0
 
 api_key:
   max_user_keys: 20

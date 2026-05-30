@@ -10,6 +10,7 @@ import (
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	domainemail "jcourse/internal/domain/email"
+	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/task"
 	"jcourse/pkg/logx"
@@ -19,6 +20,7 @@ type ReviewCommandConfig struct {
 	HotScores                     course.HotScoreConfig
 	Vote                          review.VoteConfig
 	FrequencyViolationAdminEmails []string
+	Rewards                       point.RewardConfig
 }
 
 type ReviewCommandService struct {
@@ -45,7 +47,8 @@ func NewReviewCommandService(
 
 func (s *ReviewCommandService) CreateReview(ctx context.Context, u *auth.User, cmd *CreateReviewCommand) error {
 	now := time.Now()
-	err := s.reviewService.Create(ctx, u, review.CreateReview{
+	rewards := s.buildCreateReviewRewards(u.ID, cmd.CourseID, now)
+	result, err := s.reviewService.CreateWithReward(ctx, u, review.CreateReview{
 		CourseID: cmd.CourseID,
 		Semester: cmd.Semester,
 		UserID:   u.ID,
@@ -53,13 +56,16 @@ func (s *ReviewCommandService) CreateReview(ctx context.Context, u *auth.User, c
 		Content:  cmd.Content,
 		Score:    cmd.Score,
 		Now:      now,
-	})
+	}, rewards)
 	if err != nil {
 		var violation *review.FrequencyViolation
 		if errors.As(err, &violation) {
 			s.enqueueFrequencyViolationTasks(ctx, violation)
 		}
 		return err
+	}
+	for _, rewardID := range result.RewardIDs {
+		s.enqueueGrantReward(ctx, rewardID)
 	}
 	s.enqueueHotCourseActivity(ctx, u.ID, course.HotCourseActivityReviewCreate, cmd.CourseID)
 	return nil
@@ -175,6 +181,23 @@ func (s *ReviewCommandService) VoteReview(ctx context.Context, userID int, revie
 func (s *ReviewCommandService) enqueueHotCourseActivity(ctx context.Context, userID int, activity course.HotCourseActivity, courseID int) {
 	if err := task.Enqueue(ctx, course.NewRecordHotCourseActivityTask(userID, activity, courseID)); err != nil {
 		logx.Warn(ctx, "enqueue hot course activity", "user_id", userID, "activity", activity, "course_id", courseID, "err", err)
+	}
+}
+
+func (s *ReviewCommandService) buildCreateReviewRewards(userID int, courseID int, now time.Time) []point.Reward {
+	if !s.config.Rewards.Enabled {
+		return nil
+	}
+	reward := point.NewCourseFirstReviewReward(userID, courseID, s.config.Rewards.CourseFirstReviewPoints, now)
+	if reward == nil {
+		return nil
+	}
+	return []point.Reward{*reward}
+}
+
+func (s *ReviewCommandService) enqueueGrantReward(ctx context.Context, rewardID int) {
+	if err := task.Enqueue(ctx, point.NewGrantRewardTask(rewardID)); err != nil {
+		logx.Warn(ctx, "enqueue grant reward", "reward_id", rewardID, "err", err)
 	}
 }
 

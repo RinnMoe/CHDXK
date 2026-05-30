@@ -201,6 +201,10 @@ func setDefaults(v *viper.Viper) {
 	setSectionDefaults(v, "review.command.vote", map[string]any{
 		"max_daily_votes": review.DefaultVoteConfig.MaxDailyVotes,
 	})
+	setSectionDefaults(v, "review.command.rewards", map[string]any{
+		"enabled":                    point.DefaultRewardConfig.Enabled,
+		"course_first_review_points": point.DefaultRewardConfig.CourseFirstReviewPoints,
+	})
 	v.SetDefault("review.command.frequency_violation_admin_emails", []string{})
 	setSectionDefaults(v, "api_key", map[string]any{
 		"max_user_keys":     auth.DefaultApiKeyConfig.MaxUserKeys,
