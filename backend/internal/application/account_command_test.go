@@ -47,6 +47,23 @@ func TestAccountCommandService_SendRegisterCodeRejectsEmailOutsideWhitelist(t *t
 	}
 }
 
+func TestAccountCommandService_SendRegisterCodeSendsForExistingUser(t *testing.T) {
+	username := accountUsername(t, "alice@example.edu")
+	accountRepo := newFakeAccountRepo(map[string]*identity.Account{
+		"alice@example.edu": {ID: 1, Username: username, PasswordHash: mustHash(t, "secret")},
+	})
+	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
+	enqueuer := &fakeEnqueuer{}
+	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
+	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
+	svc := newAccountService(accountRepo, userRepo, newFakeCodeRepo())
+
+	if err := svc.SendRegisterCode(context.Background(), application.SendRegisterCodeCommand{Email: "Alice@Example.EDU"}); err != nil {
+		t.Fatalf("SendRegisterCode: %v", err)
+	}
+	assertVerificationEmailTask(t, enqueuer.tasks[0], "alice@example.edu")
+}
+
 func TestAccountCommandService_RegisterAndLogin(t *testing.T) {
 	accountRepo := newFakeAccountRepo(nil)
 	userRepo := newFakeAuthUserRepo(nil)
@@ -85,6 +102,21 @@ func TestAccountCommandService_RegisterRejectsWrongCode(t *testing.T) {
 	_, err := svc.Register(context.Background(), application.RegisterCommand{Email: "alice@example.edu", Code: "000000", Password: "secret"})
 	if !errors.Is(err, verification.ErrCodeInvalid) {
 		t.Fatalf("Register error = %v, want ErrVerificationCodeInvalid", err)
+	}
+}
+
+func TestAccountCommandService_RegisterRejectsExistingUserAfterCode(t *testing.T) {
+	username := accountUsername(t, "alice@example.edu")
+	accountRepo := newFakeAccountRepo(map[string]*identity.Account{
+		"alice@example.edu": {ID: 1, Username: username, PasswordHash: mustHash(t, "secret")},
+	})
+	codes := newFakeCodeRepo()
+	codes.Saved["alice@example.edu"] = verification.Code{Email: "alice@example.edu", Code: "123456", ExpiresAt: time.Now().Add(time.Minute)}
+	svc := newAccountService(accountRepo, newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}}), codes)
+
+	_, err := svc.Register(context.Background(), application.RegisterCommand{Email: "alice@example.edu", Code: "123456", Password: "secret"})
+	if !errors.Is(err, identity.ErrAlreadyExists) {
+		t.Fatalf("Register error = %v, want ErrUserAlreadyExists", err)
 	}
 }
 
@@ -191,12 +223,20 @@ func TestAccountCommandService_SendResetCodeAndResetPassword(t *testing.T) {
 	}
 }
 
-func TestAccountCommandService_SendResetCodeRejectsUnknownEmail(t *testing.T) {
-	svc := newAccountService(newFakeAccountRepo(nil), newFakeAuthUserRepo(nil), newFakeCodeRepo())
+func TestAccountCommandService_SendResetCodeSendsForUnknownEmail(t *testing.T) {
+	codes := newFakeCodeRepo()
+	enqueuer := &fakeEnqueuer{}
+	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
+	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
+	svc := newAccountServiceWithAttempts(newFakeAccountRepo(nil), newFakeAuthUserRepo(nil), newFakeCodeRepo(), codes, 5, security.NewMockLoginAttemptRepository(nil))
 
 	err := svc.SendResetCode(context.Background(), application.SendResetCodeCommand{Email: "nobody@example.edu"})
-	if !errors.Is(err, identity.ErrNotFound) {
-		t.Fatalf("SendResetCode error = %v, want ErrUserNotFound", err)
+	if err != nil {
+		t.Fatalf("SendResetCode: %v", err)
+	}
+	assertVerificationEmailTask(t, enqueuer.tasks[0], "nobody@example.edu")
+	if len(codes.Saved["nobody@example.edu"].Code) != 6 {
+		t.Fatalf("saved code = %q, want 6 digits", codes.Saved["nobody@example.edu"].Code)
 	}
 }
 

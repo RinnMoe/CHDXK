@@ -40,13 +40,21 @@ func TestPasswordResetService_SendResetCodeSuccess(t *testing.T) {
 	}
 }
 
-func TestPasswordResetService_SendResetCodeRejectsUnknownUser(t *testing.T) {
+func TestPasswordResetService_SendResetCodeSendsForUnknownUser(t *testing.T) {
 	repo := identity.NewMockRepository(nil)
-	svc := NewPasswordResetService(repo, verification.NewMockCodeRepository(), nil, testUsernameDeriver(), verification.Config{})
+	codes := verification.NewMockCodeRepository()
+	enqueuer := &resetFakeEnqueuer{}
+	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
+	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
+	svc := NewPasswordResetService(repo, codes, nil, testUsernameDeriver(), verification.Config{})
 
-	err := svc.SendResetCode(context.Background(), "nobody@example.edu")
-	if !errors.Is(err, identity.ErrNotFound) {
-		t.Fatalf("SendResetCode error = %v, want ErrUserNotFound", err)
+	if err := svc.SendResetCode(context.Background(), "nobody@example.edu"); err != nil {
+		t.Fatalf("SendResetCode: %v", err)
+	}
+	assertResetVerificationEmailTask(t, enqueuer.tasks[0], "nobody@example.edu")
+	saved := codes.Saved["nobody@example.edu"]
+	if len(saved.Code) != 6 {
+		t.Fatalf("saved code = %q, want 6 digits", saved.Code)
 	}
 }
 

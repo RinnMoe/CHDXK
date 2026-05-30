@@ -40,17 +40,8 @@ func NewPasswordResetService(
 
 func (s *PasswordResetService) SendResetCode(ctx context.Context, email string) error {
 	normalized := identity.NormalizeEmail(email)
-	username, err := s.usernames.UsernameFromEmail(normalized)
-	if err != nil {
+	if _, err := s.usernames.UsernameFromEmail(normalized); err != nil {
 		return err
-	}
-
-	existing, err := s.accountRepo.FindByUsername(ctx, username)
-	if err != nil {
-		return err
-	}
-	if existing == nil {
-		return identity.ErrNotFound
 	}
 
 	wait, err := s.codes.ReserveSend(ctx, normalized, s.verification.CodeInterval)

@@ -54,17 +54,6 @@ func (s *RegistrationService) SendRegisterCode(ctx context.Context, email string
 	if err != nil {
 		return err
 	}
-	username, err := s.usernames.UsernameFromEmail(normalized)
-	if err != nil {
-		return err
-	}
-	existing, err := s.accountRepo.FindByUsername(ctx, username)
-	if err != nil {
-		return err
-	}
-	if existing != nil {
-		return identity.ErrAlreadyExists
-	}
 
 	wait, err := s.codes.ReserveSend(ctx, normalized, s.verification.CodeInterval)
 	if err != nil {
