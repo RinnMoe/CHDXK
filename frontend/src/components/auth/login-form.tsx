@@ -70,6 +70,7 @@ export function LoginForm() {
                     value={field.state.value}
                     onChange={(value) => field.handleChange(value)}
                     onBlur={field.handleBlur}
+                    placeholder="jAccount"
                   />
                   {error && (
                     <p className="text-sm text-destructive" role="alert">
@@ -107,7 +108,7 @@ export function LoginForm() {
                   <Input
                     id="password"
                     type="password"
-                    placeholder="********"
+                    placeholder="选课社区密码，非 jAccount 密码"
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}

@@ -9,6 +9,7 @@ import (
 	"jcourse/internal/domain/account/credential"
 	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/account/security"
+	"jcourse/pkg/apperr"
 )
 
 func TestLoginService_LoginLockedAfterMaxAttempts(t *testing.T) {
@@ -53,6 +54,13 @@ func TestLoginService_FailedLoginIncrementsAttempts(t *testing.T) {
 	_, err := svc.Login(context.Background(), "alice@example.edu", "wrong")
 	if !errors.Is(err, security.ErrInvalidCredentials) {
 		t.Fatalf("Login error = %v, want ErrInvalidCredentials", err)
+	}
+	var appErr *apperr.AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("Login error = %T, want AppError", err)
+	}
+	if appErr.Msg != "邮箱或密码错误，还有 4 次尝试机会" {
+		t.Fatalf("Login error message = %q, want remaining attempts", appErr.Msg)
 	}
 	if attempts.Counts["alice@example.edu"] != 1 {
 		t.Fatalf("attempt count = %d, want 1", attempts.Counts["alice@example.edu"])

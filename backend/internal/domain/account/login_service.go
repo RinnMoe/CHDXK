@@ -8,6 +8,7 @@ import (
 	"jcourse/internal/domain/account/credential"
 	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/account/security"
+	"jcourse/pkg/apperr"
 )
 
 type LoginConfig struct {
@@ -67,8 +68,7 @@ func (s *LoginService) Login(ctx context.Context, email, password string) (*iden
 		return nil, err
 	}
 	if acct == nil || !s.hasher.Verify(password, acct.PasswordHash) {
-		_ = s.recordFailure(ctx, normalized)
-		return nil, security.ErrInvalidCredentials
+		return nil, s.recordFailure(ctx, normalized)
 	}
 	_ = s.attempts.Reset(ctx, normalized)
 	return acct, nil
@@ -88,10 +88,12 @@ func (s *LoginService) isLocked(ctx context.Context, email string) bool {
 func (s *LoginService) recordFailure(ctx context.Context, email string) error {
 	count, err := s.attempts.Increment(ctx, email)
 	if err != nil {
-		return err
+		return security.ErrInvalidCredentials
 	}
-	if count >= s.config.MaxAttempts && s.config.Lockout > 0 {
-		return fmt.Errorf("%w: locked for %s", security.ErrLoginLocked, s.config.Lockout.Round(time.Minute))
+	remaining := s.config.MaxAttempts - count
+	if remaining < 0 {
+		remaining = 0
 	}
-	return nil
+	msg := fmt.Sprintf("邮箱或密码错误，还有 %d 次尝试机会", remaining)
+	return fmt.Errorf("%w: %w", apperr.Unauthorized(msg), security.ErrInvalidCredentials)
 }

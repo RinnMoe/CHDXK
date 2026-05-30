@@ -71,6 +71,7 @@ export function RegisterForm() {
                     value={field.state.value}
                     onChange={(value) => field.handleChange(value)}
                     onBlur={field.handleBlur}
+                    placeholder="jAccount"
                   />
                   {error && (
                     <p className="text-sm text-destructive" role="alert">
