@@ -1,9 +1,18 @@
+import { useState } from "react"
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
-import { RiSearchLine } from "@remixicon/react"
+import dayjs from "dayjs"
+import { zhCN } from "date-fns/locale"
+import { RiCalendarLine, RiSearchLine } from "@remixicon/react"
 import { PaginationComponent } from "@/components/common/pagination"
 import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import {
   Select,
   SelectContent,
@@ -21,7 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useAuditLogs } from "@/hooks/use-audit-log"
-import { formatDateTime } from "@/lib/date"
+import { formatDateInputValue, formatDateTime } from "@/lib/date"
 import { getErrorMessage, type FormSubmitEvent } from "./admin-utils"
 
 const pageSize = 20
@@ -52,6 +61,82 @@ function detailText(details: Record<string, unknown>) {
     )
     .map(([key, value]) => `${key}: ${String(value)}`)
   return parts.length ? parts.join("; ") : "-"
+}
+
+function parseDateInputValue(value: string): Date | undefined {
+  const date = dayjs(value)
+  return date.isValid() ? date.toDate() : undefined
+}
+
+type DateFilterPickerProps = {
+  id: string
+  name: string
+  label: string
+  value: string
+  onChange: (value: string) => void
+}
+
+function DateFilterPicker({
+  id,
+  name,
+  label,
+  value,
+  onChange,
+}: DateFilterPickerProps) {
+  const [open, setOpen] = useState(false)
+  const selectedDate = parseDateInputValue(value)
+
+  return (
+    <div className="flex w-40 flex-col gap-1">
+      <Label htmlFor={id}>{label}</Label>
+      <input type="hidden" name={name} value={value} />
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            id={id}
+            type="button"
+            variant="outline"
+            className="h-9 w-full justify-between font-normal"
+          >
+            <span className={value ? undefined : "text-muted-foreground"}>
+              {value || "选择日期"}
+            </span>
+            <RiCalendarLine className="size-4 text-muted-foreground" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            defaultMonth={selectedDate}
+            onSelect={(date) => {
+              if (!date) return
+              onChange(formatDateInputValue(date))
+              setOpen(false)
+            }}
+            locale={zhCN}
+            captionLayout="dropdown"
+          />
+          {value ? (
+            <div className="border-t p-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="w-full"
+                onClick={() => {
+                  onChange("")
+                  setOpen(false)
+                }}
+              >
+                清除日期
+              </Button>
+            </div>
+          ) : null}
+        </PopoverContent>
+      </Popover>
+    </div>
+  )
 }
 
 export function AuditLogsTab() {
@@ -110,6 +195,21 @@ export function AuditLogsTab() {
     })
   }
 
+  function setDateFilter(key: "audit_start_time" | "audit_end_time") {
+    return (value: string) => {
+      void navigate({
+        search: (prev) => ({
+          ...prev,
+          tab: "audit-log",
+          audit_page: 1,
+          [key]: value || undefined,
+        }),
+        replace: true,
+        resetScroll: false,
+      })
+    }
+  }
+
   function setPage(nextPage: number) {
     void navigate({
       search: (prev) => ({
@@ -129,26 +229,20 @@ export function AuditLogsTab() {
       </div>
 
       <form className="flex flex-wrap items-end gap-2" onSubmit={handleSearch}>
-        <div className="flex w-40 flex-col gap-1">
-          <Label htmlFor="audit-start-time">开始时间</Label>
-          <Input
-            id="audit-start-time"
-            name="start_time"
-            type="date"
-            defaultValue={startTime}
-            className="w-full"
-          />
-        </div>
-        <div className="flex w-40 flex-col gap-1">
-          <Label htmlFor="audit-end-time">结束时间</Label>
-          <Input
-            id="audit-end-time"
-            name="end_time"
-            type="date"
-            defaultValue={endTime}
-            className="w-full"
-          />
-        </div>
+        <DateFilterPicker
+          id="audit-start-time"
+          name="start_time"
+          label="开始时间"
+          value={startTime}
+          onChange={setDateFilter("audit_start_time")}
+        />
+        <DateFilterPicker
+          id="audit-end-time"
+          name="end_time"
+          label="结束时间"
+          value={endTime}
+          onChange={setDateFilter("audit_end_time")}
+        />
         <div className="flex w-36 flex-col gap-1">
           <Label htmlFor="audit-actor-user-id">触发人 ID</Label>
           <Input
