@@ -2,7 +2,6 @@ import type { SiteDailyStatDTO } from "@/api/site-stats"
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -60,6 +59,8 @@ const metricConfig: ReadonlyArray<{
   { key: "new_dislike_count", name: "点踩", color: "var(--color-destructive)" },
 ]
 
+const chartHeight = 192
+
 export function DailyStatsChart({ stats }: DailyStatsChartProps) {
   const chartData = [...stats].sort((a, b) =>
     a.stat_date.localeCompare(b.stat_date)
@@ -72,14 +73,18 @@ export function DailyStatsChart({ stats }: DailyStatsChartProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {metricConfig.map((metric) => (
-        <Card key={metric.key} size="sm">
+        <Card key={metric.key} size="sm" className="min-w-0">
           <CardHeader>
             <CardTitle>{metric.name}</CardTitle>
-            <CardDescription>每日趋势</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-48 w-full">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="h-48 min-w-0 w-full">
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+                minHeight={chartHeight}
+                initialDimension={{ width: 0, height: chartHeight }}
+              >
                 <LineChart
                   data={chartData}
                   margin={{ top: 4, right: 12, left: 0, bottom: 4 }}
