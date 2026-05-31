@@ -67,6 +67,21 @@ func TestLoginService_FailedLoginIncrementsAttempts(t *testing.T) {
 	}
 }
 
+func TestLoginService_LoginRejectsAccountWithoutPassword(t *testing.T) {
+	username := mustUsernameFromEmail(t, "alice@example.edu")
+	repo := identity.NewMockRepository(map[string]*identity.Account{username: {ID: 1, Username: username, PasswordHash: ""}})
+	attempts := security.NewMockLoginAttemptRepository(map[string]int{})
+	svc := NewLoginService(repo, credential.NewDjangoPBKDF2SHA256PasswordHasher(credential.PasswordHashConfig{Iterations: 1}), attempts, testUsernameDeriver(), LoginConfig{MaxAttempts: 5, Lockout: 15 * time.Minute})
+
+	_, err := svc.Login(context.Background(), "alice@example.edu", "secret")
+	if !errors.Is(err, security.ErrPasswordNotSet) {
+		t.Fatalf("Login error = %v, want ErrPasswordNotSet", err)
+	}
+	if attempts.Counts["alice@example.edu"] != 0 {
+		t.Fatalf("attempt count = %d, want 0", attempts.Counts["alice@example.edu"])
+	}
+}
+
 func TestLoginService_SuccessfulLoginResetsAttempts(t *testing.T) {
 	hasher := credential.NewDjangoPBKDF2SHA256PasswordHasher(credential.PasswordHashConfig{Iterations: 1})
 	password, _ := hasher.Hash("secret")

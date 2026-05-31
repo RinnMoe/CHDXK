@@ -139,14 +139,16 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		usernameDeriver,
 		conf.Auth.Verification,
 	)
+	sessionAuthService := auth.NewSessionAuthService(accountRepo, conf.Session.Secret)
 	accountCommand := application.NewAccountCommandService(
 		registrationService,
 		loginService,
 		passwordResetService,
 		currentUserService,
+		sessionAuthService,
 	)
 	apiKeySvc := auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, conf.APIKey)
-	authResolution := application.NewAuthResolutionService(currentUserService, apiKeySvc, accessTracker)
+	authResolution := application.NewAuthResolutionService(currentUserService, apiKeySvc, accessTracker, sessionAuthService)
 	apiKeyQuery := application.NewApiKeyQueryService(apiKeySvc)
 	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc)
 	userSettingsQuery := application.NewUserSettingsQueryService(userSettingsRepo, courseRepo)

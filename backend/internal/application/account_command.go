@@ -13,6 +13,7 @@ type AccountCommandService struct {
 	login           *account.LoginService
 	passwordReset   *account.PasswordResetService
 	authUserService *auth.AuthUserService
+	sessionAuth     *auth.SessionAuthService
 }
 
 func NewAccountCommandService(
@@ -20,12 +21,14 @@ func NewAccountCommandService(
 	login *account.LoginService,
 	passwordReset *account.PasswordResetService,
 	authUserService *auth.AuthUserService,
+	sessionAuth *auth.SessionAuthService,
 ) *AccountCommandService {
 	return &AccountCommandService{
 		registration:    registration,
 		login:           login,
 		passwordReset:   passwordReset,
 		authUserService: authUserService,
+		sessionAuth:     sessionAuth,
 	}
 }
 
@@ -69,6 +72,10 @@ func (s *AccountCommandService) SendResetCode(ctx context.Context, cmd SendReset
 
 func (s *AccountCommandService) ResetPassword(ctx context.Context, cmd ResetPasswordCommand) error {
 	return s.passwordReset.ResetPassword(ctx, cmd.Email, cmd.Code, cmd.NewPassword)
+}
+
+func (s *AccountCommandService) SessionAuthHash(ctx context.Context, userID int) (string, error) {
+	return s.sessionAuth.HashForUser(ctx, userID)
 }
 
 func newAccountDTO(acct *identity.Account, u *auth.User) *AccountDTO {

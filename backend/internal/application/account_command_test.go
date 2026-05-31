@@ -134,6 +134,20 @@ func TestAccountCommandService_LoginRejectsWrongPassword(t *testing.T) {
 	}
 }
 
+func TestAccountCommandService_LoginRejectsAccountWithoutPassword(t *testing.T) {
+	username := accountUsername(t, "alice@example.edu")
+	accountRepo := newFakeAccountRepo(map[string]*identity.Account{
+		"alice@example.edu": {ID: 1, Username: username, PasswordHash: ""},
+	})
+	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser}})
+	svc := newAccountService(accountRepo, userRepo, newFakeCodeRepo())
+
+	_, err := svc.Login(context.Background(), application.LoginCommand{Email: "alice@example.edu", Password: "secret"})
+	if !errors.Is(err, security.ErrPasswordNotSet) {
+		t.Fatalf("Login error = %v, want ErrPasswordNotSet", err)
+	}
+}
+
 func TestAccountCommandService_LoginRejectsSuspendedUser(t *testing.T) {
 	now := time.Now()
 	suspendedAt := now.Add(-time.Hour)
@@ -299,6 +313,7 @@ func newAccountServiceWithAttempts(
 		account.NewLoginService(accountRepo, hasher, attempts, usernames, testLoginConfig(maxLoginAttempts)),
 		account.NewPasswordResetService(accountRepo, resetCodes, hasher, usernames, testVerificationConfig()),
 		auth.NewCurrentUserService(userRepo),
+		auth.NewSessionAuthService(accountRepo, "test-session-secret"),
 	)
 }
 

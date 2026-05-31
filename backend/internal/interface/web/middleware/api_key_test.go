@@ -104,6 +104,7 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 				auth.NewCurrentUserService(&systemAuthUserRepo{}),
 				svc,
 				tracker,
+				auth.NewSessionAuthService(nil, "test-session-secret"),
 			)))
 			r.Use(handler)
 			r.GET("/test", func(c *gin.Context) {
@@ -148,6 +149,7 @@ func TestSystemAPIKeyAuth_RepoError(t *testing.T) {
 		auth.NewCurrentUserService(&systemAuthUserRepo{}),
 		svc,
 		nil,
+		auth.NewSessionAuthService(nil, "test-session-secret"),
 	)))
 	r.Use(handler)
 	r.GET("/test", func(c *gin.Context) {
@@ -174,7 +176,7 @@ func TestSystemAPIKeyAuthReusesResolvedAPIKey(t *testing.T) {
 
 	r := gin.New()
 	r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
-	r.Use(middleware.ResolveCurrentUser(application.NewAuthResolutionService(auth.NewCurrentUserService(&systemAuthUserRepo{}), svc, tracker)))
+	r.Use(middleware.ResolveCurrentUser(application.NewAuthResolutionService(auth.NewCurrentUserService(&systemAuthUserRepo{}), svc, tracker, auth.NewSessionAuthService(nil, "test-session-secret"))))
 	r.GET("/test", middleware.SystemAPIKeyAuth(), func(c *gin.Context) {
 		c.String(http.StatusOK, "ok")
 	})

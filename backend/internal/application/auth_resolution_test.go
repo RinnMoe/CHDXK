@@ -2,9 +2,11 @@ package application
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
+	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 )
 
@@ -15,9 +17,9 @@ func TestAuthResolutionServiceResolveUserAPIKey(t *testing.T) {
 	}
 	userRepo := auth.NewMockUserRepository(map[int]*auth.User{7: {ID: 7, Role: auth.RoleUser}})
 	tracker := &authResolutionAccessTracker{}
-	svc := NewAuthResolutionService(auth.NewCurrentUserService(userRepo), auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig), tracker)
+	svc := NewAuthResolutionService(auth.NewCurrentUserService(userRepo), auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig), tracker, testSessionAuthService(7, "password-hash"))
 
-	resolved, err := svc.Resolve(context.Background(), credential.Key(), 0)
+	resolved, err := svc.Resolve(context.Background(), credential.Key(), 0, "")
 	if err != nil {
 		t.Fatalf("Resolve returned error: %v", err)
 	}
@@ -48,9 +50,9 @@ func TestAuthResolutionServiceResolveSystemAPIKey(t *testing.T) {
 	}
 	userRepo := auth.NewMockUserRepository(map[int]*auth.User{7: {ID: 7, Role: auth.RoleUser}})
 	tracker := &authResolutionAccessTracker{}
-	svc := NewAuthResolutionService(auth.NewCurrentUserService(userRepo), auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig), tracker)
+	svc := NewAuthResolutionService(auth.NewCurrentUserService(userRepo), auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig), tracker, testSessionAuthService(7, "password-hash"))
 
-	resolved, err := svc.Resolve(context.Background(), credential.Key(), 7)
+	resolved, err := svc.Resolve(context.Background(), credential.Key(), 7, "")
 	if err != nil {
 		t.Fatalf("Resolve returned error: %v", err)
 	}
@@ -75,9 +77,14 @@ func TestAuthResolutionServiceResolveSessionUser(t *testing.T) {
 	apiKeyRepo := &authResolutionAPIKeyRepo{}
 	userRepo := auth.NewMockUserRepository(map[int]*auth.User{7: {ID: 7, Role: auth.RoleUser}})
 	tracker := &authResolutionAccessTracker{}
-	svc := NewAuthResolutionService(auth.NewCurrentUserService(userRepo), auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig), tracker)
+	sessionAuth := testSessionAuthService(7, "password-hash")
+	sessionHash, err := sessionAuth.HashForUser(context.Background(), 7)
+	if err != nil {
+		t.Fatalf("HashForUser: %v", err)
+	}
+	svc := NewAuthResolutionService(auth.NewCurrentUserService(userRepo), auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig), tracker, sessionAuth)
 
-	resolved, err := svc.Resolve(context.Background(), "", 7)
+	resolved, err := svc.Resolve(context.Background(), "", 7, sessionHash)
 	if err != nil {
 		t.Fatalf("Resolve returned error: %v", err)
 	}
@@ -101,19 +108,52 @@ func TestAuthResolutionServiceResolveSessionUser(t *testing.T) {
 	}
 }
 
+func TestAuthResolutionServiceRejectsInvalidSessionHash(t *testing.T) {
+	apiKeyRepo := &authResolutionAPIKeyRepo{}
+	userRepo := auth.NewMockUserRepository(map[int]*auth.User{7: {ID: 7, Role: auth.RoleUser}})
+	svc := NewAuthResolutionService(
+		auth.NewCurrentUserService(userRepo),
+		auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig),
+		nil,
+		testSessionAuthService(7, "new-password-hash"),
+	)
+
+	resolved, err := svc.Resolve(context.Background(), "", 7, "sha256:old-session-hash")
+	if !errors.Is(err, auth.ErrInvalidSession) {
+		t.Fatalf("Resolve error = %v, want ErrInvalidSession", err)
+	}
+	if resolved.User != nil || resolved.ApiKey != nil {
+		t.Fatalf("resolved = %+v, want empty", resolved)
+	}
+	if userRepo.FindByIDCalls != 0 {
+		t.Fatalf("FindByID calls = %d, want 0", userRepo.FindByIDCalls)
+	}
+}
+
 func TestAuthResolutionServiceIgnoresAccessTrackerError(t *testing.T) {
 	apiKeyRepo := &authResolutionAPIKeyRepo{}
 	userRepo := auth.NewMockUserRepository(map[int]*auth.User{7: {ID: 7, Role: auth.RoleUser}})
 	tracker := &authResolutionAccessTracker{recordErr: context.Canceled}
-	svc := NewAuthResolutionService(auth.NewCurrentUserService(userRepo), auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig), tracker)
+	sessionAuth := testSessionAuthService(7, "password-hash")
+	sessionHash, err := sessionAuth.HashForUser(context.Background(), 7)
+	if err != nil {
+		t.Fatalf("HashForUser: %v", err)
+	}
+	svc := NewAuthResolutionService(auth.NewCurrentUserService(userRepo), auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig), tracker, sessionAuth)
 
-	resolved, err := svc.Resolve(context.Background(), "", 7)
+	resolved, err := svc.Resolve(context.Background(), "", 7, sessionHash)
 	if err != nil {
 		t.Fatalf("Resolve returned error: %v", err)
 	}
 	if resolved.User == nil || resolved.User.ID != 7 {
 		t.Fatalf("resolved user = %+v, want user 7", resolved.User)
 	}
+}
+
+func testSessionAuthService(userID int, passwordHash string) *auth.SessionAuthService {
+	repo := identity.NewMockRepository(nil)
+	repo.PutAccount("", &identity.Account{ID: userID, PasswordHash: passwordHash})
+	return auth.NewSessionAuthService(repo, "test-session-secret")
 }
 
 type authResolutionAPIKeyRepo struct {

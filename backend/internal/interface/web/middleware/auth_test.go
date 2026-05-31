@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"jcourse/internal/application"
+	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 )
 
@@ -23,12 +24,18 @@ func TestRequireAuthReusesResolvedSessionUser(t *testing.T) {
 	currentUserSvc := auth.NewCurrentUserService(repo)
 	apiKeyRepo := &auth.MockApiKeyRepository{}
 	apiKeySvc := auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig)
-	authResolution := application.NewAuthResolutionService(currentUserSvc, apiKeySvc, nil)
+	sessionAuth := testMiddlewareSessionAuth(7, "password-hash")
+	authResolution := application.NewAuthResolutionService(currentUserSvc, apiKeySvc, nil, sessionAuth)
 	r := gin.New()
 	r.Use(sessions.Sessions("jcourse_session", filesession.NewStore(t.TempDir(), []byte("test-secret"))))
 	r.Use(ResolveCurrentUser(authResolution))
 	r.GET("/login-session", func(c *gin.Context) {
-		if err := SetSessionUserID(c, 7); err != nil {
+		hash, err := sessionAuth.HashForUser(c.Request.Context(), 7)
+		if err != nil {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+		if err := SetSessionUser(c, 7, hash); err != nil {
 			c.Status(http.StatusInternalServerError)
 			return
 		}
@@ -65,6 +72,7 @@ func TestResolveCurrentUserWithUserAPIKey(t *testing.T) {
 		auth.NewCurrentUserService(userRepo),
 		auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig),
 		tracker,
+		testMiddlewareSessionAuth(7, "password-hash"),
 	)))
 	r.GET("/protected", RequireAuth(), func(c *gin.Context) {
 		u := auth.GetUserFromCtx(c.Request.Context())
@@ -110,6 +118,7 @@ func TestResolveCurrentUserWithSystemAPIKey(t *testing.T) {
 		auth.NewCurrentUserService(userRepo),
 		auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig),
 		tracker,
+		testMiddlewareSessionAuth(7, "password-hash"),
 	)))
 	r.GET("/protected", RequireAuth(), func(c *gin.Context) {
 		u := auth.GetUserFromCtx(c.Request.Context())
@@ -159,12 +168,18 @@ func TestResolveCurrentUserRejectsSuspendedSessionUser(t *testing.T) {
 	currentUserSvc := auth.NewCurrentUserService(repo)
 	apiKeyRepo := &auth.MockApiKeyRepository{}
 	apiKeySvc := auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, auth.DefaultApiKeyConfig)
-	authResolution := application.NewAuthResolutionService(currentUserSvc, apiKeySvc, nil)
+	sessionAuth := testMiddlewareSessionAuth(7, "password-hash")
+	authResolution := application.NewAuthResolutionService(currentUserSvc, apiKeySvc, nil, sessionAuth)
 	r := gin.New()
 	r.Use(sessions.Sessions("jcourse_session", filesession.NewStore(t.TempDir(), []byte("test-secret"))))
 	r.Use(ResolveCurrentUser(authResolution))
 	r.GET("/login-session", func(c *gin.Context) {
-		if err := SetSessionUserID(c, 7); err != nil {
+		hash, err := sessionAuth.HashForUser(c.Request.Context(), 7)
+		if err != nil {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+		if err := SetSessionUser(c, 7, hash); err != nil {
 			c.Status(http.StatusInternalServerError)
 			return
 		}
@@ -182,6 +197,51 @@ func TestResolveCurrentUserRejectsSuspendedSessionUser(t *testing.T) {
 
 	if w.Code != http.StatusForbidden {
 		t.Fatalf("status = %d, want %d", w.Code, http.StatusForbidden)
+	}
+}
+
+func TestResolveCurrentUserClearsInvalidSessionHash(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	repo := auth.NewMockUserRepository(map[int]*auth.User{7: {ID: 7, Role: auth.RoleUser}})
+	sessionAuth := testMiddlewareSessionAuth(7, "current-password-hash")
+	authResolution := application.NewAuthResolutionService(
+		auth.NewCurrentUserService(repo),
+		auth.NewApiKeyService(&auth.MockApiKeyRepository{}, &auth.MockApiKeyRepository{}, auth.DefaultApiKeyConfig),
+		nil,
+		sessionAuth,
+	)
+	r := gin.New()
+	r.Use(sessions.Sessions("jcourse_session", filesession.NewStore(t.TempDir(), []byte("test-secret"))))
+	r.Use(ResolveCurrentUser(authResolution))
+	r.GET("/login-session", func(c *gin.Context) {
+		if err := SetSessionUser(c, 7, "sha256:old-session-hash"); err != nil {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+		c.Status(http.StatusNoContent)
+	})
+	r.GET("/protected", RequireAuth(), func(c *gin.Context) {
+		c.Status(http.StatusOK)
+	})
+
+	cookieValue := captureSessionCookie(t, r)
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/protected", nil)
+	req.Header.Set("Cookie", cookieValue)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want %d", w.Code, http.StatusUnauthorized)
+	}
+	res := w.Result()
+	defer res.Body.Close()
+	cookies := res.Cookies()
+	if len(cookies) == 0 || cookies[0].MaxAge >= 0 {
+		t.Fatalf("expected expired session cookie, got %+v", cookies)
+	}
+	if repo.FindByIDCalls != 0 {
+		t.Fatalf("FindByID calls = %d, want 0", repo.FindByIDCalls)
 	}
 }
 
@@ -316,7 +376,7 @@ func TestSetSessionUserIDClearsExistingSessionState(t *testing.T) {
 		c.Status(http.StatusNoContent)
 	})
 	r.GET("/login-session", func(c *gin.Context) {
-		if err := SetSessionUserID(c, 7); err != nil {
+		if err := SetSessionUser(c, 7, "auth-hash"); err != nil {
 			c.Status(http.StatusInternalServerError)
 			return
 		}
@@ -357,7 +417,7 @@ func TestClearSessionExpiresCookie(t *testing.T) {
 	r := gin.New()
 	r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
 	r.GET("/login-session", func(c *gin.Context) {
-		if err := SetSessionUserID(c, 7); err != nil {
+		if err := SetSessionUser(c, 7, "auth-hash"); err != nil {
 			c.Status(http.StatusInternalServerError)
 			return
 		}
@@ -388,6 +448,12 @@ func TestClearSessionExpiresCookie(t *testing.T) {
 	if cookies[0].MaxAge >= 0 {
 		t.Fatalf("logout cookie MaxAge = %d, want negative", cookies[0].MaxAge)
 	}
+}
+
+func testMiddlewareSessionAuth(userID int, passwordHash string) *auth.SessionAuthService {
+	repo := identity.NewMockRepository(nil)
+	repo.PutAccount("", &identity.Account{ID: userID, PasswordHash: passwordHash})
+	return auth.NewSessionAuthService(repo, "test-session-secret")
 }
 
 func captureSessionCookie(t *testing.T, r http.Handler) string {

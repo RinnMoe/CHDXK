@@ -14,6 +14,7 @@ import (
 
 const (
 	sessionKeyUserID    = "user_id"
+	sessionKeyAuthHash  = "auth_hash"
 	sessionKeyCSRFToken = "csrf_token"
 	sessionRedisPrefix  = "jcourse:session:"
 )
@@ -48,11 +49,18 @@ func NewSessionStore(redisConf persistence.RedisConfig, sessionConf SessionConfi
 }
 
 func SetSessionUserID(c *gin.Context, userID int) error {
+	return SetSessionUser(c, userID, "")
+}
+
+func SetSessionUser(c *gin.Context, userID int, authHash string) error {
 	if err := resetSession(c); err != nil {
 		return err
 	}
 	s := sessions.Default(c)
 	s.Set(sessionKeyUserID, userID)
+	if authHash != "" {
+		s.Set(sessionKeyAuthHash, authHash)
+	}
 	return s.Save()
 }
 
@@ -72,6 +80,15 @@ func ClearSession(c *gin.Context) error {
 	}
 	s.Clear()
 	return s.Save()
+}
+
+func sessionString(s sessions.Session, key string) (string, bool) {
+	v := s.Get(key)
+	if v == nil {
+		return "", false
+	}
+	value, ok := v.(string)
+	return value, ok
 }
 
 type gorillaSessionAccessor interface {

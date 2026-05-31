@@ -3,6 +3,7 @@ package account
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"jcourse/internal/domain/account/credential"
@@ -67,7 +68,13 @@ func (s *LoginService) Login(ctx context.Context, email, password string) (*iden
 	if err != nil {
 		return nil, err
 	}
-	if acct == nil || !s.hasher.Verify(password, acct.PasswordHash) {
+	if acct == nil {
+		return nil, s.recordFailure(ctx, normalized)
+	}
+	if strings.TrimSpace(acct.PasswordHash) == "" {
+		return nil, security.ErrPasswordNotSet
+	}
+	if !s.hasher.Verify(password, acct.PasswordHash) {
 		return nil, s.recordFailure(ctx, normalized)
 	}
 	_ = s.attempts.Reset(ctx, normalized)

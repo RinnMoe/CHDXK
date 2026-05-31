@@ -20,8 +20,13 @@ func ResolveCurrentUser(authResolution *application.AuthResolutionService) gin.H
 			return
 		}
 
-		resolved, err := authResolution.Resolve(c.Request.Context(), bearerToken(c), sessionUserID(c))
+		resolved, err := authResolution.Resolve(c.Request.Context(), bearerToken(c), sessionUserID(c), sessionAuthHash(c))
 		if err != nil {
+			if errors.Is(err, auth.ErrInvalidSession) {
+				_ = ClearSession(c)
+				c.Next()
+				return
+			}
 			if errors.Is(err, auth.ErrUserSuspended) {
 				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": err.Error()})
 				return
@@ -39,6 +44,15 @@ func ResolveCurrentUser(authResolution *application.AuthResolutionService) gin.H
 		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}
+}
+
+func sessionAuthHash(c *gin.Context) string {
+	s := sessions.Default(c)
+	hash, ok := sessionString(s, sessionKeyAuthHash)
+	if !ok {
+		return ""
+	}
+	return hash
 }
 
 func RequireAuth() gin.HandlerFunc {

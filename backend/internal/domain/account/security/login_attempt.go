@@ -9,6 +9,7 @@ import (
 var (
 	ErrInvalidCredentials = apperr.ErrInvalidCredentials
 	ErrLoginLocked        = apperr.ErrLoginLocked
+	ErrPasswordNotSet     = apperr.ErrPasswordNotSet
 )
 
 type LoginAttemptRepository interface {

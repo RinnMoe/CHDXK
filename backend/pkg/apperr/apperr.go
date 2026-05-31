@@ -53,6 +53,7 @@ var (
 	ErrUserNotFound       = NotFound("用户不存在")
 	ErrEmailNotAllowed    = Forbidden("邮箱不允许注册")
 	ErrPasswordRequired   = BadRequest("密码不能为空")
+	ErrPasswordNotSet     = BadRequest("该账户尚未设置密码，请先设置密码")
 	ErrInvalidCredentials = Unauthorized("邮箱或密码错误")
 	ErrLoginLocked        = TooManyRequests("登录失败次数过多，请稍后再试")
 

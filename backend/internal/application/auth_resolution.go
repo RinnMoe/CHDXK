@@ -16,18 +16,19 @@ type AuthResolutionService struct {
 	currentUserSvc *auth.AuthUserService
 	apiKeySvc      *auth.ApiKeyService
 	accessTracker  auth.AccessTracker
+	sessionAuth    *auth.SessionAuthService
 }
 
-func NewAuthResolutionService(currentUserSvc *auth.AuthUserService, apiKeySvc *auth.ApiKeyService, accessTracker auth.AccessTracker) *AuthResolutionService {
-	return &AuthResolutionService{currentUserSvc: currentUserSvc, apiKeySvc: apiKeySvc, accessTracker: accessTracker}
+func NewAuthResolutionService(currentUserSvc *auth.AuthUserService, apiKeySvc *auth.ApiKeyService, accessTracker auth.AccessTracker, sessionAuth *auth.SessionAuthService) *AuthResolutionService {
+	return &AuthResolutionService{currentUserSvc: currentUserSvc, apiKeySvc: apiKeySvc, accessTracker: accessTracker, sessionAuth: sessionAuth}
 }
 
-func (s *AuthResolutionService) Resolve(ctx context.Context, bearerToken string, sessionUserID int) (*ResolvedAuth, error) {
+func (s *AuthResolutionService) Resolve(ctx context.Context, bearerToken string, sessionUserID int, sessionAuthHash string) (*ResolvedAuth, error) {
 	if bearerToken != "" {
 		return s.resolveAPIKey(ctx, bearerToken)
 	}
 	if sessionUserID > 0 {
-		return s.resolveSessionUser(ctx, sessionUserID)
+		return s.resolveSessionUser(ctx, sessionUserID, sessionAuthHash)
 	}
 	return &ResolvedAuth{}, nil
 }
@@ -52,7 +53,10 @@ func (s *AuthResolutionService) resolveAPIKey(ctx context.Context, token string)
 	return resolved, nil
 }
 
-func (s *AuthResolutionService) resolveSessionUser(ctx context.Context, userID int) (*ResolvedAuth, error) {
+func (s *AuthResolutionService) resolveSessionUser(ctx context.Context, userID int, sessionAuthHash string) (*ResolvedAuth, error) {
+	if err := s.sessionAuth.Validate(ctx, userID, sessionAuthHash); err != nil {
+		return &ResolvedAuth{}, err
+	}
 	user, err := s.currentUserSvc.GetUser(ctx, userID)
 	if err != nil || user == nil {
 		return &ResolvedAuth{}, err

@@ -50,7 +50,13 @@ func (ctrl *AccountController) Register(c *gin.Context) {
 		respondError(c, err)
 		return
 	}
-	if err := middleware.SetSessionUserID(c, u.ID); err != nil {
+	authHash, err := ctrl.command.SessionAuthHash(c.Request.Context(), u.ID)
+	if err != nil {
+		logAccountError(c, "register_session_auth_hash", cmd.Email, err)
+		respondError(c, err)
+		return
+	}
+	if err := middleware.SetSessionUser(c, u.ID, authHash); err != nil {
 		logAccountError(c, "register_set_session", cmd.Email, err)
 		respondError(c, err)
 		return
@@ -72,7 +78,13 @@ func (ctrl *AccountController) Login(c *gin.Context) {
 		respondError(c, err)
 		return
 	}
-	if err := middleware.SetSessionUserID(c, u.ID); err != nil {
+	authHash, err := ctrl.command.SessionAuthHash(c.Request.Context(), u.ID)
+	if err != nil {
+		logAccountError(c, "login_session_auth_hash", cmd.Email, err)
+		respondError(c, err)
+		return
+	}
+	if err := middleware.SetSessionUser(c, u.ID, authHash); err != nil {
 		logAccountError(c, "login_set_session", cmd.Email, err)
 		respondError(c, err)
 		return
