@@ -347,7 +347,7 @@ func (r *CourseRepository) GetFilters(ctx context.Context) (*course.CourseFilter
 	if err := r.db.WithContext(ctx).Model(&CourseEntity{}).
 		Select("year AS name, COUNT(*) AS count").
 		Joins("CROSS JOIN LATERAL unnest(courses.target_years) AS year").
-		Group("year").Order("year").
+		Group("year").Order("year DESC").
 		Scan(&targetYears).Error; err != nil {
 		return nil, err
 	}

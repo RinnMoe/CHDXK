@@ -129,6 +129,9 @@ function FilterSelectGroup({
   onChange,
 }: FilterSelectGroupProps) {
   if (!items) return null
+  const selectedItem = selected
+    ? items.find((item) => item.name === selected)
+    : undefined
   const itemClassName =
     "px-2 [&>span:first-child]:hidden [&>span:last-child]:min-w-0 [&>span:last-child]:flex-1"
 
@@ -139,8 +142,14 @@ function FilterSelectGroup({
         value={selected ?? ALL}
         onValueChange={(value) => onChange(paramKey, value)}
       >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder={`全部${label}`} />
+        <SelectTrigger className="w-full [&>[data-slot=select-value]]:min-w-0 [&>[data-slot=select-value]]:flex-1 [&>[data-slot=select-value]]:gap-0 [&>[data-slot=select-value]>span]:w-full">
+          <SelectValue>
+            {selectedItem ? (
+              <FilterOptionLabel item={selectedItem} />
+            ) : (
+              (selected ?? `全部${label}`)
+            )}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent className="max-w-80">
           <SelectItem value={ALL} className={itemClassName}>
@@ -152,16 +161,20 @@ function FilterSelectGroup({
               value={item.name}
               className={itemClassName}
             >
-              <span className="flex w-full min-w-0 items-center justify-between gap-3">
-                <span className="min-w-0 truncate">{item.name}</span>
-                <span className="shrink-0 text-muted-foreground">
-                  {item.count}
-                </span>
-              </span>
+              <FilterOptionLabel item={item} />
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
     </div>
+  )
+}
+
+function FilterOptionLabel({ item }: { item: FilterItem }) {
+  return (
+    <span className="flex w-full min-w-0 items-center justify-between gap-3">
+      <span className="min-w-0 truncate">{item.name}</span>
+      <span className="shrink-0 text-muted-foreground">{item.count}</span>
+    </span>
   )
 }

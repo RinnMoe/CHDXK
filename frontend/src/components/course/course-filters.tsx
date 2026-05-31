@@ -3,7 +3,6 @@ import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { RiFilterLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -57,6 +56,8 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
       nextValue = undefined
     } else if (Array.isArray(value)) {
       nextValue = value
+    } else if (key === "categories" || key === "target_years") {
+      nextValue = [value]
     } else if (key === "credit") {
       const credit = Number(value)
       nextValue = Number.isFinite(credit) ? credit : undefined
@@ -72,14 +73,6 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
       }),
       resetScroll: false,
     })
-  }
-
-  function toggleMulti(key: "categories" | "target_years", value: string) {
-    const cur = search[key] ?? []
-    const next = cur.includes(value)
-      ? cur.filter((v) => v !== value)
-      : [...cur, value]
-    updateFilter(key, next)
   }
 
   const content = (
@@ -128,12 +121,12 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
       )}
 
       {filters.target_years && (
-        <FilterCheckGroup
+        <FilterSelectGroup
           label="目标年级"
           items={filters.target_years}
           paramKey="target_years"
-          selected={search.target_years ?? []}
-          onToggle={toggleMulti}
+          selected={search.target_years?.[0] ?? null}
+          onChange={updateFilter}
         />
       )}
 
@@ -212,6 +205,9 @@ function FilterSelectGroup({
   onChange,
 }: FilterSelectGroupProps) {
   if (!items) return null
+  const selectedItem = selected
+    ? items.find((item) => item.name === selected)
+    : undefined
   const itemClassName =
     "px-2 [&>span:first-child]:hidden [&>span:last-child]:min-w-0 [&>span:last-child]:flex-1"
 
@@ -222,8 +218,14 @@ function FilterSelectGroup({
         value={selected ?? ALL}
         onValueChange={(value) => onChange(paramKey, value)}
       >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder={`全部${label}`} />
+        <SelectTrigger className="w-full [&>[data-slot=select-value]]:min-w-0 [&>[data-slot=select-value]]:flex-1 [&>[data-slot=select-value]]:gap-0 [&>[data-slot=select-value]>span]:w-full">
+          <SelectValue>
+            {selectedItem ? (
+              <FilterOptionLabel item={selectedItem} />
+            ) : (
+              (selected ?? `全部${label}`)
+            )}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent className="max-w-80">
           <SelectItem value={ALL} className={itemClassName}>
@@ -235,12 +237,7 @@ function FilterSelectGroup({
               value={item.name}
               className={itemClassName}
             >
-              <span className="flex w-full min-w-0 items-center justify-between gap-3">
-                <span className="min-w-0 truncate">{item.name}</span>
-                <span className="shrink-0 text-muted-foreground">
-                  {item.count}
-                </span>
-              </span>
+              <FilterOptionLabel item={item} />
             </SelectItem>
           ))}
         </SelectContent>
@@ -249,51 +246,11 @@ function FilterSelectGroup({
   )
 }
 
-interface FilterCheckGroupProps {
-  label: string
-  paramKey: "categories" | "target_years"
-  items?: FilterItem[]
-  selected: string[]
-  onToggle: (key: "categories" | "target_years", value: string) => void
-}
-
-function FilterCheckGroup({
-  label,
-  paramKey,
-  items,
-  selected,
-  onToggle,
-}: FilterCheckGroupProps) {
-  if (!items) return null
-
+function FilterOptionLabel({ item }: { item: FilterItem }) {
   return (
-    <div className="space-y-3">
-      <Label>{label}</Label>
-      <div className="space-y-2">
-        {items.map((item) => {
-          const id = `${paramKey}-${item.name}`
-          const checked = selected.includes(item.name)
-          return (
-            <div key={item.name} className="flex items-start gap-2">
-              <Checkbox
-                id={id}
-                checked={checked}
-                className="mt-0.5"
-                onCheckedChange={() => onToggle(paramKey, item.name)}
-              />
-              <Label
-                htmlFor={id}
-                className="block min-w-0 flex-1 cursor-pointer text-sm leading-snug font-normal break-all whitespace-normal"
-              >
-                {item.name}
-              </Label>
-              <span className="mt-0.5 shrink-0 text-sm text-muted-foreground">
-                {item.count}
-              </span>
-            </div>
-          )
-        })}
-      </div>
-    </div>
+    <span className="flex w-full min-w-0 items-center justify-between gap-3">
+      <span className="min-w-0 truncate">{item.name}</span>
+      <span className="shrink-0 text-muted-foreground">{item.count}</span>
+    </span>
   )
 }

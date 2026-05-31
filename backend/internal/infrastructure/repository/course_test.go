@@ -677,11 +677,11 @@ func TestCourseRepository_GetFilters(t *testing.T) {
 		if len(filters.TargetYears) != 2 {
 			t.Fatalf("target_years count: got %d, want 2", len(filters.TargetYears))
 		}
-		if filters.TargetYears[0].Name != "2021" || filters.TargetYears[0].Count != 2 {
-			t.Errorf("target_year 2021: got %+v", filters.TargetYears[0])
+		if filters.TargetYears[0].Name != "2022" || filters.TargetYears[0].Count != 2 {
+			t.Errorf("target_year 2022: got %+v", filters.TargetYears[0])
 		}
-		if filters.TargetYears[1].Name != "2022" || filters.TargetYears[1].Count != 2 {
-			t.Errorf("target_year 2022: got %+v", filters.TargetYears[1])
+		if filters.TargetYears[1].Name != "2021" || filters.TargetYears[1].Count != 2 {
+			t.Errorf("target_year 2021: got %+v", filters.TargetYears[1])
 		}
 	})
 

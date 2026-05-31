@@ -331,7 +331,7 @@ export function makeCourseFilters(): CourseFilters {
     credits: CREDITS.map((c) => ({ name: String(c), count: randInt(5, 30) })),
     departments: counts(DEPARTMENTS),
     categories: counts(CATEGORIES),
-    target_years: counts(TARGET_YEARS),
+    target_years: counts([...TARGET_YEARS].sort().reverse()),
     languages: counts(["中文", "英文", "双语"]),
     semesters: counts(MOCK_COURSE_SEMESTERS),
   }
