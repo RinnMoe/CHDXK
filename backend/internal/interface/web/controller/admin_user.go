@@ -19,6 +19,10 @@ type suspendUserCommand struct {
 	Days int `json:"days"`
 }
 
+type resetPasswordCommand struct {
+	Password string `json:"password" binding:"required"`
+}
+
 func NewAdminUserController(
 	query *application.AdminUserQueryService,
 	command *application.AdminUserCommandService,
@@ -125,6 +129,29 @@ func (ctrl *AdminUserController) RevokeAdmin(c *gin.Context) {
 	}
 
 	if err := ctrl.command.RevokeAdmin(c.Request.Context(), actor, userID); err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "ok"})
+}
+
+func (ctrl *AdminUserController) ResetPassword(c *gin.Context) {
+	userID, ok := bindAdminUserID(c)
+	if !ok {
+		return
+	}
+	var cmd resetPasswordCommand
+	if err := c.ShouldBindJSON(&cmd); err != nil {
+		respondBindError(c, err)
+		return
+	}
+	actor := auth.GetUserFromCtx(c.Request.Context())
+	if actor == nil {
+		respondUnauthorized(c)
+		return
+	}
+
+	if err := ctrl.command.ResetPassword(c.Request.Context(), actor, userID, cmd.Password); err != nil {
 		respondError(c, err)
 		return
 	}

@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 
+	"jcourse/internal/domain/account/credential"
 	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/audit"
 	"jcourse/internal/domain/auth"
@@ -18,15 +20,26 @@ var (
 )
 
 type AdminUserCommandService struct {
-	adminUsers *auth.AdminUserService
+	adminUsers  *auth.AdminUserService
+	accountRepo identity.Repository
+	hasher      credential.PasswordHasher
 }
 
 type AdminUserCommandConfig = auth.AdminConfig
 
 var DefaultAdminUserCommandConfig = AdminUserCommandConfig{DefaultSuspendDays: auth.DefaultAdminConfig.DefaultSuspendDays}
 
-func NewAdminUserCommandService(userRepo auth.UserRepository, config AdminUserCommandConfig) *AdminUserCommandService {
-	return &AdminUserCommandService{adminUsers: auth.NewAdminUserService(userRepo, auth.AdminConfig(config))}
+func NewAdminUserCommandService(
+	userRepo auth.UserRepository,
+	accountRepo identity.Repository,
+	hasher credential.PasswordHasher,
+	config AdminUserCommandConfig,
+) *AdminUserCommandService {
+	return &AdminUserCommandService{
+		adminUsers:  auth.NewAdminUserService(userRepo, auth.AdminConfig(config)),
+		accountRepo: accountRepo,
+		hasher:      hasher,
+	}
 }
 
 func (s *AdminUserCommandService) SuspendUserForDays(ctx context.Context, actor *auth.User, userID int, days int) error {
@@ -88,6 +101,43 @@ func (s *AdminUserCommandService) RevokeAdmin(ctx context.Context, actor *auth.U
 		Action:      audit.ActionAdminRevoke,
 		TargetType:  audit.TargetTypeUser,
 		TargetID:    strconv.Itoa(userID),
+	})
+	return nil
+}
+
+func (s *AdminUserCommandService) ResetPassword(ctx context.Context, actor *auth.User, userID int, newPassword string) error {
+	if strings.TrimSpace(newPassword) == "" {
+		return credential.ErrPasswordRequired
+	}
+
+	acct, err := s.accountRepo.FindByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if acct == nil {
+		return identity.ErrNotFound
+	}
+
+	passwordHash, err := s.hasher.Hash(newPassword)
+	if err != nil {
+		return err
+	}
+	hadPassword := acct.PasswordHash != ""
+	acct.PasswordHash = passwordHash
+	if err := s.accountRepo.Update(ctx, acct); err != nil {
+		return err
+	}
+
+	audit.EnqueueLog(ctx, audit.Log{
+		OccurredAt:  time.Now(),
+		ActorUserID: actor.ID,
+		Action:      audit.ActionUserPasswordReset,
+		TargetType:  audit.TargetTypeUser,
+		TargetID:    strconv.Itoa(userID),
+		Details: audit.Details{
+			"email":               acct.Email,
+			"had_password_before": hadPassword,
+		},
 	})
 	return nil
 }

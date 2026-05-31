@@ -1,6 +1,11 @@
 import { useState } from "react"
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
-import { RiLockLine, RiLockUnlockLine, RiSearchLine } from "@remixicon/react"
+import {
+  RiKey2Line,
+  RiLockLine,
+  RiLockUnlockLine,
+  RiSearchLine,
+} from "@remixicon/react"
 import { PaginationComponent } from "@/components/common/pagination"
 import { PointRecordList } from "@/components/point/point-record-list"
 import { ReviewList } from "@/components/review/review-list"
@@ -24,6 +29,7 @@ import {
   useAdminUserByEmail,
   useClearAdminUserSuspension,
   useGrantAdminUser,
+  useResetAdminUserPassword,
   useRevokeAdminUser,
   useSuspendAdminUser,
 } from "@/hooks/use-admin-user"
@@ -35,6 +41,11 @@ import { getErrorMessage, type FormSubmitEvent } from "./admin-utils"
 const reviewPageSize = 20
 const pointPageSize = 20
 const routeApi = getRouteApi("/app/admin/user")
+
+function defaultPasswordFromEmail(email: string, username: string) {
+  const source = email.split("@")[0] || username
+  return source.trim().toLowerCase()
+}
 
 interface AdminUserQueryTabProps {
   currentUserID: number
@@ -68,6 +79,8 @@ export function AdminUserQueryTab({
   const page = Math.max(1, search.page ?? 1)
   const [suspendDays, setSuspendDays] = useState(30)
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false)
+  const [resetDialogOpen, setResetDialogOpen] = useState(false)
+  const [resetPassword, setResetPassword] = useState("")
 
   const userQuery = useAdminUserByEmail(email)
   const selectedUser = userQuery.data
@@ -84,6 +97,7 @@ export function AdminUserQueryTab({
   const clearSuspensionMutation = useClearAdminUserSuspension()
   const grantAdminMutation = useGrantAdminUser()
   const revokeAdminMutation = useRevokeAdminUser()
+  const resetPasswordMutation = useResetAdminUserPassword()
 
   function handleSearch(event: FormSubmitEvent) {
     event.preventDefault()
@@ -136,11 +150,31 @@ export function AdminUserQueryTab({
     await revokeAdminMutation.mutateAsync(userID)
   }
 
+  function openResetPasswordDialog() {
+    if (!selectedUser) return
+    setResetPassword(
+      defaultPasswordFromEmail(selectedUser.email, selectedUser.username)
+    )
+    setResetDialogOpen(true)
+  }
+
+  async function confirmResetPassword(event: FormSubmitEvent) {
+    event.preventDefault()
+    if (!selectedUser) return
+
+    await resetPasswordMutation.mutateAsync({
+      userID: selectedUser.id,
+      cmd: { password: resetPassword },
+    })
+    setResetDialogOpen(false)
+  }
+
   const isMutating =
     suspendMutation.isPending ||
     clearSuspensionMutation.isPending ||
     grantAdminMutation.isPending ||
-    revokeAdminMutation.isPending
+    revokeAdminMutation.isPending ||
+    resetPasswordMutation.isPending
   const selectedUserIsAdmin = selectedUser?.is_admin() ?? false
   const selectedUserIsSuperAdmin = selectedUser?.is_super_admin() ?? false
   const selectedUserIsSelf = selectedUser?.id === currentUserID
@@ -211,6 +245,23 @@ export function AdminUserQueryTab({
                 <p>{formatDateTime(selectedUser.last_seen_at)}</p>
               </div>
               <div className="sm:col-span-2 lg:col-span-3">
+                <p className="text-muted-foreground">密码</p>
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <Badge
+                    variant={
+                      selectedUser.password_hash ? "secondary" : "outline"
+                    }
+                  >
+                    {selectedUser.password_hash ? "已设置" : "未设置"}
+                  </Badge>
+                  {selectedUser.password_hash ? (
+                    <span className="max-w-full font-mono text-xs break-all text-muted-foreground">
+                      {selectedUser.password_hash}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+              <div className="sm:col-span-2 lg:col-span-3">
                 <p className="text-muted-foreground">封禁状态</p>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
                   <Badge
@@ -258,6 +309,71 @@ export function AdminUserQueryTab({
                   授予 admin
                 </Button>
               )}
+
+              {currentUserIsSuperAdmin && !selectedUserIsSelf ? (
+                <Dialog
+                  open={resetDialogOpen}
+                  onOpenChange={setResetDialogOpen}
+                >
+                  <DialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={openResetPasswordDialog}
+                      disabled={isMutating}
+                    >
+                      <RiKey2Line />
+                      重置密码
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <form onSubmit={confirmResetPassword} className="space-y-6">
+                      <DialogHeader>
+                        <DialogTitle>重置密码</DialogTitle>
+                        <DialogDescription>
+                          用户 {selectedUser.id} 的密码会被立即改为下方内容。
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="reset-password">新密码</Label>
+                        <Input
+                          id="reset-password"
+                          type="text"
+                          value={resetPassword}
+                          onChange={(event) =>
+                            setResetPassword(event.target.value)
+                          }
+                          autoFocus
+                        />
+                      </div>
+
+                      {resetPasswordMutation.isError ? (
+                        <p className="text-sm text-destructive">
+                          {getErrorMessage(resetPasswordMutation.error)}
+                        </p>
+                      ) : null}
+
+                      <DialogFooter>
+                        <DialogClose asChild>
+                          <Button type="button" variant="outline">
+                            取消
+                          </Button>
+                        </DialogClose>
+                        <Button
+                          type="submit"
+                          disabled={
+                            resetPasswordMutation.isPending ||
+                            resetPassword.trim() === ""
+                          }
+                        >
+                          确认重置
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              ) : null}
 
               {!selectedUserIsSelf &&
                 (selectedUserIsAdmin ? (
@@ -348,7 +464,8 @@ export function AdminUserQueryTab({
                 <h2 className="text-lg font-medium">积分记录</h2>
                 {pointsQuery.data ? (
                   <p className="mt-1 text-sm text-muted-foreground">
-                    当前 {pointsQuery.data.total} 分，共 {pointsQuery.data.records.total} 条记录
+                    当前 {pointsQuery.data.total} 分，共{" "}
+                    {pointsQuery.data.records.total} 条记录
                   </p>
                 ) : null}
               </div>
@@ -365,7 +482,9 @@ export function AdminUserQueryTab({
                 {getErrorMessage(pointsQuery.error)}
               </p>
             ) : (
-              <PointRecordList records={pointsQuery.data?.records.items ?? []} />
+              <PointRecordList
+                records={pointsQuery.data?.records.items ?? []}
+              />
             )}
           </div>
 

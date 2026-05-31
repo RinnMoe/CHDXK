@@ -178,6 +178,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		adminUserGroup.GET("/by-email", adminUserController.GetUserByEmail)
 		adminUserGroup.PUT("/:userID/suspension", adminUserController.SuspendUser)
 		adminUserGroup.DELETE("/:userID/suspension", adminUserController.ClearSuspension)
+		adminUserGroup.PUT("/:userID/password", middleware.RequireSuperAdmin(), adminUserController.ResetPassword)
 		adminUserGroup.PUT("/:userID/admin", middleware.RequireSuperAdmin(), adminUserController.GrantAdmin)
 		adminUserGroup.DELETE("/:userID/admin", middleware.RequireSuperAdmin(), adminUserController.RevokeAdmin)
 	}

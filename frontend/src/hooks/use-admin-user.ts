@@ -4,14 +4,21 @@ import {
   getAdminUserByEmail,
   grantAdminUser,
   listAdminUsers,
+  resetAdminUserPassword,
   revokeAdminUser,
   suspendAdminUser,
+  type ResetAdminUserPasswordCommand,
   type SuspendAdminUserCommand,
 } from "@/api/admin-user"
 
 type SuspendAdminUserVariables = {
   userID: number
   cmd?: SuspendAdminUserCommand
+}
+
+type ResetAdminUserPasswordVariables = {
+  userID: number
+  cmd: ResetAdminUserPasswordCommand
 }
 
 export function useAdminUserByEmail(email: string) {
@@ -71,6 +78,18 @@ export function useRevokeAdminUser() {
 
   return useMutation({
     mutationFn: revokeAdminUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-user"] })
+    },
+  })
+}
+
+export function useResetAdminUserPassword() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ userID, cmd }: ResetAdminUserPasswordVariables) =>
+      resetAdminUserPassword(userID, cmd),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-user"] })
     },

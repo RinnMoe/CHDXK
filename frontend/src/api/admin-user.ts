@@ -11,6 +11,7 @@ export interface AdminUserDTO {
   suspended: boolean
   suspended_at?: string
   suspend_till?: string
+  password_hash?: string
   is_admin: () => boolean
   is_super_admin: () => boolean
 }
@@ -69,5 +70,19 @@ export function grantAdminUser(userID: number): Promise<{ message: string }> {
 export function revokeAdminUser(userID: number): Promise<{ message: string }> {
   return apiClient(`${BASE_URL}/admin/user/${userID}/admin`, {
     method: "DELETE",
+  })
+}
+
+export interface ResetAdminUserPasswordCommand {
+  password: string
+}
+
+export function resetAdminUserPassword(
+  userID: number,
+  cmd: ResetAdminUserPasswordCommand
+): Promise<{ message: string }> {
+  return apiClient(`${BASE_URL}/admin/user/${userID}/password`, {
+    method: "PUT",
+    body: JSON.stringify(cmd),
   })
 }
