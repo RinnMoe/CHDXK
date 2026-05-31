@@ -50,7 +50,7 @@ func (imp *Importer) Run(ctx context.Context, rows []CSVRow) error {
 	}
 
 	logx.Info(ctx, "refreshing course search vectors")
-	if err := repository.RefreshCourseSearchVectors(imp.db); err != nil {
+	if err := repository.RefreshCourseSearchVectors(imp.db, imp.semester); err != nil {
 		return err
 	}
 

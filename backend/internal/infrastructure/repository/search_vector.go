@@ -78,9 +78,9 @@ func TeacherSearchVectorExpr(config, code, searchName string) clause.Expr {
 	}
 }
 
-func RefreshCourseSearchVectors(db *gorm.DB) error {
+func RefreshCourseSearchVectors(db *gorm.DB, semesters ...string) error {
 	config := SearchConfig(db)
-	return db.Exec(`
+	query := `
 		UPDATE courses AS c
 		SET search_vector =
 			setweight(to_tsvector(?::regconfig, coalesce(c.name, '')), 'A') ||
@@ -88,7 +88,13 @@ func RefreshCourseSearchVectors(db *gorm.DB) error {
 			setweight(to_tsvector(?::regconfig, coalesce(t.name, '')), 'B')
 		FROM teachers AS t
 		WHERE c.main_teacher_id = t.id
-	`, config, config).Error
+	`
+	args := []any{config, config}
+	if len(semesters) > 0 {
+		query += "\n\t\tAND c.last_semester IN ?"
+		args = append(args, semesters)
+	}
+	return db.Exec(query, args...).Error
 }
 
 func RefreshReviewSearchVectors(db *gorm.DB) error {
