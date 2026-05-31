@@ -2,8 +2,8 @@ import { useState } from "react"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { useForm } from "@tanstack/react-form"
 import { EmailPrefixInput } from "@/components/auth/email-prefix-input"
+import { PasswordInput } from "@/components/auth/password-input"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CodeInputWithButton } from "./code-button"
@@ -133,9 +133,8 @@ export function PasswordResetForm() {
               return (
                 <div className="space-y-2">
                   <Label htmlFor="password">新密码</Label>
-                  <Input
+                  <PasswordInput
                     id="password"
-                    type="password"
                     placeholder="至少 10 位，含字母/数字/符号"
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
@@ -176,9 +175,8 @@ export function PasswordResetForm() {
               return (
                 <div className="space-y-2">
                   <Label htmlFor="confirm-password">确认密码</Label>
-                  <Input
+                  <PasswordInput
                     id="confirm-password"
-                    type="password"
                     placeholder="再次输入密码"
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}

@@ -2,8 +2,8 @@ import { useState } from "react"
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router"
 import { useForm } from "@tanstack/react-form"
 import { EmailPrefixInput } from "@/components/auth/email-prefix-input"
+import { PasswordInput } from "@/components/auth/password-input"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { buildAuthEmail } from "@/config/auth"
@@ -105,9 +105,8 @@ export function LoginForm() {
                       忘记或未设密码？
                     </Link>
                   </div>
-                  <Input
+                  <PasswordInput
                     id="password"
-                    type="password"
                     placeholder="选课社区密码，非 jAccount 密码"
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
