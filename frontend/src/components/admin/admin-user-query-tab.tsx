@@ -5,10 +5,23 @@ import {
   RiLockLine,
   RiLockUnlockLine,
   RiSearchLine,
+  RiShieldCrossLine,
+  RiShieldUserLine,
 } from "@remixicon/react"
 import { PaginationComponent } from "@/components/common/pagination"
 import { PointRecordList } from "@/components/point/point-record-list"
 import { ReviewList } from "@/components/review/review-list"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -291,23 +304,65 @@ export function AdminUserQueryTab({
                   需要超级管理员权限
                 </p>
               ) : selectedUserIsAdmin ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => revokeAdmin(selectedUser.id)}
-                  disabled={isMutating}
-                >
-                  撤销权限
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:hover:bg-destructive/20"
+                      disabled={isMutating}
+                    >
+                      <RiShieldCrossLine />
+                      撤销权限
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent size="sm">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>撤销管理员权限</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        撤销 {selectedUser.username} 的管理员权限。
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>取消</AlertDialogCancel>
+                      <AlertDialogAction
+                        variant="destructive"
+                        onClick={() => {
+                          void revokeAdmin(selectedUser.id)
+                        }}
+                      >
+                        撤销
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={grantAdmin}
-                  disabled={isMutating}
-                >
-                  授予 admin
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button type="button" variant="outline" disabled={isMutating}>
+                      <RiShieldUserLine />
+                      授予 admin
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent size="sm">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>授予管理员权限</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        授予 {selectedUser.username} 管理员权限。
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>取消</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => {
+                          void grantAdmin()
+                        }}
+                      >
+                        授予
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               )}
 
               {currentUserIsSuperAdmin && !selectedUserIsSelf ? (

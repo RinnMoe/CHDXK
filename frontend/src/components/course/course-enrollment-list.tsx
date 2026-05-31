@@ -101,13 +101,12 @@ export function CourseEnrollmentList({
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
-                    variant="destructive"
-                    size="sm"
-                    className="size-8 px-0 md:w-auto md:px-2.5"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="hover:bg-destructive/10 hover:text-destructive focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:hover:bg-destructive/20"
                     aria-label="删除选课记录"
                   >
                     <RiDeleteBinLine />
-                    <span className="hidden md:inline">删除</span>
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent size="sm">
