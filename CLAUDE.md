@@ -64,7 +64,7 @@ infrastructure/ persistence (gorm + redis), repository (gorm impls), smtp, jacco
 interface/web   Gin controllers, middleware, router
 interface/async Asynq task handler registration
 app/container.go  manual DI wiring
-cmd/{api,taskworker,importer,migrate_v1}  entrypoints
+cmd/{api,taskworker,importer}  entrypoints
 ```
 
 **Key patterns:**

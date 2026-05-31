@@ -13,7 +13,6 @@ go test -tags test ./internal/infrastructure/repository -run TestX   # repositor
 go run cmd/api/main.go --config config/config.yaml                   # API (:8080)
 go run cmd/taskworker/main.go --config config/config.yaml            # async worker (Asynq)
 go run cmd/importer/main.go --config config/config.yaml --semester 2025-2026-1
-go run cmd/migrate_v1/main.go --config config/config.yaml            # legacy v1 → v2 data migration
 ```
 
 **Always pass `-tags test` to `go test` and `go vet`.** Shared repository mocks live in `internal/domain/*/testutil.go` files guarded by `//go:build test`; without the tag, code that imports them fails to compile.
@@ -33,7 +32,6 @@ cmd/
   api/          HTTP server entrypoint
   taskworker/   Asynq worker; SIGINT/SIGTERM graceful shutdown
   importer/     CSV course importer (data/<semester>.csv)
-  migrate_v1/   one-shot data migration from the v1 schema
 config/         AppConfig types + Viper loader (JCOURSE_ env override)
 script/         four-digit numbered up/down SQL migrations (0001_, 0002_, 0003_, ...)
 internal/

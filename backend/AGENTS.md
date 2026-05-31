@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This directory is the Go backend for `jcourse`. Entrypoints live in `cmd/api` for the HTTP server, `cmd/taskworker` for the Asynq worker and schedulers, `cmd/importer` for course CSV import jobs, and `cmd/migrate_v1` for the legacy v1 data migration tool. Configuration loading is in `config/`, with a template at `config/config.example.yaml`. Core code follows a clean/hexagonal layout under `internal/`: `domain/` defines models, policy, repository/query interfaces, and test mocks; `application/` contains use-case services, commands, queries, DTOs, and templates; `infrastructure/` contains Gorm repositories, Redis persistence, SMTP, JAccount, moderation, and Asynq adapters; `interface/web` contains Gin routes, controllers, and middleware; `interface/async` registers task handlers. Shared backend helpers live in `pkg/`. SQL migrations are in `script/`, starting with `0001_schema_pgsql.up.sql`.
+This directory is the Go backend for `jcourse`. Entrypoints live in `cmd/api` for the HTTP server, `cmd/taskworker` for the Asynq worker and schedulers, and `cmd/importer` for course CSV import jobs. Configuration loading is in `config/`, with a template at `config/config.example.yaml`. Core code follows a clean/hexagonal layout under `internal/`: `domain/` defines models, policy, repository/query interfaces, and test mocks; `application/` contains use-case services, commands, queries, DTOs, and templates; `infrastructure/` contains Gorm repositories, Redis persistence, SMTP, JAccount, moderation, and Asynq adapters; `interface/web` contains Gin routes, controllers, and middleware; `interface/async` registers task handlers. Shared backend helpers live in `pkg/`. SQL migrations are in `script/`, starting with `0001_schema_pgsql.up.sql`.
 
 ## Build, Test, and Development Commands
 
@@ -14,7 +14,6 @@ This directory is the Go backend for `jcourse`. Entrypoints live in `cmd/api` fo
 - `go run cmd/api/main.go --config config/config.yaml` starts the API server.
 - `go run cmd/taskworker/main.go --config config/config.yaml` starts the async worker.
 - `go run cmd/importer/main.go --target-dsn "$TARGET_DSN" --semester 2025-2026-1` runs the importer for `data/<semester>.csv`.
-- `go run cmd/migrate_v1/main.go --source-dsn "$SOURCE_DSN" --target-dsn "$TARGET_DSN"` runs the legacy v1 data migration tool; it writes its checkpoint to `data/migrate_v1.checkpoint.json` by default, unless `--state-file` is provided.
 
 Create `config/config.yaml` from `config/config.example.yaml` for local runs. Override config with `JCOURSE_` environment variables, for example `JCOURSE_SERVER_ADDR=:9090`.
 
