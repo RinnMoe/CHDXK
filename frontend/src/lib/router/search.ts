@@ -22,6 +22,12 @@ export function positiveIntParam(value: unknown, fallback = 1): number {
   return Math.max(1, Math.trunc(number))
 }
 
+export function optionalPositiveIntParam(value: unknown): number | undefined {
+  const number = numberParam(value)
+  if (!number) return undefined
+  return Math.max(1, Math.trunc(number))
+}
+
 export function stringArrayParam(value: unknown): string[] | undefined {
   const values = Array.isArray(value) ? value : value === undefined ? [] : [value]
   const strings = values

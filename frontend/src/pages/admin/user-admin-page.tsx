@@ -23,8 +23,9 @@ export function UserAdminPage() {
   const activeTab = getAdminTab(search.tab ?? null)
 
   function setActiveTab(tab: string) {
+    const nextTab = getAdminTab(tab)
     void navigate({
-      search: (prev) => ({ ...prev, tab: getAdminTab(tab) }),
+      search: (prev) => ({ ...prev, tab: nextTab }),
       replace: true,
       resetScroll: false,
     })

@@ -15,7 +15,7 @@ import { getSafeRedirectPath } from "@/lib/auth-redirect"
 import {
   enumParam,
   numberParam,
-  positiveIntParam,
+  optionalPositiveIntParam,
   rawStringParam,
   stringArrayParam,
   stringParam,
@@ -392,7 +392,7 @@ export const userAdminRoute = createRoute({
     audit_start_time: rawStringParam(search.audit_start_time),
     audit_end_time: rawStringParam(search.audit_end_time),
     audit_action: rawStringParam(search.audit_action),
-    audit_actor_user_id: positiveIntParam(search.audit_actor_user_id, 0),
+    audit_actor_user_id: optionalPositiveIntParam(search.audit_actor_user_id),
   }),
   component: lazyRouteComponent(
     () => import("@/pages/admin/user-admin-page"),

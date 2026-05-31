@@ -79,6 +79,10 @@ export function AuditLogsTab() {
     const nextEnd = String(formData.get("end_time") ?? "")
     const nextActor = String(formData.get("actor_user_id") ?? "").trim()
     const nextActorID = Number(nextActor)
+    const nextActorUserID =
+      nextActor && Number.isFinite(nextActorID) && nextActorID > 0
+        ? Math.trunc(nextActorID)
+        : undefined
     void navigate({
       search: (prev) => ({
         ...prev,
@@ -86,9 +90,7 @@ export function AuditLogsTab() {
         audit_page: 1,
         audit_start_time: nextStart || undefined,
         audit_end_time: nextEnd || undefined,
-        audit_actor_user_id: Number.isFinite(nextActorID)
-          ? nextActorID
-          : undefined,
+        audit_actor_user_id: nextActorUserID,
       }),
       replace: true,
       resetScroll: false,
