@@ -13,7 +13,6 @@ import (
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/review/policy"
 	"jcourse/internal/infrastructure/jaccount"
-	"jcourse/internal/infrastructure/moderation"
 	"jcourse/internal/infrastructure/persistence"
 	"jcourse/internal/infrastructure/repository"
 	"jcourse/internal/infrastructure/smtp"
@@ -78,15 +77,12 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	reviewQuery := application.NewReviewQueryService(reviewRepo, voteRepo, notificationRepo)
 
 	freqPolicy := policy.NewFrequencyPolicy(reviewRepo, conf.Review.FrequencyPolicy)
-	moderator, _ := moderation.NewAliyunGreenModerator(conf.Review.SafetyPolicy)
-	safetyPolicy := policy.NewSafetyPolicy(moderator)
-
 	reviewCommand := application.NewReviewCommandService(
 		courseRepo,
 		reviewRepo,
 		voteRepo,
 		conf.Review.Command,
-		[]review.CreatePolicy{freqPolicy, safetyPolicy},
+		[]review.CreatePolicy{freqPolicy},
 	)
 	courseHotService := course.NewCourseHotService(courseHotRepo, conf.Review.Command.HotScores)
 	courseService := course.NewService(courseRepo)
