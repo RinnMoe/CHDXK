@@ -48,14 +48,14 @@ func applyCourseSearchChainFilter[T any](db gorm.ChainInterface[T], config, q st
 		return db
 	}
 	nameLike := "%" + query + "%"
-	prefixQuery := strings.ToLower(query) + ":*"
+	codeLike := "%" + query + "%"
 	return db.Where(
 		`(courses.search_vector @@ websearch_to_tsquery(?::regconfig, ?)
-			OR courses.search_vector @@ to_tsquery('simple', ?)
+			OR courses.code ILIKE ?
 			OR courses.name ILIKE ?)`,
 		config,
 		query,
-		prefixQuery,
+		codeLike,
 		nameLike,
 	)
 }
