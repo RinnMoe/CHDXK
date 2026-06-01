@@ -152,6 +152,24 @@ func TestCourseRepository_FindBy(t *testing.T) {
 		}
 	})
 
+	t.Run("search by q course code with symbols", func(t *testing.T) {
+		symbolCode := seedCourseRaw(t, db, "CS-10:3", "带符号课程代码", 2.0, "计算机学院", t1.ID, "zh", []string{"选修课"}, []string{"2023"})
+		t.Cleanup(func() {
+			_ = db.Delete(&repository.CourseEntity{}, symbolCode.ID).Error
+		})
+
+		results, total, err := repo.FindBy(ctx, course.CourseFilter{Q: "CS-10:"})
+		if err != nil {
+			t.Fatalf("FindBy: %v", err)
+		}
+		if total != 1 {
+			t.Errorf("total: got %d, want 1", total)
+		}
+		if len(results) == 0 || results[0].Code != "CS-10:3" {
+			t.Errorf("Code: got %v, want CS-10:3", results)
+		}
+	})
+
 	t.Run("search by q teacher name", func(t *testing.T) {
 		results, total, err := repo.FindBy(ctx, course.CourseFilter{Q: "张三"})
 		if err != nil {
@@ -495,9 +513,10 @@ func TestRefreshCourseSearchVectorsWithSemester(t *testing.T) {
 
 	cleanTables(t, db, "courses", "teachers", "reviews")
 
-	teacher := seedTeacher(t, db)
-	current := seedCourseRaw(t, db, "CUR101", "当前学期课程", 3.0, "测试学院", teacher.ID, "zh", []string{"核心课"}, []string{"2025"})
-	previous := seedCourseRaw(t, db, "OLD101", "历史学期课程", 3.0, "测试学院", teacher.ID, "zh", []string{"核心课"}, []string{"2024"})
+	currentTeacher := seedTeacherRaw(t, db, "T-CURRENT", "当前老师", "测试学院", "教授")
+	previousTeacher := seedTeacherRaw(t, db, "T-PREVIOUS", "历史老师", "测试学院", "教授")
+	current := seedCourseRaw(t, db, "CUR101", "当前学期课程", 3.0, "测试学院", currentTeacher.ID, "zh", []string{"核心课"}, []string{"2025"})
+	previous := seedCourseRaw(t, db, "OLD101", "历史学期课程", 3.0, "测试学院", previousTeacher.ID, "zh", []string{"核心课"}, []string{"2024"})
 	if err := db.Model(&repository.CourseEntity{}).
 		Where("id = ?", current.ID).
 		Update("last_semester", "2025-2026-1").Error; err != nil {
@@ -513,7 +532,7 @@ func TestRefreshCourseSearchVectorsWithSemester(t *testing.T) {
 		t.Fatalf("refresh course search vectors: %v", err)
 	}
 
-	results, total, err := repo.FindBy(ctx, course.CourseFilter{Q: "CUR101"})
+	results, total, err := repo.FindBy(ctx, course.CourseFilter{Q: "当前老师"})
 	if err != nil {
 		t.Fatalf("FindBy current course: %v", err)
 	}
@@ -521,7 +540,7 @@ func TestRefreshCourseSearchVectorsWithSemester(t *testing.T) {
 		t.Fatalf("current search results: total=%d results=%+v, want only %d", total, results, current.ID)
 	}
 
-	results, total, err = repo.FindBy(ctx, course.CourseFilter{Q: "OLD101"})
+	results, total, err = repo.FindBy(ctx, course.CourseFilter{Q: "历史老师"})
 	if err != nil {
 		t.Fatalf("FindBy previous course: %v", err)
 	}
