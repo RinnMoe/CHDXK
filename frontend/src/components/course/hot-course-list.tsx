@@ -14,10 +14,10 @@ interface HotCourseListProps {
 
 function HotCourseHeader() {
   return (
-    <div className="flex items-center gap-2 border-b px-4 py-2 text-sm font-medium text-muted-foreground">
-      <span className="w-8 shrink-0 whitespace-nowrap text-center">排名</span>
-      <span className="min-w-0 flex-1 pl-4">课程</span>
-      <span className="w-12 shrink-0 text-right">热度</span>
+    <div className="flex items-center gap-1 border-b px-3 py-2 text-sm font-medium text-muted-foreground">
+      <span className="w-7 shrink-0 whitespace-nowrap text-center">排名</span>
+      <span className="min-w-0 flex-1 pl-2">课程</span>
+      <span className="w-10 shrink-0 text-right">热度</span>
     </div>
   )
 }
@@ -27,8 +27,8 @@ function HotCourseSkeleton({ count }: { count: number }) {
     <div>
       <HotCourseHeader />
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="flex items-center gap-2 border-b px-4 py-3">
-          <Skeleton className="h-6 w-8 shrink-0" />
+        <div key={i} className="flex items-center gap-1 border-b px-3 py-3">
+          <Skeleton className="h-6 w-7 shrink-0" />
           <div className="min-w-0 flex-1 space-y-2">
             <Skeleton className="h-3 w-24" />
             <Skeleton className="h-4 w-3/4" />
@@ -69,18 +69,18 @@ export function HotCourseList({
     <div>
       <HotCourseHeader />
       {items.map((item, i) => (
-        <div key={item.course.id} className="flex items-center gap-2 border-b">
+        <div key={item.course.id} className="flex items-center gap-1 border-b">
           <span
-            className={`ml-4 w-8 shrink-0 text-center text-sm font-bold ${
+            className={`ml-3 w-7 shrink-0 text-center text-sm font-bold ${
               i < 3 ? "text-amber-500" : "text-muted-foreground"
             }`}
           >
             {i + 1}
           </span>
           <div className="min-w-0 flex-1">
-            <CourseCompactCard course={item.course} />
+            <CourseCompactCard course={item.course} dense bordered={false} />
           </div>
-          <div className="w-12 shrink-0 pr-4 text-right text-sm font-medium text-muted-foreground">
+          <div className="w-10 shrink-0 pr-3 text-right text-sm font-medium text-muted-foreground">
             {item.score}
           </div>
         </div>

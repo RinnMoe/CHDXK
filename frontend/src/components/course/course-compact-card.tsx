@@ -2,18 +2,28 @@ import { Link } from "@tanstack/react-router"
 import { RatingDisplay } from "./rating-display"
 import { TitleBadge } from "@/components/ui/title-badge"
 import type { CourseListItemDTO } from "@/api/course"
-import { displayTeacherTitle } from "@/lib/utils"
+import { cn, displayTeacherTitle } from "@/lib/utils"
 
 interface CourseCompactCardProps {
   course: CourseListItemDTO
+  dense?: boolean
+  bordered?: boolean
 }
 
-export function CourseCompactCard({ course }: CourseCompactCardProps) {
+export function CourseCompactCard({
+  course,
+  dense = false,
+  bordered = true,
+}: CourseCompactCardProps) {
   return (
     <Link
       to="/course/$courseID"
       params={{ courseID: String(course.id) }}
-      className="flex items-center gap-4 border-b px-4 py-3 transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      className={cn(
+        "flex items-center transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+        dense ? "gap-2 px-2 py-2.5" : "gap-4 px-4 py-3",
+        bordered && "border-b"
+      )}
     >
       <div className="min-w-0 flex-1 space-y-2">
         <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">

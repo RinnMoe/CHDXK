@@ -309,7 +309,11 @@ export function ReviewCard({
               {review.course.code}
             </span>
             <span className="font-semibold">{review.course.name}</span>
-            <span className="text-sm text-muted-foreground">
+            <span
+              className={`text-sm text-muted-foreground ${
+                review.course.main_teacher.name.length >= 3 ? "min-w-[3em]" : ""
+              }`}
+            >
               {review.course.main_teacher.name}
             </span>
           </Link>

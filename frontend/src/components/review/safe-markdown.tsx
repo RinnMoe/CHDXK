@@ -89,7 +89,7 @@ function remarkReviewReferences() {
 
 const markdownComponents: Components = {
   hr() {
-    return <hr className="my-0" />
+    return <hr />
   },
   a({ href, children, title }) {
     if (href?.startsWith("/review/")) {

@@ -222,6 +222,10 @@
     border-collapse: collapse;
     width: 100%;
   }
+  .prose hr {
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
   .prose th,
   .prose td {
     border: 1px solid var(--color-border);
