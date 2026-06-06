@@ -42,7 +42,7 @@ const defaultConfig = {
   expect429: false,
 };
 
-const configFilePath = envString("CONFIG_FILE", "backend/loadtest/loadtest.config.json");
+const configFilePath = envString("CONFIG_FILE", "loadtest.config.json");
 const fileConfig = readConfigFile(configFilePath);
 const config = normalizeConfig({ ...defaultConfig, ...fileConfig.values, ...envConfig() });
 
