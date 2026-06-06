@@ -97,10 +97,7 @@ func (s *LoginService) recordFailure(ctx context.Context, email string) error {
 	if err != nil {
 		return security.ErrInvalidCredentials
 	}
-	remaining := s.config.MaxAttempts - count
-	if remaining < 0 {
-		remaining = 0
-	}
+	remaining := max(s.config.MaxAttempts-count, 0)
 	msg := fmt.Sprintf("邮箱或密码错误，还有 %d 次尝试机会", remaining)
 	return fmt.Errorf("%w: %w", apperr.Unauthorized(msg), security.ErrInvalidCredentials)
 }

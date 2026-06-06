@@ -68,12 +68,12 @@ func TestUserRateLimiterSkipsAdmins(t *testing.T) {
 		c.String(http.StatusOK, "ok")
 	})
 
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		if code := performRateLimitRequestWithUser(r, &auth.User{ID: 1, Role: auth.RoleAdmin}); code != http.StatusOK {
 			t.Fatalf("admin request %d status = %d, want %d", i+1, code, http.StatusOK)
 		}
 	}
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		if code := performRateLimitRequestWithUser(r, &auth.User{ID: 2, Role: auth.RoleSuperAdmin}); code != http.StatusOK {
 			t.Fatalf("super admin request %d status = %d, want %d", i+1, code, http.StatusOK)
 		}
@@ -91,7 +91,7 @@ func TestUserRateLimiterSkipsSystemUser(t *testing.T) {
 		c.String(http.StatusOK, "ok")
 	})
 
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		if code := performRateLimitRequestWithUser(r, &auth.User{Role: auth.RoleSystem}); code != http.StatusOK {
 			t.Fatalf("system request %d status = %d, want %d", i+1, code, http.StatusOK)
 		}

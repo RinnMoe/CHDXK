@@ -79,6 +79,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	accountController := controller.NewAccountController(container.AccountCommand, container.AccountQuery)
 	apiKeyController := controller.NewApiKeyController(container.ApiKeyQuery, container.ApiKeyCommand)
 	userSettingsController := controller.NewUserSettingsController(container.UserSettingsQuery, container.UserSettingsCommand)
+	systemSettingsController := controller.NewSystemSettingsController(container.SystemSettingsQuery, container.SystemSettingsCommand)
 	siteStatsController := controller.NewSiteStatsController(container.SiteStatsQuery)
 	announcementController := controller.NewAnnouncementController(container.AnnouncementQuery)
 	adminUserController := controller.NewAdminUserController(container.AdminUserQuery, container.AdminUserCommand)
@@ -167,6 +168,10 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		pointGroup.POST("/transfer/preview", pointController.PreviewTransfer)
 		pointGroup.POST("/transfer", pointController.CreateTransfer)
 	}
+	systemSettingsGroup := apiGroup.Group("/system-settings")
+	{
+		systemSettingsGroup.GET("", systemSettingsController.List)
+	}
 	siteStatsGroup := apiGroup.Group("/site-stat", middleware.RequireAdmin())
 	{
 		siteStatsGroup.GET("/daily/:date", siteStatsController.GetByDate)
@@ -187,6 +192,10 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		adminApiKeyGroup.GET("/system", apiKeyController.ListSystemApiKeys)
 		adminApiKeyGroup.POST("/system", apiKeyController.CreateSystemApiKey)
 		adminApiKeyGroup.DELETE("/system/:apiKeyID", apiKeyController.DeleteSystemApiKey)
+	}
+	adminSystemSettingsGroup := apiGroup.Group("/admin/system-settings", middleware.RequireAdmin())
+	{
+		adminSystemSettingsGroup.PUT("/:key", systemSettingsController.Update)
 	}
 	adminAuditGroup := apiGroup.Group("/admin/audit-log", middleware.RequireAdmin())
 	{

@@ -59,7 +59,7 @@ export type TeacherDetailSearch = PageSearch & {
   order_by?: "rating_score" | "rating_count"
 }
 export type UserAdminSearch = {
-  tab?: "user" | "admin" | "system-api-key" | "audit-log"
+  tab?: "user" | "admin" | "system-api-key" | "system-settings" | "audit-log"
   email?: string
   page?: number
   audit_page?: number
@@ -81,7 +81,11 @@ function buildLoginRedirectPath(path: string) {
   return `/login?${new URLSearchParams({ redirect: path }).toString()}`
 }
 
-function currentPath(location: { pathname: string; searchStr: string; hash: string }) {
+function currentPath(location: {
+  pathname: string
+  searchStr: string
+  hash: string
+}) {
   return `${location.pathname}${location.searchStr}${location.hash}`
 }
 
@@ -151,7 +155,10 @@ export const loginRoute = createRoute({
       : undefined,
   }),
   beforeLoad: redirectAuthedUser,
-  component: lazyRouteComponent(() => import("@/pages/login-page"), "LoginPage"),
+  component: lazyRouteComponent(
+    () => import("@/pages/login-page"),
+    "LoginPage"
+  ),
 })
 
 export const registerRoute = createRoute({
@@ -177,7 +184,9 @@ export const passwordResetRoute = createRoute({
 export const courseEnrollmentSyncCallbackRoute = createRoute({
   getParentRoute: () => publicRoute,
   path: "/course/mine/sync-callback",
-  validateSearch: (search: SearchRecord): CourseEnrollmentSyncCallbackSearch => ({
+  validateSearch: (
+    search: SearchRecord
+  ): CourseEnrollmentSyncCallbackSearch => ({
     status: enumParam(search.status, ["ok", "error"] as const) ?? "error",
     semester: rawStringParam(search.semester) ?? "",
     message: rawStringParam(search.message),
@@ -384,6 +393,7 @@ export const userAdminRoute = createRoute({
       "user",
       "admin",
       "system-api-key",
+      "system-settings",
       "audit-log",
     ] as const),
     email: rawStringParam(search.email),
@@ -416,7 +426,10 @@ export const siteStatsRoute = createRoute({
 export const aboutRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/about",
-  component: lazyRouteComponent(() => import("@/pages/about-page"), "AboutPage"),
+  component: lazyRouteComponent(
+    () => import("@/pages/about-page"),
+    "AboutPage"
+  ),
 })
 
 export const faqRoute = createRoute({

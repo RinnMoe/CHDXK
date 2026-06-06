@@ -109,3 +109,25 @@ func TestUserSettingsService_UpdateCurrentSemesterRejectsInvalid(t *testing.T) {
 		t.Fatalf("error = %v, want %v", err, ErrInvalidCurrentSemester)
 	}
 }
+
+func TestSystemSettingsService_SaveRejectsUnregisteredKey(t *testing.T) {
+	svc := NewSystemSettingsService(NewMockSystemRepository())
+
+	_, err := svc.Save(context.Background(), "unknown", "value")
+	if !errors.Is(err, ErrInvalidSystemSettingKey) {
+		t.Fatalf("error = %v, want %v", err, ErrInvalidSystemSettingKey)
+	}
+}
+
+func TestSystemSettingsService_SaveRegisteredKeyWithoutValidator(t *testing.T) {
+	repo := NewMockSystemRepository()
+	svc := NewSystemSettingsService(repo)
+
+	got, err := svc.Save(context.Background(), SystemSettingKeyCurrentSemester, "2025-2026-2")
+	if err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+	if got.Key != SystemSettingKeyCurrentSemester || got.Value != "2025-2026-2" {
+		t.Fatalf("setting = %+v", got)
+	}
+}

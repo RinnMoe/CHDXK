@@ -146,6 +146,17 @@ func (UserSettingsEntity) TableName() string {
 	return "user_settings"
 }
 
+type SystemSettingsEntity struct {
+	Key       string    `gorm:"column:key;primaryKey"`
+	Value     string    `gorm:"column:value"`
+	CreatedAt time.Time `gorm:"column:created_at"`
+	UpdatedAt time.Time `gorm:"column:updated_at"`
+}
+
+func (SystemSettingsEntity) TableName() string {
+	return "system_settings"
+}
+
 type UserPointRecordEntity struct {
 	ID          int       `gorm:"column:id"`
 	UserID      int       `gorm:"column:user_id;index"`

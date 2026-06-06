@@ -45,6 +45,7 @@ const actionOptions = [
   { value: "admin.revoke", label: "撤回管理员" },
   { value: "system_api_key.create", label: "新增系统 API Key" },
   { value: "system_api_key.delete", label: "删除系统 API Key" },
+  { value: "system_settings.update", label: "修改系统设置" },
   { value: "review.update", label: "修改点评" },
   { value: "review.delete", label: "删除点评" },
   { value: "review.moderator_remark.update", label: "修改管理备注" },

@@ -12,9 +12,16 @@ import { CourseHeaderMeta } from "@/components/course/course-header-meta"
 import { ReviewForm } from "@/components/review/review-form"
 import { useCourseDetail } from "@/hooks/use-course"
 import { useCreateReview } from "@/hooks/use-review"
-import { useUserSettings } from "@/hooks/use-user-settings"
+import {
+  getCurrentSemesterSetting,
+  useSystemSettings,
+} from "@/hooks/use-system-settings"
 import { useAuth } from "@/contexts/auth-context"
-import { getCourseSemesters, getDefaultSemester } from "@/lib/course-semesters"
+import {
+  filterSemestersUpTo,
+  getCourseSemesters,
+  getDefaultSemester,
+} from "@/lib/course-semesters"
 import type { CreateReviewCommand, UpdateReviewCommand } from "@/api/review"
 
 const routeApi = getRouteApi("/app/course/$courseID/review/new")
@@ -26,13 +33,13 @@ export function NewReviewPage() {
   const router = useRouter()
   const { user } = useAuth()
   const { data: course } = useCourseDetail(id)
-  const settingsQuery = useUserSettings(!!user)
+  const systemSettingsQuery = useSystemSettings(!!user)
   const { mutateAsync, isPending } = useCreateReview()
-  const semesters = getCourseSemesters(course)
-  const defaultSemester = getDefaultSemester(
-    semesters,
-    settingsQuery.data?.current_semester
-  )
+  const currentSemester = getCurrentSemesterSetting(systemSettingsQuery.data)
+  const semesters = systemSettingsQuery.isLoading
+    ? []
+    : filterSemestersUpTo(getCourseSemesters(course), currentSemester)
+  const defaultSemester = getDefaultSemester(semesters, currentSemester)
 
   async function handleSubmit(cmd: CreateReviewCommand | UpdateReviewCommand) {
     await mutateAsync(cmd as CreateReviewCommand)

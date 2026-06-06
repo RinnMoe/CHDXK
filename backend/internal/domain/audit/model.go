@@ -15,13 +15,15 @@ const (
 	ActionAdminRevoke               = "admin.revoke"
 	ActionSystemAPIKeyCreate        = "system_api_key.create"
 	ActionSystemAPIKeyDelete        = "system_api_key.delete"
+	ActionSystemSettingsUpdate      = "system_settings.update"
 	ActionReviewUpdate              = "review.update"
 	ActionReviewDelete              = "review.delete"
 	ActionReviewModeratorRemarkEdit = "review.moderator_remark.update"
 
-	TargetTypeUser         = "user"
-	TargetTypeSystemAPIKey = "system_api_key"
-	TargetTypeReview       = "review"
+	TargetTypeUser           = "user"
+	TargetTypeSystemAPIKey   = "system_api_key"
+	TargetTypeSystemSettings = "system_settings"
+	TargetTypeReview         = "review"
 )
 
 var ErrInvalidTimeRange = apperr.ErrInvalidAuditTimeRange

@@ -35,3 +35,11 @@ export function getDefaultSemester(
   }
   return semesters[0] ?? ""
 }
+
+export function filterSemestersUpTo(
+  semesters: string[],
+  currentSemester?: string | null
+) {
+  if (!currentSemester) return semesters
+  return semesters.filter((semester) => semester <= currentSemester)
+}

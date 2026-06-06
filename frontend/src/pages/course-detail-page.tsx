@@ -32,7 +32,10 @@ import {
   useCourseReviewFilters,
   useCourseReviews,
 } from "@/hooks/use-course"
-import { useUserSettings } from "@/hooks/use-user-settings"
+import {
+  getCurrentSemesterSetting,
+  useSystemSettings,
+} from "@/hooks/use-system-settings"
 import { useAuth } from "@/contexts/auth-context"
 import { ReviewList } from "@/components/review/review-list"
 import { ReviewCard } from "@/components/review/review-card"
@@ -143,7 +146,7 @@ export function CourseDetailPage() {
 
   const { user } = useAuth()
   const { data: course, isLoading } = useCourseDetail(id)
-  const settingsQuery = useUserSettings(!!user)
+  const systemSettingsQuery = useSystemSettings(!!user)
   const { data: reviewFilters } = useCourseReviewFilters(id)
   const { data: reviews, isLoading: reviewsLoading } = useCourseReviews(id, {
     semester,
@@ -219,6 +222,7 @@ export function CourseDetailPage() {
   const listedReviews =
     reviews?.items.filter((review) => review.id !== course.my_review?.id) ?? []
   const courseSemesters = getCourseSemesters(course)
+  const currentSemester = getCurrentSemesterSetting(systemSettingsQuery.data)
   const selectedSemesters = [
     ...new Set((course.my_enrollments ?? []).map((item) => item.semester)),
   ].sort((a, b) => b.localeCompare(a))
@@ -333,10 +337,7 @@ export function CourseDetailPage() {
                         size="sm"
                         className="h-7 px-2 text-muted-foreground hover:text-foreground"
                       >
-                        <Link
-                          to="/course/mine"
-                          search={{ type: "enrolled" }}
-                        >
+                        <Link to="/course/mine" search={{ type: "enrolled" }}>
                           查看全部
                         </Link>
                       </Button>
@@ -353,7 +354,7 @@ export function CourseDetailPage() {
                         courseID={course.id}
                         courseName={course.name}
                         semesters={courseSemesters}
-                        currentSemester={settingsQuery.data?.current_semester}
+                        currentSemester={currentSemester}
                       />
                     )}
                     <Button

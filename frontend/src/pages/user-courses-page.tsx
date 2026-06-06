@@ -51,7 +51,10 @@ import {
   useIgnoredCourses,
   useSetNotificationLevel,
 } from "@/hooks/use-course"
-import { useUserSettings } from "@/hooks/use-user-settings"
+import {
+  getCurrentSemesterSetting,
+  useSystemSettings,
+} from "@/hooks/use-system-settings"
 import { getDefaultSemester } from "@/lib/course-semesters"
 
 const PAGE_SIZE = 20
@@ -76,7 +79,7 @@ export function UserCoursesPage() {
 
   const enrolledCourses = useCourseEnrollments(!!user && view === "enrolled")
   const filtersQuery = useCourseFilters()
-  const settingsQuery = useUserSettings(!!user)
+  const systemSettingsQuery = useSystemSettings(!!user)
   const followedCourses = useFollowedCourses(
     filter,
     !!user && view === "followed"
@@ -93,7 +96,7 @@ export function UserCoursesPage() {
   )
   const defaultSyncSemester = getDefaultSemester(
     syncSemesterNames,
-    settingsQuery.data?.current_semester
+    getCurrentSemesterSetting(systemSettingsQuery.data)
   )
   const enrolledItems = enrolledCourses.data ?? []
   const enrollmentSemesters = [
@@ -123,7 +126,10 @@ export function UserCoursesPage() {
           search: (prev) => ({
             ...prev,
             type: "enrolled",
-            semester: matched > 0 && payload.semester ? payload.semester : prev.semester,
+            semester:
+              matched > 0 && payload.semester
+                ? payload.semester
+                : prev.semester,
             page: 1,
           }),
           replace: true,

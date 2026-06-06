@@ -43,6 +43,8 @@ type ServiceContainer struct {
 	ApiKeyCommand         *application.ApiKeyCommandService
 	UserSettingsQuery     *application.UserSettingsQueryService
 	UserSettingsCommand   *application.UserSettingsCommandService
+	SystemSettingsQuery   *application.SystemSettingsQueryService
+	SystemSettingsCommand *application.SystemSettingsCommandService
 	AuditLogQuery         *application.AuditLogQueryService
 	AuditLogCommand       *application.AuditLogCommandService
 	EmailSender           email.Sender
@@ -64,6 +66,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	accountRepo := repository.NewAccountRepository(db, redisClient)
 	userRepo := repository.NewUserRepository(db, redisClient)
 	userSettingsRepo := repository.NewUserSettingsRepository(db, redisClient)
+	systemSettingsRepo := repository.NewSystemSettingsRepository(db, redisClient)
 	apiKeyRepo := repository.NewApiKeyRepository(db)
 	auditLogRepo := repository.NewAuditLogRepository(db)
 	accessTracker := repository.NewAccessTrackerRepository(db, redisClient, conf.Auth.Access.FlushBatchSize)
@@ -149,6 +152,8 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc)
 	userSettingsQuery := application.NewUserSettingsQueryService(userSettingsRepo, courseRepo)
 	userSettingsCommand := application.NewUserSettingsCommandService(userSettingsRepo, courseRepo)
+	systemSettingsQuery := application.NewSystemSettingsQueryService(systemSettingsRepo)
+	systemSettingsCommand := application.NewSystemSettingsCommandService(systemSettingsRepo, courseRepo)
 	auditLogQuery := application.NewAuditLogQueryService(auditLogRepo)
 	auditLogCommand := application.NewAuditLogCommandService(auditLogRepo)
 
@@ -177,6 +182,8 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		ApiKeyCommand:         apiKeyCommand,
 		UserSettingsQuery:     userSettingsQuery,
 		UserSettingsCommand:   userSettingsCommand,
+		SystemSettingsQuery:   systemSettingsQuery,
+		SystemSettingsCommand: systemSettingsCommand,
 		AuditLogQuery:         auditLogQuery,
 		AuditLogCommand:       auditLogCommand,
 		EmailSender:           smtpSender,

@@ -6,6 +6,7 @@ import { courseHandlers } from "./handlers/course"
 import { pointHandlers } from "./handlers/point"
 import { reviewHandlers } from "./handlers/review"
 import { siteStatsHandlers } from "./handlers/site-stats"
+import { systemSettingsHandlers } from "./handlers/system-settings"
 import { teacherHandlers } from "./handlers/teacher"
 import { userSettingsHandlers } from "./handlers/user-settings"
 
@@ -17,6 +18,7 @@ export const worker = setupWorker(
   ...teacherHandlers,
   ...pointHandlers,
   ...userSettingsHandlers,
+  ...systemSettingsHandlers,
   ...announcementHandlers,
   ...siteStatsHandlers
 )
