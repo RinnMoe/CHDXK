@@ -2,7 +2,6 @@ package application
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"jcourse/internal/domain/audit"
@@ -16,9 +15,7 @@ type SystemSettingsCommandService struct {
 }
 
 func NewSystemSettingsCommandService(repo setting.SystemRepository, courseRepo course.CourseRepository) *SystemSettingsCommandService {
-	validators := setting.NewValueValidatorFactory(map[string]setting.ValueValidator{
-		setting.SystemSettingKeyCurrentSemester: currentSemesterValidator{courseRepo: courseRepo},
-	})
+	validators := setting.NewSystemSettingValueValidatorFactory(courseRepo)
 	return &SystemSettingsCommandService{settings: setting.NewSystemSettingsService(repo, validators)}
 }
 
@@ -51,23 +48,4 @@ func (s *SystemSettingsCommandService) Update(ctx context.Context, actor *auth.U
 
 	dto := newSystemSettingDTO(*updatedSetting)
 	return &dto, nil
-}
-
-type currentSemesterValidator struct {
-	courseRepo course.CourseRepository
-}
-
-func (v currentSemesterValidator) Validate(ctx context.Context, value string) error {
-	value = strings.TrimSpace(value)
-	if value == "" {
-		return setting.ErrInvalidCurrentSemester
-	}
-	allowed, err := v.courseRepo.OfferedSemesterExists(ctx, value)
-	if err != nil {
-		return err
-	}
-	if !allowed {
-		return setting.ErrInvalidCurrentSemester
-	}
-	return nil
 }

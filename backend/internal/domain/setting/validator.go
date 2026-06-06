@@ -1,6 +1,11 @@
 package setting
 
-import "context"
+import (
+	"context"
+	"strings"
+
+	"jcourse/internal/domain/course"
+)
 
 type ValueValidator interface {
 	Validate(ctx context.Context, value string) error
@@ -35,4 +40,29 @@ func (f *ValueValidatorFactory) Validate(ctx context.Context, key, value string)
 		return nil
 	}
 	return validator.Validate(ctx, value)
+}
+
+func NewSystemSettingValueValidatorFactory(courseRepo course.CourseRepository) *ValueValidatorFactory {
+	return NewValueValidatorFactory(map[string]ValueValidator{
+		SystemSettingKeyCurrentSemester: currentSemesterValidator{courseRepo: courseRepo},
+	})
+}
+
+type currentSemesterValidator struct {
+	courseRepo course.CourseRepository
+}
+
+func (v currentSemesterValidator) Validate(ctx context.Context, value string) error {
+	value = strings.TrimSpace(value)
+	if value == "" || v.courseRepo == nil {
+		return ErrInvalidCurrentSemester
+	}
+	allowed, err := v.courseRepo.OfferedSemesterExists(ctx, value)
+	if err != nil {
+		return err
+	}
+	if !allowed {
+		return ErrInvalidCurrentSemester
+	}
+	return nil
 }

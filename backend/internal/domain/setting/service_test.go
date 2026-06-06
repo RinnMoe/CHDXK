@@ -131,3 +131,22 @@ func TestSystemSettingsService_SaveRegisteredKeyWithoutValidator(t *testing.T) {
 		t.Fatalf("setting = %+v", got)
 	}
 }
+
+func TestSystemSettingsService_SaveCurrentSemesterValidatesOfferedSemester(t *testing.T) {
+	repo := NewMockSystemRepository()
+	validators := NewSystemSettingValueValidatorFactory(newFakeSettingsCourseRepo("2025-2026-1"))
+	svc := NewSystemSettingsService(repo, validators)
+
+	got, err := svc.Save(context.Background(), SystemSettingKeyCurrentSemester, " 2025-2026-1 ")
+	if err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+	if got.Value != " 2025-2026-1 " {
+		t.Fatalf("value = %q, want original", got.Value)
+	}
+
+	_, err = svc.Save(context.Background(), SystemSettingKeyCurrentSemester, "2020-2021-1")
+	if !errors.Is(err, ErrInvalidCurrentSemester) {
+		t.Fatalf("error = %v, want %v", err, ErrInvalidCurrentSemester)
+	}
+}
