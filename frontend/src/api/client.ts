@@ -1,6 +1,12 @@
 import type { ApiError } from "./types"
 import { BASE_URL } from "./constants"
 
+const CSRF_HEADER = "X-CSRF-Token"
+const CSRF_ERRORS = new Set(["csrf token missing", "csrf token mismatch"])
+
+let csrfToken: string | null = null
+let csrfTokenRequest: Promise<string> | null = null
+
 class HttpError extends Error {
   status: number
   body?: ApiError
@@ -18,19 +24,41 @@ export async function apiClient<T>(
   init?: RequestInit
 ): Promise<T> {
   const method = requestMethod(input, init)
+  const requiresCsrf = requiresCsrfToken(method)
+  const hasCallerCsrfToken = new Headers(init?.headers).has(CSRF_HEADER)
+
+  let res = await fetchWithDefaults(
+    input,
+    init,
+    requiresCsrf && !hasCallerCsrfToken ? await fetchCsrfToken() : undefined
+  )
+
+  if (requiresCsrf && !hasCallerCsrfToken && (await isCsrfFailure(res))) {
+    clearCsrfToken()
+    res = await fetchWithDefaults(input, init, await fetchCsrfToken())
+  }
+
+  return parseResponse<T>(res)
+}
+
+async function fetchWithDefaults(
+  input: RequestInfo,
+  init?: RequestInit,
+  csrf?: string
+) {
   const headers = new Headers(init?.headers)
   if (!headers.has("Content-Type"))
     headers.set("Content-Type", "application/json")
-  if (requiresCsrfToken(method) && !headers.has("X-CSRF-Token")) {
-    headers.set("X-CSRF-Token", await fetchCsrfToken())
-  }
+  if (csrf && !headers.has(CSRF_HEADER)) headers.set(CSRF_HEADER, csrf)
 
-  const res = await fetch(input, {
+  return fetch(input, {
     ...init,
     credentials: "include",
     headers,
   })
+}
 
+async function parseResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     let errorBody: ApiError | undefined
     try {
@@ -52,6 +80,16 @@ export async function apiClient<T>(
   return res.json() as Promise<T>
 }
 
+async function isCsrfFailure(res: Response) {
+  if (res.status !== 403) return false
+  try {
+    const body = (await res.clone().json()) as ApiError
+    return CSRF_ERRORS.has(body.error)
+  } catch {
+    return false
+  }
+}
+
 function requestMethod(input: RequestInfo, init?: RequestInit) {
   return (
     init?.method ?? (input instanceof Request ? input.method : "GET")
@@ -63,12 +101,26 @@ function requiresCsrfToken(method: string) {
 }
 
 async function fetchCsrfToken() {
-  const res = await fetch(`${BASE_URL}/auth/csrf`, {
-    credentials: "include",
-  })
-  const token = res.headers.get("X-CSRF-Token")
-  if (!res.ok || !token) throw new Error("failed to fetch csrf token")
-  return token
+  if (csrfToken) return csrfToken
+  if (!csrfTokenRequest) {
+    csrfTokenRequest = fetch(`${BASE_URL}/auth/csrf`, {
+      credentials: "include",
+    })
+      .then((res) => {
+        const token = res.headers.get(CSRF_HEADER)
+        if (!res.ok || !token) throw new Error("failed to fetch csrf token")
+        csrfToken = token
+        return token
+      })
+      .finally(() => {
+        csrfTokenRequest = null
+      })
+  }
+  return csrfTokenRequest
+}
+
+function clearCsrfToken() {
+  csrfToken = null
 }
 
 export { HttpError }
