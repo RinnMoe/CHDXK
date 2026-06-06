@@ -8,6 +8,7 @@ import {
   RiShieldCrossLine,
   RiShieldUserLine,
 } from "@remixicon/react"
+import { EmailPrefixInput } from "@/components/auth/email-prefix-input"
 import { PaginationComponent } from "@/components/common/pagination"
 import { PointRecordList } from "@/components/point/point-record-list"
 import { ReviewList } from "@/components/review/review-list"
@@ -48,6 +49,7 @@ import {
 } from "@/hooks/use-admin-user"
 import { useUserPoints } from "@/hooks/use-point"
 import { useUserReviews } from "@/hooks/use-review"
+import { buildAuthEmail, normalizeAuthEmailPrefix } from "@/config/auth"
 import { formatDateTime, formatNullableDateTime } from "@/lib/date"
 import { getErrorMessage, type FormSubmitEvent } from "./admin-utils"
 
@@ -63,6 +65,47 @@ function defaultPasswordFromEmail(email: string, username: string) {
 interface AdminUserQueryTabProps {
   currentUserID: number
   currentUserIsSuperAdmin: boolean
+}
+
+interface AdminUserEmailSearchFormProps {
+  email: string
+  onSearch: (email: string) => void
+}
+
+function AdminUserEmailSearchForm({
+  email,
+  onSearch,
+}: AdminUserEmailSearchFormProps) {
+  const [emailPrefix, setEmailPrefix] = useState(() =>
+    normalizeAuthEmailPrefix(email)
+  )
+
+  function handleSubmit(event: FormSubmitEvent) {
+    event.preventDefault()
+    const nextPrefix = emailPrefix.trim()
+    onSearch(nextPrefix ? buildAuthEmail(nextPrefix).toLowerCase() : "")
+  }
+
+  return (
+    <form
+      className="flex max-w-md flex-wrap items-end gap-2"
+      onSubmit={handleSubmit}
+    >
+      <div className="min-w-72 flex-1">
+        <EmailPrefixInput
+          id="admin-user-email"
+          label="邮箱"
+          value={emailPrefix}
+          onChange={setEmailPrefix}
+          placeholder="jAccount"
+        />
+      </div>
+      <Button type="submit">
+        <RiSearchLine />
+        查询
+      </Button>
+    </form>
+  )
 }
 
 function SuspensionText({
@@ -112,12 +155,7 @@ export function AdminUserQueryTab({
   const revokeAdminMutation = useRevokeAdminUser()
   const resetPasswordMutation = useResetAdminUserPassword()
 
-  function handleSearch(event: FormSubmitEvent) {
-    event.preventDefault()
-    const formData = new FormData(event.currentTarget)
-    const nextEmail = String(formData.get("email") ?? "")
-      .trim()
-      .toLowerCase()
+  function handleSearch(nextEmail: string) {
     void navigate({
       search: (prev) => ({
         ...prev,
@@ -196,28 +234,11 @@ export function AdminUserQueryTab({
     <section className="space-y-6">
       <h2 className="text-lg font-medium">邮箱</h2>
 
-      <form
+      <AdminUserEmailSearchForm
         key={email}
-        className="flex flex-wrap items-end gap-2"
-        onSubmit={handleSearch}
-      >
-        <div className="min-w-72 flex-1 space-y-1">
-          <Label htmlFor="admin-user-email" className="sr-only">
-            邮箱
-          </Label>
-          <Input
-            id="admin-user-email"
-            name="email"
-            type="email"
-            defaultValue={email}
-            placeholder="name@example.edu"
-          />
-        </div>
-        <Button type="submit">
-          <RiSearchLine />
-          查询
-        </Button>
-      </form>
+        email={email}
+        onSearch={handleSearch}
+      />
 
       {userQuery.isLoading && email ? (
         <Skeleton className="h-36 w-full" />
