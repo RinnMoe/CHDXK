@@ -28,16 +28,6 @@ session:
   secure: false
 
 auth:
-  registration:
-    email_whitelist:
-      - "@example.edu"
-  verification:
-    code_interval: "1m"
-    code_ttl: "10m"
-    code_length: 6
-  login:
-    max_attempts: 5
-    lockout: "15m"
   access:
     flush_cron: "*/5 * * * *"
     scheduler_enabled: true
@@ -67,13 +57,8 @@ review:
     read_timeout: 10000
   command:
     frequency_violation_admin_emails: []
-    hot_scores:
-      review_create_score: 3
-      review_update_score: 1
-      review_vote_score: 1
 
 api_key:
-  max_user_keys: 20
   snowflake_node_id: 1
 
 point:

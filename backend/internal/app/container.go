@@ -6,6 +6,7 @@ import (
 	"jcourse/internal/domain/account"
 	"jcourse/internal/domain/account/credential"
 	"jcourse/internal/domain/account/identity"
+	"jcourse/internal/domain/account/verification"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/email"
@@ -69,7 +70,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	courseHotRepo := repository.NewGormCourseHotRepository(db, redisClient)
 	verificationRepo := repository.NewVerificationCodeRepository(redisClient)
 	resetCodeRepo := repository.NewVerificationCodeRepositoryWithPrefix(redisClient, "reset")
-	loginAttemptRepo := repository.NewLoginAttemptRepository(redisClient, conf.Auth.Login.Lockout)
+	loginAttemptRepo := repository.NewLoginAttemptRepository(redisClient, account.DefaultLoginConfig.Lockout)
 	usernameDeriver := identity.NewBLAKE2bUsernameDeriver(conf.Auth.UsernameDeriver)
 
 	reviewQuery := application.NewReviewQueryService(reviewRepo, voteRepo, notificationRepo)
@@ -82,7 +83,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		conf.Review.Command,
 		nil,
 	)
-	courseHotService := course.NewCourseHotService(courseHotRepo, conf.Review.Command.HotScores)
+	courseHotService := course.NewCourseHotService(courseHotRepo, course.DefaultHotScoreConfig)
 	courseService := course.NewService(courseRepo)
 	courseRatingCommand := course.NewCourseRatingCommandService(courseRepo, conf.Course.RatingScore)
 	courseQuery := application.NewCourseQueryService(courseRepo, teacherRepo, reviewRepo, notificationRepo, courseEnrollmentRepo, courseHotRepo)
@@ -94,6 +95,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		courseEnrollmentService,
 		courseHotService,
 		courseRatingCommand,
+		siteSettings,
 	)
 	courseEnrollmentQuery := application.NewCourseEnrollmentQueryService(courseEnrollmentRepo)
 	teacherQuery := application.NewTeacherQueryService(teacherRepo)
@@ -114,22 +116,22 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		verificationRepo,
 		hasher,
 		usernameDeriver,
-		conf.Auth.Registration,
-		conf.Auth.Verification,
+		account.DefaultRegistrationConfig,
+		verification.DefaultConfig,
 	)
 	loginService := account.NewLoginService(
 		accountRepo,
 		hasher,
 		loginAttemptRepo,
 		usernameDeriver,
-		conf.Auth.Login,
+		account.DefaultLoginConfig,
 	)
 	passwordResetService := account.NewPasswordResetService(
 		accountRepo,
 		resetCodeRepo,
 		hasher,
 		usernameDeriver,
-		conf.Auth.Verification,
+		verification.DefaultConfig,
 	)
 	sessionAuthService := auth.NewSessionAuthService(accountRepo, conf.Session.Secret)
 	accountCommand := application.NewAccountCommandService(
@@ -138,11 +140,12 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		passwordResetService,
 		currentUserService,
 		sessionAuthService,
+		siteSettings,
 	)
 	apiKeySvc := auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, conf.APIKey)
 	authResolution := application.NewAuthResolutionService(currentUserService, apiKeySvc, accessTracker, sessionAuthService)
 	apiKeyQuery := application.NewApiKeyQueryService(apiKeySvc)
-	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc)
+	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc, siteSettings)
 	systemSettingsQuery := application.NewSystemSettingsQueryService(systemSettingsService)
 	systemSettingsCommand := application.NewSystemSettingsCommandService(systemSettingsService)
 	auditLogQuery := application.NewAuditLogQueryService(auditLogRepo)

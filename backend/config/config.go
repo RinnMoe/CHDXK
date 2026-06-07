@@ -9,10 +9,8 @@ import (
 	"github.com/spf13/viper"
 
 	"jcourse/internal/application"
-	"jcourse/internal/domain/account"
 	"jcourse/internal/domain/account/credential"
 	"jcourse/internal/domain/account/identity"
-	"jcourse/internal/domain/account/verification"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/point"
@@ -41,9 +39,6 @@ type AppConfig struct {
 }
 
 type AuthConfig struct {
-	Registration    account.RegistrationConfig
-	Verification    verification.Config
-	Login           account.LoginConfig
 	Access          auth.AccessConfig
 	PasswordHash    credential.PasswordHashConfig
 	UsernameDeriver identity.UsernameDeriverConfig
@@ -144,18 +139,6 @@ func setDefaults(v *viper.Viper) {
 		"scheduler_enabled": stat.DefaultConfig.SchedulerEnabled,
 		"timezone":          stat.DefaultConfig.Timezone,
 	})
-	setSectionDefaults(v, "auth.registration", map[string]any{
-		"email_whitelist": account.DefaultRegistrationConfig.EmailWhitelist,
-	})
-	setSectionDefaults(v, "auth.verification", map[string]any{
-		"code_interval": verification.DefaultConfig.CodeInterval.String(),
-		"code_ttl":      verification.DefaultConfig.CodeTTL.String(),
-		"code_length":   verification.DefaultConfig.CodeLength,
-	})
-	setSectionDefaults(v, "auth.login", map[string]any{
-		"max_attempts": account.DefaultLoginConfig.MaxAttempts,
-		"lockout":      account.DefaultLoginConfig.Lockout.String(),
-	})
 	setSectionDefaults(v, "auth.access", map[string]any{
 		"flush_cron":        auth.DefaultAccessConfig.FlushCron,
 		"scheduler_enabled": auth.DefaultAccessConfig.SchedulerEnabled,
@@ -183,14 +166,8 @@ func setDefaults(v *viper.Viper) {
 		"connect_timeout": moderation.DefaultAliyunGreenConfig.ConnectTimeout,
 		"read_timeout":    moderation.DefaultAliyunGreenConfig.ReadTimeout,
 	})
-	setSectionDefaults(v, "review.command.hot_scores", map[string]any{
-		"review_create_score": course.DefaultHotScoreConfig.ReviewCreateScore,
-		"review_update_score": course.DefaultHotScoreConfig.ReviewUpdateScore,
-		"review_vote_score":   course.DefaultHotScoreConfig.ReviewVoteScore,
-	})
 	v.SetDefault("review.command.frequency_violation_admin_emails", []string{})
 	setSectionDefaults(v, "api_key", map[string]any{
-		"max_user_keys":     auth.DefaultApiKeyConfig.MaxUserKeys,
 		"snowflake_node_id": auth.DefaultApiKeyConfig.SnowflakeNodeID,
 	})
 	setSectionDefaults(v, "jaccount", map[string]any{

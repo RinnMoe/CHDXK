@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { buildAuthEmail } from "@/config/auth"
 import { useAuth } from "@/contexts/auth-context"
+import { useAuthEmailDomain } from "@/hooks/use-system-settings"
 import { fieldError } from "./form-utils"
 
 type LoginFormValues = {
@@ -21,6 +22,7 @@ export function LoginForm() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const search = routeApi.useSearch()
+  const emailDomain = useAuthEmailDomain()
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const form = useForm({
@@ -30,7 +32,7 @@ export function LoginForm() {
     } as LoginFormValues,
     onSubmit: async ({ value }) => {
       await login({
-        email: buildAuthEmail(value.emailPrefix),
+        email: buildAuthEmail(value.emailPrefix, emailDomain),
         password: value.password,
       })
       await navigate({ href: search.redirect ?? "/", replace: true })
@@ -71,6 +73,7 @@ export function LoginForm() {
                     onChange={(value) => field.handleChange(value)}
                     onBlur={field.handleBlur}
                     placeholder="jAccount"
+                    emailDomain={emailDomain}
                   />
                   {error && (
                     <p className="text-sm text-destructive" role="alert">

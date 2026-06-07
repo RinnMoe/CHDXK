@@ -2,12 +2,15 @@
 
 package security
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 type MockLoginAttemptRepository struct {
 	Counts map[string]int
 
-	OnIncrement func(context.Context, string) (int, error)
+	OnIncrement func(context.Context, string, time.Duration) (int, error)
 	OnGet       func(context.Context, string) (int, error)
 	OnReset     func(context.Context, string) error
 }
@@ -19,9 +22,9 @@ func NewMockLoginAttemptRepository(counts map[string]int) *MockLoginAttemptRepos
 	return &MockLoginAttemptRepository{Counts: counts}
 }
 
-func (r *MockLoginAttemptRepository) Increment(ctx context.Context, email string) (int, error) {
+func (r *MockLoginAttemptRepository) Increment(ctx context.Context, email string, lockout time.Duration) (int, error) {
 	if r.OnIncrement != nil {
-		return r.OnIncrement(ctx, email)
+		return r.OnIncrement(ctx, email, lockout)
 	}
 	r.ensureMap()
 	r.Counts[email]++

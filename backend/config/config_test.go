@@ -4,7 +4,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 )
 
 func TestLoadMergesSectionDefaults(t *testing.T) {
@@ -13,12 +12,6 @@ func TestLoadMergesSectionDefaults(t *testing.T) {
 session:
   secret: "replace-with-at-least-32-random-characters"
 auth:
-  registration:
-    email_whitelist:
-      - "@example.edu"
-  verification:
-    code_interval: "2m"
-    code_length: 8
   username_deriver:
     salt: "SALT"
 review:
@@ -35,20 +28,11 @@ review:
 		t.Fatalf("Load: %v", err)
 	}
 
-	if conf.Auth.Verification.CodeInterval != 2*time.Minute {
-		t.Fatalf("auth override code interval = %s, want %s", conf.Auth.Verification.CodeInterval, 2*time.Minute)
-	}
-	if conf.Auth.Verification.CodeLength != 8 {
-		t.Fatalf("auth override code length = %d, want 8", conf.Auth.Verification.CodeLength)
-	}
 	if len(conf.Server.Cors.AllowedOrigins) != 1 || conf.Server.Cors.AllowedOrigins[0] != "*" {
 		t.Fatalf("server default cors origins = %#v", conf.Server.Cors.AllowedOrigins)
 	}
 	if conf.Server.Debug {
 		t.Fatal("server default debug = true, want false")
-	}
-	if conf.Auth.Login.Lockout != 15*time.Minute {
-		t.Fatalf("auth default lockout = %s, want %s", conf.Auth.Login.Lockout, 15*time.Minute)
 	}
 	if conf.Auth.Access.FlushCron != "*/5 * * * *" {
 		t.Fatalf("auth access default flush cron = %q, want */5 * * * *", conf.Auth.Access.FlushCron)

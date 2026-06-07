@@ -50,12 +50,17 @@ func NewRegistrationService(
 }
 
 func (s *RegistrationService) SendRegisterCode(ctx context.Context, email string) error {
-	normalized, err := s.normalizeAllowedEmail(email)
+	return s.SendRegisterCodeWithConfig(ctx, email, s.config, s.verification)
+}
+
+func (s *RegistrationService) SendRegisterCodeWithConfig(ctx context.Context, email string, config RegistrationConfig, verificationConfig verification.Config) error {
+	verificationConfig = verificationConfig.WithDefaults()
+	normalized, err := s.normalizeAllowedEmail(email, config)
 	if err != nil {
 		return err
 	}
 
-	wait, err := s.codes.ReserveSend(ctx, normalized, s.verification.CodeInterval)
+	wait, err := s.codes.ReserveSend(ctx, normalized, verificationConfig.CodeInterval)
 	if err != nil {
 		return err
 	}
@@ -63,14 +68,14 @@ func (s *RegistrationService) SendRegisterCode(ctx context.Context, email string
 		return fmt.Errorf("%w: retry after %s", verification.ErrSendTooSoon, wait.Round(time.Second))
 	}
 
-	code, err := verification.NewCode(normalized, time.Now(), s.verification)
+	code, err := verification.NewCode(normalized, time.Now(), verificationConfig)
 	if err != nil {
 		return err
 	}
-	if err := s.codes.Save(ctx, code, s.verification.CodeTTL); err != nil {
+	if err := s.codes.Save(ctx, code, verificationConfig.CodeTTL); err != nil {
 		return err
 	}
-	mail, err := notification.NewVerificationCodeEmail(normalized, code.Code, s.verification.CodeTTL)
+	mail, err := notification.NewVerificationCodeEmail(normalized, code.Code, verificationConfig.CodeTTL)
 	if err != nil {
 		return err
 	}
@@ -78,7 +83,11 @@ func (s *RegistrationService) SendRegisterCode(ctx context.Context, email string
 }
 
 func (s *RegistrationService) Register(ctx context.Context, email, code, password string) (*identity.Account, error) {
-	normalized, err := s.normalizeAllowedEmail(email)
+	return s.RegisterWithConfig(ctx, email, code, password, s.config)
+}
+
+func (s *RegistrationService) RegisterWithConfig(ctx context.Context, email, code, password string, config RegistrationConfig) (*identity.Account, error) {
+	normalized, err := s.normalizeAllowedEmail(email, config)
 	if err != nil {
 		return nil, err
 	}
@@ -119,9 +128,13 @@ func (s *RegistrationService) Register(ctx context.Context, email, code, passwor
 	return acct, nil
 }
 
-func (s *RegistrationService) normalizeAllowedEmail(email string) (string, error) {
+func (s *RegistrationService) normalizeAllowedEmail(email string, config RegistrationConfig) (string, error) {
 	normalized := identity.NormalizeEmail(email)
-	if !s.whitelist.Allows(normalized) {
+	whitelist := s.whitelist
+	if len(config.EmailWhitelist) > 0 {
+		whitelist = identity.NewEmailWhitelist(config.EmailWhitelist)
+	}
+	if !whitelist.Allows(normalized) {
 		return "", identity.ErrEmailNotAllowed
 	}
 	return normalized, nil

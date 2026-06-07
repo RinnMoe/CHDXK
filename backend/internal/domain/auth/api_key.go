@@ -224,6 +224,13 @@ func (s *ApiKeyService) CreateSystemKey(ctx context.Context, name string) (*ApiK
 }
 
 func (s *ApiKeyService) CreateUserKey(ctx context.Context, userID int, name string) (*ApiKey, *ApiKeyCredential, error) {
+	return s.CreateUserKeyWithConfig(ctx, userID, name, s.config)
+}
+
+func (s *ApiKeyService) CreateUserKeyWithConfig(ctx context.Context, userID int, name string, config ApiKeyConfig) (*ApiKey, *ApiKeyCredential, error) {
+	if config.MaxUserKeys <= 0 {
+		config.MaxUserKeys = DefaultApiKeyConfig.MaxUserKeys
+	}
 	credential, err := s.generateCredential()
 	if err != nil {
 		return nil, nil, err
@@ -237,7 +244,7 @@ func (s *ApiKeyService) CreateUserKey(ctx context.Context, userID int, name stri
 	if err != nil {
 		return nil, nil, err
 	}
-	if count >= s.config.MaxUserKeys {
+	if count >= config.MaxUserKeys {
 		return nil, nil, ErrApiKeyLimitExceeded
 	}
 	if err := s.repo.Create(ctx, apiKey); err != nil {

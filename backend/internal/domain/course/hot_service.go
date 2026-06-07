@@ -20,10 +20,14 @@ func NewCourseHotService(repo HotCourseRepository, scores HotScoreConfig) *Cours
 }
 
 func (s *CourseHotService) RecordActivity(ctx context.Context, payload RecordHotCourseActivityPayload) error {
+	return s.RecordActivityWithScores(ctx, payload, s.scores)
+}
+
+func (s *CourseHotService) RecordActivityWithScores(ctx context.Context, payload RecordHotCourseActivityPayload, scores HotScoreConfig) error {
 	if s.repo == nil {
 		return nil
 	}
-	score, err := s.scores.ScoreForActivity(payload.Activity)
+	score, err := scores.ScoreForActivity(payload.Activity)
 	if err != nil {
 		return err
 	}

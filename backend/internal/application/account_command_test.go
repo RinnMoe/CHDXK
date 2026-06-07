@@ -314,7 +314,18 @@ func newAccountServiceWithAttempts(
 		account.NewPasswordResetService(accountRepo, resetCodes, hasher, usernames, testVerificationConfig()),
 		auth.NewCurrentUserService(userRepo),
 		auth.NewSessionAuthService(accountRepo, "test-session-secret"),
+		testAccountSettingsProvider(maxLoginAttempts),
 	)
+}
+
+func testAccountSettingsProvider(maxLoginAttempts int) application.StaticSiteSettingsProvider {
+	provider := application.NewDefaultSiteSettingsProvider()
+	provider.AccountRuntime = application.AccountRuntimeConfig{
+		Registration: testRegistrationConfig(),
+		Login:        testLoginConfig(maxLoginAttempts),
+		Verification: testVerificationConfig(),
+	}
+	return provider
 }
 
 func mustHash(t *testing.T, password string) string {

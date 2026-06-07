@@ -49,6 +49,7 @@ import {
 } from "@/hooks/use-admin-user"
 import { useUserPoints } from "@/hooks/use-point"
 import { useUserReviews } from "@/hooks/use-review"
+import { useAuthEmailDomain } from "@/hooks/use-system-settings"
 import { buildAuthEmail, normalizeAuthEmailPrefix } from "@/config/auth"
 import { formatDateTime, formatNullableDateTime } from "@/lib/date"
 import { getErrorMessage, type FormSubmitEvent } from "./admin-utils"
@@ -69,21 +70,25 @@ interface AdminUserQueryTabProps {
 
 interface AdminUserEmailSearchFormProps {
   email: string
+  emailDomain: string
   onSearch: (email: string) => void
 }
 
 function AdminUserEmailSearchForm({
   email,
+  emailDomain,
   onSearch,
 }: AdminUserEmailSearchFormProps) {
   const [emailPrefix, setEmailPrefix] = useState(() =>
-    normalizeAuthEmailPrefix(email)
+    normalizeAuthEmailPrefix(email, emailDomain)
   )
 
   function handleSubmit(event: FormSubmitEvent) {
     event.preventDefault()
     const nextPrefix = emailPrefix.trim()
-    onSearch(nextPrefix ? buildAuthEmail(nextPrefix).toLowerCase() : "")
+    onSearch(
+      nextPrefix ? buildAuthEmail(nextPrefix, emailDomain).toLowerCase() : ""
+    )
   }
 
   return (
@@ -96,6 +101,7 @@ function AdminUserEmailSearchForm({
           id="admin-user-email"
           label="邮箱"
           value={emailPrefix}
+          emailDomain={emailDomain}
           onChange={setEmailPrefix}
           placeholder="jAccount"
         />
@@ -132,6 +138,7 @@ export function AdminUserQueryTab({
   const search = routeApi.useSearch()
   const navigate = useNavigate({ from: "/admin/user" })
   const email = search.email ?? ""
+  const emailDomain = useAuthEmailDomain()
   const page = Math.max(1, search.page ?? 1)
   const [suspendDays, setSuspendDays] = useState(30)
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false)
@@ -235,8 +242,9 @@ export function AdminUserQueryTab({
       <h2 className="text-lg font-medium">邮箱</h2>
 
       <AdminUserEmailSearchForm
-        key={email}
+        key={`${email}:${emailDomain}`}
         email={email}
+        emailDomain={emailDomain}
         onSearch={handleSearch}
       />
 

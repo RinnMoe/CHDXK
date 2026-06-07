@@ -11,23 +11,26 @@ import (
 )
 
 type LoginAttemptRepository struct {
-	client  *redis.Client
-	lockout time.Duration
+	client         *redis.Client
+	defaultLockout time.Duration
 }
 
 func NewLoginAttemptRepository(client *redis.Client, lockout time.Duration) *LoginAttemptRepository {
-	return &LoginAttemptRepository{client: client, lockout: lockout}
+	return &LoginAttemptRepository{client: client, defaultLockout: lockout}
 }
 
-func (r *LoginAttemptRepository) Increment(ctx context.Context, email string) (int, error) {
+func (r *LoginAttemptRepository) Increment(ctx context.Context, email string, lockout time.Duration) (int, error) {
 	key := r.key(email)
 	count, err := r.client.Incr(ctx, key).Result()
 	if err != nil {
 		logCacheAccessFailure(ctx, "incr", key, err)
 		return 0, err
 	}
-	if count == 1 && r.lockout > 0 {
-		if err := r.client.Expire(ctx, key, r.lockout).Err(); err != nil {
+	if lockout <= 0 {
+		lockout = r.defaultLockout
+	}
+	if count == 1 && lockout > 0 {
+		if err := r.client.Expire(ctx, key, lockout).Err(); err != nil {
 			logCacheAccessFailure(ctx, "expire", key, err)
 		}
 	}

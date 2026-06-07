@@ -3,7 +3,10 @@ package application
 import (
 	"context"
 
+	"jcourse/internal/domain/account"
+	"jcourse/internal/domain/account/verification"
 	"jcourse/internal/domain/auth"
+	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/review/policy"
@@ -13,12 +16,21 @@ import (
 type SiteSettingsProvider interface {
 	ReviewRuntimeConfig(ctx context.Context) (ReviewRuntimeConfig, error)
 	AdminUserConfig(ctx context.Context) (AdminUserCommandConfig, error)
+	AccountRuntimeConfig(ctx context.Context) (AccountRuntimeConfig, error)
+	ApiKeyConfig(ctx context.Context) (auth.ApiKeyConfig, error)
+	HotScoreConfig(ctx context.Context) (course.HotScoreConfig, error)
 }
 
 type ReviewRuntimeConfig struct {
 	Vote            review.VoteConfig
 	Rewards         point.RewardConfig
 	FrequencyPolicy policy.FrequencyPolicyConfig
+}
+
+type AccountRuntimeConfig struct {
+	Registration account.RegistrationConfig
+	Login        account.LoginConfig
+	Verification verification.Config
 }
 
 type SystemSiteSettingsProvider struct {
@@ -61,9 +73,56 @@ func (p *SystemSiteSettingsProvider) AdminUserConfig(ctx context.Context) (Admin
 	}, nil
 }
 
+func (p *SystemSiteSettingsProvider) AccountRuntimeConfig(ctx context.Context) (AccountRuntimeConfig, error) {
+	snapshot, err := p.settings.Snapshot(ctx)
+	if err != nil {
+		return AccountRuntimeConfig{}, err
+	}
+	return AccountRuntimeConfig{
+		Registration: account.RegistrationConfig{
+			EmailWhitelist: snapshot.StringList(setting.SystemSettingKeyAuthRegistrationEmailWhitelist),
+		},
+		Login: account.LoginConfig{
+			MaxAttempts: snapshot.Int(setting.SystemSettingKeyAuthLoginMaxAttempts),
+			Lockout:     snapshot.Duration(setting.SystemSettingKeyAuthLoginLockout),
+		},
+		Verification: verification.Config{
+			CodeInterval: snapshot.Duration(setting.SystemSettingKeyAuthVerificationCodeInterval),
+			CodeTTL:      snapshot.Duration(setting.SystemSettingKeyAuthVerificationCodeTTL),
+			CodeLength:   verification.DefaultConfig.CodeLength,
+		},
+	}, nil
+}
+
+func (p *SystemSiteSettingsProvider) ApiKeyConfig(ctx context.Context) (auth.ApiKeyConfig, error) {
+	snapshot, err := p.settings.Snapshot(ctx)
+	if err != nil {
+		return auth.ApiKeyConfig{}, err
+	}
+	return auth.ApiKeyConfig{
+		MaxUserKeys:     snapshot.Int(setting.SystemSettingKeyAPIKeyMaxUserKeys),
+		SnowflakeNodeID: auth.DefaultApiKeyConfig.SnowflakeNodeID,
+	}, nil
+}
+
+func (p *SystemSiteSettingsProvider) HotScoreConfig(ctx context.Context) (course.HotScoreConfig, error) {
+	snapshot, err := p.settings.Snapshot(ctx)
+	if err != nil {
+		return course.HotScoreConfig{}, err
+	}
+	return course.HotScoreConfig{
+		ReviewCreateScore: int64(snapshot.Int(setting.SystemSettingKeyReviewHotScoreReviewCreate)),
+		ReviewUpdateScore: int64(snapshot.Int(setting.SystemSettingKeyReviewHotScoreReviewUpdate)),
+		ReviewVoteScore:   int64(snapshot.Int(setting.SystemSettingKeyReviewHotScoreReviewVote)),
+	}, nil
+}
+
 type StaticSiteSettingsProvider struct {
-	ReviewRuntime ReviewRuntimeConfig
-	AdminUser     AdminUserCommandConfig
+	ReviewRuntime  ReviewRuntimeConfig
+	AdminUser      AdminUserCommandConfig
+	AccountRuntime AccountRuntimeConfig
+	ApiKey         auth.ApiKeyConfig
+	HotScores      course.HotScoreConfig
 }
 
 func NewDefaultSiteSettingsProvider() StaticSiteSettingsProvider {
@@ -74,6 +133,13 @@ func NewDefaultSiteSettingsProvider() StaticSiteSettingsProvider {
 			FrequencyPolicy: policy.DefaultFrequencyPolicyConfig,
 		},
 		AdminUser: AdminUserCommandConfig{DefaultSuspendDays: auth.DefaultAdminConfig.DefaultSuspendDays},
+		AccountRuntime: AccountRuntimeConfig{
+			Registration: account.DefaultRegistrationConfig,
+			Login:        account.DefaultLoginConfig,
+			Verification: verification.DefaultConfig,
+		},
+		ApiKey:    auth.DefaultApiKeyConfig,
+		HotScores: course.DefaultHotScoreConfig,
 	}
 }
 
@@ -83,6 +149,18 @@ func (p StaticSiteSettingsProvider) ReviewRuntimeConfig(context.Context) (Review
 
 func (p StaticSiteSettingsProvider) AdminUserConfig(context.Context) (AdminUserCommandConfig, error) {
 	return p.AdminUser, nil
+}
+
+func (p StaticSiteSettingsProvider) AccountRuntimeConfig(context.Context) (AccountRuntimeConfig, error) {
+	return p.AccountRuntime, nil
+}
+
+func (p StaticSiteSettingsProvider) ApiKeyConfig(context.Context) (auth.ApiKeyConfig, error) {
+	return p.ApiKey, nil
+}
+
+func (p StaticSiteSettingsProvider) HotScoreConfig(context.Context) (course.HotScoreConfig, error) {
+	return p.HotScores, nil
 }
 
 var _ SiteSettingsProvider = (*SystemSiteSettingsProvider)(nil)

@@ -10,7 +10,24 @@ import {
   setMockUserPassword,
   toAuthUserDTO,
 } from "../fixtures/auth"
+import { getMockSystemSettingValue } from "./system-settings"
 import { randomDelay } from "../utils"
+
+function parseStringList(value: string | undefined) {
+  return (value ?? "@sjtu.edu.cn")
+    .split(/[\s,]+/)
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean)
+}
+
+function isAllowedRegistrationEmail(email: string) {
+  const allowed = parseStringList(
+    getMockSystemSettingValue("auth.registration.email_whitelist")
+  )
+  return allowed.some((item) =>
+    item.startsWith("@") ? email.endsWith(item) : email === item
+  )
+}
 
 export const authHandlers = [
   http.post("/api/auth/register/code", async ({ request }) => {
@@ -20,7 +37,7 @@ export const authHandlers = [
       return HttpResponse.json({ error: "email is required" }, { status: 400 })
     }
     const email = body.email.toLowerCase()
-    if (!email.endsWith("@sjtu.edu.cn")) {
+    if (!isAllowedRegistrationEmail(email)) {
       return HttpResponse.json(
         { error: "email domain not allowed" },
         { status: 403 }

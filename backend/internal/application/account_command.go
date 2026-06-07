@@ -14,6 +14,7 @@ type AccountCommandService struct {
 	passwordReset   *account.PasswordResetService
 	authUserService *auth.AuthUserService
 	sessionAuth     *auth.SessionAuthService
+	settings        SiteSettingsProvider
 }
 
 func NewAccountCommandService(
@@ -22,22 +23,36 @@ func NewAccountCommandService(
 	passwordReset *account.PasswordResetService,
 	authUserService *auth.AuthUserService,
 	sessionAuth *auth.SessionAuthService,
+	settings SiteSettingsProvider,
 ) *AccountCommandService {
+	if settings == nil {
+		defaults := NewDefaultSiteSettingsProvider()
+		settings = defaults
+	}
 	return &AccountCommandService{
 		registration:    registration,
 		login:           login,
 		passwordReset:   passwordReset,
 		authUserService: authUserService,
 		sessionAuth:     sessionAuth,
+		settings:        settings,
 	}
 }
 
 func (s *AccountCommandService) SendRegisterCode(ctx context.Context, cmd SendRegisterCodeCommand) error {
-	return s.registration.SendRegisterCode(ctx, cmd.Email)
+	config, err := s.settings.AccountRuntimeConfig(ctx)
+	if err != nil {
+		return err
+	}
+	return s.registration.SendRegisterCodeWithConfig(ctx, cmd.Email, config.Registration, config.Verification)
 }
 
 func (s *AccountCommandService) Register(ctx context.Context, cmd RegisterCommand) (*AccountDTO, error) {
-	acct, err := s.registration.Register(ctx, cmd.Email, cmd.Code, cmd.Password)
+	config, err := s.settings.AccountRuntimeConfig(ctx)
+	if err != nil {
+		return nil, err
+	}
+	acct, err := s.registration.RegisterWithConfig(ctx, cmd.Email, cmd.Code, cmd.Password, config.Registration)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +67,11 @@ func (s *AccountCommandService) Register(ctx context.Context, cmd RegisterComman
 }
 
 func (s *AccountCommandService) Login(ctx context.Context, cmd LoginCommand) (*AccountDTO, error) {
-	acct, err := s.login.Login(ctx, cmd.Email, cmd.Password)
+	config, err := s.settings.AccountRuntimeConfig(ctx)
+	if err != nil {
+		return nil, err
+	}
+	acct, err := s.login.LoginWithConfig(ctx, cmd.Email, cmd.Password, config.Login)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +86,11 @@ func (s *AccountCommandService) Login(ctx context.Context, cmd LoginCommand) (*A
 }
 
 func (s *AccountCommandService) SendResetCode(ctx context.Context, cmd SendResetCodeCommand) error {
-	return s.passwordReset.SendResetCode(ctx, cmd.Email)
+	config, err := s.settings.AccountRuntimeConfig(ctx)
+	if err != nil {
+		return err
+	}
+	return s.passwordReset.SendResetCodeWithConfig(ctx, cmd.Email, config.Verification)
 }
 
 func (s *AccountCommandService) ResetPassword(ctx context.Context, cmd ResetPasswordCommand) error {

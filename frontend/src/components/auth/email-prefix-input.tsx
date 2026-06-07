@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { authEmailDomain, normalizeAuthEmailPrefix } from "@/config/auth"
+import { defaultAuthEmailDomain, normalizeAuthEmailPrefix } from "@/config/auth"
 
 interface EmailPrefixInputProps {
   id: string
@@ -10,6 +10,7 @@ interface EmailPrefixInputProps {
   onBlur?: () => void
   autoComplete?: string
   placeholder?: string
+  emailDomain?: string
 }
 
 export function EmailPrefixInput({
@@ -20,6 +21,7 @@ export function EmailPrefixInput({
   onBlur,
   autoComplete = "username",
   placeholder = "your",
+  emailDomain = defaultAuthEmailDomain,
 }: EmailPrefixInputProps) {
   return (
     <div className="space-y-2">
@@ -31,13 +33,15 @@ export function EmailPrefixInput({
           inputMode="email"
           placeholder={placeholder}
           value={value}
-          onChange={(e) => onChange(normalizeAuthEmailPrefix(e.target.value))}
+          onChange={(e) =>
+            onChange(normalizeAuthEmailPrefix(e.target.value, emailDomain))
+          }
           onBlur={onBlur}
           autoComplete={autoComplete}
           className="rounded-r-none"
         />
         <span className="inline-flex h-9 shrink-0 items-center rounded-r-md border border-l-0 border-input bg-muted px-3 text-sm text-muted-foreground">
-          {authEmailDomain}
+          {emailDomain}
         </span>
       </div>
     </div>

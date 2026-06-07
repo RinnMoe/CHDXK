@@ -16,6 +16,7 @@ type CourseCommandService struct {
 	enrollmentService    *course.EnrollmentService
 	hotService           *course.CourseHotService
 	ratingCommandService *course.CourseRatingCommandService
+	settings             SiteSettingsProvider
 }
 
 func NewCourseCommandService(
@@ -24,13 +25,19 @@ func NewCourseCommandService(
 	enrollmentService *course.EnrollmentService,
 	hotService *course.CourseHotService,
 	ratingCommandService *course.CourseRatingCommandService,
+	settings SiteSettingsProvider,
 ) *CourseCommandService {
+	if settings == nil {
+		defaults := NewDefaultSiteSettingsProvider()
+		settings = defaults
+	}
 	return &CourseCommandService{
 		courseService:        courseService,
 		notificationService:  notificationService,
 		enrollmentService:    enrollmentService,
 		hotService:           hotService,
 		ratingCommandService: ratingCommandService,
+		settings:             settings,
 	}
 }
 
@@ -58,7 +65,11 @@ func (s *CourseCommandService) DeleteEnrollment(ctx context.Context, userID, enr
 }
 
 func (s *CourseCommandService) RecordActivity(ctx context.Context, payload course.RecordHotCourseActivityPayload) error {
-	return s.hotService.RecordActivity(ctx, payload)
+	scores, err := s.settings.HotScoreConfig(ctx)
+	if err != nil {
+		return err
+	}
+	return s.hotService.RecordActivityWithScores(ctx, payload, scores)
 }
 
 func (s *CourseCommandService) StartEnrollmentSync(ctx context.Context, semester, state string) (string, string, error) {

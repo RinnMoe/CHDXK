@@ -3,10 +3,12 @@ import {
   listAdminSystemSettings,
   listSystemSettings,
   updateSystemSetting,
+  SYSTEM_SETTING_AUTH_EMAIL_DOMAIN,
   SYSTEM_SETTING_CURRENT_SEMESTER,
   type SystemSettingDTO,
   type UpdateSystemSettingCommand,
 } from "@/api/system-settings"
+import { defaultAuthEmailDomain } from "@/config/auth"
 
 export function useSystemSettings(enabled = true) {
   return useQuery({
@@ -58,4 +60,18 @@ export function getCurrentSemesterSetting(
     settings?.find((item) => item.key === SYSTEM_SETTING_CURRENT_SEMESTER)
       ?.value ?? ""
   )
+}
+
+export function getAuthEmailDomainSetting(
+  settings?: SystemSettingDTO[] | null
+) {
+  return (
+    settings?.find((item) => item.key === SYSTEM_SETTING_AUTH_EMAIL_DOMAIN)
+      ?.value || defaultAuthEmailDomain
+  )
+}
+
+export function useAuthEmailDomain() {
+  const settingsQuery = useSystemSettings()
+  return getAuthEmailDomainSetting(settingsQuery.data)
 }

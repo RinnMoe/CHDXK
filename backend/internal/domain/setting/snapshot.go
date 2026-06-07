@@ -2,6 +2,7 @@ package setting
 
 import (
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -42,4 +43,18 @@ func (s *Snapshot) Float(key string) float64 {
 func (s *Snapshot) Duration(key string) time.Duration {
 	value, _ := time.ParseDuration(s.String(key))
 	return value
+}
+
+func (s *Snapshot) StringList(key string) []string {
+	parts := strings.FieldsFunc(s.String(key), func(r rune) bool {
+		return r == ',' || r == '\n' || r == '\r' || r == '\t'
+	})
+	items := make([]string, 0, len(parts))
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part != "" {
+			items = append(items, part)
+		}
+	}
+	return items
 }

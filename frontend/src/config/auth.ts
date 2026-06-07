@@ -1,15 +1,25 @@
-export const authEmailDomain = "@sjtu.edu.cn"
+export const defaultAuthEmailDomain = "@sjtu.edu.cn"
 
 export const authPasswordPolicy = {
   minLength: 10,
 } as const
 
-export function buildAuthEmail(prefix: string) {
-  return `${prefix.trim()}${authEmailDomain}`
+export function buildAuthEmail(
+  prefix: string,
+  domain = defaultAuthEmailDomain
+) {
+  return `${prefix.trim()}${domain}`
 }
 
-export function normalizeAuthEmailPrefix(value: string) {
-  return value.trim().replace(authEmailDomain, "").split("@")[0]
+export function normalizeAuthEmailPrefix(
+  value: string,
+  domain = defaultAuthEmailDomain
+) {
+  const trimmed = value.trim()
+  if (domain && trimmed.toLowerCase().endsWith(domain.toLowerCase())) {
+    return trimmed.slice(0, -domain.length).split("@")[0]
+  }
+  return trimmed.split("@")[0]
 }
 
 export function validateAuthPassword(password: string) {

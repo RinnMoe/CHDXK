@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CodeInputWithButton } from "./code-button"
 import { buildAuthEmail, validateAuthPassword } from "@/config/auth"
 import { useAuth } from "@/contexts/auth-context"
+import { useAuthEmailDomain } from "@/hooks/use-system-settings"
 import { fieldError } from "./form-utils"
 
 type PasswordResetFormValues = {
@@ -21,6 +22,7 @@ type PasswordResetFormValues = {
 export function PasswordResetForm() {
   const navigate = useNavigate()
   const { resetPassword, sendResetCode } = useAuth()
+  const emailDomain = useAuthEmailDomain()
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const form = useForm({
@@ -32,7 +34,7 @@ export function PasswordResetForm() {
     } as PasswordResetFormValues,
     onSubmit: async ({ value }) => {
       await resetPassword({
-        email: buildAuthEmail(value.emailPrefix),
+        email: buildAuthEmail(value.emailPrefix, emailDomain),
         code: value.code.trim(),
         new_password: value.password,
       })
@@ -71,6 +73,7 @@ export function PasswordResetForm() {
                     id="email"
                     label="邮箱"
                     value={field.state.value}
+                    emailDomain={emailDomain}
                     onChange={(value) => field.handleChange(value)}
                     onBlur={field.handleBlur}
                   />
@@ -101,7 +104,9 @@ export function PasswordResetForm() {
                         id="code"
                         label="验证码"
                         email={
-                          emailPrefix.trim() ? buildAuthEmail(emailPrefix) : ""
+                          emailPrefix.trim()
+                            ? buildAuthEmail(emailPrefix, emailDomain)
+                            : ""
                         }
                         code={field.state.value}
                         onCodeChange={(value) =>

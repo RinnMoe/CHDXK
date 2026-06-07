@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CodeInputWithButton } from "./code-button"
 import { buildAuthEmail, validateAuthPassword } from "@/config/auth"
 import { useAuth } from "@/contexts/auth-context"
+import { useAuthEmailDomain } from "@/hooks/use-system-settings"
 import { fieldError } from "./form-utils"
 
 type RegisterFormValues = {
@@ -20,6 +21,7 @@ type RegisterFormValues = {
 
 export function RegisterForm() {
   const { register, sendRegisterCode } = useAuth()
+  const emailDomain = useAuthEmailDomain()
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const form = useForm({
@@ -31,7 +33,7 @@ export function RegisterForm() {
     } as RegisterFormValues,
     onSubmit: async ({ value }) => {
       await register({
-        email: buildAuthEmail(value.emailPrefix),
+        email: buildAuthEmail(value.emailPrefix, emailDomain),
         code: value.code.trim(),
         password: value.password,
       })
@@ -72,6 +74,7 @@ export function RegisterForm() {
                     onChange={(value) => field.handleChange(value)}
                     onBlur={field.handleBlur}
                     placeholder="jAccount"
+                    emailDomain={emailDomain}
                   />
                   {error && (
                     <p className="text-sm text-destructive" role="alert">
@@ -100,7 +103,9 @@ export function RegisterForm() {
                         id="code"
                         label="验证码"
                         email={
-                          emailPrefix.trim() ? buildAuthEmail(emailPrefix) : ""
+                          emailPrefix.trim()
+                            ? buildAuthEmail(emailPrefix, emailDomain)
+                            : ""
                         }
                         code={field.state.value}
                         onCodeChange={(value) =>

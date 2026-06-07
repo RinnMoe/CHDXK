@@ -10,11 +10,12 @@ import (
 type ValueType string
 
 const (
-	ValueTypeString   ValueType = "string"
-	ValueTypeInt      ValueType = "int"
-	ValueTypeBool     ValueType = "bool"
-	ValueTypeFloat    ValueType = "float"
-	ValueTypeDuration ValueType = "duration"
+	ValueTypeString     ValueType = "string"
+	ValueTypeInt        ValueType = "int"
+	ValueTypeBool       ValueType = "bool"
+	ValueTypeFloat      ValueType = "float"
+	ValueTypeDuration   ValueType = "duration"
+	ValueTypeStringList ValueType = "string_list"
 )
 
 type Definition struct {

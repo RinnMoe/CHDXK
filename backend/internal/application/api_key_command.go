@@ -10,15 +10,24 @@ import (
 )
 
 type ApiKeyCommandService struct {
-	svc *auth.ApiKeyService
+	svc      *auth.ApiKeyService
+	settings SiteSettingsProvider
 }
 
-func NewApiKeyCommandService(svc *auth.ApiKeyService) *ApiKeyCommandService {
-	return &ApiKeyCommandService{svc: svc}
+func NewApiKeyCommandService(svc *auth.ApiKeyService, settings SiteSettingsProvider) *ApiKeyCommandService {
+	if settings == nil {
+		defaults := NewDefaultSiteSettingsProvider()
+		settings = defaults
+	}
+	return &ApiKeyCommandService{svc: svc, settings: settings}
 }
 
 func (s *ApiKeyCommandService) CreateMyApiKey(ctx context.Context, userID int, cmd CreateApiKeyCommand) (*ApiKeyDTO, error) {
-	key, credential, err := s.svc.CreateUserKey(ctx, userID, cmd.Name)
+	config, err := s.settings.ApiKeyConfig(ctx)
+	if err != nil {
+		return nil, err
+	}
+	key, credential, err := s.svc.CreateUserKeyWithConfig(ctx, userID, cmd.Name, config)
 	if err != nil {
 		return nil, err
 	}

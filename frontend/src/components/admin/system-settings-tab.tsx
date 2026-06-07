@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
@@ -27,6 +28,8 @@ type DraftMap = Record<string, string>
 
 const GROUP_LABELS: Record<string, string> = {
   admin: "管理",
+  api_key: "API key",
+  auth: "认证",
   course: "课程",
   review: "点评",
 }
@@ -203,17 +206,29 @@ function SettingControl({
             onChange(checked === true ? "true" : "false")
           }
         />
-        <span className="text-sm text-muted-foreground">
-          启用
-        </span>
+        <span className="text-sm text-muted-foreground">启用</span>
       </div>
+    )
+  }
+
+  if (setting.type === "string_list") {
+    return (
+      <Textarea
+        id={`setting-${setting.key}`}
+        className="min-h-20 resize-y"
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+      />
     )
   }
 
   return (
     <Input
       id={`setting-${setting.key}`}
-      type={setting.type === "int" || setting.type === "float" ? "number" : "text"}
+      type={
+        setting.type === "int" || setting.type === "float" ? "number" : "text"
+      }
       step={setting.type === "float" ? "0.01" : undefined}
       value={value}
       disabled={disabled}

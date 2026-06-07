@@ -39,12 +39,17 @@ func NewPasswordResetService(
 }
 
 func (s *PasswordResetService) SendResetCode(ctx context.Context, email string) error {
+	return s.SendResetCodeWithConfig(ctx, email, s.verification)
+}
+
+func (s *PasswordResetService) SendResetCodeWithConfig(ctx context.Context, email string, verificationConfig verification.Config) error {
+	verificationConfig = verificationConfig.WithDefaults()
 	normalized := identity.NormalizeEmail(email)
 	if _, err := s.usernames.UsernameFromEmail(normalized); err != nil {
 		return err
 	}
 
-	wait, err := s.codes.ReserveSend(ctx, normalized, s.verification.CodeInterval)
+	wait, err := s.codes.ReserveSend(ctx, normalized, verificationConfig.CodeInterval)
 	if err != nil {
 		return err
 	}
@@ -52,14 +57,14 @@ func (s *PasswordResetService) SendResetCode(ctx context.Context, email string) 
 		return fmt.Errorf("%w: retry after %s", verification.ErrSendTooSoon, wait.Round(time.Second))
 	}
 
-	code, err := verification.NewCode(normalized, time.Now(), s.verification)
+	code, err := verification.NewCode(normalized, time.Now(), verificationConfig)
 	if err != nil {
 		return err
 	}
-	if err := s.codes.Save(ctx, code, s.verification.CodeTTL); err != nil {
+	if err := s.codes.Save(ctx, code, verificationConfig.CodeTTL); err != nil {
 		return err
 	}
-	mail, err := notification.NewVerificationCodeEmail(normalized, code.Code, s.verification.CodeTTL)
+	mail, err := notification.NewVerificationCodeEmail(normalized, code.Code, verificationConfig.CodeTTL)
 	if err != nil {
 		return err
 	}
