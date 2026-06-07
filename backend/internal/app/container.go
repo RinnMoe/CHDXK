@@ -9,7 +9,6 @@ import (
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/email"
-	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/review/policy"
 	"jcourse/internal/infrastructure/jaccount"
@@ -26,7 +25,6 @@ type ServiceContainer struct {
 	CourseEnrollmentQuery *application.CourseEnrollmentQueryService
 	TeacherQuery          *application.TeacherQueryService
 	PointQuery            *application.PointQueryService
-	PointCommand          *application.PointCommandService
 	PointRewardCommand    *application.PointRewardCommandService
 	SiteStatsQuery        *application.SiteStatsQueryService
 	SiteStatsCommand      *application.SiteStatsCommandService
@@ -41,8 +39,6 @@ type ServiceContainer struct {
 	ApiKeySvc             *auth.ApiKeyService
 	ApiKeyQuery           *application.ApiKeyQueryService
 	ApiKeyCommand         *application.ApiKeyCommandService
-	UserSettingsQuery     *application.UserSettingsQueryService
-	UserSettingsCommand   *application.UserSettingsCommandService
 	SystemSettingsQuery   *application.SystemSettingsQueryService
 	SystemSettingsCommand *application.SystemSettingsCommandService
 	AuditLogQuery         *application.AuditLogQueryService
@@ -65,7 +61,6 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	pointRepo := repository.NewPointRepository(db, redisClient)
 	accountRepo := repository.NewAccountRepository(db, redisClient)
 	userRepo := repository.NewUserRepository(db, redisClient)
-	userSettingsRepo := repository.NewUserSettingsRepository(db, redisClient)
 	systemSettingsRepo := repository.NewSystemSettingsRepository(db, redisClient)
 	apiKeyRepo := repository.NewApiKeyRepository(db)
 	auditLogRepo := repository.NewAuditLogRepository(db)
@@ -103,9 +98,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	courseEnrollmentQuery := application.NewCourseEnrollmentQueryService(courseEnrollmentRepo)
 	teacherQuery := application.NewTeacherQueryService(teacherRepo)
 	announcementQuery := application.NewAnnouncementQueryService(announcementRepo)
-	transferService := point.NewTransferService(conf.Point)
-	pointQuery := application.NewPointQueryService(pointRepo, accountRepo, transferService, usernameDeriver)
-	pointCommand := application.NewPointCommandService(accountRepo, pointRepo, transferService, usernameDeriver)
+	pointQuery := application.NewPointQueryService(pointRepo, accountRepo, usernameDeriver)
 	pointRewardCommand := application.NewPointRewardCommandService(pointRepo)
 	statsConfig := conf.Stats
 	siteStatsQuery := application.NewSiteStatsQueryService(statRepo, statsConfig)
@@ -150,8 +143,6 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	authResolution := application.NewAuthResolutionService(currentUserService, apiKeySvc, accessTracker, sessionAuthService)
 	apiKeyQuery := application.NewApiKeyQueryService(apiKeySvc)
 	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc)
-	userSettingsQuery := application.NewUserSettingsQueryService(userSettingsRepo, courseRepo)
-	userSettingsCommand := application.NewUserSettingsCommandService(userSettingsRepo, courseRepo)
 	systemSettingsQuery := application.NewSystemSettingsQueryService(systemSettingsRepo)
 	systemSettingsCommand := application.NewSystemSettingsCommandService(systemSettingsRepo, courseRepo)
 	auditLogQuery := application.NewAuditLogQueryService(auditLogRepo)
@@ -165,7 +156,6 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		CourseEnrollmentQuery: courseEnrollmentQuery,
 		TeacherQuery:          teacherQuery,
 		PointQuery:            pointQuery,
-		PointCommand:          pointCommand,
 		PointRewardCommand:    pointRewardCommand,
 		SiteStatsQuery:        siteStatsQuery,
 		SiteStatsCommand:      siteStatsCommand,
@@ -180,8 +170,6 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		ApiKeySvc:             apiKeySvc,
 		ApiKeyQuery:           apiKeyQuery,
 		ApiKeyCommand:         apiKeyCommand,
-		UserSettingsQuery:     userSettingsQuery,
-		UserSettingsCommand:   userSettingsCommand,
 		SystemSettingsQuery:   systemSettingsQuery,
 		SystemSettingsCommand: systemSettingsCommand,
 		AuditLogQuery:         auditLogQuery,

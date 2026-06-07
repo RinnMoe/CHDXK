@@ -1,16 +1,7 @@
+import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query"
-import {
-  createTransfer,
   getUserPoints,
-  previewTransfer,
-  type CreatePointTransferCommand,
   type PointRecordListFilter,
-  type PreviewTransferParams,
 } from "@/api/point"
 
 export function useUserPoints(
@@ -22,21 +13,5 @@ export function useUserPoints(
     queryFn: () => getUserPoints(userID, filter),
     enabled: !!userID,
     placeholderData: keepPreviousData,
-  })
-}
-
-export function usePreviewTransfer() {
-  return useMutation({
-    mutationFn: (params: PreviewTransferParams) => previewTransfer(params),
-  })
-}
-
-export function useCreateTransfer() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (cmd: CreatePointTransferCommand) => createTransfer(cmd),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["points"] })
-    },
   })
 }

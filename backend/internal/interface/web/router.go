@@ -75,10 +75,9 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	courseEnrollmentController := controller.NewCourseEnrollmentController(container.CourseEnrollmentQuery, container.CourseCommand)
 	courseEnrollmentSyncController := controller.NewCourseEnrollmentSyncController(container.CourseCommand, conf.JAccount)
 	teacherController := controller.NewTeacherController(container.TeacherQuery, container.CourseQuery)
-	pointController := controller.NewPointController(container.PointQuery, container.PointCommand)
+	pointController := controller.NewPointController(container.PointQuery)
 	accountController := controller.NewAccountController(container.AccountCommand, container.AccountQuery)
 	apiKeyController := controller.NewApiKeyController(container.ApiKeyQuery, container.ApiKeyCommand)
-	userSettingsController := controller.NewUserSettingsController(container.UserSettingsQuery, container.UserSettingsCommand)
 	systemSettingsController := controller.NewSystemSettingsController(container.SystemSettingsQuery, container.SystemSettingsCommand)
 	siteStatsController := controller.NewSiteStatsController(container.SiteStatsQuery)
 	announcementController := controller.NewAnnouncementController(container.AnnouncementQuery)
@@ -152,8 +151,6 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	}
 	userGroup := apiGroup.Group("/user")
 	{
-		userGroup.GET("/settings", userSettingsController.GetMySettings)
-		userGroup.PUT("/settings", userSettingsController.UpdateMySettings)
 		userGroup.GET("/:userID/point", middleware.RequireSelfOrAdmin("userID"), pointController.GetUserPoints)
 		userGroup.GET("/:userID/review", middleware.RequireSelfOrAdmin("userID"), reviewController.ListUserReviews)
 	}
@@ -162,11 +159,6 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		apiKeyGroup.GET("/", apiKeyController.ListMyApiKeys)
 		apiKeyGroup.POST("/", apiKeyController.CreateMyApiKey)
 		apiKeyGroup.DELETE("/:apiKeyID", apiKeyController.DeleteMyApiKey)
-	}
-	pointGroup := apiGroup.Group("/point")
-	{
-		pointGroup.POST("/transfer/preview", pointController.PreviewTransfer)
-		pointGroup.POST("/transfer", pointController.CreateTransfer)
 	}
 	systemSettingsGroup := apiGroup.Group("/system-settings")
 	{

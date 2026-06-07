@@ -5,14 +5,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 
 	"jcourse/internal/application"
 	"jcourse/internal/domain/account/identity"
-	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/point"
 	"jcourse/internal/interface/web/controller"
 )
@@ -32,8 +30,7 @@ func TestPointController_GetUserPoints(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := &pointControllerFakeQuery{}
-			cmd := newPointControllerCommand()
-			ctrl := controller.NewPointController(application.NewPointQueryService(repo, &pointControllerFakeAccountRepo{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), testPointUsernameDeriver()), cmd)
+			ctrl := controller.NewPointController(application.NewPointQueryService(repo, &pointControllerFakeAccountRepo{}, testPointUsernameDeriver()))
 			r := gin.New()
 			r.GET("/api/user/:userID/point", ctrl.GetUserPoints)
 
@@ -48,38 +45,6 @@ func TestPointController_GetUserPoints(t *testing.T) {
 	}
 }
 
-func TestPointController_PreviewAndCreateTransfer(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-	command := newPointControllerCommand()
-	ctrl := controller.NewPointController(application.NewPointQueryService(&pointControllerFakeQuery{}, &pointControllerFakeAccountRepo{}, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), testPointUsernameDeriver()), command)
-	r := gin.New()
-	r.POST("/api/point/transfer/preview", func(c *gin.Context) {
-		c.Request = c.Request.WithContext(auth.WithUser(c.Request.Context(), &auth.User{ID: 1, Role: auth.RoleUser}))
-		ctrl.PreviewTransfer(c)
-	})
-	r.POST("/api/point/transfer", func(c *gin.Context) {
-		c.Request = c.Request.WithContext(auth.WithUser(c.Request.Context(), &auth.User{ID: 1, Role: auth.RoleUser}))
-		ctrl.CreateTransfer(c)
-	})
-
-	body := `{"recipient_email":"bob@example.edu","amount":100,"fee_payer":"sender"}`
-	previewReq := httptest.NewRequest(http.MethodPost, "/api/point/transfer/preview", strings.NewReader(body))
-	previewReq.Header.Set("Content-Type", "application/json")
-	previewW := httptest.NewRecorder()
-	r.ServeHTTP(previewW, previewReq)
-	if previewW.Code != http.StatusOK {
-		t.Fatalf("preview status = %d, want 200", previewW.Code)
-	}
-
-	createReq := httptest.NewRequest(http.MethodPost, "/api/point/transfer", strings.NewReader(body))
-	createReq.Header.Set("Content-Type", "application/json")
-	createW := httptest.NewRecorder()
-	r.ServeHTTP(createW, createReq)
-	if createW.Code != http.StatusCreated {
-		t.Fatalf("create status = %d, want 201", createW.Code)
-	}
-}
-
 type pointControllerFakeQuery struct{}
 
 func (q *pointControllerFakeQuery) SumByUser(_ context.Context, _ int) (int, error) {
@@ -88,23 +53,6 @@ func (q *pointControllerFakeQuery) SumByUser(_ context.Context, _ int) (int, err
 
 func (q *pointControllerFakeQuery) FindRecordsByUser(_ context.Context, filter point.RecordFilter) ([]point.Record, int64, error) {
 	return []point.Record{}, 0, nil
-}
-
-func newPointControllerCommand() *application.PointCommandService {
-	bobUsername, err := testPointUsernameDeriver().UsernameFromEmail("bob@example.edu")
-	if err != nil {
-		panic(err)
-	}
-	return application.NewPointCommandService(
-		&pointControllerFakeAccountRepo{accountsByID: map[int]*identity.Account{
-			1: {ID: 1, Username: "alice@example.edu", Email: "alice@example.edu"},
-		}, accountsByUsername: map[string]*identity.Account{
-			bobUsername: {ID: 2, Username: bobUsername, Email: "bob@example.edu"},
-		}},
-		&pointControllerFakeTransferRepo{},
-		point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}),
-		testPointUsernameDeriver(),
-	)
 }
 
 func testPointUsernameDeriver() identity.UsernameDeriver {
@@ -133,13 +81,6 @@ func (r *pointControllerFakeAccountRepo) FindByEmail(_ context.Context, email st
 	return r.accountsByEmail[email], nil
 }
 
-type pointControllerFakeTransferRepo struct{}
-
-func (r *pointControllerFakeTransferRepo) CreateTransfer(_ context.Context, t *point.Transfer, _ point.Record, _ point.Record) error {
-	t.ID = 1
-	return nil
-}
-
 func TestPointController_GetPointsByEmail(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -157,8 +98,7 @@ func TestPointController_GetPointsByEmail(t *testing.T) {
 		},
 	}
 	ctrl := controller.NewPointController(
-		application.NewPointQueryService(fakeQuery, fakeAccountRepo, point.NewTransferService(point.TransferFeeConfig{RateBps: 250, MinFee: 1}), testPointUsernameDeriver()),
-		newPointControllerCommand(),
+		application.NewPointQueryService(fakeQuery, fakeAccountRepo, testPointUsernameDeriver()),
 	)
 
 	r := gin.New()

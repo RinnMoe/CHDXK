@@ -14,14 +14,13 @@ type PointRecordListFilter struct {
 }
 
 type PointQueryService struct {
-	query           point.Query
-	accountRepo     identity.Repository
-	transferService *point.TransferService
-	usernames       identity.UsernameDeriver
+	query       point.Query
+	accountRepo identity.Repository
+	usernames   identity.UsernameDeriver
 }
 
-func NewPointQueryService(query point.Query, accountRepo identity.Repository, transferService *point.TransferService, usernames identity.UsernameDeriver) *PointQueryService {
-	return &PointQueryService{query: query, accountRepo: accountRepo, transferService: transferService, usernames: usernames}
+func NewPointQueryService(query point.Query, accountRepo identity.Repository, usernames identity.UsernameDeriver) *PointQueryService {
+	return &PointQueryService{query: query, accountRepo: accountRepo, usernames: usernames}
 }
 
 func (s *PointQueryService) GetUserPoints(ctx context.Context, userID int, f PointRecordListFilter) (*PointSummaryDTO, error) {
@@ -53,24 +52,6 @@ func (s *PointQueryService) GetUserPoints(ctx context.Context, userID int, f Poi
 			PageSize: f.PageSize,
 		},
 	}, nil
-}
-
-type PreviewTransferParams struct {
-	Amount   int            `json:"amount"`
-	FeePayer point.FeePayer `json:"fee_payer"`
-}
-
-func (s *PointQueryService) PreviewTransfer(ctx context.Context, userID int, params PreviewTransferParams) (*PointTransferPreviewDTO, error) {
-	senderBalance, err := s.query.SumByUser(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
-	preview, err := s.transferService.Preview(params.Amount, params.FeePayer)
-	if err != nil {
-		return nil, err
-	}
-	dto := newPointTransferPreviewDTO(preview, senderBalance)
-	return &dto, nil
 }
 
 var ErrPointUserNotFound = apperr.ErrPointUserNotFound

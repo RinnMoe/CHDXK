@@ -22,19 +22,9 @@ func IsRegisteredSystemSettingKey(key string) bool {
 	return ok
 }
 
-type UserSettings struct {
-	UserID          int
-	CurrentSemester string
-}
-
 type SystemSetting struct {
 	Key   string
 	Value string
-}
-
-type Repository interface {
-	GetByUserID(ctx context.Context, userID int) (*UserSettings, error)
-	Save(ctx context.Context, settings *UserSettings) error
 }
 
 type SystemRepository interface {

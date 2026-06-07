@@ -7,16 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"jcourse/internal/application"
-	"jcourse/internal/domain/auth"
 )
 
 type PointController struct {
-	query   *application.PointQueryService
-	command *application.PointCommandService
+	query *application.PointQueryService
 }
 
-func NewPointController(query *application.PointQueryService, command *application.PointCommandService) *PointController {
-	return &PointController{query: query, command: command}
+func NewPointController(query *application.PointQueryService) *PointController {
+	return &PointController{query: query}
 }
 
 func (ctrl *PointController) GetUserPoints(c *gin.Context) {
@@ -39,48 +37,6 @@ func (ctrl *PointController) GetUserPoints(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, result)
-}
-
-func (ctrl *PointController) CreateTransfer(c *gin.Context) {
-	u := auth.GetUserFromCtx(c.Request.Context())
-	if u == nil {
-		respondUnauthorized(c)
-		return
-	}
-
-	var cmd application.CreatePointTransferCommand
-	if err := c.ShouldBindJSON(&cmd); err != nil {
-		respondBindError(c, err)
-		return
-	}
-
-	transfer, err := ctrl.command.CreateTransfer(c.Request.Context(), u, cmd)
-	if err != nil {
-		respondError(c, err)
-		return
-	}
-	c.JSON(http.StatusCreated, transfer)
-}
-
-func (ctrl *PointController) PreviewTransfer(c *gin.Context) {
-	u := auth.GetUserFromCtx(c.Request.Context())
-	if u == nil {
-		respondUnauthorized(c)
-		return
-	}
-
-	var params application.PreviewTransferParams
-	if err := c.ShouldBindJSON(&params); err != nil {
-		respondBindError(c, err)
-		return
-	}
-
-	preview, err := ctrl.query.PreviewTransfer(c.Request.Context(), u.ID, params)
-	if err != nil {
-		respondError(c, err)
-		return
-	}
-	c.JSON(http.StatusOK, preview)
 }
 
 func (ctrl *PointController) GetPointsByEmail(c *gin.Context) {

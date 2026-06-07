@@ -135,17 +135,6 @@ func (UserEntity) TableName() string {
 	return "users"
 }
 
-type UserSettingsEntity struct {
-	UserID          int       `gorm:"column:user_id;primaryKey"`
-	CurrentSemester string    `gorm:"column:current_semester"`
-	CreatedAt       time.Time `gorm:"column:created_at"`
-	UpdatedAt       time.Time `gorm:"column:updated_at"`
-}
-
-func (UserSettingsEntity) TableName() string {
-	return "user_settings"
-}
-
 type SystemSettingsEntity struct {
 	Key       string    `gorm:"column:key;primaryKey"`
 	Value     string    `gorm:"column:value"`

@@ -15,16 +15,6 @@ const REASONS: {
   { reason: "review_create", description: "发表点评奖励", amount: 5 },
   { reason: "review_vote", description: "点评获得点赞", amount: 1 },
   { reason: "daily_login", description: "每日登录奖励", amount: 1 },
-  {
-    reason: "transfer_in",
-    description: "积分转入",
-    amount: 20,
-  },
-  {
-    reason: "transfer_out",
-    description: "积分转出",
-    amount: -10,
-  },
 ]
 
 const balances = new Map<number, MockUserBalance>()
@@ -53,9 +43,4 @@ export function getMockPointRecords(userID: number): PointRecordDTO[] {
 
 export function getMockPointTotal(userID: number): number {
   return getMockPointRecords(userID).reduce((sum, r) => sum + r.amount, 0)
-}
-
-export function pushMockPointRecord(userID: number, record: PointRecordDTO) {
-  const entry = ensureBalance(userID)
-  entry.records.unshift(record)
 }
