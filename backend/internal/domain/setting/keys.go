@@ -23,6 +23,4 @@ const (
 	SystemSettingKeyReviewFrequencyMaxReviews      = "review.frequency.max_reviews"
 	SystemSettingKeyReviewFrequencySimilarityRatio = "review.frequency.similarity_ratio"
 	SystemSettingKeyReviewFrequencySuspendDuration = "review.frequency.suspend_duration"
-
-	SystemSettingKeyAdminDefaultSuspendDays = "admin.default_suspend_days"
 )

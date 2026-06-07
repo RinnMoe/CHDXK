@@ -16,14 +16,10 @@ var (
 
 type AdminUserService struct {
 	userRepo UserRepository
-	config   AdminConfig
 }
 
-func NewAdminUserService(userRepo UserRepository, config AdminConfig) *AdminUserService {
-	if config.DefaultSuspendDays <= 0 {
-		config.DefaultSuspendDays = DefaultAdminConfig.DefaultSuspendDays
-	}
-	return &AdminUserService{userRepo: userRepo, config: config}
+func NewAdminUserService(userRepo UserRepository) *AdminUserService {
+	return &AdminUserService{userRepo: userRepo}
 }
 
 func (s *AdminUserService) SuspendUserForDays(ctx context.Context, actorUserID int, userID int, days int) error {
@@ -41,10 +37,6 @@ func (s *AdminUserService) SuspendUserForDays(ctx context.Context, actorUserID i
 	if u.IsAdmin() {
 		return ErrCannotSuspendAdmin
 	}
-	if days <= 0 {
-		days = s.config.DefaultSuspendDays
-	}
-
 	u.Suspend(time.Duration(days) * 24 * time.Hour)
 	return s.userRepo.Update(ctx, u)
 }

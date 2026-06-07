@@ -40,12 +40,12 @@ export function getAdminUserByEmail(email: string): Promise<AdminUserDTO> {
 }
 
 export interface SuspendAdminUserCommand {
-  days?: number
+  days: number
 }
 
 export function suspendAdminUser(
   userID: number,
-  cmd: SuspendAdminUserCommand = {}
+  cmd: SuspendAdminUserCommand
 ): Promise<{ message: string }> {
   return apiClient(`${BASE_URL}/admin/user/${userID}/suspension`, {
     method: "PUT",

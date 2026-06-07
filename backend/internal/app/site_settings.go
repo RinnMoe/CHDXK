@@ -180,15 +180,6 @@ func newSystemSettingsService(repo setting.SystemRepository, courseRepo course.C
 			DefaultValue: policy.DefaultFrequencyPolicyConfig.SuspendDuration.String(),
 			Validator:    setting.ValueValidatorFunc(positiveDurationSetting),
 		},
-		{
-			Key:          setting.SystemSettingKeyAdminDefaultSuspendDays,
-			Group:        "admin",
-			Label:        "默认封禁天数",
-			Description:  "管理员未填写时的默认封禁天数",
-			Type:         setting.ValueTypeInt,
-			DefaultValue: strconv.Itoa(auth.DefaultAdminConfig.DefaultSuspendDays),
-			Validator:    setting.ValueValidatorFunc(positiveIntSetting),
-		},
 	})
 	return setting.NewSystemSettingsService(repo, registry)
 }

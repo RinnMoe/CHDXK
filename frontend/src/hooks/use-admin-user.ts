@@ -13,7 +13,7 @@ import {
 
 type SuspendAdminUserVariables = {
   userID: number
-  cmd?: SuspendAdminUserCommand
+  cmd: SuspendAdminUserCommand
 }
 
 type ResetAdminUserPasswordVariables = {

@@ -42,7 +42,7 @@ func TestAdminUserCommandServiceResetPassword(t *testing.T) {
 	prev := task.SetEnqueuerForTest(enqueuer)
 	defer task.SetEnqueuerForTest(prev)
 
-	svc := NewAdminUserCommandService(userRepo, accountRepo, hasher, nil)
+	svc := NewAdminUserCommandService(userRepo, accountRepo, hasher)
 	actor := &auth.User{ID: 1, Role: auth.RoleSuperAdmin}
 	if err := svc.ResetPassword(ctx, actor, 2, "newpass"); err != nil {
 		t.Fatalf("ResetPassword: %v", err)
@@ -78,7 +78,7 @@ func TestAdminUserCommandServiceResetPasswordRejectsEmptyPassword(t *testing.T) 
 	userRepo := auth.NewMockUserRepository(map[int]*auth.User{
 		2: {ID: 2, Role: auth.RoleUser},
 	})
-	svc := NewAdminUserCommandService(userRepo, accountRepo, hasher, nil)
+	svc := NewAdminUserCommandService(userRepo, accountRepo, hasher)
 
 	err := svc.ResetPassword(context.Background(), &auth.User{ID: 1, Role: auth.RoleSuperAdmin}, 2, "  ")
 	if err != credential.ErrPasswordRequired {

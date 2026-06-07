@@ -60,11 +60,15 @@ func (ctrl *AdminUserController) SuspendUser(c *gin.Context) {
 		return
 	}
 	cmd := suspendUserCommand{}
-	if c.Request.ContentLength != 0 {
-		if err := c.ShouldBindJSON(&cmd); err != nil {
-			respondBindError(c, err)
-			return
-		}
+
+	if err := c.ShouldBindJSON(&cmd); err != nil {
+		respondBindError(c, err)
+		return
+	}
+
+	if cmd.Days <= 0 {
+		respondBadRequest(c, "封禁天数必须大于 0")
+		return
 	}
 
 	actor := auth.GetUserFromCtx(c.Request.Context())

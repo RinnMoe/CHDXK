@@ -15,7 +15,6 @@ import (
 
 type SiteSettingsProvider interface {
 	ReviewRuntimeConfig(ctx context.Context) (ReviewRuntimeConfig, error)
-	AdminUserConfig(ctx context.Context) (AdminUserCommandConfig, error)
 	AccountRuntimeConfig(ctx context.Context) (AccountRuntimeConfig, error)
 	ApiKeyConfig(ctx context.Context) (auth.ApiKeyConfig, error)
 	HotScoreConfig(ctx context.Context) (course.HotScoreConfig, error)
@@ -60,16 +59,6 @@ func (p *SystemSiteSettingsProvider) ReviewRuntimeConfig(ctx context.Context) (R
 			SimilarityRatio: snapshot.Float(setting.SystemSettingKeyReviewFrequencySimilarityRatio),
 			SuspendDuration: snapshot.Duration(setting.SystemSettingKeyReviewFrequencySuspendDuration),
 		},
-	}, nil
-}
-
-func (p *SystemSiteSettingsProvider) AdminUserConfig(ctx context.Context) (AdminUserCommandConfig, error) {
-	snapshot, err := p.settings.Snapshot(ctx)
-	if err != nil {
-		return AdminUserCommandConfig{}, err
-	}
-	return AdminUserCommandConfig{
-		DefaultSuspendDays: snapshot.Int(setting.SystemSettingKeyAdminDefaultSuspendDays),
 	}, nil
 }
 
@@ -119,7 +108,6 @@ func (p *SystemSiteSettingsProvider) HotScoreConfig(ctx context.Context) (course
 
 type StaticSiteSettingsProvider struct {
 	ReviewRuntime  ReviewRuntimeConfig
-	AdminUser      AdminUserCommandConfig
 	AccountRuntime AccountRuntimeConfig
 	ApiKey         auth.ApiKeyConfig
 	HotScores      course.HotScoreConfig
@@ -132,7 +120,6 @@ func NewDefaultSiteSettingsProvider() StaticSiteSettingsProvider {
 			Rewards:         point.DefaultRewardConfig,
 			FrequencyPolicy: policy.DefaultFrequencyPolicyConfig,
 		},
-		AdminUser: AdminUserCommandConfig{DefaultSuspendDays: auth.DefaultAdminConfig.DefaultSuspendDays},
 		AccountRuntime: AccountRuntimeConfig{
 			Registration: account.DefaultRegistrationConfig,
 			Login:        account.DefaultLoginConfig,
@@ -145,10 +132,6 @@ func NewDefaultSiteSettingsProvider() StaticSiteSettingsProvider {
 
 func (p StaticSiteSettingsProvider) ReviewRuntimeConfig(context.Context) (ReviewRuntimeConfig, error) {
 	return p.ReviewRuntime, nil
-}
-
-func (p StaticSiteSettingsProvider) AdminUserConfig(context.Context) (AdminUserCommandConfig, error) {
-	return p.AdminUser, nil
 }
 
 func (p StaticSiteSettingsProvider) AccountRuntimeConfig(context.Context) (AccountRuntimeConfig, error) {

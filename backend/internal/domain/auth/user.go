@@ -12,12 +12,6 @@ const (
 	RoleUser       = "user"
 )
 
-type AdminConfig struct {
-	DefaultSuspendDays int
-}
-
-var DefaultAdminConfig = AdminConfig{DefaultSuspendDays: 30}
-
 type User struct {
 	ID          int
 	Role        string

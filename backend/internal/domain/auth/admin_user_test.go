@@ -8,9 +8,9 @@ import (
 
 func TestAdminUserService_SuspendUserForDays(t *testing.T) {
 	repo := NewMockUserRepository(map[int]*User{2: {ID: 2, Role: RoleUser}})
-	svc := NewAdminUserService(repo, AdminConfig{DefaultSuspendDays: 7})
+	svc := NewAdminUserService(repo)
 
-	if err := svc.SuspendUserForDays(context.Background(), 1, 2, 0); err != nil {
+	if err := svc.SuspendUserForDays(context.Background(), 1, 2, 7); err != nil {
 		t.Fatalf("SuspendUserForDays: %v", err)
 	}
 	got := repo.Users[2]
@@ -20,7 +20,7 @@ func TestAdminUserService_SuspendUserForDays(t *testing.T) {
 }
 
 func TestAdminUserService_RejectsSelfOperation(t *testing.T) {
-	svc := NewAdminUserService(NewMockUserRepository(map[int]*User{1: {ID: 1, Role: RoleUser}}), AdminConfig{})
+	svc := NewAdminUserService(NewMockUserRepository(map[int]*User{1: {ID: 1, Role: RoleUser}}))
 
 	err := svc.GrantAdmin(context.Background(), 1, 1)
 	if !errors.Is(err, ErrCannotOperateSelf) {
@@ -30,7 +30,7 @@ func TestAdminUserService_RejectsSelfOperation(t *testing.T) {
 
 func TestAdminUserService_RejectsSuspendingAdmin(t *testing.T) {
 	repo := NewMockUserRepository(map[int]*User{2: {ID: 2, Role: RoleAdmin}})
-	svc := NewAdminUserService(repo, AdminConfig{})
+	svc := NewAdminUserService(repo)
 
 	err := svc.SuspendUserForDays(context.Background(), 1, 2, 1)
 	if !errors.Is(err, ErrCannotSuspendAdmin) {
@@ -40,7 +40,7 @@ func TestAdminUserService_RejectsSuspendingAdmin(t *testing.T) {
 
 func TestAdminUserService_GrantAndRevokeAdmin(t *testing.T) {
 	repo := NewMockUserRepository(map[int]*User{2: {ID: 2, Role: RoleUser}})
-	svc := NewAdminUserService(repo, AdminConfig{})
+	svc := NewAdminUserService(repo)
 
 	if err := svc.GrantAdmin(context.Background(), 1, 2); err != nil {
 		t.Fatalf("GrantAdmin: %v", err)
@@ -58,7 +58,7 @@ func TestAdminUserService_GrantAndRevokeAdmin(t *testing.T) {
 
 func TestAdminUserService_RejectsModifyingSuperAdmin(t *testing.T) {
 	repo := NewMockUserRepository(map[int]*User{2: {ID: 2, Role: RoleSuperAdmin}})
-	svc := NewAdminUserService(repo, AdminConfig{})
+	svc := NewAdminUserService(repo)
 
 	err := svc.RevokeAdmin(context.Background(), 1, 2)
 	if !errors.Is(err, ErrCannotModifySuperAdmin) {
