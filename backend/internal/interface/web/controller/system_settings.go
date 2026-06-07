@@ -27,6 +27,15 @@ func (ctrl *SystemSettingsController) List(c *gin.Context) {
 	c.JSON(http.StatusOK, settings)
 }
 
+func (ctrl *SystemSettingsController) ListAdmin(c *gin.Context) {
+	settings, err := ctrl.query.ListAdmin(c.Request.Context())
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, settings)
+}
+
 func (ctrl *SystemSettingsController) Update(c *gin.Context) {
 	u := auth.GetUserFromCtx(c.Request.Context())
 	if u == nil {

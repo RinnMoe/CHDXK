@@ -23,10 +23,8 @@ auth:
     salt: "SALT"
 review:
   command:
-    vote:
-      max_daily_votes: 100
-  frequency_policy:
-    window: "2h"
+    frequency_violation_admin_emails:
+      - "admin@example.edu"
 `)
 	if err := os.WriteFile(path, contents, 0o600); err != nil {
 		t.Fatalf("write config: %v", err)
@@ -73,11 +71,8 @@ review:
 	if !conf.Course.RatingScore.SchedulerEnabled {
 		t.Fatal("course rating score scheduler enabled = false, want true")
 	}
-	if conf.Review.FrequencyPolicy.Window != 2*time.Hour {
-		t.Fatalf("review override window = %s, want %s", conf.Review.FrequencyPolicy.Window, 2*time.Hour)
-	}
-	if conf.Review.Command.Vote.MaxDailyVotes != 100 {
-		t.Fatalf("review override max daily votes = %d, want 100", conf.Review.Command.Vote.MaxDailyVotes)
+	if len(conf.Review.Command.FrequencyViolationAdminEmails) != 1 || conf.Review.Command.FrequencyViolationAdminEmails[0] != "admin@example.edu" {
+		t.Fatalf("review command admin emails = %#v", conf.Review.Command.FrequencyViolationAdminEmails)
 	}
 }
 

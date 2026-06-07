@@ -3,9 +3,19 @@ import { BASE_URL } from "./constants"
 
 export const SYSTEM_SETTING_CURRENT_SEMESTER = "current_semester"
 
+export type SystemSettingType = "string" | "int" | "bool" | "float" | "duration"
+
 export interface SystemSettingDTO {
   key: string
   value: string
+  default_value: string
+  type: SystemSettingType
+  group: string
+  label: string
+  description: string
+  public: boolean
+  secret: boolean
+  requires_restart: boolean
 }
 
 export interface UpdateSystemSettingCommand {
@@ -14,6 +24,10 @@ export interface UpdateSystemSettingCommand {
 
 export function listSystemSettings(): Promise<SystemSettingDTO[]> {
   return apiClient(`${BASE_URL}/system-settings`)
+}
+
+export function listAdminSystemSettings(): Promise<SystemSettingDTO[]> {
+  return apiClient(`${BASE_URL}/admin/system-settings`)
 }
 
 export function updateSystemSetting(

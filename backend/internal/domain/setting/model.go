@@ -7,24 +7,19 @@ import (
 )
 
 var (
-	ErrInvalidCurrentSemester  = apperr.ErrInvalidCurrentSemester
-	ErrInvalidSystemSettingKey = apperr.BadRequest("系统设置项无效")
+	ErrInvalidCurrentSemester    = apperr.ErrInvalidCurrentSemester
+	ErrInvalidSystemSettingKey   = apperr.BadRequest("系统设置项无效")
+	ErrInvalidSystemSettingValue = apperr.BadRequest("系统设置值无效")
 )
-
-const SystemSettingKeyCurrentSemester = "current_semester"
-
-var registeredSystemSettingKeys = map[string]struct{}{
-	SystemSettingKeyCurrentSemester: {},
-}
-
-func IsRegisteredSystemSettingKey(key string) bool {
-	_, ok := registeredSystemSettingKeys[key]
-	return ok
-}
 
 type SystemSetting struct {
 	Key   string
 	Value string
+}
+
+type EffectiveSystemSetting struct {
+	Definition Definition
+	Value      string
 }
 
 type SystemRepository interface {

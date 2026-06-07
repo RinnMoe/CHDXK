@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
+  listAdminSystemSettings,
   listSystemSettings,
   updateSystemSetting,
   SYSTEM_SETTING_CURRENT_SEMESTER,
@@ -9,8 +10,16 @@ import {
 
 export function useSystemSettings(enabled = true) {
   return useQuery({
-    queryKey: ["system-settings"],
+    queryKey: ["system-settings", "public"],
     queryFn: listSystemSettings,
+    enabled,
+  })
+}
+
+export function useAdminSystemSettings(enabled = true) {
+  return useQuery({
+    queryKey: ["system-settings", "admin"],
+    queryFn: listAdminSystemSettings,
     enabled,
   })
 }
@@ -26,15 +35,18 @@ export function useUpdateSystemSetting() {
       cmd: UpdateSystemSettingCommand
     }) => updateSystemSetting(key, cmd),
     onSuccess: (updated: SystemSettingDTO) => {
-      queryClient.setQueryData<SystemSettingDTO[]>(
-        ["system-settings"],
-        (settings) => {
-          const current = settings ?? []
-          const index = current.findIndex((item) => item.key === updated.key)
-          if (index < 0) return [...current, updated]
-          return current.map((item, i) => (i === index ? updated : item))
-        }
-      )
+      for (const scope of ["public", "admin"] as const) {
+        queryClient.setQueryData<SystemSettingDTO[]>(
+          ["system-settings", scope],
+          (settings) => {
+            const current = settings ?? []
+            const index = current.findIndex((item) => item.key === updated.key)
+            if (index < 0) return updated.public ? [...current, updated] : current
+            return current.map((item, i) => (i === index ? updated : item))
+          }
+        )
+      }
+      void queryClient.invalidateQueries({ queryKey: ["system-settings"] })
     },
   })
 }

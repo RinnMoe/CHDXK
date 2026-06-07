@@ -12,43 +12,59 @@ import (
 	domainemail "jcourse/internal/domain/email"
 	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/review"
+	"jcourse/internal/domain/review/policy"
 	"jcourse/internal/domain/task"
 	"jcourse/pkg/logx"
 )
 
 type ReviewCommandConfig struct {
 	HotScores                     course.HotScoreConfig
-	Vote                          review.VoteConfig
 	FrequencyViolationAdminEmails []string
-	Rewards                       point.RewardConfig
 }
 
 type ReviewCommandService struct {
-	reviewService *review.Service
-	voteService   *review.VoteService
-	reviewRepo    review.ReviewRepository
-	config        ReviewCommandConfig
+	courseRepo     course.CourseRepository
+	reviewRepo     review.ReviewRepository
+	reviewQuery    review.ReviewQuery
+	voteRepo       review.VoteRepository
+	settings       SiteSettingsProvider
+	config         ReviewCommandConfig
+	createPolicies []review.CreatePolicy
 }
 
 func NewReviewCommandService(
 	courseRepo course.CourseRepository,
 	reviewRepo review.ReviewRepository,
 	voteRepo review.VoteRepository,
+	settings SiteSettingsProvider,
 	config ReviewCommandConfig,
 	policies []review.CreatePolicy,
 ) *ReviewCommandService {
+	if settings == nil {
+		defaults := NewDefaultSiteSettingsProvider()
+		settings = defaults
+	}
+	reviewQuery, _ := reviewRepo.(review.ReviewQuery)
 	return &ReviewCommandService{
-		reviewService: review.NewService(courseRepo, reviewRepo, policies),
-		voteService:   review.NewVoteService(reviewRepo, voteRepo, config.Vote),
-		reviewRepo:    reviewRepo,
-		config:        config,
+		courseRepo:     courseRepo,
+		reviewRepo:     reviewRepo,
+		reviewQuery:    reviewQuery,
+		voteRepo:       voteRepo,
+		settings:       settings,
+		config:         config,
+		createPolicies: policies,
 	}
 }
 
 func (s *ReviewCommandService) CreateReview(ctx context.Context, u *auth.User, cmd *CreateReviewCommand) error {
+	runtimeConfig, err := s.settings.ReviewRuntimeConfig(ctx)
+	if err != nil {
+		return err
+	}
+	reviewService := review.NewService(s.courseRepo, s.reviewRepo, s.createReviewPolicies(runtimeConfig.FrequencyPolicy))
 	now := time.Now()
-	rewards := s.buildCreateReviewRewards(u.ID, cmd.CourseID, now)
-	result, err := s.reviewService.CreateWithReward(ctx, u, review.CreateReview{
+	rewards := buildCreateReviewRewards(runtimeConfig.Rewards, u.ID, cmd.CourseID, now)
+	result, err := reviewService.CreateWithReward(ctx, u, review.CreateReview{
 		CourseID: cmd.CourseID,
 		Semester: cmd.Semester,
 		UserID:   u.ID,
@@ -71,6 +87,15 @@ func (s *ReviewCommandService) CreateReview(ctx context.Context, u *auth.User, c
 	return nil
 }
 
+func (s *ReviewCommandService) createReviewPolicies(config policy.FrequencyPolicyConfig) []review.CreatePolicy {
+	policies := make([]review.CreatePolicy, 0, len(s.createPolicies)+1)
+	if s.reviewQuery != nil {
+		policies = append(policies, policy.NewFrequencyPolicy(s.reviewQuery, config))
+	}
+	policies = append(policies, s.createPolicies...)
+	return policies
+}
+
 func (s *ReviewCommandService) UpdateReview(ctx context.Context, u *auth.User, cmd *UpdateReviewCommand) error {
 	existing, err := s.reviewRepo.Get(ctx, cmd.ReviewID)
 	if err != nil {
@@ -81,7 +106,8 @@ func (s *ReviewCommandService) UpdateReview(ctx context.Context, u *auth.User, c
 	}
 
 	now := time.Now()
-	err = s.reviewService.Update(ctx, u, review.UpdateReview{
+	reviewService := review.NewService(s.courseRepo, s.reviewRepo, nil)
+	err = reviewService.Update(ctx, u, review.UpdateReview{
 		ReviewID: cmd.ReviewID,
 		Semester: cmd.Semester,
 		Rating:   cmd.Rating,
@@ -117,7 +143,8 @@ func (s *ReviewCommandService) DeleteReview(ctx context.Context, u *auth.User, r
 	if existing == nil {
 		return review.ErrReviewNotFound
 	}
-	if err := s.reviewService.Delete(ctx, u, reviewID); err != nil {
+	reviewService := review.NewService(s.courseRepo, s.reviewRepo, nil)
+	if err := reviewService.Delete(ctx, u, reviewID); err != nil {
 		return err
 	}
 	if u.IsAdmin() && u.ID != existing.UserID {
@@ -144,7 +171,8 @@ func (s *ReviewCommandService) UpdateModeratorRemark(ctx context.Context, u *aut
 	if existing == nil {
 		return review.ErrReviewNotFound
 	}
-	if err := s.reviewService.UpdateModeratorRemark(ctx, u, review.UpdateModeratorRemark{
+	reviewService := review.NewService(s.courseRepo, s.reviewRepo, nil)
+	if err := reviewService.UpdateModeratorRemark(ctx, u, review.UpdateModeratorRemark{
 		ReviewID:        reviewID,
 		ModeratorRemark: cmd.ModeratorRemark,
 	}); err != nil {
@@ -167,8 +195,13 @@ func (s *ReviewCommandService) UpdateModeratorRemark(ctx context.Context, u *aut
 }
 
 func (s *ReviewCommandService) VoteReview(ctx context.Context, userID int, reviewID int, voteType int) error {
+	runtimeConfig, err := s.settings.ReviewRuntimeConfig(ctx)
+	if err != nil {
+		return err
+	}
+	voteService := review.NewVoteService(s.reviewRepo, s.voteRepo, runtimeConfig.Vote)
 	now := time.Now()
-	result, err := s.voteService.Vote(ctx, userID, reviewID, voteType, now)
+	result, err := voteService.Vote(ctx, userID, reviewID, voteType, now)
 	if err != nil {
 		return err
 	}
@@ -184,11 +217,11 @@ func (s *ReviewCommandService) enqueueHotCourseActivity(ctx context.Context, use
 	}
 }
 
-func (s *ReviewCommandService) buildCreateReviewRewards(userID int, courseID int, now time.Time) []point.Reward {
-	if !s.config.Rewards.Enabled {
+func buildCreateReviewRewards(config point.RewardConfig, userID int, courseID int, now time.Time) []point.Reward {
+	if !config.Enabled {
 		return nil
 	}
-	reward := point.NewCourseFirstReviewReward(userID, courseID, s.config.Rewards.CourseFirstReviewPoints, now)
+	reward := point.NewCourseFirstReviewReward(userID, courseID, config.CourseFirstReviewPoints, now)
 	if reward == nil {
 		return nil
 	}

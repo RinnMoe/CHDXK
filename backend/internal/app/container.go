@@ -9,8 +9,6 @@ import (
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/email"
-	"jcourse/internal/domain/review"
-	"jcourse/internal/domain/review/policy"
 	"jcourse/internal/infrastructure/jaccount"
 	"jcourse/internal/infrastructure/persistence"
 	"jcourse/internal/infrastructure/repository"
@@ -62,6 +60,8 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	accountRepo := repository.NewAccountRepository(db, redisClient)
 	userRepo := repository.NewUserRepository(db, redisClient)
 	systemSettingsRepo := repository.NewSystemSettingsRepository(db, redisClient)
+	systemSettingsService := newSystemSettingsService(systemSettingsRepo, courseRepo)
+	siteSettings := application.NewSystemSiteSettingsProvider(systemSettingsService)
 	apiKeyRepo := repository.NewApiKeyRepository(db)
 	auditLogRepo := repository.NewAuditLogRepository(db)
 	accessTracker := repository.NewAccessTrackerRepository(db, redisClient, conf.Auth.Access.FlushBatchSize)
@@ -74,13 +74,13 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 
 	reviewQuery := application.NewReviewQueryService(reviewRepo, voteRepo, notificationRepo)
 
-	freqPolicy := policy.NewFrequencyPolicy(reviewRepo, conf.Review.FrequencyPolicy)
 	reviewCommand := application.NewReviewCommandService(
 		courseRepo,
 		reviewRepo,
 		voteRepo,
+		siteSettings,
 		conf.Review.Command,
-		[]review.CreatePolicy{freqPolicy},
+		nil,
 	)
 	courseHotService := course.NewCourseHotService(courseHotRepo, conf.Review.Command.HotScores)
 	courseService := course.NewService(courseRepo)
@@ -107,7 +107,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	accountQuery := application.NewAccountQueryService(accountRepo)
 	adminUserQuery := application.NewAdminUserQueryService(accountRepo, userRepo, usernameDeriver)
 	hasher := credential.NewDjangoPBKDF2SHA256PasswordHasher(conf.Auth.PasswordHash)
-	adminUserCommand := application.NewAdminUserCommandService(userRepo, accountRepo, hasher, conf.Admin)
+	adminUserCommand := application.NewAdminUserCommandService(userRepo, accountRepo, hasher, siteSettings)
 	smtpSender := smtp.NewSMTPSender(conf.SMTP)
 	registrationService := account.NewRegistrationService(
 		accountRepo,
@@ -143,8 +143,8 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	authResolution := application.NewAuthResolutionService(currentUserService, apiKeySvc, accessTracker, sessionAuthService)
 	apiKeyQuery := application.NewApiKeyQueryService(apiKeySvc)
 	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc)
-	systemSettingsQuery := application.NewSystemSettingsQueryService(systemSettingsRepo)
-	systemSettingsCommand := application.NewSystemSettingsCommandService(systemSettingsRepo, courseRepo)
+	systemSettingsQuery := application.NewSystemSettingsQueryService(systemSettingsService)
+	systemSettingsCommand := application.NewSystemSettingsCommandService(systemSettingsService)
 	auditLogQuery := application.NewAuditLogQueryService(auditLogRepo)
 	auditLogCommand := application.NewAuditLogCommandService(auditLogRepo)
 

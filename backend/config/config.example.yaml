@@ -55,11 +55,6 @@ course:
     scheduler_enabled: true
 
 review:
-  frequency_policy:
-    window: "5m"
-    max_reviews: 3
-    similarity_ratio: 0.85
-    suspend_duration: "2160h"
   safety_policy:
     enabled: false
     access_key_id: ""
@@ -76,18 +71,10 @@ review:
       review_create_score: 3
       review_update_score: 1
       review_vote_score: 1
-    vote:
-      max_daily_votes: 50
-    rewards:
-      enabled: false
-      course_first_review_points: 0
 
 api_key:
   max_user_keys: 20
   snowflake_node_id: 1
-
-admin:
-  default_suspend_days: 30
 
 point:
   rate_bps: 250

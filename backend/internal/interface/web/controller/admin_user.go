@@ -59,7 +59,7 @@ func (ctrl *AdminUserController) SuspendUser(c *gin.Context) {
 	if !ok {
 		return
 	}
-	cmd := suspendUserCommand{Days: 30}
+	cmd := suspendUserCommand{}
 	if c.Request.ContentLength != 0 {
 		if err := c.ShouldBindJSON(&cmd); err != nil {
 			respondBindError(c, err)

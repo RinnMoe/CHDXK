@@ -23,6 +23,7 @@ type AdminUserCommandService struct {
 	adminUsers  *auth.AdminUserService
 	accountRepo identity.Repository
 	hasher      credential.PasswordHasher
+	settings    SiteSettingsProvider
 }
 
 type AdminUserCommandConfig = auth.AdminConfig
@@ -33,16 +34,28 @@ func NewAdminUserCommandService(
 	userRepo auth.UserRepository,
 	accountRepo identity.Repository,
 	hasher credential.PasswordHasher,
-	config AdminUserCommandConfig,
+	settings SiteSettingsProvider,
 ) *AdminUserCommandService {
+	if settings == nil {
+		defaults := NewDefaultSiteSettingsProvider()
+		settings = defaults
+	}
 	return &AdminUserCommandService{
-		adminUsers:  auth.NewAdminUserService(userRepo, auth.AdminConfig(config)),
+		adminUsers:  auth.NewAdminUserService(userRepo, auth.AdminConfig{}),
 		accountRepo: accountRepo,
 		hasher:      hasher,
+		settings:    settings,
 	}
 }
 
 func (s *AdminUserCommandService) SuspendUserForDays(ctx context.Context, actor *auth.User, userID int, days int) error {
+	if days <= 0 {
+		config, err := s.settings.AdminUserConfig(ctx)
+		if err != nil {
+			return err
+		}
+		days = config.DefaultSuspendDays
+	}
 	err := mapAuthUserNotFound(s.adminUsers.SuspendUserForDays(ctx, actor.ID, userID, days))
 	if err != nil {
 		return err

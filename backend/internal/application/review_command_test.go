@@ -22,11 +22,13 @@ func newFakeCommandReviewRepo() *review.MockReviewRepository {
 	return review.NewMockReviewRepository()
 }
 
-func newReviewCommandTestServiceWithConfig(reviewRepo *review.MockReviewRepository, voteRepo *review.MockVoteRepository, config application.ReviewCommandConfig) *application.ReviewCommandService {
+func newReviewCommandTestServiceWithRuntimeConfig(reviewRepo *review.MockReviewRepository, voteRepo *review.MockVoteRepository, runtimeConfig application.ReviewRuntimeConfig) *application.ReviewCommandService {
 	courseRepo := course.NewMockCourseRepository()
 	courseRepo.Courses[1] = &course.CourseView{ID: 1, Code: "CS101", LastSemester: "2025-2026-1"}
 	courseRepo.OfferedCourses[1] = map[string]bool{"2025-2026-1": true}
-	return application.NewReviewCommandService(courseRepo, reviewRepo, voteRepo, config, nil)
+	provider := application.NewDefaultSiteSettingsProvider()
+	provider.ReviewRuntime = runtimeConfig
+	return application.NewReviewCommandService(courseRepo, reviewRepo, voteRepo, provider, application.ReviewCommandConfig{}, nil)
 }
 
 type fakeReviewCommandEnqueuer struct {
@@ -50,13 +52,13 @@ func newReviewCommandTestServiceWithPolicies(reviewRepo *review.MockReviewReposi
 		courseRepo,
 		reviewRepo,
 		voteRepo,
+		nil,
 		application.ReviewCommandConfig{
 			HotScores: course.HotScoreConfig{
 				ReviewCreateScore: 5,
 				ReviewUpdateScore: 2,
 				ReviewVoteScore:   1,
 			},
-			Vote:                          review.DefaultVoteConfig,
 			FrequencyViolationAdminEmails: []string{"admin@example.edu"},
 		},
 		policies,
@@ -108,8 +110,9 @@ func TestReviewCommandService_CreateReviewEnqueuesGrantRewardWhenEnabled(t *test
 	enqueuer := &fakeReviewCommandEnqueuer{}
 	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
 	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
-	svc := newReviewCommandTestServiceWithConfig(reviewRepo, &review.MockVoteRepository{}, application.ReviewCommandConfig{
-		Vote: review.DefaultVoteConfig,
+	svc := newReviewCommandTestServiceWithRuntimeConfig(reviewRepo, &review.MockVoteRepository{}, application.ReviewRuntimeConfig{
+		Vote:            review.DefaultVoteConfig,
+		FrequencyPolicy: policy.DefaultFrequencyPolicyConfig,
 		Rewards: point.RewardConfig{
 			Enabled:                 true,
 			CourseFirstReviewPoints: 10,
@@ -154,8 +157,9 @@ func TestReviewCommandService_CreateReviewDoesNotEnqueueRewardWhenConflict(t *te
 	enqueuer := &fakeReviewCommandEnqueuer{}
 	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
 	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
-	svc := newReviewCommandTestServiceWithConfig(reviewRepo, &review.MockVoteRepository{}, application.ReviewCommandConfig{
-		Vote: review.DefaultVoteConfig,
+	svc := newReviewCommandTestServiceWithRuntimeConfig(reviewRepo, &review.MockVoteRepository{}, application.ReviewRuntimeConfig{
+		Vote:            review.DefaultVoteConfig,
+		FrequencyPolicy: policy.DefaultFrequencyPolicyConfig,
 		Rewards: point.RewardConfig{
 			Enabled:                 true,
 			CourseFirstReviewPoints: 10,

@@ -16,8 +16,6 @@ import (
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/point"
-	"jcourse/internal/domain/review"
-	"jcourse/internal/domain/review/policy"
 	"jcourse/internal/domain/stat"
 	"jcourse/internal/infrastructure/moderation"
 	"jcourse/internal/infrastructure/persistence"
@@ -27,20 +25,19 @@ import (
 )
 
 type AppConfig struct {
-	Server   ServerConfig                       `mapstructure:"server"`
-	Postgres persistence.PostgresConfig         `mapstructure:"postgres"`
-	Redis    persistence.RedisConfig            `mapstructure:"redis"`
-	Session  middleware.SessionConfig           `mapstructure:"session"`
-	Auth     AuthConfig                         `mapstructure:"auth"`
-	Course   CourseConfig                       `mapstructure:"course"`
-	Review   ReviewConfig                       `mapstructure:"review"`
-	APIKey   auth.ApiKeyConfig                  `mapstructure:"api_key"`
-	Admin    application.AdminUserCommandConfig `mapstructure:"admin"`
-	Point    point.TransferFeeConfig            `mapstructure:"point"`
-	Asynq    task.Config                        `mapstructure:"asynq"`
-	Stats    stat.Config                        `mapstructure:"stats"`
-	SMTP     smtp.SMTPConfig                    `mapstructure:"smtp"`
-	JAccount JAccountConfig                     `mapstructure:"jaccount"`
+	Server   ServerConfig               `mapstructure:"server"`
+	Postgres persistence.PostgresConfig `mapstructure:"postgres"`
+	Redis    persistence.RedisConfig    `mapstructure:"redis"`
+	Session  middleware.SessionConfig   `mapstructure:"session"`
+	Auth     AuthConfig                 `mapstructure:"auth"`
+	Course   CourseConfig               `mapstructure:"course"`
+	Review   ReviewConfig               `mapstructure:"review"`
+	APIKey   auth.ApiKeyConfig          `mapstructure:"api_key"`
+	Point    point.TransferFeeConfig    `mapstructure:"point"`
+	Asynq    task.Config                `mapstructure:"asynq"`
+	Stats    stat.Config                `mapstructure:"stats"`
+	SMTP     smtp.SMTPConfig            `mapstructure:"smtp"`
+	JAccount JAccountConfig             `mapstructure:"jaccount"`
 }
 
 type AuthConfig struct {
@@ -57,9 +54,8 @@ type CourseConfig struct {
 }
 
 type ReviewConfig struct {
-	Command         application.ReviewCommandConfig `mapstructure:"command"`
-	FrequencyPolicy policy.FrequencyPolicyConfig    `mapstructure:"frequency_policy"`
-	SafetyPolicy    moderation.AliyunGreenConfig    `mapstructure:"safety_policy"`
+	Command      application.ReviewCommandConfig `mapstructure:"command"`
+	SafetyPolicy moderation.AliyunGreenConfig    `mapstructure:"safety_policy"`
 }
 
 type ServerConfig struct {
@@ -178,12 +174,6 @@ func setDefaults(v *viper.Viper) {
 		"refresh_cron":      course.DefaultRatingScoreConfig.RefreshCron,
 		"scheduler_enabled": course.DefaultRatingScoreConfig.SchedulerEnabled,
 	})
-	setSectionDefaults(v, "review.frequency_policy", map[string]any{
-		"window":           policy.DefaultFrequencyPolicyConfig.Window.String(),
-		"max_reviews":      policy.DefaultFrequencyPolicyConfig.MaxReviews,
-		"similarity_ratio": policy.DefaultFrequencyPolicyConfig.SimilarityRatio,
-		"suspend_duration": policy.DefaultFrequencyPolicyConfig.SuspendDuration.String(),
-	})
 	setSectionDefaults(v, "review.safety_policy", map[string]any{
 		"enabled":         moderation.DefaultAliyunGreenConfig.Enabled,
 		"region_id":       moderation.DefaultAliyunGreenConfig.RegionID,
@@ -198,20 +188,10 @@ func setDefaults(v *viper.Viper) {
 		"review_update_score": course.DefaultHotScoreConfig.ReviewUpdateScore,
 		"review_vote_score":   course.DefaultHotScoreConfig.ReviewVoteScore,
 	})
-	setSectionDefaults(v, "review.command.vote", map[string]any{
-		"max_daily_votes": review.DefaultVoteConfig.MaxDailyVotes,
-	})
-	setSectionDefaults(v, "review.command.rewards", map[string]any{
-		"enabled":                    point.DefaultRewardConfig.Enabled,
-		"course_first_review_points": point.DefaultRewardConfig.CourseFirstReviewPoints,
-	})
 	v.SetDefault("review.command.frequency_violation_admin_emails", []string{})
 	setSectionDefaults(v, "api_key", map[string]any{
 		"max_user_keys":     auth.DefaultApiKeyConfig.MaxUserKeys,
 		"snowflake_node_id": auth.DefaultApiKeyConfig.SnowflakeNodeID,
-	})
-	setSectionDefaults(v, "admin", map[string]any{
-		"default_suspend_days": application.DefaultAdminUserCommandConfig.DefaultSuspendDays,
 	})
 	setSectionDefaults(v, "jaccount", map[string]any{
 		"authorize_url":       "https://jaccount.sjtu.edu.cn/oauth2/authorize",

@@ -187,6 +187,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	}
 	adminSystemSettingsGroup := apiGroup.Group("/admin/system-settings", middleware.RequireAdmin())
 	{
+		adminSystemSettingsGroup.GET("", systemSettingsController.ListAdmin)
 		adminSystemSettingsGroup.PUT("/:key", systemSettingsController.Update)
 	}
 	adminAuditGroup := apiGroup.Group("/admin/audit-log", middleware.RequireAdmin())
