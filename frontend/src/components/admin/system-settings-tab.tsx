@@ -6,9 +6,9 @@ import {
 } from "@/api/system-settings"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Tooltip,
@@ -31,6 +31,7 @@ import {
 import { getErrorMessage } from "./admin-utils"
 
 type DraftMap = Record<string, string>
+type ErrorMap = Record<string, string>
 
 const GROUP_LABELS: Record<string, string> = {
   admin: "管理",
@@ -45,8 +46,7 @@ export function SystemSettingsTab() {
   const filtersQuery = useCourseFilters()
   const updateMutation = useUpdateSystemSetting()
   const [drafts, setDrafts] = useState<DraftMap>({})
-  const [message, setMessage] = useState("")
-  const [error, setError] = useState("")
+  const [errors, setErrors] = useState<ErrorMap>({})
 
   const semesters = useMemo(
     () => filtersQuery.data?.semesters?.filter((item) => item.name) ?? [],
@@ -68,8 +68,11 @@ export function SystemSettingsTab() {
 
   function setDraft(key: string, value: string) {
     setDrafts((current) => ({ ...current, [key]: value }))
-    setMessage("")
-    setError("")
+    setErrors((current) => {
+      const next = { ...current }
+      delete next[key]
+      return next
+    })
   }
 
   function restoreDefault(setting: SystemSettingDTO) {
@@ -77,8 +80,11 @@ export function SystemSettingsTab() {
   }
 
   async function saveSetting(setting: SystemSettingDTO) {
-    setMessage("")
-    setError("")
+    setErrors((current) => {
+      const next = { ...current }
+      delete next[setting.key]
+      return next
+    })
     try {
       await updateMutation.mutateAsync({
         key: setting.key,
@@ -89,9 +95,11 @@ export function SystemSettingsTab() {
         delete next[setting.key]
         return next
       })
-      setMessage("已保存")
     } catch (err) {
-      setError(getErrorMessage(err))
+      setErrors((current) => ({
+        ...current,
+        [setting.key]: getErrorMessage(err),
+      }))
     }
   }
 
@@ -100,13 +108,6 @@ export function SystemSettingsTab() {
   return (
     <section className="space-y-4">
       <h2 className="text-lg font-medium">系统设置</h2>
-
-      {error && (
-        <p className="text-sm text-destructive" role="alert">
-          {error}
-        </p>
-      )}
-      {message && <p className="text-sm text-muted-foreground">{message}</p>}
 
       <TooltipProvider>
         <div className="space-y-6">
@@ -122,6 +123,7 @@ export function SystemSettingsTab() {
                   const submitting =
                     updateMutation.isPending &&
                     updateMutation.variables?.key === setting.key
+                  const settingError = errors[setting.key]
 
                   return (
                     <div
@@ -148,13 +150,20 @@ export function SystemSettingsTab() {
                         </p>
                       </div>
 
-                      <SettingControl
-                        setting={setting}
-                        value={value}
-                        semesters={semesters.map((item) => item.name)}
-                        disabled={isLoading || submitting}
-                        onChange={(next) => setDraft(setting.key, next)}
-                      />
+                      <div className="min-w-0 space-y-1">
+                        <SettingControl
+                          setting={setting}
+                          value={value}
+                          semesters={semesters.map((item) => item.name)}
+                          disabled={isLoading || submitting}
+                          onChange={(next) => setDraft(setting.key, next)}
+                        />
+                        {settingError && (
+                          <p className="text-xs text-destructive" role="alert">
+                            {settingError}
+                          </p>
+                        )}
+                      </div>
 
                       <div className="flex h-8 w-20 items-center justify-end gap-2">
                         {isDirty && (
@@ -241,8 +250,8 @@ function SettingControl({
 
   if (setting.type === "bool") {
     return (
-      <div className="flex h-9 items-center gap-2">
-        <Checkbox
+      <div className="flex h-9 items-center">
+        <Switch
           id={`setting-${setting.key}`}
           checked={value === "true"}
           disabled={disabled}
@@ -250,7 +259,6 @@ function SettingControl({
             onChange(checked === true ? "true" : "false")
           }
         />
-        <span className="text-sm text-muted-foreground">启用</span>
       </div>
     )
   }
