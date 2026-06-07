@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { RiSaveLine } from "@remixicon/react"
+import { RiCloseLine, RiSaveLine } from "@remixicon/react"
 import {
   SYSTEM_SETTING_CURRENT_SEMESTER,
   type SystemSettingDTO,
@@ -10,6 +10,12 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import {
   Select,
   SelectContent,
@@ -66,6 +72,10 @@ export function SystemSettingsTab() {
     setError("")
   }
 
+  function restoreDefault(setting: SystemSettingDTO) {
+    setDraft(setting.key, setting.default_value)
+  }
+
   async function saveSetting(setting: SystemSettingDTO) {
     setMessage("")
     setError("")
@@ -98,69 +108,103 @@ export function SystemSettingsTab() {
       )}
       {message && <p className="text-sm text-muted-foreground">{message}</p>}
 
-      <div className="space-y-6">
-        {Object.entries(groups).map(([group, settings]) => (
-          <section key={group} className="space-y-3">
-            <h3 className="text-sm font-medium text-muted-foreground">
-              {GROUP_LABELS[group] ?? group}
-            </h3>
-            <div className="divide-y rounded-md border">
-              {settings.map((setting) => {
-                const value = draftValue(setting)
-                const isDirty = value !== setting.value
-                const submitting =
-                  updateMutation.isPending &&
-                  updateMutation.variables?.key === setting.key
+      <TooltipProvider>
+        <div className="space-y-6">
+          {Object.entries(groups).map(([group, settings]) => (
+            <section key={group} className="space-y-3">
+              <h3 className="text-sm font-medium text-muted-foreground">
+                {GROUP_LABELS[group] ?? group}
+              </h3>
+              <div className="divide-y rounded-md border">
+                {settings.map((setting) => {
+                  const value = draftValue(setting)
+                  const isDirty = value !== setting.value
+                  const submitting =
+                    updateMutation.isPending &&
+                    updateMutation.variables?.key === setting.key
 
-                return (
-                  <div
-                    key={setting.key}
-                    className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_minmax(240px,320px)_auto] md:items-center"
-                  >
-                    <div className="min-w-0 space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Label htmlFor={`setting-${setting.key}`}>
-                          {setting.label || setting.key}
-                        </Label>
-                        {setting.public && <Badge variant="outline">公开</Badge>}
-                        {setting.requires_restart && (
-                          <Badge variant="secondary">需重启</Badge>
+                  return (
+                    <div
+                      key={setting.key}
+                      className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_minmax(240px,320px)_5rem] md:items-center"
+                    >
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Label htmlFor={`setting-${setting.key}`}>
+                            {setting.label || setting.key}
+                          </Label>
+                          {setting.public && <Badge variant="outline">公开</Badge>}
+                          {setting.requires_restart && (
+                            <Badge variant="secondary">需重启</Badge>
+                          )}
+                        </div>
+                        {setting.description && (
+                          <p className="text-sm text-muted-foreground">
+                            {setting.description}
+                          </p>
+                        )}
+                        <p className="truncate text-xs text-muted-foreground">
+                          {setting.key}
+                        </p>
+                      </div>
+
+                      <SettingControl
+                        setting={setting}
+                        value={value}
+                        semesters={semesters.map((item) => item.name)}
+                        disabled={isLoading || submitting}
+                        onChange={(next) => setDraft(setting.key, next)}
+                      />
+
+                      <div className="flex h-8 w-20 items-center justify-end gap-2">
+                        {isDirty && (
+                          <>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  type="button"
+                                  size="icon-sm"
+                                  aria-label={submitting ? "保存中" : "保存"}
+                                  disabled={isLoading || submitting}
+                                  onClick={() => void saveSetting(setting)}
+                                >
+                                  <RiSaveLine />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {submitting ? "保存中" : "保存"}
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  type="button"
+                                  size="icon-sm"
+                                  variant="outline"
+                                  aria-label="恢复默认值"
+                                  disabled={
+                                    isLoading ||
+                                    submitting ||
+                                    value === setting.default_value
+                                  }
+                                  onClick={() => restoreDefault(setting)}
+                                >
+                                  <RiCloseLine />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>恢复默认值</TooltipContent>
+                            </Tooltip>
+                          </>
                         )}
                       </div>
-                      {setting.description && (
-                        <p className="text-sm text-muted-foreground">
-                          {setting.description}
-                        </p>
-                      )}
-                      <p className="truncate text-xs text-muted-foreground">
-                        {setting.key}
-                      </p>
                     </div>
-
-                    <SettingControl
-                      setting={setting}
-                      value={value}
-                      semesters={semesters.map((item) => item.name)}
-                      disabled={isLoading || submitting}
-                      onChange={(next) => setDraft(setting.key, next)}
-                    />
-
-                    <Button
-                      type="button"
-                      size="sm"
-                      disabled={isLoading || submitting || !isDirty}
-                      onClick={() => void saveSetting(setting)}
-                    >
-                      <RiSaveLine data-icon="inline-start" />
-                      {submitting ? "保存中" : "保存"}
-                    </Button>
-                  </div>
-                )
-              })}
-            </div>
-          </section>
-        ))}
-      </div>
+                  )
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
+      </TooltipProvider>
     </section>
   )
 }
