@@ -8,7 +8,6 @@ import (
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/viper"
 
-	"jcourse/internal/application"
 	"jcourse/internal/domain/account/credential"
 	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
@@ -49,8 +48,7 @@ type CourseConfig struct {
 }
 
 type ReviewConfig struct {
-	Command      application.ReviewCommandConfig `mapstructure:"command"`
-	SafetyPolicy moderation.AliyunGreenConfig    `mapstructure:"safety_policy"`
+	SafetyPolicy moderation.AliyunGreenConfig `mapstructure:"safety_policy"`
 }
 
 type ServerConfig struct {
@@ -166,7 +164,6 @@ func setDefaults(v *viper.Viper) {
 		"connect_timeout": moderation.DefaultAliyunGreenConfig.ConnectTimeout,
 		"read_timeout":    moderation.DefaultAliyunGreenConfig.ReadTimeout,
 	})
-	v.SetDefault("review.command.frequency_violation_admin_emails", []string{})
 	setSectionDefaults(v, "api_key", map[string]any{
 		"snowflake_node_id": auth.DefaultApiKeyConfig.SnowflakeNodeID,
 	})

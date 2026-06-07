@@ -14,10 +14,6 @@ session:
 auth:
   username_deriver:
     salt: "SALT"
-review:
-  command:
-    frequency_violation_admin_emails:
-      - "admin@example.edu"
 `)
 	if err := os.WriteFile(path, contents, 0o600); err != nil {
 		t.Fatalf("write config: %v", err)
@@ -54,9 +50,6 @@ review:
 	}
 	if !conf.Course.RatingScore.SchedulerEnabled {
 		t.Fatal("course rating score scheduler enabled = false, want true")
-	}
-	if len(conf.Review.Command.FrequencyViolationAdminEmails) != 1 || conf.Review.Command.FrequencyViolationAdminEmails[0] != "admin@example.edu" {
-		t.Fatalf("review command admin emails = %#v", conf.Review.Command.FrequencyViolationAdminEmails)
 	}
 }
 

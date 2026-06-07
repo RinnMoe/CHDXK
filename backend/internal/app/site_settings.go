@@ -180,6 +180,14 @@ func newSystemSettingsService(repo setting.SystemRepository, courseRepo course.C
 			DefaultValue: policy.DefaultFrequencyPolicyConfig.SuspendDuration.String(),
 			Validator:    setting.ValueValidatorFunc(positiveDurationSetting),
 		},
+		{
+			Key:          setting.SystemSettingKeyReviewFrequencyViolationAdminEmails,
+			Group:        "review",
+			Label:        "刷评通知管理员邮箱",
+			Description:  "命中刷评策略后接收通知的管理员邮箱，多个值用逗号或换行分隔，留空则不发送",
+			Type:         setting.ValueTypeStringList,
+			DefaultValue: "",
+		},
 	})
 	return setting.NewSystemSettingsService(repo, registry)
 }

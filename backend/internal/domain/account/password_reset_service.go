@@ -15,11 +15,10 @@ import (
 )
 
 type PasswordResetService struct {
-	accountRepo  identity.Repository
-	codes        verification.CodeRepository
-	hasher       credential.PasswordHasher
-	usernames    identity.UsernameDeriver
-	verification verification.Config
+	accountRepo identity.Repository
+	codes       verification.CodeRepository
+	hasher      credential.PasswordHasher
+	usernames   identity.UsernameDeriver
 }
 
 func NewPasswordResetService(
@@ -27,23 +26,16 @@ func NewPasswordResetService(
 	codes verification.CodeRepository,
 	hasher credential.PasswordHasher,
 	usernames identity.UsernameDeriver,
-	verificationConfig verification.Config,
 ) *PasswordResetService {
 	return &PasswordResetService{
-		accountRepo:  accountRepo,
-		codes:        codes,
-		hasher:       hasher,
-		usernames:    usernames,
-		verification: verificationConfig.WithDefaults(),
+		accountRepo: accountRepo,
+		codes:       codes,
+		hasher:      hasher,
+		usernames:   usernames,
 	}
 }
 
-func (s *PasswordResetService) SendResetCode(ctx context.Context, email string) error {
-	return s.SendResetCodeWithConfig(ctx, email, s.verification)
-}
-
 func (s *PasswordResetService) SendResetCodeWithConfig(ctx context.Context, email string, verificationConfig verification.Config) error {
-	verificationConfig = verificationConfig.WithDefaults()
 	normalized := identity.NormalizeEmail(email)
 	if _, err := s.usernames.UsernameFromEmail(normalized); err != nil {
 		return err

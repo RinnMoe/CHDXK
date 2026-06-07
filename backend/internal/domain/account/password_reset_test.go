@@ -25,12 +25,9 @@ func TestPasswordResetService_SendResetCodeSuccess(t *testing.T) {
 	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
 	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
 	hasher := credential.NewDjangoPBKDF2SHA256PasswordHasher(credential.PasswordHashConfig{Iterations: 1})
-	svc := NewPasswordResetService(repo, codes, hasher, testUsernameDeriver(), verification.Config{
-		CodeInterval: time.Minute,
-		CodeTTL:      10 * time.Minute,
-	})
+	svc := NewPasswordResetService(repo, codes, hasher, testUsernameDeriver())
 
-	if err := svc.SendResetCode(context.Background(), "alice@example.edu"); err != nil {
+	if err := svc.SendResetCodeWithConfig(context.Background(), "alice@example.edu", testVerificationConfig()); err != nil {
 		t.Fatalf("SendResetCode: %v", err)
 	}
 	assertResetVerificationEmailTask(t, enqueuer.tasks[0], "alice@example.edu")
@@ -46,9 +43,9 @@ func TestPasswordResetService_SendResetCodeSendsForUnknownUser(t *testing.T) {
 	enqueuer := &resetFakeEnqueuer{}
 	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
 	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
-	svc := NewPasswordResetService(repo, codes, nil, testUsernameDeriver(), verification.Config{})
+	svc := NewPasswordResetService(repo, codes, nil, testUsernameDeriver())
 
-	if err := svc.SendResetCode(context.Background(), "nobody@example.edu"); err != nil {
+	if err := svc.SendResetCodeWithConfig(context.Background(), "nobody@example.edu", testVerificationConfig()); err != nil {
 		t.Fatalf("SendResetCode: %v", err)
 	}
 	assertResetVerificationEmailTask(t, enqueuer.tasks[0], "nobody@example.edu")
@@ -63,16 +60,13 @@ func TestPasswordResetService_SendResetCodeRateLimit(t *testing.T) {
 	repo := identity.NewMockRepository(map[string]*identity.Account{
 		username: {ID: 1, Username: username},
 	})
-	svc := NewPasswordResetService(repo, verification.NewMockCodeRepository(), nil, testUsernameDeriver(), verification.Config{
-		CodeInterval: time.Minute,
-		CodeTTL:      10 * time.Minute,
-	})
+	svc := NewPasswordResetService(repo, verification.NewMockCodeRepository(), nil, testUsernameDeriver())
 	ctx := context.Background()
 
-	if err := svc.SendResetCode(ctx, "alice@example.edu"); err != nil {
+	if err := svc.SendResetCodeWithConfig(ctx, "alice@example.edu", testVerificationConfig()); err != nil {
 		t.Fatalf("first SendResetCode: %v", err)
 	}
-	err := svc.SendResetCode(ctx, "alice@example.edu")
+	err := svc.SendResetCodeWithConfig(ctx, "alice@example.edu", testVerificationConfig())
 	if !errors.Is(err, verification.ErrSendTooSoon) {
 		t.Fatalf("second SendResetCode error = %v, want ErrVerificationTooSoon", err)
 	}
@@ -92,7 +86,7 @@ func TestPasswordResetService_ResetPasswordSuccess(t *testing.T) {
 	codes.Saved["alice@example.edu"] = verification.Code{
 		Email: "alice@example.edu", Code: "123456", ExpiresAt: time.Now().Add(10 * time.Minute),
 	}
-	svc := NewPasswordResetService(repo, codes, hasher, testUsernameDeriver(), verification.Config{})
+	svc := NewPasswordResetService(repo, codes, hasher, testUsernameDeriver())
 
 	if err := svc.ResetPassword(context.Background(), "alice@example.edu", "123456", "newpass"); err != nil {
 		t.Fatalf("ResetPassword: %v", err)
@@ -114,7 +108,7 @@ func TestPasswordResetService_ResetPasswordRejectsInvalidCode(t *testing.T) {
 	codes.Saved["alice@example.edu"] = verification.Code{
 		Email: "alice@example.edu", Code: "123456", ExpiresAt: time.Now().Add(10 * time.Minute),
 	}
-	svc := NewPasswordResetService(repo, codes, credential.NewDjangoPBKDF2SHA256PasswordHasher(credential.PasswordHashConfig{Iterations: 1}), testUsernameDeriver(), verification.Config{})
+	svc := NewPasswordResetService(repo, codes, credential.NewDjangoPBKDF2SHA256PasswordHasher(credential.PasswordHashConfig{Iterations: 1}), testUsernameDeriver())
 
 	err := svc.ResetPassword(context.Background(), "alice@example.edu", "000000", "newpass")
 	if !errors.Is(err, verification.ErrCodeInvalid) {
@@ -127,7 +121,7 @@ func TestPasswordResetService_ResetPasswordRejectsEmptyPassword(t *testing.T) {
 	repo := identity.NewMockRepository(map[string]*identity.Account{
 		username: {ID: 1, Username: username},
 	})
-	svc := NewPasswordResetService(repo, verification.NewMockCodeRepository(), nil, testUsernameDeriver(), verification.Config{})
+	svc := NewPasswordResetService(repo, verification.NewMockCodeRepository(), nil, testUsernameDeriver())
 
 	err := svc.ResetPassword(context.Background(), "alice@example.edu", "123456", "  ")
 	if !errors.Is(err, credential.ErrPasswordRequired) {
@@ -140,12 +134,16 @@ func TestPasswordResetService_ResetPasswordRejectsUnknownUser(t *testing.T) {
 	codes.Saved["nobody@example.edu"] = verification.Code{
 		Email: "nobody@example.edu", Code: "123456", ExpiresAt: time.Now().Add(10 * time.Minute),
 	}
-	svc := NewPasswordResetService(identity.NewMockRepository(nil), codes, credential.NewDjangoPBKDF2SHA256PasswordHasher(credential.PasswordHashConfig{Iterations: 1}), testUsernameDeriver(), verification.Config{})
+	svc := NewPasswordResetService(identity.NewMockRepository(nil), codes, credential.NewDjangoPBKDF2SHA256PasswordHasher(credential.PasswordHashConfig{Iterations: 1}), testUsernameDeriver())
 
 	err := svc.ResetPassword(context.Background(), "nobody@example.edu", "123456", "newpass")
 	if !errors.Is(err, identity.ErrNotFound) {
 		t.Fatalf("ResetPassword error = %v, want ErrUserNotFound", err)
 	}
+}
+
+func testVerificationConfig() verification.Config {
+	return verification.Config{CodeInterval: time.Minute, CodeTTL: 10 * time.Minute}
 }
 
 type resetFakeEnqueuer struct {

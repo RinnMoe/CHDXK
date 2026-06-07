@@ -309,9 +309,9 @@ func newAccountServiceWithAttempts(
 	hasher := credential.NewDjangoPBKDF2SHA256PasswordHasher(credential.PasswordHashConfig{Iterations: 1})
 	usernames := testUsernameDeriver()
 	return application.NewAccountCommandService(
-		account.NewRegistrationService(accountRepo, registerCodes, hasher, usernames, testRegistrationConfig(), testVerificationConfig()),
-		account.NewLoginService(accountRepo, hasher, attempts, usernames, testLoginConfig(maxLoginAttempts)),
-		account.NewPasswordResetService(accountRepo, resetCodes, hasher, usernames, testVerificationConfig()),
+		account.NewRegistrationService(accountRepo, registerCodes, hasher, usernames),
+		account.NewLoginService(accountRepo, hasher, attempts, usernames),
+		account.NewPasswordResetService(accountRepo, resetCodes, hasher, usernames),
 		auth.NewCurrentUserService(userRepo),
 		auth.NewSessionAuthService(accountRepo, "test-session-secret"),
 		testAccountSettingsProvider(maxLoginAttempts),

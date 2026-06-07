@@ -17,19 +17,12 @@ import (
 	"jcourse/pkg/logx"
 )
 
-type ReviewCommandConfig struct {
-	HotScores                     course.HotScoreConfig
-	FrequencyViolationAdminEmails []string
-}
-
 type ReviewCommandService struct {
-	courseRepo     course.CourseRepository
-	reviewRepo     review.ReviewRepository
-	reviewQuery    review.ReviewQuery
-	voteRepo       review.VoteRepository
-	settings       SiteSettingsProvider
-	config         ReviewCommandConfig
-	createPolicies []review.CreatePolicy
+	courseRepo  course.CourseRepository
+	reviewRepo  review.ReviewRepository
+	reviewQuery review.ReviewQuery
+	voteRepo    review.VoteRepository
+	settings    SiteSettingsProvider
 }
 
 func NewReviewCommandService(
@@ -37,8 +30,6 @@ func NewReviewCommandService(
 	reviewRepo review.ReviewRepository,
 	voteRepo review.VoteRepository,
 	settings SiteSettingsProvider,
-	config ReviewCommandConfig,
-	policies []review.CreatePolicy,
 ) *ReviewCommandService {
 	if settings == nil {
 		defaults := NewDefaultSiteSettingsProvider()
@@ -46,13 +37,11 @@ func NewReviewCommandService(
 	}
 	reviewQuery, _ := reviewRepo.(review.ReviewQuery)
 	return &ReviewCommandService{
-		courseRepo:     courseRepo,
-		reviewRepo:     reviewRepo,
-		reviewQuery:    reviewQuery,
-		voteRepo:       voteRepo,
-		settings:       settings,
-		config:         config,
-		createPolicies: policies,
+		courseRepo:  courseRepo,
+		reviewRepo:  reviewRepo,
+		reviewQuery: reviewQuery,
+		voteRepo:    voteRepo,
+		settings:    settings,
 	}
 }
 
@@ -76,7 +65,7 @@ func (s *ReviewCommandService) CreateReview(ctx context.Context, u *auth.User, c
 	if err != nil {
 		var violation *review.FrequencyViolation
 		if errors.As(err, &violation) {
-			s.enqueueFrequencyViolationTasks(ctx, violation)
+			s.enqueueFrequencyViolationTasks(ctx, violation, runtimeConfig.FrequencyViolationAdminEmails)
 		}
 		return err
 	}
@@ -88,12 +77,10 @@ func (s *ReviewCommandService) CreateReview(ctx context.Context, u *auth.User, c
 }
 
 func (s *ReviewCommandService) createReviewPolicies(config policy.FrequencyPolicyConfig) []review.CreatePolicy {
-	policies := make([]review.CreatePolicy, 0, len(s.createPolicies)+1)
 	if s.reviewQuery != nil {
-		policies = append(policies, policy.NewFrequencyPolicy(s.reviewQuery, config))
+		return []review.CreatePolicy{policy.NewFrequencyPolicy(s.reviewQuery, config)}
 	}
-	policies = append(policies, s.createPolicies...)
-	return policies
+	return nil
 }
 
 func (s *ReviewCommandService) UpdateReview(ctx context.Context, u *auth.User, cmd *UpdateReviewCommand) error {
@@ -234,7 +221,7 @@ func (s *ReviewCommandService) enqueueGrantReward(ctx context.Context, rewardID 
 	}
 }
 
-func (s *ReviewCommandService) enqueueFrequencyViolationTasks(ctx context.Context, violation *review.FrequencyViolation) {
+func (s *ReviewCommandService) enqueueFrequencyViolationTasks(ctx context.Context, violation *review.FrequencyViolation, adminEmails []string) {
 	if violation == nil || violation.Review == nil {
 		return
 	}
@@ -242,7 +229,7 @@ func (s *ReviewCommandService) enqueueFrequencyViolationTasks(ctx context.Contex
 	if err := task.Enqueue(ctx, auth.NewSuspendUserTask(userID, violation.SuspendDuration)); err != nil {
 		logx.Warn(ctx, "enqueue frequency violation suspension", "user_id", userID, "err", err)
 	}
-	mails, err := violation.NewSpamSuspensionEmails(s.config.FrequencyViolationAdminEmails)
+	mails, err := violation.NewSpamSuspensionEmails(adminEmails)
 	if err != nil {
 		logx.Warn(ctx, "render frequency violation email", "user_id", userID, "err", err)
 		return

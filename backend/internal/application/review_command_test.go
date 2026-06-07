@@ -28,7 +28,7 @@ func newReviewCommandTestServiceWithRuntimeConfig(reviewRepo *review.MockReviewR
 	courseRepo.OfferedCourses[1] = map[string]bool{"2025-2026-1": true}
 	provider := application.NewDefaultSiteSettingsProvider()
 	provider.ReviewRuntime = runtimeConfig
-	return application.NewReviewCommandService(courseRepo, reviewRepo, voteRepo, provider, application.ReviewCommandConfig{}, nil)
+	return application.NewReviewCommandService(courseRepo, reviewRepo, voteRepo, provider)
 }
 
 type fakeReviewCommandEnqueuer struct {
@@ -41,36 +41,35 @@ func (f *fakeReviewCommandEnqueuer) Enqueue(ctx context.Context, t task.Task, op
 }
 
 func newReviewCommandTestService(reviewRepo *review.MockReviewRepository, voteRepo *review.MockVoteRepository) *application.ReviewCommandService {
-	return newReviewCommandTestServiceWithPolicies(reviewRepo, voteRepo, nil)
-}
-
-func newReviewCommandTestServiceWithPolicies(reviewRepo *review.MockReviewRepository, voteRepo *review.MockVoteRepository, policies []review.CreatePolicy) *application.ReviewCommandService {
 	courseRepo := course.NewMockCourseRepository()
 	courseRepo.Courses[1] = &course.CourseView{ID: 1, Code: "CS101", LastSemester: "2025-2026-1"}
 	courseRepo.OfferedCourses[1] = map[string]bool{"2025-2026-1": true}
-	return application.NewReviewCommandService(
-		courseRepo,
-		reviewRepo,
-		voteRepo,
-		nil,
-		application.ReviewCommandConfig{
-			HotScores: course.HotScoreConfig{
-				ReviewCreateScore: 5,
-				ReviewUpdateScore: 2,
-				ReviewVoteScore:   1,
-			},
-			FrequencyViolationAdminEmails: []string{"admin@example.edu"},
-		},
-		policies,
-	)
+	return application.NewReviewCommandService(courseRepo, reviewRepo, voteRepo, nil)
 }
 
-type rejectCreatePolicy struct {
-	err error
+type reviewCommandQueryRepo struct {
+	*review.MockReviewRepository
+	recent []review.ReviewView
 }
 
-func (p rejectCreatePolicy) CanCreate(ctx context.Context, u *auth.User, c *course.CourseView, r *review.Review) error {
-	return p.err
+func (r *reviewCommandQueryRepo) FindBy(ctx context.Context, filter review.ReviewFilter) ([]review.ReviewView, int64, error) {
+	return r.recent, int64(len(r.recent)), nil
+}
+
+func (r *reviewCommandQueryRepo) GetByID(ctx context.Context, reviewID int) (*review.ReviewView, error) {
+	return nil, nil
+}
+
+func (r *reviewCommandQueryRepo) GetCourseFilters(ctx context.Context, courseID int) (*review.ReviewFilters, error) {
+	return &review.ReviewFilters{}, nil
+}
+
+func (r *reviewCommandQueryRepo) GetCourseTrend(ctx context.Context, courseID int) ([]review.ReviewTrendItem, error) {
+	return nil, nil
+}
+
+func (r *reviewCommandQueryRepo) FindRevisions(ctx context.Context, reviewID int) ([]review.RevisionView, error) {
+	return nil, nil
 }
 
 func TestReviewCommandService_CreateReviewEnqueuesHotCourseActivity(t *testing.T) {
@@ -184,26 +183,36 @@ func TestReviewCommandService_CreateReviewDoesNotEnqueueRewardWhenConflict(t *te
 }
 
 func TestReviewCommandService_CreateReviewEnqueuesFrequencyViolationTasks(t *testing.T) {
-	reviewRepo := newFakeCommandReviewRepo()
+	reviewRepo := &reviewCommandQueryRepo{
+		MockReviewRepository: newFakeCommandReviewRepo(),
+		recent: []review.ReviewView{
+			{CourseID: 1, Content: "previous 1", Course: &course.CourseView{ID: 1, Code: "CS101"}},
+			{CourseID: 1, Content: "previous 2", Course: &course.CourseView{ID: 1, Code: "CS101"}},
+			{CourseID: 1, Content: "previous 3", Course: &course.CourseView{ID: 1, Code: "CS101"}},
+		},
+	}
 	enqueuer := &fakeReviewCommandEnqueuer{}
 	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
 	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
 	duration := 2 * time.Hour
-	violation := &review.FrequencyViolation{
-		Reason:          policy.ErrSameCourseSpam,
-		Review:          &review.Review{UserID: 10, CourseID: 1, Content: "spam content"},
-		Course:          &course.CourseView{ID: 1, Code: "CS101", Name: "Intro CS"},
+	courseRepo := course.NewMockCourseRepository()
+	courseRepo.Courses[1] = &course.CourseView{ID: 1, Code: "CS101", Name: "Intro CS", LastSemester: "2025-2026-1"}
+	courseRepo.OfferedCourses[1] = map[string]bool{"2025-2026-1": true}
+	provider := application.NewDefaultSiteSettingsProvider()
+	provider.ReviewRuntime.FrequencyPolicy = policy.FrequencyPolicyConfig{
+		Window:          time.Hour,
+		MaxReviews:      3,
+		SimilarityRatio: 0.9,
 		SuspendDuration: duration,
 	}
-	svc := newReviewCommandTestServiceWithPolicies(reviewRepo, &review.MockVoteRepository{}, []review.CreatePolicy{
-		rejectCreatePolicy{err: violation},
-	})
+	provider.ReviewRuntime.FrequencyViolationAdminEmails = []string{"admin@example.edu"}
+	svc := application.NewReviewCommandService(courseRepo, reviewRepo, &review.MockVoteRepository{}, provider)
 
 	err := svc.CreateReview(context.Background(), &auth.User{ID: 10}, &application.CreateReviewCommand{
 		CourseID: 1,
 		Semester: "2025-2026-1",
 		Rating:   5,
-		Content:  "spam",
+		Content:  "spam content",
 	})
 	if !errors.Is(err, policy.ErrSameCourseSpam) {
 		t.Fatalf("CreateReview error = %v, want %v", err, policy.ErrSameCourseSpam)
@@ -302,17 +311,18 @@ func TestReviewCommandService_VoteReviewRecordsOnlyChangedVote(t *testing.T) {
 
 func TestCourseHotService_RecordActivityUsesConfiguredScore(t *testing.T) {
 	hotRepo := &course.MockHotCourseRepository{}
-	svc := course.NewCourseHotService(hotRepo, course.HotScoreConfig{
+	svc := course.NewCourseHotService(hotRepo)
+	scores := course.HotScoreConfig{
 		ReviewCreateScore: 5,
 		ReviewUpdateScore: 2,
 		ReviewVoteScore:   1,
-	})
+	}
 
-	err := svc.RecordActivity(context.Background(), course.RecordHotCourseActivityPayload{
+	err := svc.RecordActivityWithScores(context.Background(), course.RecordHotCourseActivityPayload{
 		UserID:   10,
 		Activity: course.HotCourseActivityReviewUpdate,
 		CourseID: 1,
-	})
+	}, scores)
 	if err != nil {
 		t.Fatalf("RecordActivity: %v", err)
 	}

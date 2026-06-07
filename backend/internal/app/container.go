@@ -6,7 +6,6 @@ import (
 	"jcourse/internal/domain/account"
 	"jcourse/internal/domain/account/credential"
 	"jcourse/internal/domain/account/identity"
-	"jcourse/internal/domain/account/verification"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/email"
@@ -80,10 +79,8 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		reviewRepo,
 		voteRepo,
 		siteSettings,
-		conf.Review.Command,
-		nil,
 	)
-	courseHotService := course.NewCourseHotService(courseHotRepo, course.DefaultHotScoreConfig)
+	courseHotService := course.NewCourseHotService(courseHotRepo)
 	courseService := course.NewService(courseRepo)
 	courseRatingCommand := course.NewCourseRatingCommandService(courseRepo, conf.Course.RatingScore)
 	courseQuery := application.NewCourseQueryService(courseRepo, teacherRepo, reviewRepo, notificationRepo, courseEnrollmentRepo, courseHotRepo)
@@ -116,22 +113,18 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		verificationRepo,
 		hasher,
 		usernameDeriver,
-		account.DefaultRegistrationConfig,
-		verification.DefaultConfig,
 	)
 	loginService := account.NewLoginService(
 		accountRepo,
 		hasher,
 		loginAttemptRepo,
 		usernameDeriver,
-		account.DefaultLoginConfig,
 	)
 	passwordResetService := account.NewPasswordResetService(
 		accountRepo,
 		resetCodeRepo,
 		hasher,
 		usernameDeriver,
-		verification.DefaultConfig,
 	)
 	sessionAuthService := auth.NewSessionAuthService(accountRepo, conf.Session.Secret)
 	accountCommand := application.NewAccountCommandService(

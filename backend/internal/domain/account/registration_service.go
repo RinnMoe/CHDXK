@@ -21,13 +21,10 @@ type RegistrationConfig struct {
 var DefaultRegistrationConfig = RegistrationConfig{}
 
 type RegistrationService struct {
-	accountRepo  identity.Repository
-	codes        verification.CodeRepository
-	hasher       credential.PasswordHasher
-	usernames    identity.UsernameDeriver
-	whitelist    identity.EmailWhitelist
-	config       RegistrationConfig
-	verification verification.Config
+	accountRepo identity.Repository
+	codes       verification.CodeRepository
+	hasher      credential.PasswordHasher
+	usernames   identity.UsernameDeriver
 }
 
 func NewRegistrationService(
@@ -35,26 +32,16 @@ func NewRegistrationService(
 	codes verification.CodeRepository,
 	hasher credential.PasswordHasher,
 	usernames identity.UsernameDeriver,
-	config RegistrationConfig,
-	verificationConfig verification.Config,
 ) *RegistrationService {
 	return &RegistrationService{
-		accountRepo:  accountRepo,
-		codes:        codes,
-		hasher:       hasher,
-		usernames:    usernames,
-		whitelist:    identity.NewEmailWhitelist(config.EmailWhitelist),
-		config:       config,
-		verification: verificationConfig.WithDefaults(),
+		accountRepo: accountRepo,
+		codes:       codes,
+		hasher:      hasher,
+		usernames:   usernames,
 	}
 }
 
-func (s *RegistrationService) SendRegisterCode(ctx context.Context, email string) error {
-	return s.SendRegisterCodeWithConfig(ctx, email, s.config, s.verification)
-}
-
 func (s *RegistrationService) SendRegisterCodeWithConfig(ctx context.Context, email string, config RegistrationConfig, verificationConfig verification.Config) error {
-	verificationConfig = verificationConfig.WithDefaults()
 	normalized, err := s.normalizeAllowedEmail(email, config)
 	if err != nil {
 		return err
@@ -80,10 +67,6 @@ func (s *RegistrationService) SendRegisterCodeWithConfig(ctx context.Context, em
 		return err
 	}
 	return task.Enqueue(ctx, domainemail.NewSendEmailTask(string(notification.EmailTemplateVerificationCode), mail))
-}
-
-func (s *RegistrationService) Register(ctx context.Context, email, code, password string) (*identity.Account, error) {
-	return s.RegisterWithConfig(ctx, email, code, password, s.config)
 }
 
 func (s *RegistrationService) RegisterWithConfig(ctx context.Context, email, code, password string, config RegistrationConfig) (*identity.Account, error) {
@@ -130,10 +113,7 @@ func (s *RegistrationService) RegisterWithConfig(ctx context.Context, email, cod
 
 func (s *RegistrationService) normalizeAllowedEmail(email string, config RegistrationConfig) (string, error) {
 	normalized := identity.NormalizeEmail(email)
-	whitelist := s.whitelist
-	if len(config.EmailWhitelist) > 0 {
-		whitelist = identity.NewEmailWhitelist(config.EmailWhitelist)
-	}
+	whitelist := identity.NewEmailWhitelist(config.EmailWhitelist)
 	if !whitelist.Allows(normalized) {
 		return "", identity.ErrEmailNotAllowed
 	}

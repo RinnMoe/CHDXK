@@ -21,9 +21,10 @@ type SiteSettingsProvider interface {
 }
 
 type ReviewRuntimeConfig struct {
-	Vote            review.VoteConfig
-	Rewards         point.RewardConfig
-	FrequencyPolicy policy.FrequencyPolicyConfig
+	Vote                          review.VoteConfig
+	Rewards                       point.RewardConfig
+	FrequencyPolicy               policy.FrequencyPolicyConfig
+	FrequencyViolationAdminEmails []string
 }
 
 type AccountRuntimeConfig struct {
@@ -59,6 +60,7 @@ func (p *SystemSiteSettingsProvider) ReviewRuntimeConfig(ctx context.Context) (R
 			SimilarityRatio: snapshot.Float(setting.SystemSettingKeyReviewFrequencySimilarityRatio),
 			SuspendDuration: snapshot.Duration(setting.SystemSettingKeyReviewFrequencySuspendDuration),
 		},
+		FrequencyViolationAdminEmails: snapshot.StringList(setting.SystemSettingKeyReviewFrequencyViolationAdminEmails),
 	}, nil
 }
 
@@ -116,9 +118,10 @@ type StaticSiteSettingsProvider struct {
 func NewDefaultSiteSettingsProvider() StaticSiteSettingsProvider {
 	return StaticSiteSettingsProvider{
 		ReviewRuntime: ReviewRuntimeConfig{
-			Vote:            review.DefaultVoteConfig,
-			Rewards:         point.DefaultRewardConfig,
-			FrequencyPolicy: policy.DefaultFrequencyPolicyConfig,
+			Vote:                          review.DefaultVoteConfig,
+			Rewards:                       point.DefaultRewardConfig,
+			FrequencyPolicy:               policy.DefaultFrequencyPolicyConfig,
+			FrequencyViolationAdminEmails: []string{},
 		},
 		AccountRuntime: AccountRuntimeConfig{
 			Registration: account.DefaultRegistrationConfig,

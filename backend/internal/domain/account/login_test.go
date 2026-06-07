@@ -18,9 +18,9 @@ func TestLoginService_LoginLockedAfterMaxAttempts(t *testing.T) {
 	username := mustUsernameFromEmail(t, "alice@example.edu")
 	repo := identity.NewMockRepository(map[string]*identity.Account{username: {ID: 1, Username: username, PasswordHash: password}})
 	attempts := security.NewMockLoginAttemptRepository(map[string]int{"alice@example.edu": 5})
-	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver(), LoginConfig{MaxAttempts: 5, Lockout: 15 * time.Minute})
+	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver())
 
-	_, err := svc.Login(context.Background(), "alice@example.edu", "secret")
+	_, err := svc.LoginWithConfig(context.Background(), "alice@example.edu", "secret", testLoginConfig())
 	if !errors.Is(err, security.ErrLoginLocked) {
 		t.Fatalf("Login error = %v, want ErrLoginLocked", err)
 	}
@@ -32,9 +32,9 @@ func TestLoginService_LoginNotLockedWhenBelowMax(t *testing.T) {
 	username := mustUsernameFromEmail(t, "alice@example.edu")
 	repo := identity.NewMockRepository(map[string]*identity.Account{username: {ID: 1, Username: username, PasswordHash: password}})
 	attempts := security.NewMockLoginAttemptRepository(map[string]int{"alice@example.edu": 4})
-	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver(), LoginConfig{MaxAttempts: 5, Lockout: 15 * time.Minute})
+	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver())
 
-	u, err := svc.Login(context.Background(), "alice@example.edu", "secret")
+	u, err := svc.LoginWithConfig(context.Background(), "alice@example.edu", "secret", testLoginConfig())
 	if err != nil {
 		t.Fatalf("Login: %v", err)
 	}
@@ -49,9 +49,9 @@ func TestLoginService_FailedLoginIncrementsAttempts(t *testing.T) {
 	username := mustUsernameFromEmail(t, "alice@example.edu")
 	repo := identity.NewMockRepository(map[string]*identity.Account{username: {ID: 1, Username: username, PasswordHash: password}})
 	attempts := security.NewMockLoginAttemptRepository(map[string]int{})
-	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver(), LoginConfig{MaxAttempts: 5, Lockout: 15 * time.Minute})
+	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver())
 
-	_, err := svc.Login(context.Background(), "alice@example.edu", "wrong")
+	_, err := svc.LoginWithConfig(context.Background(), "alice@example.edu", "wrong", testLoginConfig())
 	if !errors.Is(err, security.ErrInvalidCredentials) {
 		t.Fatalf("Login error = %v, want ErrInvalidCredentials", err)
 	}
@@ -71,9 +71,9 @@ func TestLoginService_LoginRejectsAccountWithoutPassword(t *testing.T) {
 	username := mustUsernameFromEmail(t, "alice@example.edu")
 	repo := identity.NewMockRepository(map[string]*identity.Account{username: {ID: 1, Username: username, PasswordHash: ""}})
 	attempts := security.NewMockLoginAttemptRepository(map[string]int{})
-	svc := NewLoginService(repo, credential.NewDjangoPBKDF2SHA256PasswordHasher(credential.PasswordHashConfig{Iterations: 1}), attempts, testUsernameDeriver(), LoginConfig{MaxAttempts: 5, Lockout: 15 * time.Minute})
+	svc := NewLoginService(repo, credential.NewDjangoPBKDF2SHA256PasswordHasher(credential.PasswordHashConfig{Iterations: 1}), attempts, testUsernameDeriver())
 
-	_, err := svc.Login(context.Background(), "alice@example.edu", "secret")
+	_, err := svc.LoginWithConfig(context.Background(), "alice@example.edu", "secret", testLoginConfig())
 	if !errors.Is(err, security.ErrPasswordNotSet) {
 		t.Fatalf("Login error = %v, want ErrPasswordNotSet", err)
 	}
@@ -88,9 +88,9 @@ func TestLoginService_SuccessfulLoginResetsAttempts(t *testing.T) {
 	username := mustUsernameFromEmail(t, "alice@example.edu")
 	repo := identity.NewMockRepository(map[string]*identity.Account{username: {ID: 1, Username: username, PasswordHash: password}})
 	attempts := security.NewMockLoginAttemptRepository(map[string]int{"alice@example.edu": 3})
-	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver(), LoginConfig{MaxAttempts: 5, Lockout: 15 * time.Minute})
+	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver())
 
-	_, err := svc.Login(context.Background(), "alice@example.edu", "secret")
+	_, err := svc.LoginWithConfig(context.Background(), "alice@example.edu", "secret", testLoginConfig())
 	if err != nil {
 		t.Fatalf("Login: %v", err)
 	}
@@ -99,15 +99,15 @@ func TestLoginService_SuccessfulLoginResetsAttempts(t *testing.T) {
 	}
 }
 
-func TestLoginService_DefaultConfigAppliesLockout(t *testing.T) {
+func TestLoginService_ConfigControlsLockout(t *testing.T) {
 	hasher := credential.NewDjangoPBKDF2SHA256PasswordHasher(credential.PasswordHashConfig{Iterations: 1})
 	password, _ := hasher.Hash("secret")
 	username := mustUsernameFromEmail(t, "alice@example.edu")
 	repo := identity.NewMockRepository(map[string]*identity.Account{username: {ID: 1, Username: username, PasswordHash: password}})
 	attempts := security.NewMockLoginAttemptRepository(map[string]int{"alice@example.edu": 999})
-	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver(), LoginConfig{})
+	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver())
 
-	_, err := svc.Login(context.Background(), "alice@example.edu", "secret")
+	_, err := svc.LoginWithConfig(context.Background(), "alice@example.edu", "secret", testLoginConfig())
 	if !errors.Is(err, security.ErrLoginLocked) {
 		t.Fatalf("Login error = %v, want ErrLoginLocked", err)
 	}
@@ -118,20 +118,25 @@ func TestLoginService_LockoutTriggersOnNthFailure(t *testing.T) {
 	username := mustUsernameFromEmail(t, "alice@example.edu")
 	repo := identity.NewMockRepository(map[string]*identity.Account{username: {ID: 1, Username: username, PasswordHash: "irrelevant"}})
 	attempts := security.NewMockLoginAttemptRepository(map[string]int{})
-	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver(), LoginConfig{MaxAttempts: 3, Lockout: 15 * time.Minute})
+	svc := NewLoginService(repo, hasher, attempts, testUsernameDeriver())
+	config := LoginConfig{MaxAttempts: 3, Lockout: 15 * time.Minute}
 	ctx := context.Background()
 
 	for i := 1; i <= 3; i++ {
-		_, err := svc.Login(ctx, "alice@example.edu", "wrong")
+		_, err := svc.LoginWithConfig(ctx, "alice@example.edu", "wrong", config)
 		if !errors.Is(err, security.ErrInvalidCredentials) {
 			t.Fatalf("attempt %d error = %v, want ErrInvalidCredentials", i, err)
 		}
 	}
 
-	_, err := svc.Login(ctx, "alice@example.edu", "wrong")
+	_, err := svc.LoginWithConfig(ctx, "alice@example.edu", "wrong", config)
 	if !errors.Is(err, security.ErrLoginLocked) {
 		t.Fatalf("error after 3 failures = %v, want ErrLoginLocked", err)
 	}
+}
+
+func testLoginConfig() LoginConfig {
+	return LoginConfig{MaxAttempts: 5, Lockout: 15 * time.Minute}
 }
 
 func mustUsernameFromEmail(t *testing.T, email string) string {

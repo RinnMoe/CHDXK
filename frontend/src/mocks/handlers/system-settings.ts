@@ -165,6 +165,18 @@ let settings: SystemSettingDTO[] = [
     secret: false,
     requires_restart: false,
   },
+  {
+    key: "review.frequency.violation_admin_emails",
+    value: "",
+    default_value: "",
+    type: "string_list",
+    group: "review",
+    label: "刷评通知管理员邮箱",
+    description: "命中刷评策略后接收通知的管理员邮箱，多个值用逗号或换行分隔，留空则不发送",
+    public: false,
+    secret: false,
+    requires_restart: false,
+  },
 ]
 
 export function getMockSystemSettingValue(key: string) {

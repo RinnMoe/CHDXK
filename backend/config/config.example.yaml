@@ -55,9 +55,6 @@ review:
     sensitive_level: "medium"
     connect_timeout: 3000
     read_timeout: 10000
-  command:
-    frequency_violation_admin_emails: []
-
 api_key:
   snowflake_node_id: 1
 

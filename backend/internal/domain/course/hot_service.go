@@ -7,20 +7,15 @@ import (
 
 type CourseHotService struct {
 	repo              HotCourseRepository
-	scores            HotScoreConfig
 	hotCourseLocation *time.Location
 }
 
-func NewCourseHotService(repo HotCourseRepository, scores HotScoreConfig) *CourseHotService {
+func NewCourseHotService(repo HotCourseRepository) *CourseHotService {
 	loc, err := DefaultHotCourseLocation()
 	if err != nil {
 		panic(err)
 	}
-	return &CourseHotService{repo: repo, scores: scores, hotCourseLocation: loc}
-}
-
-func (s *CourseHotService) RecordActivity(ctx context.Context, payload RecordHotCourseActivityPayload) error {
-	return s.RecordActivityWithScores(ctx, payload, s.scores)
+	return &CourseHotService{repo: repo, hotCourseLocation: loc}
 }
 
 func (s *CourseHotService) RecordActivityWithScores(ctx context.Context, payload RecordHotCourseActivityPayload, scores HotScoreConfig) error {

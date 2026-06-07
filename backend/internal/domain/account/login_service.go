@@ -27,7 +27,6 @@ type LoginService struct {
 	hasher      credential.PasswordHasher
 	attempts    security.LoginAttemptRepository
 	usernames   identity.UsernameDeriver
-	config      LoginConfig
 }
 
 func NewLoginService(
@@ -35,30 +34,16 @@ func NewLoginService(
 	hasher credential.PasswordHasher,
 	attempts security.LoginAttemptRepository,
 	usernames identity.UsernameDeriver,
-	config LoginConfig,
 ) *LoginService {
-	defaults := DefaultLoginConfig
-	if config.MaxAttempts <= 0 {
-		config.MaxAttempts = defaults.MaxAttempts
-	}
-	if config.Lockout <= 0 {
-		config.Lockout = defaults.Lockout
-	}
 	return &LoginService{
 		accountRepo: accountRepo,
 		hasher:      hasher,
 		attempts:    attempts,
 		usernames:   usernames,
-		config:      config,
 	}
 }
 
-func (s *LoginService) Login(ctx context.Context, email, password string) (*identity.Account, error) {
-	return s.LoginWithConfig(ctx, email, password, s.config)
-}
-
 func (s *LoginService) LoginWithConfig(ctx context.Context, email, password string, config LoginConfig) (*identity.Account, error) {
-	config = normalizeLoginConfig(config)
 	normalized := identity.NormalizeEmail(email)
 	username, err := s.usernames.UsernameFromEmail(normalized)
 	if err != nil {
@@ -105,15 +90,4 @@ func (s *LoginService) recordFailure(ctx context.Context, email string, config L
 	remaining := max(config.MaxAttempts-count, 0)
 	msg := fmt.Sprintf("邮箱或密码错误，还有 %d 次尝试机会", remaining)
 	return fmt.Errorf("%w: %w", apperr.Unauthorized(msg), security.ErrInvalidCredentials)
-}
-
-func normalizeLoginConfig(config LoginConfig) LoginConfig {
-	defaults := DefaultLoginConfig
-	if config.MaxAttempts <= 0 {
-		config.MaxAttempts = defaults.MaxAttempts
-	}
-	if config.Lockout <= 0 {
-		config.Lockout = defaults.Lockout
-	}
-	return config
 }
