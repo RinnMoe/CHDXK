@@ -367,6 +367,9 @@ func (r2 *ReviewRepository) create(ctx context.Context, r *review.Review, reward
 			return err
 		}
 		for i := range rewards {
+			if rewards[i].SourceType == point.RewardSourceTypeReview && rewards[i].SourceKey == "" {
+				rewards[i].SourceKey = strconv.Itoa(e.ID)
+			}
 			rewardEntity := newPointRewardEntity(&rewards[i])
 			insertResult := tx.Clauses(clause.OnConflict{
 				Columns:   []clause.Column{{Name: "reason"}, {Name: "source_type"}, {Name: "source_key"}},

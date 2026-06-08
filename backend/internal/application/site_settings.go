@@ -51,8 +51,10 @@ func (p *SystemSiteSettingsProvider) ReviewRuntimeConfig(ctx context.Context) (R
 			MaxDailyVotes: snapshot.Int(setting.SystemSettingKeyReviewVoteMaxDailyVotes),
 		},
 		Rewards: point.RewardConfig{
-			Enabled:                 snapshot.Bool(setting.SystemSettingKeyReviewRewardEnabled),
-			CourseFirstReviewPoints: snapshot.Int(setting.SystemSettingKeyReviewRewardCourseFirstReviewPts),
+			CourseFirstReviewEnabled: snapshot.Bool(setting.SystemSettingKeyReviewRewardCourseFirstReviewEnabled),
+			CourseFirstReviewPoints:  snapshot.Int(setting.SystemSettingKeyReviewRewardCourseFirstReviewPts),
+			ReviewCreateEnabled:      snapshot.Bool(setting.SystemSettingKeyReviewRewardReviewCreateEnabled),
+			ReviewCreatePoints:       snapshot.Int(setting.SystemSettingKeyReviewRewardReviewCreatePts),
 		},
 		FrequencyPolicy: policy.FrequencyPolicyConfig{
 			Window:          snapshot.Duration(setting.SystemSettingKeyReviewFrequencyWindow),

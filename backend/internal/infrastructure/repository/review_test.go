@@ -2,6 +2,7 @@ package repository_test
 
 import (
 	"context"
+	"strconv"
 	"testing"
 	"time"
 
@@ -144,16 +145,7 @@ func TestReviewRepository_CreateWithRewardCreatesMultipleRewards(t *testing.T) {
 
 	result, err := repo.CreateWithReward(ctx, reviewToCreate, []point.Reward{
 		*point.NewCourseFirstReviewReward(user.ID, course.ID, 10, now),
-		{
-			UserID:      user.ID,
-			Reason:      point.RewardReason("review_create"),
-			Amount:      2,
-			SourceType:  "review",
-			SourceKey:   "pending-review-create-test",
-			Description: "发布点评奖励",
-			Status:      point.RewardStatusPending,
-			CreatedAt:   now,
-		},
+		*point.NewReviewCreateReward(user.ID, 2, now),
 	})
 	if err != nil {
 		t.Fatalf("CreateWithReward: %v", err)
@@ -168,6 +160,14 @@ func TestReviewRepository_CreateWithRewardCreatesMultipleRewards(t *testing.T) {
 	}
 	if count != 2 {
 		t.Fatalf("reward count = %d, want 2", count)
+	}
+
+	var reviewCreateReward repository.PointRewardEntity
+	if err := db.Where("reason = ?", string(point.RewardReasonReviewCreate)).Take(&reviewCreateReward).Error; err != nil {
+		t.Fatalf("find review create reward: %v", err)
+	}
+	if reviewCreateReward.SourceType != point.RewardSourceTypeReview || reviewCreateReward.SourceKey != strconv.Itoa(reviewToCreate.ID) {
+		t.Fatalf("review create reward source = %s/%s, want review/%d", reviewCreateReward.SourceType, reviewCreateReward.SourceKey, reviewToCreate.ID)
 	}
 }
 

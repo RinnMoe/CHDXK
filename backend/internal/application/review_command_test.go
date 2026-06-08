@@ -113,8 +113,8 @@ func TestReviewCommandService_CreateReviewEnqueuesGrantRewardWhenEnabled(t *test
 		Vote:            review.DefaultVoteConfig,
 		FrequencyPolicy: policy.DefaultFrequencyPolicyConfig,
 		Rewards: point.RewardConfig{
-			Enabled:                 true,
-			CourseFirstReviewPoints: 10,
+			CourseFirstReviewEnabled: true,
+			CourseFirstReviewPoints:  10,
 		},
 	})
 
@@ -145,6 +145,98 @@ func TestReviewCommandService_CreateReviewEnqueuesGrantRewardWhenEnabled(t *test
 	}
 }
 
+func TestReviewCommandService_CreateReviewEnqueuesReviewCreateRewardWhenEnabled(t *testing.T) {
+	reviewRepo := newFakeCommandReviewRepo()
+	reviewRepo.OnCreateWithReward = func(ctx context.Context, rv *review.Review, rewards []point.Reward) (review.CreateResult, error) {
+		if len(rewards) != 1 {
+			t.Fatalf("rewards = %d, want 1", len(rewards))
+		}
+		got := rewards[0]
+		if got.Reason != point.RewardReasonReviewCreate || got.Amount != 1 || got.SourceType != point.RewardSourceTypeReview || got.Description != "发布点评奖励" {
+			t.Fatalf("reward = %+v", got)
+		}
+		if err := reviewRepo.Create(ctx, rv); err != nil {
+			return review.CreateResult{}, err
+		}
+		return review.CreateResult{RewardIDs: []int{1001}}, nil
+	}
+	enqueuer := &fakeReviewCommandEnqueuer{}
+	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
+	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
+	svc := newReviewCommandTestServiceWithRuntimeConfig(reviewRepo, &review.MockVoteRepository{}, application.ReviewRuntimeConfig{
+		Vote:            review.DefaultVoteConfig,
+		FrequencyPolicy: policy.DefaultFrequencyPolicyConfig,
+		Rewards: point.RewardConfig{
+			ReviewCreateEnabled: true,
+			ReviewCreatePoints:  1,
+		},
+	})
+
+	err := svc.CreateReview(context.Background(), &auth.User{ID: 10}, &application.CreateReviewCommand{
+		CourseID: 1,
+		Semester: "2025-2026-1",
+		Rating:   5,
+		Content:  "good course",
+	})
+	if err != nil {
+		t.Fatalf("CreateReview: %v", err)
+	}
+	if len(enqueuer.tasks) != 2 {
+		t.Fatalf("tasks = %d, want reward and hot course", len(enqueuer.tasks))
+	}
+	if got := enqueuer.tasks[0].Type(); got != point.TaskTypeGrantReward {
+		t.Fatalf("first task type = %q, want %q", got, point.TaskTypeGrantReward)
+	}
+	if got := enqueuer.tasks[1].Type(); got != course.TaskTypeRecordHotCourseActivity {
+		t.Fatalf("second task type = %q, want %q", got, course.TaskTypeRecordHotCourseActivity)
+	}
+}
+
+func TestReviewCommandService_CreateReviewBuildsBothRewardsWhenEnabled(t *testing.T) {
+	reviewRepo := newFakeCommandReviewRepo()
+	reviewRepo.OnCreateWithReward = func(ctx context.Context, rv *review.Review, rewards []point.Reward) (review.CreateResult, error) {
+		if len(rewards) != 2 {
+			t.Fatalf("rewards = %d, want 2", len(rewards))
+		}
+		if rewards[0].Reason != point.RewardReasonCourseFirstReview {
+			t.Fatalf("first reward reason = %q, want %q", rewards[0].Reason, point.RewardReasonCourseFirstReview)
+		}
+		if rewards[1].Reason != point.RewardReasonReviewCreate {
+			t.Fatalf("second reward reason = %q, want %q", rewards[1].Reason, point.RewardReasonReviewCreate)
+		}
+		if err := reviewRepo.Create(ctx, rv); err != nil {
+			return review.CreateResult{}, err
+		}
+		return review.CreateResult{RewardIDs: []int{1001, 1002}}, nil
+	}
+	enqueuer := &fakeReviewCommandEnqueuer{}
+	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
+	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
+	svc := newReviewCommandTestServiceWithRuntimeConfig(reviewRepo, &review.MockVoteRepository{}, application.ReviewRuntimeConfig{
+		Vote:            review.DefaultVoteConfig,
+		FrequencyPolicy: policy.DefaultFrequencyPolicyConfig,
+		Rewards: point.RewardConfig{
+			CourseFirstReviewEnabled: true,
+			CourseFirstReviewPoints:  10,
+			ReviewCreateEnabled:      true,
+			ReviewCreatePoints:       1,
+		},
+	})
+
+	err := svc.CreateReview(context.Background(), &auth.User{ID: 10}, &application.CreateReviewCommand{
+		CourseID: 1,
+		Semester: "2025-2026-1",
+		Rating:   5,
+		Content:  "good course",
+	})
+	if err != nil {
+		t.Fatalf("CreateReview: %v", err)
+	}
+	if len(enqueuer.tasks) != 3 {
+		t.Fatalf("tasks = %d, want 3", len(enqueuer.tasks))
+	}
+}
+
 func TestReviewCommandService_CreateReviewDoesNotEnqueueRewardWhenConflict(t *testing.T) {
 	reviewRepo := newFakeCommandReviewRepo()
 	reviewRepo.OnCreateWithReward = func(ctx context.Context, rv *review.Review, rewards []point.Reward) (review.CreateResult, error) {
@@ -160,8 +252,8 @@ func TestReviewCommandService_CreateReviewDoesNotEnqueueRewardWhenConflict(t *te
 		Vote:            review.DefaultVoteConfig,
 		FrequencyPolicy: policy.DefaultFrequencyPolicyConfig,
 		Rewards: point.RewardConfig{
-			Enabled:                 true,
-			CourseFirstReviewPoints: 10,
+			CourseFirstReviewEnabled: true,
+			CourseFirstReviewPoints:  10,
 		},
 	})
 

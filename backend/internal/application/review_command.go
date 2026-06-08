@@ -205,14 +205,18 @@ func (s *ReviewCommandService) enqueueHotCourseActivity(ctx context.Context, use
 }
 
 func buildCreateReviewRewards(config point.RewardConfig, userID int, courseID int, now time.Time) []point.Reward {
-	if !config.Enabled {
-		return nil
+	rewards := make([]point.Reward, 0, 2)
+	if config.CourseFirstReviewEnabled {
+		if reward := point.NewCourseFirstReviewReward(userID, courseID, config.CourseFirstReviewPoints, now); reward != nil {
+			rewards = append(rewards, *reward)
+		}
 	}
-	reward := point.NewCourseFirstReviewReward(userID, courseID, config.CourseFirstReviewPoints, now)
-	if reward == nil {
-		return nil
+	if config.ReviewCreateEnabled {
+		if reward := point.NewReviewCreateReward(userID, config.ReviewCreatePoints, now); reward != nil {
+			rewards = append(rewards, *reward)
+		}
 	}
-	return []point.Reward{*reward}
+	return rewards
 }
 
 func (s *ReviewCommandService) enqueueGrantReward(ctx context.Context, rewardID int) {

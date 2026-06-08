@@ -13,22 +13,28 @@ const (
 	RecordReasonReward RecordReason = "reward"
 
 	RewardReasonCourseFirstReview RewardReason = "course_first_review"
+	RewardReasonReviewCreate      RewardReason = "review_create"
 
 	RewardStatusPending  RewardStatus = "pending"
 	RewardStatusGranted  RewardStatus = "granted"
 	RewardStatusCanceled RewardStatus = "canceled"
 
 	RewardSourceTypeCourse = "course"
+	RewardSourceTypeReview = "review"
 )
 
 type RewardConfig struct {
-	Enabled                 bool `mapstructure:"enabled"`
-	CourseFirstReviewPoints int  `mapstructure:"course_first_review_points"`
+	CourseFirstReviewEnabled bool `mapstructure:"course_first_review_enabled"`
+	CourseFirstReviewPoints  int  `mapstructure:"course_first_review_points"`
+	ReviewCreateEnabled      bool `mapstructure:"review_create_enabled"`
+	ReviewCreatePoints       int  `mapstructure:"review_create_points"`
 }
 
 var DefaultRewardConfig = RewardConfig{
-	Enabled:                 false,
-	CourseFirstReviewPoints: 0,
+	CourseFirstReviewEnabled: false,
+	CourseFirstReviewPoints:  0,
+	ReviewCreateEnabled:      false,
+	ReviewCreatePoints:       1,
 }
 
 type Reward struct {
@@ -55,6 +61,21 @@ func NewCourseFirstReviewReward(userID int, courseID int, amount int, now time.T
 		SourceType:  RewardSourceTypeCourse,
 		SourceKey:   strconv.Itoa(courseID),
 		Description: "课程首评奖励",
+		Status:      RewardStatusPending,
+		CreatedAt:   now,
+	}
+}
+
+func NewReviewCreateReward(userID int, amount int, now time.Time) *Reward {
+	if amount <= 0 {
+		return nil
+	}
+	return &Reward{
+		UserID:      userID,
+		Reason:      RewardReasonReviewCreate,
+		Amount:      amount,
+		SourceType:  RewardSourceTypeReview,
+		Description: "发布点评奖励",
 		Status:      RewardStatusPending,
 		CreatedAt:   now,
 	}

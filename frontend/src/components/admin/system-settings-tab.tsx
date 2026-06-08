@@ -39,6 +39,7 @@ const GROUP_LABELS: Record<string, string> = {
   auth: "认证",
   course: "课程",
   review: "点评",
+  review_reward: "点评积分",
 }
 
 export function SystemSettingsTab() {
