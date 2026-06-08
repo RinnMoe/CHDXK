@@ -18,7 +18,7 @@ func TestSiteDailyStatRepository_Collect(t *testing.T) {
 	repo := repository.NewSiteDailyStatRepository(db)
 	ctx := context.Background()
 
-	cleanTables(t, db, "site_daily_stats", "review_votes", "reviews", "courses", "teachers", "users")
+	cleanTables(t, db, "site_daily_stats", "point_rewards", "point_transfers", "user_point_records", "review_votes", "reviews", "courses", "teachers", "users")
 
 	loc := mustRepoStatsLocation(t)
 	periodStart := time.Date(2026, 5, 20, 0, 0, 0, 0, loc)
@@ -49,6 +49,12 @@ func TestSiteDailyStatRepository_Collect(t *testing.T) {
 	seedStatVote(t, db, r4.ID, author1.ID, review.VoteLike, before)
 	seedStatVote(t, db, r5.ID, oldUser.ID, review.VoteDislike, after)
 
+	seedStatPointRecord(t, db, author1.ID, 10, during)
+	seedStatPointRecord(t, db, author2.ID, 5, during.Add(time.Hour))
+	seedStatPointRecord(t, db, activeOnly.ID, -3, during.Add(2*time.Hour))
+	seedStatPointRecord(t, db, oldUser.ID, 7, before)
+	seedStatPointRecord(t, db, oldUser.ID, 11, after)
+
 	metrics, err := repo.Collect(ctx, periodStart, periodEnd)
 	if err != nil {
 		t.Fatalf("Collect: %v", err)
@@ -58,6 +64,7 @@ func TestSiteDailyStatRepository_Collect(t *testing.T) {
 		stat.MetricActiveUserCount:     3,
 		stat.MetricNewUserCount:        1,
 		stat.MetricNewReviewCount:      3,
+		stat.MetricNewPointAmount:      15,
 		stat.MetricReviewAuthorCount:   2,
 		stat.MetricReviewedCourseTotal: 2,
 		stat.MetricNewLikeCount:        2,
@@ -94,6 +101,9 @@ func TestSiteDailyStatRepository_UpsertAndFindByDateRange(t *testing.T) {
 	if got.ActiveUserCount != 190 || got.NewReviewCount != 191 {
 		t.Fatalf("upserted stat = %+v", got)
 	}
+	if got.NewPointAmount != 192 {
+		t.Fatalf("upserted new point amount = %d, want 192", got.NewPointAmount)
+	}
 
 	items, err := repo.FindByDateRange(ctx, stat.DailyStatFilter{
 		StartDate: date18,
@@ -108,9 +118,24 @@ func TestSiteDailyStatRepository_UpsertAndFindByDateRange(t *testing.T) {
 	if items[0].StatDate.Format("2006-01-02") != "2026-05-20" || items[1].StatDate.Format("2006-01-02") != "2026-05-19" || items[2].StatDate.Format("2006-01-02") != "2026-05-18" {
 		t.Fatalf("dates = %s, %s, %s; want 2026-05-20, 2026-05-19, 2026-05-18", items[0].StatDate, items[1].StatDate, items[2].StatDate)
 	}
-	if items[1].ActiveUserCount != 190 || items[1].NewReviewCount != 191 {
+	if items[1].ActiveUserCount != 190 || items[1].NewReviewCount != 191 || items[1].NewPointAmount != 192 {
 		t.Fatalf("flattened item = %+v", items[1])
 	}
+}
+
+func seedStatPointRecord(t *testing.T, db *gorm.DB, userID, amount int, at time.Time) repository.UserPointRecordEntity {
+	t.Helper()
+	e := repository.UserPointRecordEntity{
+		UserID:      userID,
+		Reason:      "stat_seed",
+		Amount:      amount,
+		Description: "seed point stat",
+		CreatedAt:   at,
+	}
+	if err := db.Create(&e).Error; err != nil {
+		t.Fatalf("seed stat point record: %v", err)
+	}
+	return e
 }
 
 func seedStatUser(t *testing.T, db *gorm.DB, username, email string, createdAt, lastSeenAt time.Time) repository.UserEntity {
@@ -170,6 +195,7 @@ func upsertDailyStat(t *testing.T, ctx context.Context, repo *repository.SiteDai
 			stat.MetricActiveUserCount:     base,
 			stat.MetricNewUserCount:        base + 1,
 			stat.MetricNewReviewCount:      base + 1,
+			stat.MetricNewPointAmount:      base + 2,
 			stat.MetricReviewAuthorCount:   base + 2,
 			stat.MetricReviewedCourseTotal: base + 3,
 			stat.MetricNewLikeCount:        base + 4,

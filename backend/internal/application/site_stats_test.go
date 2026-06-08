@@ -15,6 +15,7 @@ func TestSiteStatsCommandService_CollectDailyByDateString(t *testing.T) {
 		stat.MetricActiveUserCount:     11,
 		stat.MetricNewUserCount:        2,
 		stat.MetricNewReviewCount:      5,
+		stat.MetricNewPointAmount:      13,
 		stat.MetricReviewAuthorCount:   3,
 		stat.MetricReviewedCourseTotal: 9,
 		stat.MetricNewLikeCount:        7,
@@ -40,7 +41,7 @@ func TestSiteStatsCommandService_CollectDailyByDateString(t *testing.T) {
 	if repo.Saved.StatDate.Format("2006-01-02") != "2026-05-20" {
 		t.Fatalf("saved stat date = %s", repo.Saved.StatDate.Format("2006-01-02"))
 	}
-	if got.ActiveUserCount != 11 || got.ReviewAuthorCount != 3 || got.NewDislikeCount != 1 {
+	if got.ActiveUserCount != 11 || got.NewPointAmount != 13 || got.ReviewAuthorCount != 3 || got.NewDislikeCount != 1 {
 		t.Fatalf("flattened metrics = %+v", got)
 	}
 }

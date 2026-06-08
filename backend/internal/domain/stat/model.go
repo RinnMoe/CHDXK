@@ -31,6 +31,7 @@ const (
 	MetricActiveUserCount     = "active_user_count"
 	MetricNewUserCount        = "new_user_count"
 	MetricNewReviewCount      = "new_review_count"
+	MetricNewPointAmount      = "new_point_amount"
 	MetricReviewAuthorCount   = "review_author_count"
 	MetricReviewedCourseTotal = "reviewed_course_total"
 	MetricNewLikeCount        = "new_like_count"
@@ -142,6 +143,7 @@ type DailyStatView struct {
 	ActiveUserCount     int64
 	NewUserCount        int64
 	NewReviewCount      int64
+	NewPointAmount      int64
 	ReviewAuthorCount   int64
 	ReviewedCourseTotal int64
 	NewLikeCount        int64

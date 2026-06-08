@@ -3,15 +3,16 @@ import { BASE_URL } from "./constants"
 
 export interface SiteDailyStatDTO {
   stat_date: string
-  total_user_count: number
-  total_review_count: number
   active_user_count: number
   new_user_count: number
   new_review_count: number
+  new_point_amount: number
   review_author_count: number
-  reviewed_course_total: number
   new_like_count: number
   new_dislike_count: number
+  total_user_count: number
+  total_review_count: number
+  reviewed_course_total: number
   generated_at: string
   updated_at: string
 }

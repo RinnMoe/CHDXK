@@ -26,15 +26,16 @@ export function DailyStatsTable({ stats }: DailyStatsTableProps) {
             <TableHeader>
               <TableRow>
                 <TableHead>日期</TableHead>
-                <TableHead>用户总数</TableHead>
-                <TableHead>点评总数</TableHead>
                 <TableHead>活跃用户</TableHead>
                 <TableHead>新增用户</TableHead>
                 <TableHead>新增点评</TableHead>
+                <TableHead>新增积分</TableHead>
                 <TableHead>点评作者</TableHead>
+                <TableHead>新增点赞</TableHead>
+                <TableHead>新增点踩</TableHead>
+                <TableHead>用户总数</TableHead>
+                <TableHead>点评总数</TableHead>
                 <TableHead>被点评课程</TableHead>
-                <TableHead>点赞</TableHead>
-                <TableHead>点踩</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -43,15 +44,16 @@ export function DailyStatsTable({ stats }: DailyStatsTableProps) {
                   <TableCell className="font-mono text-sm">
                     {formatDateInputValue(s.stat_date)}
                   </TableCell>
-                  <TableCell>{s.total_user_count}</TableCell>
-                  <TableCell>{s.total_review_count}</TableCell>
                   <TableCell>{s.active_user_count}</TableCell>
                   <TableCell>{s.new_user_count}</TableCell>
                   <TableCell>{s.new_review_count}</TableCell>
+                  <TableCell>{s.new_point_amount}</TableCell>
                   <TableCell>{s.review_author_count}</TableCell>
-                  <TableCell>{s.reviewed_course_total}</TableCell>
                   <TableCell>{s.new_like_count}</TableCell>
                   <TableCell>{s.new_dislike_count}</TableCell>
+                  <TableCell>{s.total_user_count}</TableCell>
+                  <TableCell>{s.total_review_count}</TableCell>
+                  <TableCell>{s.reviewed_course_total}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -69,6 +69,7 @@ func newDailyStatView(e *SiteDailyStatEntity) stat.DailyStatView {
 		ActiveUserCount:     metrics[stat.MetricActiveUserCount],
 		NewUserCount:        metrics[stat.MetricNewUserCount],
 		NewReviewCount:      metrics[stat.MetricNewReviewCount],
+		NewPointAmount:      metrics[stat.MetricNewPointAmount],
 		ReviewAuthorCount:   metrics[stat.MetricReviewAuthorCount],
 		ReviewedCourseTotal: metrics[stat.MetricReviewedCourseTotal],
 		NewLikeCount:        metrics[stat.MetricNewLikeCount],
@@ -128,6 +129,14 @@ func (r *SiteDailyStatRepository) Collect(ctx context.Context, periodStart, peri
 		return nil, err
 	}
 
+	var newPointAmount int64
+	if err := r.db.WithContext(ctx).Model(&UserPointRecordEntity{}).
+		Select("COALESCE(SUM(amount), 0)").
+		Where("created_at >= ? AND created_at < ? AND amount > 0", periodStart, periodEnd).
+		Scan(&newPointAmount).Error; err != nil {
+		return nil, err
+	}
+
 	var reviewedCourses int64
 	if err := r.db.WithContext(ctx).Model(&ReviewEntity{}).
 		Where("created_at < ?", periodEnd).
@@ -155,6 +164,7 @@ func (r *SiteDailyStatRepository) Collect(ctx context.Context, periodStart, peri
 		stat.MetricActiveUserCount:     activeUsers,
 		stat.MetricNewUserCount:        newUsers,
 		stat.MetricNewReviewCount:      newReviews,
+		stat.MetricNewPointAmount:      newPointAmount,
 		stat.MetricReviewAuthorCount:   reviewAuthors,
 		stat.MetricReviewedCourseTotal: reviewedCourses,
 		stat.MetricNewLikeCount:        newLikes,
