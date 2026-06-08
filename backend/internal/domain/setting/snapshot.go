@@ -1,6 +1,7 @@
 package setting
 
 import (
+	"maps"
 	"strconv"
 	"strings"
 	"time"
@@ -12,9 +13,7 @@ type Snapshot struct {
 
 func NewSnapshot(values map[string]string) *Snapshot {
 	items := make(map[string]string, len(values))
-	for key, value := range values {
-		items[key] = value
-	}
+	maps.Copy(items, values)
 	return &Snapshot{values: items}
 }
 
