@@ -26,3 +26,16 @@ func (s *AnnouncementQueryService) ListActiveAnnouncements(ctx context.Context) 
 	}
 	return result, nil
 }
+
+func (s *AnnouncementQueryService) ListAdminAnnouncements(ctx context.Context) ([]AnnouncementDTO, error) {
+	announcements, err := s.announcementQuery.FindAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]AnnouncementDTO, len(announcements))
+	for i, a := range announcements {
+		result[i] = newAnnouncementDTO(&a)
+	}
+	return result, nil
+}

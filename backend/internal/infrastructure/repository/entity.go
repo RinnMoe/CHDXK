@@ -262,6 +262,8 @@ type AnnouncementEntity struct {
 	Priority  int       `gorm:"column:priority"`
 	ShowStart time.Time `gorm:"column:show_start"`
 	ShowEnd   time.Time `gorm:"column:show_end"`
+	LinkURL   string    `gorm:"column:link_url"`
+	LinkTitle string    `gorm:"column:link_title"`
 	CreatedAt time.Time `gorm:"column:created_at"`
 }
 

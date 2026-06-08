@@ -6,6 +6,7 @@ import (
 	"jcourse/internal/domain/account"
 	"jcourse/internal/domain/account/credential"
 	"jcourse/internal/domain/account/identity"
+	"jcourse/internal/domain/announcement"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/email"
@@ -34,6 +35,7 @@ type ServiceContainer struct {
 	AuthResolution        *application.AuthResolutionService
 	AccessTracker         auth.AccessTracker
 	AnnouncementQuery     *application.AnnouncementQueryService
+	AnnouncementService   *announcement.Service
 	ApiKeySvc             *auth.ApiKeyService
 	ApiKeyQuery           *application.ApiKeyQueryService
 	ApiKeyCommand         *application.ApiKeyCommandService
@@ -97,6 +99,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	courseEnrollmentQuery := application.NewCourseEnrollmentQueryService(courseEnrollmentRepo)
 	teacherQuery := application.NewTeacherQueryService(teacherRepo)
 	announcementQuery := application.NewAnnouncementQueryService(announcementRepo)
+	announcementService := announcement.NewService(announcementRepo)
 	pointQuery := application.NewPointQueryService(pointRepo, accountRepo, usernameDeriver)
 	pointRewardCommand := application.NewPointRewardCommandService(pointRepo)
 	statsConfig := conf.Stats
@@ -163,6 +166,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		AuthResolution:        authResolution,
 		AccessTracker:         accessTracker,
 		AnnouncementQuery:     announcementQuery,
+		AnnouncementService:   announcementService,
 		ApiKeySvc:             apiKeySvc,
 		ApiKeyQuery:           apiKeyQuery,
 		ApiKeyCommand:         apiKeyCommand,

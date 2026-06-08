@@ -1,5 +1,9 @@
 import { useState } from "react"
-import { RiCloseLine, RiInformationLine } from "@remixicon/react"
+import {
+  RiCloseLine,
+  RiExternalLinkLine,
+  RiInformationLine,
+} from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
 import { useAnnouncements } from "@/hooks/use-announcement"
@@ -46,6 +50,8 @@ export function AnnouncementBanner() {
       {visible.map((a) => {
         const title = a.title.trim()
         const body = a.body.trim()
+        const linkURL = a.link_url?.trim()
+        const linkTitle = a.link_title?.trim() || linkURL
 
         if (!title && !body) return null
 
@@ -63,6 +69,17 @@ export function AnnouncementBanner() {
                 >
                   {body}
                 </p>
+              )}
+              {linkURL && (
+                <a
+                  href={linkURL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-2 inline-flex max-w-full items-center gap-1 text-sm font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  <span className="truncate">{linkTitle}</span>
+                  <RiExternalLinkLine className="size-4 shrink-0" />
+                </a>
               )}
             </div>
             <Button

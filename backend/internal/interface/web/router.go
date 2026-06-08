@@ -80,7 +80,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	apiKeyController := controller.NewApiKeyController(container.ApiKeyQuery, container.ApiKeyCommand)
 	systemSettingsController := controller.NewSystemSettingsController(container.SystemSettingsQuery, container.SystemSettingsCommand)
 	siteStatsController := controller.NewSiteStatsController(container.SiteStatsQuery)
-	announcementController := controller.NewAnnouncementController(container.AnnouncementQuery)
+	announcementController := controller.NewAnnouncementController(container.AnnouncementQuery, container.AnnouncementService)
 	adminUserController := controller.NewAdminUserController(container.AdminUserQuery, container.AdminUserCommand)
 	auditLogController := controller.NewAuditLogController(container.AuditLogQuery)
 
@@ -192,6 +192,13 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	adminAuditGroup := apiGroup.Group("/admin/audit-log", middleware.RequireAdmin())
 	{
 		adminAuditGroup.GET("", auditLogController.ListAuditLogs)
+	}
+	adminAnnouncementGroup := apiGroup.Group("/admin/announcement", middleware.RequireAdmin())
+	{
+		adminAnnouncementGroup.GET("", announcementController.ListAdminAnnouncements)
+		adminAnnouncementGroup.POST("", announcementController.CreateAnnouncement)
+		adminAnnouncementGroup.PUT("/:announcementID", announcementController.UpdateAnnouncement)
+		adminAnnouncementGroup.DELETE("/:announcementID", announcementController.DeleteAnnouncement)
 	}
 	announcementGroup := apiGroup.Group("/announcement")
 	{

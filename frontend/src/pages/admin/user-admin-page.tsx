@@ -2,6 +2,7 @@ import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { AuditLogsTab } from "@/components/admin/audit-logs-tab"
 import { AdminUserQueryTab } from "@/components/admin/admin-user-query-tab"
 import { AdminUsersTab } from "@/components/admin/admin-users-tab"
+import { AnnouncementsTab } from "@/components/admin/announcements-tab"
 import { SystemApiKeysTab } from "@/components/admin/system-api-keys-tab"
 import { SystemSettingsTab } from "@/components/admin/system-settings-tab"
 import { PageTitle } from "@/components/common/page-title"
@@ -14,6 +15,7 @@ const adminTabs = [
   "admin",
   "system-api-key",
   "system-settings",
+  "announcement",
   "audit-log",
 ] as const
 type AdminTab = (typeof adminTabs)[number]
@@ -65,6 +67,7 @@ export function UserAdminPage() {
               <TabsTrigger value="admin">管理员查询</TabsTrigger>
               <TabsTrigger value="system-api-key">系统 API Key</TabsTrigger>
               <TabsTrigger value="system-settings">系统设置</TabsTrigger>
+              <TabsTrigger value="announcement">公告</TabsTrigger>
               <TabsTrigger value="audit-log">审计日志</TabsTrigger>
             </TabsList>
 
@@ -88,6 +91,10 @@ export function UserAdminPage() {
 
             <TabsContent value="system-settings" className="space-y-4">
               <SystemSettingsTab />
+            </TabsContent>
+
+            <TabsContent value="announcement" className="space-y-4">
+              <AnnouncementsTab />
             </TabsContent>
 
             <TabsContent value="audit-log" className="space-y-4">

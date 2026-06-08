@@ -140,6 +140,8 @@ func TestAnnouncementRepository_FindActive(t *testing.T) {
 			Priority:  7,
 			ShowStart: now.Add(-1 * time.Hour),
 			ShowEnd:   now.Add(1 * time.Hour),
+			LinkURL:   "https://example.com/detail",
+			LinkTitle: "查看详情",
 			CreatedAt: now,
 		}
 		if err := db.Create(&e).Error; err != nil {
@@ -154,7 +156,7 @@ func TestAnnouncementRepository_FindActive(t *testing.T) {
 			t.Fatalf("results: got %d, want 1", len(results))
 		}
 		r := results[0]
-		if r.Title != "标题" || r.Body != "内容" || r.Priority != 7 {
+		if r.Title != "标题" || r.Body != "内容" || r.Priority != 7 || r.LinkURL != "https://example.com/detail" || r.LinkTitle != "查看详情" {
 			t.Errorf("fields mismatch: got %+v", r)
 		}
 	})

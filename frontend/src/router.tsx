@@ -59,7 +59,13 @@ export type TeacherDetailSearch = PageSearch & {
   order_by?: "rating_score" | "rating_count"
 }
 export type UserAdminSearch = {
-  tab?: "user" | "admin" | "system-api-key" | "system-settings" | "audit-log"
+  tab?:
+    | "user"
+    | "admin"
+    | "system-api-key"
+    | "system-settings"
+    | "announcement"
+    | "audit-log"
   email?: string
   page?: number
   audit_page?: number
@@ -394,6 +400,7 @@ export const userAdminRoute = createRoute({
       "admin",
       "system-api-key",
       "system-settings",
+      "announcement",
       "audit-log",
     ] as const),
     email: rawStringParam(search.email),
