@@ -20,7 +20,6 @@ import {
 } from "@/components/course/course-badges"
 import { CourseHeaderMeta } from "@/components/course/course-header-meta"
 import { CourseNotificationControl } from "@/components/course/course-notification-control"
-import { CourseEnrollmentDialog } from "@/components/course/course-enrollment-dialog"
 import { CourseModeratorRemarkDialog } from "@/components/course/course-moderator-remark-dialog"
 import { CourseReviewTrendDialog } from "@/components/course/course-review-trend-dialog"
 import { RatingDistribution } from "@/components/course/rating-distribution"
@@ -32,10 +31,6 @@ import {
   useCourseReviewFilters,
   useCourseReviews,
 } from "@/hooks/use-course"
-import {
-  getCurrentSemesterSetting,
-  useSystemSettings,
-} from "@/hooks/use-system-settings"
 import { useAuth } from "@/contexts/auth-context"
 import { ReviewList } from "@/components/review/review-list"
 import { ReviewCard } from "@/components/review/review-card"
@@ -146,7 +141,6 @@ export function CourseDetailPage() {
 
   const { user } = useAuth()
   const { data: course, isLoading } = useCourseDetail(id)
-  const systemSettingsQuery = useSystemSettings(!!user)
   const { data: reviewFilters } = useCourseReviewFilters(id)
   const { data: reviews, isLoading: reviewsLoading } = useCourseReviews(id, {
     semester,
@@ -222,11 +216,9 @@ export function CourseDetailPage() {
   const listedReviews =
     reviews?.items.filter((review) => review.id !== course.my_review?.id) ?? []
   const courseSemesters = getCourseSemesters(course)
-  const currentSemester = getCurrentSemesterSetting(systemSettingsQuery.data)
   const selectedSemesters = [
     ...new Set((course.my_enrollments ?? []).map((item) => item.semester)),
   ].sort((a, b) => b.localeCompare(a))
-  const hasSelectedCourse = selectedSemesters.length > 0
   const teacherGroup = course.teacher_group ?? []
   const feedbackMailto = buildFeedbackMailto(course)
   const isAdmin = user?.is_admin() ?? false
@@ -349,14 +341,6 @@ export function CourseDetailPage() {
                       courseID={course.id}
                       level={course.notification_level}
                     />
-                    {courseSemesters.length > 0 && !hasSelectedCourse && (
-                      <CourseEnrollmentDialog
-                        courseID={course.id}
-                        courseName={course.name}
-                        semesters={courseSemesters}
-                        currentSemester={currentSemester}
-                      />
-                    )}
                     <Button
                       asChild
                       size="sm"

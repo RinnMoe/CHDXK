@@ -16,7 +16,6 @@ import {
   listIgnoredCourses,
   listHotCourses,
   listCourseEnrollments,
-  createCourseEnrollment,
   deleteCourseEnrollment,
   updateCourseModeratorRemark,
   type CourseDetailDTO,
@@ -158,23 +157,6 @@ export function useCourseEnrollments(enabled = true) {
     queryFn: listCourseEnrollments,
     enabled,
     placeholderData: keepPreviousData,
-  })
-}
-
-export function useCreateCourseEnrollment() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({
-      courseID,
-      semester,
-    }: {
-      courseID: number
-      semester: string
-    }) => createCourseEnrollment(courseID, semester),
-    onSuccess: (_, { courseID }) => {
-      queryClient.invalidateQueries({ queryKey: ["course-enrollments"] })
-      queryClient.invalidateQueries({ queryKey: ["course", courseID] })
-    },
   })
 }
 

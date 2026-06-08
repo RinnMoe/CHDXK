@@ -2,7 +2,6 @@ package application
 
 import (
 	"context"
-	"time"
 
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
@@ -54,10 +53,6 @@ func (s *CourseCommandService) UpdateModeratorRemark(ctx context.Context, u *aut
 
 func (s *CourseCommandService) SetNotificationLevel(ctx context.Context, userID, courseID int, level course.NotificationLevel) error {
 	return s.notificationService.SetLevel(ctx, userID, courseID, level)
-}
-
-func (s *CourseCommandService) CreateEnrollment(ctx context.Context, userID int, cmd CreateCourseEnrollmentCommand) error {
-	return s.enrollmentService.Create(ctx, userID, cmd.CourseID, cmd.Semester, time.Now())
 }
 
 func (s *CourseCommandService) DeleteEnrollment(ctx context.Context, userID, enrollmentID int) error {

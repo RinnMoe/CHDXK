@@ -126,7 +126,6 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		courseGroup.GET("/:courseID/review/filter", reviewController.GetCourseReviewFilters)
 		courseGroup.GET("/:courseID/review/trend", reviewController.GetCourseReviewTrend)
 		courseGroup.GET("/:courseID/review", reviewController.ListCourseReviews)
-		courseGroup.POST("/:courseID/enrollment", courseEnrollmentController.CreateEnrollment)
 		courseGroup.POST("/:courseID/notification", courseController.SetNotificationLevel)
 		courseGroup.PUT("/:courseID/moderator-remark", middleware.RequireAdmin(), courseController.UpdateModeratorRemark)
 	}

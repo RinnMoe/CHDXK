@@ -205,16 +205,6 @@ export function courseEnrollmentSyncStartURL(semester: string): string {
   return `${BASE_URL}/course/enrollment-sync/start?${params}`
 }
 
-export function createCourseEnrollment(
-  courseID: number,
-  semester: string
-): Promise<{ message: string }> {
-  return apiClient(`${BASE_URL}/course/${courseID}/enrollment`, {
-    method: "POST",
-    body: JSON.stringify({ semester }),
-  })
-}
-
 export function deleteCourseEnrollment(
   enrollmentID: number
 ): Promise<{ message: string }> {
