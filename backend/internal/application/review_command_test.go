@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"jcourse/internal/application"
+	"jcourse/internal/domain/audit"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	domainemail "jcourse/internal/domain/email"
@@ -341,6 +342,73 @@ func TestReviewCommandService_UpdateReviewEnqueuesHotCourseActivity(t *testing.T
 		t.Fatalf("unmarshal payload: %v", err)
 	}
 	want := course.RecordHotCourseActivityPayload{UserID: 10, Activity: course.HotCourseActivityReviewUpdate, CourseID: 1}
+	if payload != want {
+		t.Fatalf("payload = %+v, want %+v", payload, want)
+	}
+}
+
+func TestReviewCommandService_DeleteReviewEnqueuesRewardRevocationForAdminDelete(t *testing.T) {
+	reviewRepo := newFakeCommandReviewRepo()
+	reviewRepo.Reviews[1] = &review.Review{ID: 1, CourseID: 2, UserID: 10, Semester: "2025-2026-1", Rating: 4, Content: "old"}
+	enqueuer := &fakeReviewCommandEnqueuer{}
+	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
+	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
+	svc := newReviewCommandTestService(reviewRepo, &review.MockVoteRepository{})
+
+	err := svc.DeleteReview(context.Background(), &auth.User{ID: 99, Role: auth.RoleAdmin}, 1)
+	if err != nil {
+		t.Fatalf("DeleteReview: %v", err)
+	}
+	if len(enqueuer.tasks) != 2 {
+		t.Fatalf("tasks = %d, want revoke rewards and audit log", len(enqueuer.tasks))
+	}
+	if got := enqueuer.tasks[0].Type(); got != point.TaskTypeRevokeReviewRewardsByID {
+		t.Fatalf("first task type = %q, want %q", got, point.TaskTypeRevokeReviewRewardsByID)
+	}
+	var revokePayload point.RevokeReviewRewardsByIDPayload
+	if err := json.Unmarshal(enqueuer.tasks[0].Payload(), &revokePayload); err != nil {
+		t.Fatalf("unmarshal revoke payload: %v", err)
+	}
+	wantRevoke := point.RevokeReviewRewardsByIDPayload{ReviewID: 1, CourseID: 2, AuthorUserID: 10}
+	if revokePayload != wantRevoke {
+		t.Fatalf("revoke payload = %+v, want %+v", revokePayload, wantRevoke)
+	}
+
+	if got := enqueuer.tasks[1].Type(); got != audit.TaskTypeRecordLog {
+		t.Fatalf("second task type = %q, want %q", got, audit.TaskTypeRecordLog)
+	}
+	var auditPayload audit.RecordLogPayload
+	if err := json.Unmarshal(enqueuer.tasks[1].Payload(), &auditPayload); err != nil {
+		t.Fatalf("unmarshal audit payload: %v", err)
+	}
+	if auditPayload.Action != audit.ActionReviewDelete || auditPayload.ActorUserID != 99 || auditPayload.TargetID != "1" {
+		t.Fatalf("audit payload = %+v", auditPayload)
+	}
+}
+
+func TestReviewCommandService_DeleteReviewRevokesRewardsWithoutAuditForAdminDeletingOwnReview(t *testing.T) {
+	reviewRepo := newFakeCommandReviewRepo()
+	reviewRepo.Reviews[1] = &review.Review{ID: 1, CourseID: 2, UserID: 99, Semester: "2025-2026-1", Rating: 4, Content: "old"}
+	enqueuer := &fakeReviewCommandEnqueuer{}
+	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
+	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
+	svc := newReviewCommandTestService(reviewRepo, &review.MockVoteRepository{})
+
+	err := svc.DeleteReview(context.Background(), &auth.User{ID: 99, Role: auth.RoleAdmin}, 1)
+	if err != nil {
+		t.Fatalf("DeleteReview: %v", err)
+	}
+	if len(enqueuer.tasks) != 1 {
+		t.Fatalf("tasks = %d, want revoke rewards only", len(enqueuer.tasks))
+	}
+	if got := enqueuer.tasks[0].Type(); got != point.TaskTypeRevokeReviewRewardsByID {
+		t.Fatalf("task type = %q, want %q", got, point.TaskTypeRevokeReviewRewardsByID)
+	}
+	var payload point.RevokeReviewRewardsByIDPayload
+	if err := json.Unmarshal(enqueuer.tasks[0].Payload(), &payload); err != nil {
+		t.Fatalf("unmarshal revoke payload: %v", err)
+	}
+	want := point.RevokeReviewRewardsByIDPayload{ReviewID: 1, CourseID: 2, AuthorUserID: 99}
 	if payload != want {
 		t.Fatalf("payload = %+v, want %+v", payload, want)
 	}

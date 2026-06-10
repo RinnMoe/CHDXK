@@ -134,6 +134,7 @@ func (s *ReviewCommandService) DeleteReview(ctx context.Context, u *auth.User, r
 	if err := reviewService.Delete(ctx, u, reviewID); err != nil {
 		return err
 	}
+	s.enqueueRevokeReviewRewards(ctx, existing.ID, existing.CourseID, existing.UserID)
 	if u.IsAdmin() && u.ID != existing.UserID {
 		audit.EnqueueLog(ctx, audit.Log{
 			OccurredAt:  time.Now(),
@@ -222,6 +223,12 @@ func buildCreateReviewRewards(config point.RewardConfig, userID int, courseID in
 func (s *ReviewCommandService) enqueueGrantReward(ctx context.Context, rewardID int) {
 	if err := task.Enqueue(ctx, point.NewGrantRewardTask(rewardID)); err != nil {
 		logx.Warn(ctx, "enqueue grant reward", "reward_id", rewardID, "err", err)
+	}
+}
+
+func (s *ReviewCommandService) enqueueRevokeReviewRewards(ctx context.Context, reviewID, courseID, authorUserID int) {
+	if err := task.Enqueue(ctx, point.NewRevokeReviewRewardsByIDTask(reviewID, courseID, authorUserID)); err != nil {
+		logx.Warn(ctx, "enqueue revoke review rewards", "review_id", reviewID, "course_id", courseID, "author_user_id", authorUserID, "err", err)
 	}
 }
 

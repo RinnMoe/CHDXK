@@ -10,7 +10,8 @@ type RewardReason string
 type RewardStatus string
 
 const (
-	RecordReasonReward RecordReason = "reward"
+	RecordReasonReward       RecordReason = "reward"
+	RecordReasonRewardRevoke RecordReason = "reward_revoke"
 
 	RewardReasonCourseFirstReview RewardReason = "course_first_review"
 	RewardReasonReviewCreate      RewardReason = "review_create"
@@ -48,6 +49,13 @@ type Reward struct {
 	Status      RewardStatus
 	CreatedAt   time.Time
 	GrantedAt   *time.Time
+}
+
+type RewardSource struct {
+	UserID     int
+	Reason     RewardReason
+	SourceType string
+	SourceKey  string
 }
 
 func NewCourseFirstReviewReward(userID int, courseID int, amount int, now time.Time) *Reward {
@@ -91,6 +99,17 @@ func (r *Reward) GrantRecord(now time.Time) Record {
 	}
 }
 
+func (r *Reward) RevokeRecord(now time.Time) Record {
+	return Record{
+		UserID:      r.UserID,
+		Reason:      RecordReasonRewardRevoke,
+		Amount:      -r.Amount,
+		Description: "撤销：" + r.Description,
+		CreatedAt:   now,
+	}
+}
+
 type RewardRepository interface {
 	GrantReward(ctx context.Context, rewardID int, now time.Time) error
+	RevokeRewardsBySources(ctx context.Context, sources []RewardSource, now time.Time) error
 }

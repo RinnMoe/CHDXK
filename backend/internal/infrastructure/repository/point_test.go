@@ -223,6 +223,94 @@ func TestPointRepository_GrantRewardIsIdempotent(t *testing.T) {
 	}
 }
 
+func TestPointRepository_RevokeRewardsBySourcesIsIdempotent(t *testing.T) {
+	db := newTestDB(t)
+	cleanTables(t, db, "point_rewards", "user_point_records", "users")
+	repo := repository.NewPointRepository(db)
+	ctx := context.Background()
+	user := seedUser(t, db)
+	other := seedUserRaw(t, db, "other", "other@example.com")
+	now := time.Now().Truncate(time.Second)
+	rewards := []repository.PointRewardEntity{
+		{
+			UserID:      user.ID,
+			Reason:      string(point.RewardReasonReviewCreate),
+			Amount:      1,
+			SourceType:  point.RewardSourceTypeReview,
+			SourceKey:   "10",
+			Description: "发布点评奖励",
+			Status:      string(point.RewardStatusGranted),
+			CreatedAt:   now,
+			GrantedAt:   ptrTime(now.Add(time.Minute)),
+		},
+		{
+			UserID:      user.ID,
+			Reason:      string(point.RewardReasonCourseFirstReview),
+			Amount:      10,
+			SourceType:  point.RewardSourceTypeCourse,
+			SourceKey:   "2",
+			Description: "课程首评奖励",
+			Status:      string(point.RewardStatusPending),
+			CreatedAt:   now,
+		},
+		{
+			UserID:      other.ID,
+			Reason:      string(point.RewardReasonCourseFirstReview),
+			Amount:      10,
+			SourceType:  point.RewardSourceTypeCourse,
+			SourceKey:   "3",
+			Description: "其他课程首评奖励",
+			Status:      string(point.RewardStatusGranted),
+			CreatedAt:   now,
+			GrantedAt:   ptrTime(now.Add(time.Minute)),
+		},
+	}
+	if err := db.Create(&rewards).Error; err != nil {
+		t.Fatalf("seed rewards: %v", err)
+	}
+	seedPointRecord(t, db, user.ID, point.RecordReasonReward, 1, "发布点评奖励", now.Add(time.Minute))
+	seedPointRecord(t, db, other.ID, point.RecordReasonReward, 10, "其他课程首评奖励", now.Add(time.Minute))
+
+	sources := []point.RewardSource{
+		{UserID: user.ID, Reason: point.RewardReasonReviewCreate, SourceType: point.RewardSourceTypeReview, SourceKey: "10"},
+		{UserID: user.ID, Reason: point.RewardReasonCourseFirstReview, SourceType: point.RewardSourceTypeCourse, SourceKey: "2"},
+	}
+	if err := repo.RevokeRewardsBySources(ctx, sources, now.Add(2*time.Minute)); err != nil {
+		t.Fatalf("RevokeRewardsBySources first: %v", err)
+	}
+	if err := repo.RevokeRewardsBySources(ctx, sources, now.Add(3*time.Minute)); err != nil {
+		t.Fatalf("RevokeRewardsBySources second: %v", err)
+	}
+
+	var revokeRecords []repository.UserPointRecordEntity
+	if err := db.Where("user_id = ? AND reason = ?", user.ID, string(point.RecordReasonRewardRevoke)).Find(&revokeRecords).Error; err != nil {
+		t.Fatalf("find revoke records: %v", err)
+	}
+	if len(revokeRecords) != 1 || revokeRecords[0].Amount != -1 {
+		t.Fatalf("revoke records = %+v, want one -1 record", revokeRecords)
+	}
+
+	var canceledCount int64
+	if err := db.Model(&repository.PointRewardEntity{}).Where("user_id = ? AND status = ?", user.ID, string(point.RewardStatusCanceled)).Count(&canceledCount).Error; err != nil {
+		t.Fatalf("count canceled rewards: %v", err)
+	}
+	if canceledCount != 2 {
+		t.Fatalf("canceled rewards = %d, want 2", canceledCount)
+	}
+
+	userTotal, err := repo.SumByUser(ctx, user.ID)
+	if err != nil {
+		t.Fatalf("user SumByUser: %v", err)
+	}
+	otherTotal, err := repo.SumByUser(ctx, other.ID)
+	if err != nil {
+		t.Fatalf("other SumByUser: %v", err)
+	}
+	if userTotal != 0 || otherTotal != 10 {
+		t.Fatalf("totals user=%d other=%d, want 0 and 10", userTotal, otherTotal)
+	}
+}
+
 func seedUserRaw(t *testing.T, db *gorm.DB, username, email string) repository.UserEntity {
 	t.Helper()
 	e := repository.UserEntity{
@@ -252,4 +340,8 @@ func seedPointRecord(t *testing.T, db *gorm.DB, userID int, reason point.RecordR
 		t.Fatalf("seed point record: %v", err)
 	}
 	return e
+}
+
+func ptrTime(t time.Time) *time.Time {
+	return &t
 }

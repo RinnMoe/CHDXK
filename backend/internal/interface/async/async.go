@@ -23,6 +23,7 @@ func NewMux(container *app.ServiceContainer) *asynq.ServeMux {
 	mux.Handle(course.TaskTypeRecordHotCourseActivity, asynchandler.NewRecordHotCourseActivityHandler(container.CourseCommand))
 	mux.Handle(course.TaskTypeRefreshRatingScores, asynchandler.NewRefreshCourseRatingScoresHandler(container.CourseCommand))
 	mux.Handle(point.TaskTypeGrantReward, asynchandler.NewGrantPointRewardHandler(container.PointRewardCommand))
+	mux.Handle(point.TaskTypeRevokeReviewRewardsByID, asynchandler.NewRevokeReviewPointRewardsHandler(container.PointRewardCommand))
 	mux.Handle(domainemail.TaskTypeSendEmail, asynchandler.NewSendEmailHandler(container.EmailSender))
 	mux.Handle(stat.TaskTypeCollectDailySiteStats, asynchandler.NewCollectDailySiteStatsHandler(container.SiteStatsCommand))
 	mux.Handle(audit.TaskTypeRecordLog, asynchandler.NewRecordAuditLogHandler(container.AuditLogCommand))

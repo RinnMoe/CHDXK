@@ -14,8 +14,16 @@ type grantPointRewardHandler struct {
 	command *application.PointRewardCommandService
 }
 
+type revokeReviewPointRewardsHandler struct {
+	command *application.PointRewardCommandService
+}
+
 func NewGrantPointRewardHandler(command *application.PointRewardCommandService) asynq.Handler {
 	return &grantPointRewardHandler{command: command}
+}
+
+func NewRevokeReviewPointRewardsHandler(command *application.PointRewardCommandService) asynq.Handler {
+	return &revokeReviewPointRewardsHandler{command: command}
 }
 
 func (h *grantPointRewardHandler) ProcessTask(ctx context.Context, t *asynq.Task) error {
@@ -24,4 +32,12 @@ func (h *grantPointRewardHandler) ProcessTask(ctx context.Context, t *asynq.Task
 		return err
 	}
 	return h.command.GrantReward(ctx, payload.RewardID)
+}
+
+func (h *revokeReviewPointRewardsHandler) ProcessTask(ctx context.Context, t *asynq.Task) error {
+	var payload point.RevokeReviewRewardsByIDPayload
+	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
+		return err
+	}
+	return h.command.RevokeReviewRewardsByID(ctx, payload.ReviewID, payload.CourseID, payload.AuthorUserID)
 }

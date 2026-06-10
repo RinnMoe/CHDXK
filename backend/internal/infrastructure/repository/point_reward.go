@@ -76,4 +76,52 @@ func (r *PointRepository) GrantReward(ctx context.Context, rewardID int, now tim
 	return nil
 }
 
+func (r *PointRepository) RevokeRewardsBySources(ctx context.Context, sources []point.RewardSource, now time.Time) error {
+	if len(sources) == 0 {
+		return nil
+	}
+	userIDs := map[int]struct{}{}
+	if err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, source := range sources {
+			var entities []PointRewardEntity
+			if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+				Where("user_id = ? AND reason = ? AND source_type = ? AND source_key = ?", source.UserID, string(source.Reason), source.SourceType, source.SourceKey).
+				Find(&entities).Error; err != nil {
+				return err
+			}
+
+			for _, entity := range entities {
+				reward := newPointRewardDomain(&entity)
+				switch reward.Status {
+				case point.RewardStatusCanceled:
+					continue
+				case point.RewardStatusPending:
+					if err := tx.Model(&PointRewardEntity{}).Where("id = ?", reward.ID).Update("status", string(point.RewardStatusCanceled)).Error; err != nil {
+						return err
+					}
+				case point.RewardStatusGranted:
+					recordEntity := newPointRecordEntity(reward.RevokeRecord(now))
+					if err := tx.Create(&recordEntity).Error; err != nil {
+						return err
+					}
+					if err := tx.Model(&PointRewardEntity{}).Where("id = ?", reward.ID).Update("status", string(point.RewardStatusCanceled)).Error; err != nil {
+						return err
+					}
+				}
+				userIDs[reward.UserID] = struct{}{}
+			}
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	keys := make([]string, 0, len(userIDs))
+	for userID := range userIDs {
+		keys = append(keys, cacheKey("point", userID, "sum"))
+	}
+	cacheDelete(ctx, r.cache, keys...)
+	return nil
+}
+
 var _ point.RewardRepository = (*PointRepository)(nil)
