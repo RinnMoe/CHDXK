@@ -246,11 +246,11 @@ export function CourseDetailPage() {
           <div
             className={cn("space-y-6", hasRelatedCourses && "lg:col-span-2")}
           >
-            <div className="space-y-6">
+            <div className="space-y-4">
               <CourseHeaderMeta course={course} />
 
               <div className="space-y-6 md:grid md:grid-cols-[minmax(0,1fr)_minmax(18rem,min(24rem,50%))] md:items-start md:gap-6 md:space-y-0">
-                <div className="ml-2 space-y-6 sm:ml-3 md:ml-4">
+                <div className="ml-2 space-y-4">
                   <CourseBadges
                     credit={course.credit}
                     language={course.language}

@@ -14,8 +14,8 @@ interface HotCourseListProps {
 
 function HotCourseHeader() {
   return (
-    <div className="flex items-center gap-1 border-b px-3 py-2 text-sm font-medium text-muted-foreground">
-      <span className="w-7 shrink-0 whitespace-nowrap text-center">排名</span>
+    <div className="flex items-center gap-1 border-b px-0 py-2 text-sm font-medium text-muted-foreground">
+      <span className="shrink-0 whitespace-nowrap text-center">排名</span>
       <span className="min-w-0 flex-1 pl-2">课程</span>
       <span className="w-10 shrink-0 text-right">热度</span>
     </div>
@@ -71,16 +71,16 @@ export function HotCourseList({
       {items.map((item, i) => (
         <div key={item.course.id} className="flex items-center gap-1 border-b">
           <span
-            className={`ml-3 w-7 shrink-0 text-center text-sm font-bold ${
+            className={`w-7 shrink-0 text-center text-sm font-bold ${
               i < 3 ? "text-amber-500" : "text-muted-foreground"
             }`}
           >
             {i + 1}
           </span>
           <div className="min-w-0 flex-1">
-            <CourseCompactCard course={item.course} dense bordered={false} />
+            <CourseCompactCard course={item.course} bordered={false} />
           </div>
-          <div className="w-10 shrink-0 pr-3 text-right text-sm font-medium text-muted-foreground">
+          <div className="w-10 shrink-0 text-right text-sm font-medium text-muted-foreground">
             {item.score}
           </div>
         </div>

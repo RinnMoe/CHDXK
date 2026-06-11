@@ -6,13 +6,11 @@ import { cn, displayTeacherTitle } from "@/lib/utils"
 
 interface CourseCompactCardProps {
   course: CourseListItemDTO
-  dense?: boolean
   bordered?: boolean
 }
 
 export function CourseCompactCard({
   course,
-  dense = false,
   bordered = true,
 }: CourseCompactCardProps) {
   return (
@@ -21,18 +19,18 @@ export function CourseCompactCard({
       params={{ courseID: String(course.id) }}
       className={cn(
         "flex items-center transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-        dense ? "gap-2 px-2 py-2.5" : "gap-4 px-4 py-3",
+        "gap-2 px-2 py-2",
         bordered && "border-b"
       )}
     >
       <div className="min-w-0 flex-1 space-y-2">
         <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
           <span className="shrink-0 font-mono">{course.code}</span>
-          <span className="min-w-0 text-sm break-words">
+          <span className="min-w-0 text-sm wrap-break-word">
             {course.main_teacher.name}
           </span>
         </div>
-        <div className="leading-tight font-semibold break-words whitespace-normal">
+        <div className="leading-tight font-semibold wrap-break-word whitespace-normal">
           {course.name}
         </div>
         <div className="text-sm text-muted-foreground">{course.department}</div>
@@ -55,7 +53,7 @@ export function SameCodeCourseCard({ course }: SameCodeCourseCardProps) {
     <Link
       to="/course/$courseID"
       params={{ courseID: String(course.id) }}
-      className="block border-b px-4 py-3 transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      className="block border-b px-2 py-2 transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
     >
       <div className="flex min-w-0 items-center gap-3">
         <div className="min-w-0 flex-1 space-y-1">

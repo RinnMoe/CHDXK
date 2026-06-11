@@ -285,13 +285,13 @@ export function ReviewCard({
   }
 
   return (
-    <article className="border-b px-4 py-3 transition-colors hover:bg-muted/30">
+    <article className="border-b px-2 py-2 transition-colors hover:bg-muted/30">
       <div className="space-y-2">
         {showCourse && review.course && (
           <Link
             to="/course/$courseID"
             params={{ courseID: String(review.course.id) }}
-            className="-m-2 mb-2 flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-muted/50"
+            className="flex items-center gap-2 rounded-md transition-colors hover:bg-muted/50"
           >
             <span className="font-mono text-sm text-muted-foreground">
               {review.course.code}

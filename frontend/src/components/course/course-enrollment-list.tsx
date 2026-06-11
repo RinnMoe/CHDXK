@@ -73,11 +73,11 @@ export function CourseEnrollmentList({
             >
               <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
                 <span className="shrink-0 font-mono">{course.code}</span>
-                <span className="min-w-0 break-words">
+                <span className="min-w-0 wrap-break-word">
                   {course.main_teacher.name}
                 </span>
               </div>
-              <div className="leading-tight font-semibold break-words whitespace-normal">
+              <div className="leading-tight font-semibold wrap-break-word whitespace-normal">
                 {course.name}
               </div>
               <div className="text-sm text-muted-foreground">
