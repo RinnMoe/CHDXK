@@ -333,6 +333,14 @@ export const faqRoute = createRoute({
   component: lazyRouteComponent(() => import("@/pages/faq-page"), "FaqPage"),
 })
 
+const latestRedirectRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/latest",
+  beforeLoad: () => {
+    throw redirect({ to: "/review", replace: true })
+  },
+})
+
 const notFoundRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "$",
@@ -370,6 +378,7 @@ const routeTree = rootRoute.addChildren([
     siteStatsRoute,
     aboutRoute,
     faqRoute,
+    latestRedirectRoute,
     notFoundRoute,
   ]),
 ])
