@@ -222,7 +222,7 @@ export function ReviewCard({
                       <AlertDialogFooter>
                         <AlertDialogCancel>取消</AlertDialogCancel>
                         <AlertDialogAction
-                          className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
+                          className="bg-destructive hover:bg-destructive/90"
                           onClick={handleDelete}
                         >
                           删除

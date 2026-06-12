@@ -71,7 +71,7 @@ export function ReviewFormContentEditor({
         </div>
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">预览</p>
-          <div className="review-markdown prose prose-sm min-h-40 max-w-none text-sm dark:prose-invert">
+          <div className="review-markdown prose prose-sm min-h-40 max-w-none dark:prose-invert">
             {content.trim() ? (
               <SafeMarkdown content={content} />
             ) : (
