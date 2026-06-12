@@ -42,7 +42,7 @@ function ShortcutRow({
   return (
     <div
       className={cn(
-        "grid grid-cols-[4.75rem_minmax(0,1fr)] items-start gap-3 rounded-md px-2 py-2",
+        "grid grid-cols-[4.75rem_minmax(0,1fr)] items-start gap-3 rounded-md p-2",
         disabled && "opacity-45"
       )}
     >
@@ -61,7 +61,7 @@ export function AccessHintOverlay({ hints }: { hints: AccessHint[] }) {
   return createPortal(
     <div
       data-shortcut-root
-      className="pointer-events-none fixed inset-0 z-[70]"
+      className="pointer-events-none fixed inset-0 z-70"
       aria-hidden="true"
     >
       <div className="absolute top-16 left-1/2 -translate-x-1/2 rounded-md border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-lg">

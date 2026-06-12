@@ -27,7 +27,7 @@ function HotCourseSkeleton({ count }: { count: number }) {
     <div>
       <HotCourseHeader />
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="flex items-center gap-1 border-b px-3 py-3">
+        <div key={i} className="flex items-center gap-1 border-b p-3">
           <Skeleton className="h-6 w-7 shrink-0" />
           <div className="min-w-0 flex-1 space-y-2">
             <Skeleton className="h-3 w-24" />

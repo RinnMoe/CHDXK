@@ -179,7 +179,7 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
             <SheetHeader>
               <SheetTitle>筛选课程</SheetTitle>
             </SheetHeader>
-            <ScrollArea className="mt-4 h-[calc(100vh-6rem)] pr-4 pl-4">
+            <ScrollArea className="mt-4 h-[calc(100vh-6rem)] px-4">
               {content}
             </ScrollArea>
           </SheetContent>

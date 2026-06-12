@@ -52,7 +52,7 @@ export function CourseList({
         <div className="mb-4 text-4xl">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="mx-auto h-12 w-12 text-muted-foreground/50"
+            className="mx-auto size-12 text-muted-foreground/50"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"

@@ -53,7 +53,7 @@ export function CourseReviewFilters({
             onChange({ semester: semester === ALL ? undefined : semester })
           }
         >
-          <SelectTrigger size="sm" className="w-[220px]">
+          <SelectTrigger size="sm" className="w-55">
             <SelectValue placeholder="学期" />
           </SelectTrigger>
           <SelectContent>
@@ -74,7 +74,7 @@ export function CourseReviewFilters({
             onChange({ rating: rating === ALL ? undefined : Number(rating) })
           }
         >
-          <SelectTrigger size="sm" className="w-[170px]">
+          <SelectTrigger size="sm" className="w-42.5">
             <SelectValue placeholder="评分" />
           </SelectTrigger>
           <SelectContent>

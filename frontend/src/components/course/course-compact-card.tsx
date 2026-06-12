@@ -19,7 +19,7 @@ export function CourseCompactCard({
       params={{ courseID: String(course.id) }}
       className={cn(
         "flex items-center transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-        "gap-2 px-2 py-2",
+        "gap-2 p-2",
         bordered && "border-b"
       )}
     >
@@ -53,7 +53,7 @@ export function SameCodeCourseCard({ course }: SameCodeCourseCardProps) {
     <Link
       to="/course/$courseID"
       params={{ courseID: String(course.id) }}
-      className="block border-b px-2 py-2 transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      className="block border-b p-2 transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
     >
       <div className="flex min-w-0 items-center gap-3">
         <div className="min-w-0 flex-1 space-y-1">
