@@ -3,6 +3,7 @@ package controller
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -23,6 +24,12 @@ type resetPasswordCommand struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type adminUserQuery struct {
+	Email    string `form:"email"`
+	Username string `form:"username"`
+	ReviewID int    `form:"review_id"`
+}
+
 func NewAdminUserController(
 	query *application.AdminUserQueryService,
 	command *application.AdminUserCommandService,
@@ -30,14 +37,26 @@ func NewAdminUserController(
 	return &AdminUserController{query: query, command: command}
 }
 
-func (ctrl *AdminUserController) GetUserByEmail(c *gin.Context) {
-	email := c.Query("email")
-	if email == "" {
-		respondBadRequest(c, "邮箱不能为空")
+func (ctrl *AdminUserController) GetUser(c *gin.Context) {
+	var query adminUserQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		respondBindError(c, err)
+		return
+	}
+	if query.ReviewID < 0 {
+		respondBadRequest(c, "点评 ID 无效")
+		return
+	}
+	if strings.TrimSpace(query.Email) == "" && strings.TrimSpace(query.Username) == "" && query.ReviewID == 0 {
+		respondBadRequest(c, "邮箱、用户名、点评 ID 至少填写一项")
 		return
 	}
 
-	result, err := ctrl.query.FindByEmail(c.Request.Context(), email)
+	result, err := ctrl.query.FindUser(c.Request.Context(), application.AdminUserLookup{
+		Email:    query.Email,
+		Username: query.Username,
+		ReviewID: query.ReviewID,
+	})
 	if err != nil {
 		respondError(c, err)
 		return

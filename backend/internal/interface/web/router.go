@@ -170,8 +170,8 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	}
 	adminUserGroup := apiGroup.Group("/admin/user", middleware.RequireAdmin())
 	{
+		adminUserGroup.GET("", adminUserController.GetUser)
 		adminUserGroup.GET("/admin", adminUserController.ListAdmins)
-		adminUserGroup.GET("/by-email", adminUserController.GetUserByEmail)
 		adminUserGroup.PUT("/:userID/suspension", adminUserController.SuspendUser)
 		adminUserGroup.DELETE("/:userID/suspension", adminUserController.ClearSuspension)
 		adminUserGroup.PUT("/:userID/password", middleware.RequireSuperAdmin(), adminUserController.ResetPassword)

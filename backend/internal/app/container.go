@@ -107,7 +107,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	siteStatsCommand := application.NewSiteStatsCommandService(statRepo, statRepo, statsConfig)
 	currentUserService := auth.NewCurrentUserService(userRepo)
 	accountQuery := application.NewAccountQueryService(accountRepo)
-	adminUserQuery := application.NewAdminUserQueryService(accountRepo, userRepo, usernameDeriver)
+	adminUserQuery := application.NewAdminUserQueryService(accountRepo, userRepo, reviewRepo, usernameDeriver)
 	hasher := credential.NewDjangoPBKDF2SHA256PasswordHasher(conf.Auth.PasswordHash)
 	adminUserCommand := application.NewAdminUserCommandService(userRepo, accountRepo, hasher)
 	smtpSender := smtp.NewSMTPSender(conf.SMTP)

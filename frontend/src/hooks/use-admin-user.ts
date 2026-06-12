@@ -1,12 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   clearAdminUserSuspension,
-  getAdminUserByEmail,
+  getAdminUser,
   grantAdminUser,
   listAdminUsers,
   resetAdminUserPassword,
   revokeAdminUser,
   suspendAdminUser,
+  type AdminUserLookup,
   type ResetAdminUserPasswordCommand,
   type SuspendAdminUserCommand,
 } from "@/api/admin-user"
@@ -21,13 +22,20 @@ type ResetAdminUserPasswordVariables = {
   cmd: ResetAdminUserPasswordCommand
 }
 
-export function useAdminUserByEmail(email: string) {
-  const normalized = email.trim().toLowerCase()
+export function useAdminUser(lookup: AdminUserLookup) {
+  const normalized: AdminUserLookup = {
+    email: lookup.email?.trim().toLowerCase() || undefined,
+    username: lookup.username?.trim() || undefined,
+    review_id: lookup.review_id,
+  }
+  const enabled = Boolean(
+    normalized.email || normalized.username || normalized.review_id
+  )
 
   return useQuery({
-    queryKey: ["admin-user", "by-email", normalized],
-    queryFn: () => getAdminUserByEmail(normalized),
-    enabled: normalized.length > 0,
+    queryKey: ["admin-user", "query", normalized],
+    queryFn: () => getAdminUser(normalized),
+    enabled,
     retry: false,
   })
 }

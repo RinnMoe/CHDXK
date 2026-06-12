@@ -32,10 +32,20 @@ export function listAdminUsers(): Promise<AdminUserDTO[]> {
   )
 }
 
-export function getAdminUserByEmail(email: string): Promise<AdminUserDTO> {
-  const params = new URLSearchParams({ email })
+export interface AdminUserLookup {
+  email?: string
+  username?: string
+  review_id?: number
+}
+
+export function getAdminUser(lookup: AdminUserLookup): Promise<AdminUserDTO> {
+  const params = new URLSearchParams()
+  if (lookup.email) params.set("email", lookup.email)
+  if (lookup.username) params.set("username", lookup.username)
+  if (lookup.review_id) params.set("review_id", String(lookup.review_id))
+
   return apiClient<AdminUserResponse>(
-    `${BASE_URL}/admin/user/by-email?${params.toString()}`
+    `${BASE_URL}/admin/user?${params.toString()}`
   ).then(normalizeAdminUser)
 }
 

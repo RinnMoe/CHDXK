@@ -39,8 +39,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
-  useAdminUserByEmail,
+  useAdminUser,
   useClearAdminUserSuspension,
   useGrantAdminUser,
   useResetAdminUserPassword,
@@ -57,6 +58,7 @@ import { getErrorMessage, type FormSubmitEvent } from "./admin-utils"
 const reviewPageSize = 20
 const pointPageSize = 20
 const routeApi = getRouteApi("/app/admin/user")
+type AdminUserQueryType = "email" | "username" | "review"
 
 function defaultPasswordFromEmail(email: string, username: string) {
   const source = email.split("@")[0] || username
@@ -68,48 +70,129 @@ interface AdminUserQueryTabProps {
   currentUserIsSuperAdmin: boolean
 }
 
-interface AdminUserEmailSearchFormProps {
-  email: string
-  emailDomain: string
-  onSearch: (email: string) => void
+interface AdminUserLookupFormValue {
+  email?: string
+  username?: string
+  review_id?: number
 }
 
-function AdminUserEmailSearchForm({
+interface AdminUserSearchFormProps {
+  email: string
+  username: string
+  reviewID?: number
+  emailDomain: string
+  onSearch: (value: AdminUserLookupFormValue) => void
+}
+
+function getInitialQueryType(
+  username: string,
+  reviewID?: number
+): AdminUserQueryType {
+  if (username) return "username"
+  if (reviewID) return "review"
+  return "email"
+}
+
+function AdminUserSearchForm({
   email,
+  username,
+  reviewID,
   emailDomain,
   onSearch,
-}: AdminUserEmailSearchFormProps) {
+}: AdminUserSearchFormProps) {
+  const [queryType, setQueryType] = useState<AdminUserQueryType>(() =>
+    getInitialQueryType(username, reviewID)
+  )
   const [emailPrefix, setEmailPrefix] = useState(() =>
     normalizeAuthEmailPrefix(email, emailDomain)
+  )
+  const [usernameValue, setUsernameValue] = useState(username)
+  const [reviewIDValue, setReviewIDValue] = useState(
+    reviewID ? String(reviewID) : ""
   )
 
   function handleSubmit(event: FormSubmitEvent) {
     event.preventDefault()
-    const nextPrefix = emailPrefix.trim()
-    onSearch(
-      nextPrefix ? buildAuthEmail(nextPrefix, emailDomain).toLowerCase() : ""
-    )
+
+    if (queryType === "email") {
+      const nextPrefix = emailPrefix.trim()
+      onSearch({
+        email: nextPrefix
+          ? buildAuthEmail(nextPrefix, emailDomain).toLowerCase()
+          : undefined,
+      })
+      return
+    }
+
+    if (queryType === "username") {
+      onSearch({ username: usernameValue.trim() || undefined })
+      return
+    }
+
+    const nextReviewID = Number(reviewIDValue)
+    onSearch({
+      review_id:
+        Number.isFinite(nextReviewID) && nextReviewID > 0
+          ? Math.trunc(nextReviewID)
+          : undefined,
+    })
   }
 
   return (
-    <form
-      className="flex max-w-md flex-wrap items-end gap-2"
-      onSubmit={handleSubmit}
-    >
-      <div className="min-w-72 flex-1">
-        <EmailPrefixInput
-          id="admin-user-email"
-          label="邮箱"
-          value={emailPrefix}
-          emailDomain={emailDomain}
-          onChange={setEmailPrefix}
-          placeholder="jAccount"
-        />
+    <form className="space-y-3" onSubmit={handleSubmit}>
+      <Tabs
+        value={queryType}
+        onValueChange={(value) => setQueryType(value as AdminUserQueryType)}
+      >
+        <TabsList>
+          <TabsTrigger value="email">邮箱</TabsTrigger>
+          <TabsTrigger value="username">原始 username</TabsTrigger>
+          <TabsTrigger value="review">点评 ID</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      <div className="flex max-w-md flex-wrap items-end gap-2">
+        <div className="min-w-72 flex-1">
+          {queryType === "email" ? (
+            <EmailPrefixInput
+              id="admin-user-email"
+              label="邮箱"
+              value={emailPrefix}
+              emailDomain={emailDomain}
+              onChange={setEmailPrefix}
+              placeholder="jAccount"
+            />
+          ) : null}
+          {queryType === "username" ? (
+            <div className="space-y-2">
+              <Label htmlFor="admin-user-username">原始 username</Label>
+              <Input
+                id="admin-user-username"
+                value={usernameValue}
+                onChange={(event) => setUsernameValue(event.target.value)}
+                placeholder="username"
+              />
+            </div>
+          ) : null}
+          {queryType === "review" ? (
+            <div className="space-y-2">
+              <Label htmlFor="admin-user-review-id">点评 ID</Label>
+              <Input
+                id="admin-user-review-id"
+                type="number"
+                min={1}
+                value={reviewIDValue}
+                onChange={(event) => setReviewIDValue(event.target.value)}
+                placeholder="review id"
+              />
+            </div>
+          ) : null}
+        </div>
+        <Button type="submit">
+          <RiSearchLine />
+          查询
+        </Button>
       </div>
-      <Button type="submit">
-        <RiSearchLine />
-        查询
-      </Button>
     </form>
   )
 }
@@ -138,6 +221,8 @@ export function AdminUserQueryTab({
   const search = routeApi.useSearch()
   const navigate = useNavigate({ from: "/admin/user" })
   const email = search.email ?? ""
+  const username = search.username ?? ""
+  const reviewID = search.review_id
   const emailDomain = useAuthEmailDomain()
   const page = Math.max(1, search.page ?? 1)
   const [suspendDays, setSuspendDays] = useState(30)
@@ -145,7 +230,8 @@ export function AdminUserQueryTab({
   const [resetDialogOpen, setResetDialogOpen] = useState(false)
   const [resetPassword, setResetPassword] = useState("")
 
-  const userQuery = useAdminUserByEmail(email)
+  const hasLookup = Boolean(email || username || reviewID)
+  const userQuery = useAdminUser({ email, username, review_id: reviewID })
   const selectedUser = userQuery.data
   const reviewsQuery = useUserReviews(selectedUser?.id ?? 0, {
     page,
@@ -162,12 +248,17 @@ export function AdminUserQueryTab({
   const revokeAdminMutation = useRevokeAdminUser()
   const resetPasswordMutation = useResetAdminUserPassword()
 
-  function handleSearch(nextEmail: string) {
+  function handleSearch(value: AdminUserLookupFormValue) {
+    const nextHasLookup = Boolean(
+      value.email || value.username || value.review_id
+    )
     void navigate({
       search: (prev) => ({
         ...prev,
-        email: nextEmail || undefined,
-        page: nextEmail ? 1 : undefined,
+        email: value.email,
+        username: value.username,
+        review_id: value.review_id,
+        page: nextHasLookup ? 1 : undefined,
         tab: "user",
       }),
       replace: true,
@@ -239,20 +330,22 @@ export function AdminUserQueryTab({
 
   return (
     <section className="space-y-6">
-      <h2 className="text-lg font-medium">邮箱</h2>
+      <h2 className="text-lg font-medium">查询条件</h2>
 
-      <AdminUserEmailSearchForm
-        key={`${email}:${emailDomain}`}
+      <AdminUserSearchForm
+        key={`${email}:${username}:${reviewID ?? ""}:${emailDomain}`}
         email={email}
+        username={username}
+        reviewID={reviewID}
         emailDomain={emailDomain}
         onSearch={handleSearch}
       />
 
-      {userQuery.isLoading && email ? (
+      {userQuery.isLoading && hasLookup ? (
         <Skeleton className="h-36 w-full" />
       ) : null}
 
-      {userQuery.isError && email ? (
+      {userQuery.isError && hasLookup ? (
         <p className="text-sm text-destructive">
           {getErrorMessage(userQuery.error)}
         </p>
@@ -368,7 +461,11 @@ export function AdminUserQueryTab({
               ) : (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button type="button" variant="outline" disabled={isMutating}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={isMutating}
+                    >
                       <RiShieldUserLine />
                       授予 admin
                     </Button>

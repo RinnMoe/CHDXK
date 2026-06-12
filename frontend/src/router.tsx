@@ -67,6 +67,8 @@ export type UserAdminSearch = {
     | "announcement"
     | "audit-log"
   email?: string
+  username?: string
+  review_id?: number
   page?: number
   audit_page?: number
   audit_start_time?: string
@@ -404,6 +406,8 @@ export const userAdminRoute = createRoute({
       "audit-log",
     ] as const),
     email: rawStringParam(search.email),
+    username: rawStringParam(search.username),
+    review_id: optionalPositiveIntParam(search.review_id),
     page: numberParam(search.page),
     audit_page: numberParam(search.audit_page),
     audit_start_time: rawStringParam(search.audit_start_time),
