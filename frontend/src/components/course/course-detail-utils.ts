@@ -11,7 +11,7 @@ export function byRatingDesc(
 }
 
 export function buildFeedbackMailto(course: CourseDetailDTO) {
-  const subject = `[JCourse课程信息反馈] ${course.code} ${course.name}`
+  const subject = `[课程信息反馈] ${course.code} ${course.name}`
   const courseURL =
     typeof window === "undefined"
       ? ""
@@ -24,7 +24,7 @@ export function buildFeedbackMailto(course: CourseDetailDTO) {
   const categories = course.categories?.join("、") || "未提供"
   const body = [
     "请在这里描述需要反馈的问题：",
-    "",
+    "\n",
     "课程基本信息",
     `课程ID：${course.id}`,
     `课程代码：${course.code}`,
