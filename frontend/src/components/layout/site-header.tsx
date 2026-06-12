@@ -153,8 +153,9 @@ export function SiteHeader() {
   const { user } = useAuth()
   const [open, setOpen] = useState(false)
   const navRef = useRef<HTMLElement>(null)
-  const visibleNavItems: NavLinkItem[] =
-    user?.is_admin() ? [...navItems, ...adminNavItems] : navItems
+  const visibleNavItems: NavLinkItem[] = user?.is_admin()
+    ? [...navItems, ...adminNavItems]
+    : navItems
   const activeIndex = visibleNavItems.findIndex((item) => item.match(pathname))
   const [navIndicator, setNavIndicator] = useState({
     left: 0,

@@ -1,8 +1,5 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
-import {
-  getUserPoints,
-  type PointRecordListFilter,
-} from "@/api/point"
+import { getUserPoints, type PointRecordListFilter } from "@/api/point"
 
 export function useUserPoints(
   userID: number,

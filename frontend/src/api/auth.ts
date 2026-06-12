@@ -10,10 +10,7 @@ export interface AuthUserDTO {
   is_super_admin: () => boolean
 }
 
-export type AuthUserResponse = Omit<
-  AuthUserDTO,
-  "is_admin" | "is_super_admin"
->
+export type AuthUserResponse = Omit<AuthUserDTO, "is_admin" | "is_super_admin">
 
 export function normalizeAuthUser(user: AuthUserResponse): AuthUserDTO {
   return {

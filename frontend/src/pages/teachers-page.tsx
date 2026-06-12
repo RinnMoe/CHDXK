@@ -30,20 +30,23 @@ export function TeachersPage() {
   const { data: filters, isLoading: filtersLoading } = useTeacherFilters()
   const { data, isLoading } = useTeachers(filter)
 
-  const handleSearchChange = useCallback((value: string) => {
-    const nextQ = value.trim()
-    if (nextQ === q) return
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      const nextQ = value.trim()
+      if (nextQ === q) return
 
-    void navigate({
-      search: (prev) => ({
-        ...prev,
-        q: nextQ || undefined,
-        page: 1,
-      }),
-      replace: true,
-      resetScroll: false,
-    })
-  }, [navigate, q])
+      void navigate({
+        search: (prev) => ({
+          ...prev,
+          q: nextQ || undefined,
+          page: 1,
+        }),
+        replace: true,
+        resetScroll: false,
+      })
+    },
+    [navigate, q]
+  )
 
   function handlePageChange(p: number) {
     void navigate({

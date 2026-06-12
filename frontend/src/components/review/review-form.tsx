@@ -5,12 +5,10 @@ import {
   useState,
   type SyntheticEvent,
 } from "react"
-import { Link } from "@tanstack/react-router"
 import { useForm } from "@tanstack/react-form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
 import {
   loadReviewDraft,
   removeReviewDraft,
@@ -24,9 +22,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
 import { RatingStars } from "./rating-stars"
-import { SafeMarkdown } from "./safe-markdown"
+import { ReviewFormContentEditor } from "./review-form-content-editor"
+import {
+  CONTENT_MAX_LENGTH,
+  CONTENT_MIN_LENGTH,
+  DEFAULT_REVIEW_TEMPLATE,
+  SCORE_MAX_LENGTH,
+} from "./review-form-template"
 import type {
   CreateReviewCommand,
   UpdateReviewCommand,
@@ -44,83 +47,6 @@ interface ReviewFormProps {
   onCancel?: () => void
   isSubmitting?: boolean
   draftUserID?: number
-}
-
-const SCORE_MAX_LENGTH = 10
-const CONTENT_MIN_LENGTH = 4
-const CONTENT_MAX_LENGTH = 9681
-const REVIEW_TEMPLATE_LABELS: readonly string[] = [
-  "课程内容：",
-  "上课自由度：",
-  "考核标准：",
-  "授课质量：",
-] as const
-const DEFAULT_REVIEW_TEMPLATE = REVIEW_TEMPLATE_LABELS.join("\n\n")
-
-function findTemplateLineIndex(lines: string[], label: string) {
-  return lines.findIndex((line) => line.trimStart().startsWith(label))
-}
-
-function hasTemplateLine(content: string, label: string) {
-  return findTemplateLineIndex(content.split("\n"), label) >= 0
-}
-
-function templateLineHasUserInput(line: string, label: string) {
-  const labelIndex = line.indexOf(label)
-  if (labelIndex < 0) return false
-  return line.slice(labelIndex + label.length).trim().length > 0
-}
-
-function addTemplateLine(content: string, label: string) {
-  if (hasTemplateLine(content, label)) return content
-
-  if (content.trim().length === 0) {
-    return label
-  }
-
-  const lines = content.replace(/\s*$/, "").split("\n")
-  const newLabelOrder = REVIEW_TEMPLATE_LABELS.indexOf(label)
-  const nextTemplateLineIndex = lines.findIndex((line) => {
-    const templateOrder = REVIEW_TEMPLATE_LABELS.findIndex((templateLabel) =>
-      line.trimStart().startsWith(templateLabel)
-    )
-    return templateOrder > newLabelOrder
-  })
-
-  if (nextTemplateLineIndex < 0) {
-    return `${lines.join("\n")}\n\n${label}`
-  }
-
-  lines.splice(nextTemplateLineIndex, 0, label, "")
-  return lines.join("\n")
-}
-
-function removeTemplateLine(content: string, label: string) {
-  const lines = content.split("\n")
-  const lineIndex = findTemplateLineIndex(lines, label)
-  if (lineIndex < 0) return content
-  if (templateLineHasUserInput(lines[lineIndex], label)) return content
-
-  lines.splice(lineIndex, 1)
-
-  while (
-    lineIndex < lines.length &&
-    lines[lineIndex] === "" &&
-    (lineIndex === 0 || lines[lineIndex - 1] === "")
-  ) {
-    lines.splice(lineIndex, 1)
-  }
-
-  while (
-    lineIndex > 0 &&
-    lineIndex === lines.length &&
-    lines[lineIndex - 1] === "" &&
-    (lineIndex - 1 === 0 || lines[lineIndex - 2] === "")
-  ) {
-    lines.splice(lineIndex - 1, 1)
-  }
-
-  return lines.join("\n")
 }
 
 type ReviewFormValues = {
@@ -412,96 +338,12 @@ export function ReviewForm({
           }
 
           return (
-            <div className="space-y-2">
-              <Label htmlFor="content">点评内容</Label>
-              <div className="flex flex-wrap gap-2">
-                {REVIEW_TEMPLATE_LABELS.map((label) => {
-                  const selected = hasTemplateLine(content, label)
-                  return (
-                    <button
-                      key={label}
-                      type="button"
-                      aria-pressed={selected}
-                      onClick={() => {
-                        updateContent(
-                          selected
-                            ? removeTemplateLine(content, label)
-                            : addTemplateLine(content, label)
-                        )
-                      }}
-                      className={cn(
-                        "inline-flex h-6 items-center justify-center rounded-4xl border px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none",
-                        selected
-                          ? "border-primary/20 bg-primary/10 text-primary hover:bg-primary/15"
-                          : "border-transparent bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
-                      )}
-                    >
-                      <span>{label.replace(/：$/, "")}</span>
-                    </button>
-                  )
-                })}
-              </div>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">编辑</p>
-                  <Textarea
-                    id="content"
-                    placeholder="分享你对这门课程的看法...（支持 Markdown）"
-                    value={content}
-                    onChange={(e) => {
-                      updateContent(e.target.value)
-                    }}
-                    onBlur={field.handleBlur}
-                    maxLength={CONTENT_MAX_LENGTH}
-                    rows={10}
-                    className="resize-y font-sans text-sm"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">预览</p>
-                  <div className="review-markdown prose prose-sm min-h-40 max-w-none text-sm dark:prose-invert">
-                    {content.trim() ? (
-                      <SafeMarkdown content={content} />
-                    ) : (
-                      <span className="text-muted-foreground italic">
-                        预览区域
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {content.length} / {CONTENT_MAX_LENGTH} 字，至少{" "}
-                {CONTENT_MIN_LENGTH} 字
-              </p>
-              {error && (
-                <p className="text-sm text-destructive" role="alert">
-                  {error}
-                </p>
-              )}
-              <div className="text-sm leading-6 text-muted-foreground [&_p]:m-0">
-                <p>
-                  欢迎畅所欲言。点评模板可以按需修改或删除。编辑框支持 Markdown
-                  语法。
-                </p>
-                <p>
-                  理想的点评应当富有事实且对课程有全面的描述。比如课讲得好但是考核很严格，或者作业奇葩但给分很高。二者都说出来更有利于同学们做出全面的选择和判断。
-                </p>
-                <p>
-                  避免滥用缩写、梗、隐喻等让其他读者难以理解的表达方式和内容。避免使用情绪化用语和冒犯性言论。
-                </p>
-                <p>
-                  提交点评表示您同意授权本网站使用点评的内容，并且了解本站的
-                  <Link
-                    to="/faq"
-                    className="font-medium text-primary hover:underline"
-                  >
-                    相关立场
-                  </Link>
-                  。
-                </p>
-              </div>
-            </div>
+            <ReviewFormContentEditor
+              content={content}
+              error={error}
+              onChange={updateContent}
+              onBlur={field.handleBlur}
+            />
           )
         }}
       </form.Field>

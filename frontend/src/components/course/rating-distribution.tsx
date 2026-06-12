@@ -51,7 +51,7 @@ export function RatingDistribution({ rating }: RatingDistributionProps) {
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              <span className="shrink-0 whitespace-nowrap text-right text-muted-foreground tabular-nums">
+              <span className="shrink-0 text-right whitespace-nowrap text-muted-foreground tabular-nums">
                 {count} 条点评
               </span>
             </Fragment>

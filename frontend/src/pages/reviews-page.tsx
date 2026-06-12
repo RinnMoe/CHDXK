@@ -22,20 +22,23 @@ export function ReviewsPage() {
     page_size: REVIEW_PAGE_SIZE,
   })
 
-  const handleSearchChange = useCallback((value: string) => {
-    const nextQ = value.trim()
-    if (nextQ === q) return
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      const nextQ = value.trim()
+      if (nextQ === q) return
 
-    void navigate({
-      search: (prev) => ({
-        ...prev,
-        q: nextQ || undefined,
-        page: 1,
-      }),
-      replace: true,
-      resetScroll: false,
-    })
-  }, [navigate, q])
+      void navigate({
+        search: (prev) => ({
+          ...prev,
+          q: nextQ || undefined,
+          page: 1,
+        }),
+        replace: true,
+        resetScroll: false,
+      })
+    },
+    [navigate, q]
+  )
 
   function handlePageChange(page: number) {
     void navigate({

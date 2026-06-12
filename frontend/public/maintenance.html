@@ -27,7 +27,11 @@
         min-height: 100vh;
         margin: 0;
         background:
-          radial-gradient(circle at top left, rgba(15, 118, 110, 0.12), transparent 34rem),
+          radial-gradient(
+            circle at top left,
+            rgba(15, 118, 110, 0.12),
+            transparent 34rem
+          ),
           linear-gradient(180deg, #ffffff 0%, var(--background) 100%);
         color: var(--foreground);
         font-family:
@@ -224,13 +228,21 @@
 
         <section class="panel" aria-labelledby="maintenance-title">
           <div class="header">
-            <div class="status"><span class="dot" aria-hidden="true"></span>服务维护中</div>
+            <div class="status">
+              <span class="dot" aria-hidden="true"></span>服务维护中
+            </div>
             <h1 id="maintenance-title">系统暂时无法访问</h1>
             <p>
               选课社区正在维护，或后端服务暂时不可用。请稍后刷新页面重试；已打开的页面内容可能仍可浏览，但登录、提交点评、同步课程等操作会暂时受影响。
             </p>
             <div class="actions">
-              <button class="primary-action" type="button" onclick="window.location.reload()">刷新页面</button>
+              <button
+                class="primary-action"
+                type="button"
+                onclick="window.location.reload()"
+              >
+                刷新页面
+              </button>
               <a class="secondary-action" href="/">返回首页</a>
             </div>
           </div>

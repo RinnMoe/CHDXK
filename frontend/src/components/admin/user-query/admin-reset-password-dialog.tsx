@@ -81,7 +81,9 @@ export function ResetPasswordDialog({
             />
           </div>
 
-          {isError ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
+          {isError ? (
+            <p className="text-sm text-destructive">{errorMessage}</p>
+          ) : null}
 
           <DialogFooter>
             <DialogClose asChild>
@@ -89,7 +91,10 @@ export function ResetPasswordDialog({
                 取消
               </Button>
             </DialogClose>
-            <Button type="submit" disabled={isPending || password.trim() === ""}>
+            <Button
+              type="submit"
+              disabled={isPending || password.trim() === ""}
+            >
               确认重置
             </Button>
           </DialogFooter>

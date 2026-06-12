@@ -16,6 +16,7 @@ export default defineConfig({
     typeAware: true,
   },
   rules: {
+    "max-lines": ["error", { max: 400 }],
     "react/exhaustive-deps": "error",
     "react/only-export-components": "error",
     "react/rules-of-hooks": "error",

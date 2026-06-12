@@ -29,7 +29,11 @@ export function optionalPositiveIntParam(value: unknown): number | undefined {
 }
 
 export function stringArrayParam(value: unknown): string[] | undefined {
-  const values = Array.isArray(value) ? value : value === undefined ? [] : [value]
+  const values = Array.isArray(value)
+    ? value
+    : value === undefined
+      ? []
+      : [value]
   const strings = values
     .filter((item): item is string => typeof item === "string")
     .map((item) => item.trim())

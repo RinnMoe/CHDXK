@@ -106,10 +106,7 @@ export function TeacherDetailPage() {
                 )}
               </div>
               <div>
-                <Tabs
-                  value={selectedOrderBy}
-                  onValueChange={updateCourseSort}
-                >
+                <Tabs value={selectedOrderBy} onValueChange={updateCourseSort}>
                   <TabsList>
                     <TabsTrigger value="rating_score">综合评分</TabsTrigger>
                     <TabsTrigger value="rating_count">点评数量</TabsTrigger>

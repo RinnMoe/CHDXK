@@ -34,7 +34,7 @@ export function HomePage() {
             />
           </div>
 
-          <div className="w-full shrink-0 space-y-4 lg:w-2/5 xl:w-1/3 lg:border-l lg:pl-8">
+          <div className="w-full shrink-0 space-y-4 lg:w-2/5 lg:border-l lg:pl-8 xl:w-1/3">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">热门课程</h2>
               <Link

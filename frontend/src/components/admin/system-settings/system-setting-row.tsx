@@ -43,12 +43,12 @@ export function SystemSettingRow({
             {setting.label || setting.key}
           </Label>
           {setting.public && <Badge variant="outline">公开</Badge>}
-          {setting.requires_restart && <Badge variant="secondary">需重启</Badge>}
+          {setting.requires_restart && (
+            <Badge variant="secondary">需重启</Badge>
+          )}
         </div>
         {setting.description && (
-          <p className="text-sm text-muted-foreground">
-            {setting.description}
-          </p>
+          <p className="text-sm text-muted-foreground">{setting.description}</p>
         )}
         <p className="truncate text-xs text-muted-foreground">{setting.key}</p>
       </div>
@@ -92,7 +92,9 @@ export function SystemSettingRow({
                   size="icon-sm"
                   variant="outline"
                   aria-label="恢复默认值"
-                  disabled={isLoading || submitting || value === setting.default_value}
+                  disabled={
+                    isLoading || submitting || value === setting.default_value
+                  }
                   onClick={onRestoreDefault}
                 >
                   <RiCloseLine />

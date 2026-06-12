@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type SyntheticEvent } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Link } from "@tanstack/react-router"
 import { RiEditLine, RiShareLine, RiWrenchLine } from "@remixicon/react"
 import {
@@ -14,34 +14,20 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/contexts/auth-context"
-import {
-  useDeleteReview,
-  useUpdateReviewModeratorRemark,
-} from "@/hooks/use-review"
-import {
-  formatDateTime,
-  formatReviewCardTime,
-  isReviewCardTimeRelative,
-} from "@/lib/date"
+import { useDeleteReview } from "@/hooks/use-review"
 import { VoteButtons } from "./vote-buttons"
 import { ReviewContent } from "./review-content"
-import { ReviewRevisionsDialog } from "./review-revisions-dialog"
+import { ReviewCardTime } from "./review-card-time"
+import {
+  ModeratorRemarkBanner,
+  ModeratorRemarkDialog,
+} from "./moderator-remark-dialog"
 import type { ReviewDTO } from "@/api/review"
 
 interface ReviewCardProps {
@@ -56,183 +42,12 @@ function getReviewUrl(reviewID: number) {
   return new URL(path, window.location.origin).toString()
 }
 
-function isEdited(review: ReviewDTO) {
-  if (!review.updated_at || !review.created_at) return false
-  return (
-    new Date(review.updated_at).getTime() -
-      new Date(review.created_at).getTime() >
-    1000
-  )
-}
-
-function ReviewCardTime({ review }: { review: ReviewDTO }) {
-  const { user } = useAuth()
-  const [revisionsOpen, setRevisionsOpen] = useState(false)
-  const [showAbsoluteTime, setShowAbsoluteTime] = useState(false)
-  const edited = isEdited(review)
-  const displayTime = edited ? review.updated_at : review.created_at
-  const hasRelativeTime = isReviewCardTimeRelative(displayTime)
-  const displayTimeText =
-    hasRelativeTime && !showAbsoluteTime
-      ? formatReviewCardTime(displayTime)
-      : formatDateTime(displayTime)
-  const displayTimeTitle = formatDateTime(displayTime)
-  const createdTimeTitle = `创建于 ${formatDateTime(review.created_at)}`
-  const canViewRevisions = edited && (user?.is_admin() ?? false)
-
-  const timeNode = hasRelativeTime ? (
-    <button
-      type="button"
-      className="rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
-      title={displayTimeTitle}
-      onClick={() => setShowAbsoluteTime((value) => !value)}
-    >
-      {displayTimeText}
-    </button>
-  ) : (
-    <span className="text-muted-foreground" title={displayTimeTitle}>
-      {displayTimeText}
-    </span>
-  )
-
-  const editedNode = edited ? (
-    canViewRevisions ? (
-      <button
-        type="button"
-        className="ml-1 rounded-sm text-muted-foreground/70 transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
-        title={createdTimeTitle}
-        onClick={() => setRevisionsOpen(true)}
-      >
-        (已修改)
-      </button>
-    ) : (
-      <span className="ml-1 text-muted-foreground/70" title={createdTimeTitle}>
-        (已修改)
-      </span>
-    )
-  ) : null
-
-  return (
-    <div className="ml-auto flex items-center text-sm tabular-nums">
-      {timeNode}
-      {editedNode}
-      {canViewRevisions && (
-        <ReviewRevisionsDialog
-          review={review}
-          open={revisionsOpen}
-          onOpenChange={setRevisionsOpen}
-        />
-      )}
-    </div>
-  )
-}
-
 async function copyText(text: string) {
   if (!navigator.clipboard?.writeText || !window.isSecureContext) {
     throw new Error("Clipboard API is unavailable")
   }
 
   await navigator.clipboard.writeText(text)
-}
-
-interface ModeratorRemarkDialogProps {
-  review: ReviewDTO
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}
-
-function ModeratorRemarkDialog({
-  review,
-  open,
-  onOpenChange,
-}: ModeratorRemarkDialogProps) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <ModeratorRemarkForm
-          key={`${review.id}-${open ? review.moderator_remark : "closed"}`}
-          review={review}
-          onOpenChange={onOpenChange}
-        />
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-function ModeratorRemarkForm({
-  review,
-  onOpenChange,
-}: Pick<ModeratorRemarkDialogProps, "review" | "onOpenChange">) {
-  const [remark, setRemark] = useState(review.moderator_remark ?? "")
-  const [error, setError] = useState<string | null>(null)
-  const { mutateAsync, isPending } = useUpdateReviewModeratorRemark()
-
-  async function handleSubmit(e: SyntheticEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError(null)
-    try {
-      await mutateAsync({
-        reviewID: review.id,
-        cmd: { moderator_remark: remark },
-      })
-      onOpenChange(false)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "保存失败")
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <DialogHeader>
-        <DialogTitle>管理员批注</DialogTitle>
-        <DialogDescription>
-          点评 #{review.id} 的批注会对所有用户可见。
-        </DialogDescription>
-      </DialogHeader>
-
-      <div className="space-y-2">
-        <Label htmlFor={`moderator-remark-${review.id}`}>批注内容</Label>
-        <Textarea
-          id={`moderator-remark-${review.id}`}
-          value={remark}
-          onChange={(e) => setRemark(e.target.value)}
-          rows={5}
-          className="resize-y text-sm"
-          placeholder="填写管理员批注，清空后保存可移除批注"
-        />
-      </div>
-
-      {error && (
-        <p className="text-sm text-destructive" role="alert">
-          {error}
-        </p>
-      )}
-
-      <DialogFooter>
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => onOpenChange(false)}
-        >
-          取消
-        </Button>
-        <Button type="submit" disabled={isPending}>
-          {isPending ? "保存中..." : "保存批注"}
-        </Button>
-      </DialogFooter>
-    </form>
-  )
-}
-
-function ModeratorRemarkBanner({ remark }: { remark: string }) {
-  const trimmed = remark.trim()
-  if (!trimmed) return null
-
-  return (
-    <div className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-sm">
-      <div className="whitespace-pre-wrap text-foreground/90">{trimmed}</div>
-    </div>
-  )
 }
 
 export function ReviewCard({

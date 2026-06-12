@@ -72,7 +72,9 @@ export function SuspendUserDialog({
             />
           </div>
 
-          {isError ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
+          {isError ? (
+            <p className="text-sm text-destructive">{errorMessage}</p>
+          ) : null}
 
           <DialogFooter>
             <DialogClose asChild>

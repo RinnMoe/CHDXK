@@ -144,7 +144,13 @@ export function findUserByID(id: number): MockUser | undefined {
 export function addUser(email: string, password: string): MockUser {
   const id = Math.max(0, ...mockUsers.map((u) => u.id)) + 1
   const username = email.split("@")[0]
-  const user = normalizeMockUser({ id, username, email, password, role: "user" })
+  const user = normalizeMockUser({
+    id,
+    username,
+    email,
+    password,
+    role: "user",
+  })
   mockUsers.push(user)
   persistMockAuthState()
   return user

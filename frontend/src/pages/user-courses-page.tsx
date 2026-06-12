@@ -1,35 +1,12 @@
 import { useEffect, useMemo, useState } from "react"
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router"
-import {
-  RiDeleteBinLine,
-  RiMessage3Line,
-  RiRefreshLine,
-} from "@remixicon/react"
+import { RiMessage3Line, RiRefreshLine } from "@remixicon/react"
 import { courseEnrollmentSyncStartURL } from "@/api/course"
 import {
   COURSE_ENROLLMENT_SYNC_CHANNEL,
   type CourseEnrollmentSyncMessage,
 } from "@/lib/course-enrollment-sync"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import {
   Select,
   SelectContent,
@@ -40,6 +17,8 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CourseList } from "@/components/course/course-list"
 import { CourseEnrollmentList } from "@/components/course/course-enrollment-list"
+import { CourseEnrollmentSyncDialog } from "@/components/course/course-enrollment-sync-dialog"
+import { CourseNotificationDeleteAction } from "@/components/course/course-notification-delete-action"
 import { PaginationComponent } from "@/components/common/pagination"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
@@ -219,37 +198,13 @@ export function UserCoursesPage() {
     const recordName = view === "followed" ? "关注记录" : "屏蔽记录"
 
     return (
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="hover:bg-destructive/10 hover:text-destructive focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:hover:bg-destructive/20"
-            aria-label={`删除${recordName}`}
-          >
-            <RiDeleteBinLine />
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent size="sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>删除{recordName}</AlertDialogTitle>
-            <AlertDialogDescription>
-              删除 {course.name} 的{recordName}。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={() =>
-                notificationMutation.mutate({ courseID: course.id, level: 0 })
-              }
-            >
-              删除
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <CourseNotificationDeleteAction
+        course={course}
+        recordName={recordName}
+        onDelete={() =>
+          notificationMutation.mutate({ courseID: course.id, level: 0 })
+        }
+      />
     )
   }
 
@@ -306,40 +261,14 @@ export function UserCoursesPage() {
             <p className="text-sm text-muted-foreground">{syncMessage}</p>
           )}
 
-          <Dialog open={syncOpen} onOpenChange={setSyncOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>同步课表</DialogTitle>
-                <DialogDescription>
-                  选择学期后会打开 jAccount
-                  登录窗口，同步完成后自动刷新选课记录。
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-2">
-                <Select value={syncSemester} onValueChange={setSyncSemester}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="选择学期" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {syncSemesters.map((s) => (
-                      <SelectItem key={s.name} value={s.name}>
-                        {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setSyncOpen(false)}>
-                  取消
-                </Button>
-                <Button onClick={handleStartSync} disabled={!syncSemester}>
-                  <RiRefreshLine data-icon="inline-start" />
-                  同步
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <CourseEnrollmentSyncDialog
+            open={syncOpen}
+            onOpenChange={setSyncOpen}
+            semester={syncSemester}
+            semesters={syncSemesters}
+            onSemesterChange={setSyncSemester}
+            onStartSync={handleStartSync}
+          />
 
           {!authLoading && !user && (
             <div className="py-12 text-center">

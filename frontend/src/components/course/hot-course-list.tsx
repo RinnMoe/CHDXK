@@ -15,7 +15,7 @@ interface HotCourseListProps {
 function HotCourseHeader() {
   return (
     <div className="flex items-center gap-1 border-b px-0 py-2 text-sm font-medium text-muted-foreground">
-      <span className="shrink-0 whitespace-nowrap text-center">排名</span>
+      <span className="shrink-0 text-center whitespace-nowrap">排名</span>
       <span className="min-w-0 flex-1 pl-2">课程</span>
       <span className="w-10 shrink-0 text-right">热度</span>
     </div>

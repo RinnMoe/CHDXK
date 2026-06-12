@@ -29,7 +29,7 @@ export function ReviewContent({
         )}
       </div>
 
-      <div className="review-markdown prose prose-sm min-w-0 max-w-none text-sm leading-relaxed dark:prose-invert">
+      <div className="review-markdown prose prose-sm max-w-none min-w-0 text-sm leading-relaxed dark:prose-invert">
         <SafeMarkdown content={content} />
       </div>
     </div>

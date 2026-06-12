@@ -43,7 +43,8 @@ export function useUpdateSystemSetting() {
           (settings) => {
             const current = settings ?? []
             const index = current.findIndex((item) => item.key === updated.key)
-            if (index < 0) return updated.public ? [...current, updated] : current
+            if (index < 0)
+              return updated.public ? [...current, updated] : current
             return current.map((item, i) => (i === index ? updated : item))
           }
         )
