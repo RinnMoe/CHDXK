@@ -1,27 +1,13 @@
-import { RiShieldCrossLine } from "@remixicon/react"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
 import { useAdminUsers, useRevokeAdminUser } from "@/hooks/use-admin-user"
-import { formatDateTime } from "@/lib/date"
+import { AdminUserRow } from "./admin-users/admin-user-row"
 
 interface AdminUsersTabProps {
   currentUserID: number
@@ -65,62 +51,16 @@ export function AdminUsersTab({
           </TableHeader>
           <TableBody>
             {adminsQuery.data.map((admin) => (
-              <TableRow key={admin.id}>
-                <TableCell className="font-mono">{admin.id}</TableCell>
-                <TableCell className="font-mono">{admin.username}</TableCell>
-                <TableCell>{admin.email || "-"}</TableCell>
-                <TableCell>{admin.role}</TableCell>
-                <TableCell>{formatDateTime(admin.last_seen_at)}</TableCell>
-                <TableCell className="text-right">
-                  {admin.id === currentUserID ? (
-                    <span className="inline-flex h-8 items-center text-sm text-muted-foreground">
-                      当前用户
-                    </span>
-                  ) : admin.is_super_admin() ? (
-                    <span className="inline-flex h-8 items-center text-sm text-muted-foreground">
-                      超级管理员
-                    </span>
-                  ) : !currentUserIsSuperAdmin ? (
-                    <span className="inline-flex h-8 items-center text-sm text-muted-foreground">
-                      需要超级管理员权限
-                    </span>
-                  ) : (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          className="hover:bg-destructive/10 hover:text-destructive focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:hover:bg-destructive/20"
-                          aria-label={`撤销 ${admin.username} 的管理员权限`}
-                          disabled={revokeAdminMutation.isPending}
-                        >
-                          <RiShieldCrossLine />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent size="sm">
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>撤销管理员权限</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            撤销 {admin.username} 的管理员权限。
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>取消</AlertDialogCancel>
-                          <AlertDialogAction
-                            variant="destructive"
-                            onClick={() => {
-                              void revokeAdmin(admin.id)
-                            }}
-                          >
-                            撤销
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  )}
-                </TableCell>
-              </TableRow>
+              <AdminUserRow
+                key={admin.id}
+                admin={admin}
+                currentUserID={currentUserID}
+                currentUserIsSuperAdmin={currentUserIsSuperAdmin}
+                isRevoking={revokeAdminMutation.isPending}
+                onRevoke={(userID) => {
+                  void revokeAdmin(userID)
+                }}
+              />
             ))}
           </TableBody>
         </Table>

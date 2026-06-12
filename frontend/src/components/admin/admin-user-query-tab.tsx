@@ -1,45 +1,22 @@
-import { useState } from "react"
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
-import {
-  RiKey2Line,
-  RiLockLine,
-  RiLockUnlockLine,
-  RiSearchLine,
-  RiShieldCrossLine,
-  RiShieldUserLine,
-} from "@remixicon/react"
-import { EmailPrefixInput } from "@/components/auth/email-prefix-input"
+import { RiLockUnlockLine } from "@remixicon/react"
 import { PaginationComponent } from "@/components/common/pagination"
 import { PointRecordList } from "@/components/point/point-record-list"
 import { ReviewList } from "@/components/review/review-list"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  AdminUserSearchForm,
+  type AdminUserLookupFormValue,
+} from "./user-query/admin-user-search-form"
+import { AdminUserStatus } from "./user-query/admin-user-status"
+import {
+  GrantAdminDialog,
+  RevokeAdminDialog,
+} from "./user-query/admin-permission-dialogs"
+import { ResetPasswordDialog } from "./user-query/admin-reset-password-dialog"
+import { SuspendUserDialog } from "./user-query/admin-suspend-user-dialog"
 import {
   useAdminUser,
   useClearAdminUserSuspension,
@@ -51,14 +28,11 @@ import {
 import { useUserPoints } from "@/hooks/use-point"
 import { useUserReviews } from "@/hooks/use-review"
 import { useAuthEmailDomain } from "@/hooks/use-system-settings"
-import { buildAuthEmail, normalizeAuthEmailPrefix } from "@/config/auth"
-import { formatDateTime, formatNullableDateTime } from "@/lib/date"
-import { getErrorMessage, type FormSubmitEvent } from "./admin-utils"
+import { getErrorMessage } from "./admin-utils"
 
 const reviewPageSize = 20
 const pointPageSize = 20
 const routeApi = getRouteApi("/app/admin/user")
-type AdminUserQueryType = "email" | "username" | "review"
 
 function defaultPasswordFromEmail(email: string, username: string) {
   const source = email.split("@")[0] || username
@@ -68,150 +42,6 @@ function defaultPasswordFromEmail(email: string, username: string) {
 interface AdminUserQueryTabProps {
   currentUserID: number
   currentUserIsSuperAdmin: boolean
-}
-
-interface AdminUserLookupFormValue {
-  email?: string
-  username?: string
-  review_id?: number
-}
-
-interface AdminUserSearchFormProps {
-  email: string
-  username: string
-  reviewID?: number
-  emailDomain: string
-  onSearch: (value: AdminUserLookupFormValue) => void
-}
-
-function getInitialQueryType(
-  username: string,
-  reviewID?: number
-): AdminUserQueryType {
-  if (username) return "username"
-  if (reviewID) return "review"
-  return "email"
-}
-
-function AdminUserSearchForm({
-  email,
-  username,
-  reviewID,
-  emailDomain,
-  onSearch,
-}: AdminUserSearchFormProps) {
-  const [queryType, setQueryType] = useState<AdminUserQueryType>(() =>
-    getInitialQueryType(username, reviewID)
-  )
-  const [emailPrefix, setEmailPrefix] = useState(() =>
-    normalizeAuthEmailPrefix(email, emailDomain)
-  )
-  const [usernameValue, setUsernameValue] = useState(username)
-  const [reviewIDValue, setReviewIDValue] = useState(
-    reviewID ? String(reviewID) : ""
-  )
-
-  function handleSubmit(event: FormSubmitEvent) {
-    event.preventDefault()
-
-    if (queryType === "email") {
-      const nextPrefix = emailPrefix.trim()
-      onSearch({
-        email: nextPrefix
-          ? buildAuthEmail(nextPrefix, emailDomain).toLowerCase()
-          : undefined,
-      })
-      return
-    }
-
-    if (queryType === "username") {
-      onSearch({ username: usernameValue.trim() || undefined })
-      return
-    }
-
-    const nextReviewID = Number(reviewIDValue)
-    onSearch({
-      review_id:
-        Number.isFinite(nextReviewID) && nextReviewID > 0
-          ? Math.trunc(nextReviewID)
-          : undefined,
-    })
-  }
-
-  return (
-    <form className="space-y-3" onSubmit={handleSubmit}>
-      <Tabs
-        value={queryType}
-        onValueChange={(value) => setQueryType(value as AdminUserQueryType)}
-      >
-        <TabsList>
-          <TabsTrigger value="email">邮箱</TabsTrigger>
-          <TabsTrigger value="username">原始 username</TabsTrigger>
-          <TabsTrigger value="review">点评 ID</TabsTrigger>
-        </TabsList>
-      </Tabs>
-
-      <div className="flex max-w-md flex-wrap items-end gap-2">
-        <div className="min-w-72 flex-1">
-          {queryType === "email" ? (
-            <EmailPrefixInput
-              id="admin-user-email"
-              label="邮箱"
-              value={emailPrefix}
-              emailDomain={emailDomain}
-              onChange={setEmailPrefix}
-              placeholder="jAccount"
-            />
-          ) : null}
-          {queryType === "username" ? (
-            <div className="space-y-2">
-              <Label htmlFor="admin-user-username">原始 username</Label>
-              <Input
-                id="admin-user-username"
-                value={usernameValue}
-                onChange={(event) => setUsernameValue(event.target.value)}
-                placeholder="username"
-              />
-            </div>
-          ) : null}
-          {queryType === "review" ? (
-            <div className="space-y-2">
-              <Label htmlFor="admin-user-review-id">点评 ID</Label>
-              <Input
-                id="admin-user-review-id"
-                type="number"
-                min={1}
-                value={reviewIDValue}
-                onChange={(event) => setReviewIDValue(event.target.value)}
-                placeholder="review id"
-              />
-            </div>
-          ) : null}
-        </div>
-        <Button type="submit">
-          <RiSearchLine />
-          查询
-        </Button>
-      </div>
-    </form>
-  )
-}
-
-function SuspensionText({
-  suspendedAt,
-  suspendTill,
-}: {
-  suspendedAt?: string
-  suspendTill?: string
-}) {
-  if (!suspendedAt) return <span className="text-muted-foreground">未封禁</span>
-
-  return (
-    <span>
-      {formatDateTime(suspendedAt)} 至{" "}
-      {formatNullableDateTime(suspendTill, "未设置")}
-    </span>
-  )
 }
 
 export function AdminUserQueryTab({
@@ -225,10 +55,6 @@ export function AdminUserQueryTab({
   const reviewID = search.review_id
   const emailDomain = useAuthEmailDomain()
   const page = Math.max(1, search.page ?? 1)
-  const [suspendDays, setSuspendDays] = useState(30)
-  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false)
-  const [resetDialogOpen, setResetDialogOpen] = useState(false)
-  const [resetPassword, setResetPassword] = useState("")
 
   const hasLookup = Boolean(email || username || reviewID)
   const userQuery = useAdminUser({ email, username, review_id: reviewID })
@@ -279,15 +105,13 @@ export function AdminUserQueryTab({
     await clearSuspensionMutation.mutateAsync(selectedUser.id)
   }
 
-  async function confirmSuspension(event: FormSubmitEvent) {
-    event.preventDefault()
+  async function confirmSuspension(days: number) {
     if (!selectedUser) return
 
     await suspendMutation.mutateAsync({
       userID: selectedUser.id,
-      cmd: { days: suspendDays },
+      cmd: { days },
     })
-    setSuspendDialogOpen(false)
   }
 
   async function grantAdmin() {
@@ -299,23 +123,13 @@ export function AdminUserQueryTab({
     await revokeAdminMutation.mutateAsync(userID)
   }
 
-  function openResetPasswordDialog() {
-    if (!selectedUser) return
-    setResetPassword(
-      defaultPasswordFromEmail(selectedUser.email, selectedUser.username)
-    )
-    setResetDialogOpen(true)
-  }
-
-  async function confirmResetPassword(event: FormSubmitEvent) {
-    event.preventDefault()
+  async function confirmResetPassword(password: string) {
     if (!selectedUser) return
 
     await resetPasswordMutation.mutateAsync({
       userID: selectedUser.id,
-      cmd: { password: resetPassword },
+      cmd: { password },
     })
-    setResetDialogOpen(false)
   }
 
   const isMutating =
@@ -354,65 +168,7 @@ export function AdminUserQueryTab({
       {selectedUser ? (
         <section className="space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-4 border-y py-4">
-            <div className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
-              <div>
-                <p className="text-muted-foreground">用户 ID</p>
-                <p className="font-mono">{selectedUser.id}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">用户名</p>
-                <p className="font-mono">{selectedUser.username}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">邮箱</p>
-                <p>{selectedUser.email}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">角色</p>
-                <p>{selectedUser.role}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">注册时间</p>
-                <p>{formatDateTime(selectedUser.created_at)}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">活跃时间</p>
-                <p>{formatDateTime(selectedUser.last_seen_at)}</p>
-              </div>
-              <div className="sm:col-span-2 lg:col-span-3">
-                <p className="text-muted-foreground">密码</p>
-                <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <Badge
-                    variant={
-                      selectedUser.password_hash ? "secondary" : "outline"
-                    }
-                  >
-                    {selectedUser.password_hash ? "已设置" : "未设置"}
-                  </Badge>
-                  {selectedUser.password_hash ? (
-                    <span className="max-w-full font-mono text-xs break-all text-muted-foreground">
-                      {selectedUser.password_hash}
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-              <div className="sm:col-span-2 lg:col-span-3">
-                <p className="text-muted-foreground">封禁状态</p>
-                <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <Badge
-                    variant={
-                      selectedUser.suspended ? "destructive" : "secondary"
-                    }
-                  >
-                    {selectedUser.suspended ? "已封禁" : "正常"}
-                  </Badge>
-                  <SuspensionText
-                    suspendedAt={selectedUser.suspended_at}
-                    suspendTill={selectedUser.suspend_till}
-                  />
-                </div>
-              </div>
-            </div>
+            <AdminUserStatus user={selectedUser} />
 
             <div className="flex flex-wrap items-center justify-end gap-2">
               {selectedUserIsSelf ? (
@@ -426,134 +182,37 @@ export function AdminUserQueryTab({
                   需要超级管理员权限
                 </p>
               ) : selectedUserIsAdmin ? (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:hover:bg-destructive/20"
-                      disabled={isMutating}
-                    >
-                      <RiShieldCrossLine />
-                      撤销权限
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent size="sm">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>撤销管理员权限</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        撤销 {selectedUser.username} 的管理员权限。
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>取消</AlertDialogCancel>
-                      <AlertDialogAction
-                        variant="destructive"
-                        onClick={() => {
-                          void revokeAdmin(selectedUser.id)
-                        }}
-                      >
-                        撤销
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <RevokeAdminDialog
+                  username={selectedUser.username}
+                  disabled={isMutating}
+                  onConfirm={() => {
+                    void revokeAdmin(selectedUser.id)
+                  }}
+                />
               ) : (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={isMutating}
-                    >
-                      <RiShieldUserLine />
-                      授予 admin
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent size="sm">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>授予管理员权限</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        授予 {selectedUser.username} 管理员权限。
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>取消</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => {
-                          void grantAdmin()
-                        }}
-                      >
-                        授予
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <GrantAdminDialog
+                  username={selectedUser.username}
+                  disabled={isMutating}
+                  onConfirm={() => {
+                    void grantAdmin()
+                  }}
+                />
               )}
 
               {currentUserIsSuperAdmin && !selectedUserIsSelf ? (
-                <Dialog
-                  open={resetDialogOpen}
-                  onOpenChange={setResetDialogOpen}
-                >
-                  <DialogTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={openResetPasswordDialog}
-                      disabled={isMutating}
-                    >
-                      <RiKey2Line />
-                      重置密码
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <form onSubmit={confirmResetPassword} className="space-y-6">
-                      <DialogHeader>
-                        <DialogTitle>重置密码</DialogTitle>
-                        <DialogDescription>
-                          用户 {selectedUser.id} 的密码会被立即改为下方内容。
-                        </DialogDescription>
-                      </DialogHeader>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="reset-password">新密码</Label>
-                        <Input
-                          id="reset-password"
-                          type="text"
-                          value={resetPassword}
-                          onChange={(event) =>
-                            setResetPassword(event.target.value)
-                          }
-                          autoFocus
-                        />
-                      </div>
-
-                      {resetPasswordMutation.isError ? (
-                        <p className="text-sm text-destructive">
-                          {getErrorMessage(resetPasswordMutation.error)}
-                        </p>
-                      ) : null}
-
-                      <DialogFooter>
-                        <DialogClose asChild>
-                          <Button type="button" variant="outline">
-                            取消
-                          </Button>
-                        </DialogClose>
-                        <Button
-                          type="submit"
-                          disabled={
-                            resetPasswordMutation.isPending ||
-                            resetPassword.trim() === ""
-                          }
-                        >
-                          确认重置
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                <ResetPasswordDialog
+                  key={selectedUser.id}
+                  userID={selectedUser.id}
+                  defaultPassword={defaultPasswordFromEmail(
+                    selectedUser.email,
+                    selectedUser.username
+                  )}
+                  disabled={isMutating}
+                  isPending={resetPasswordMutation.isPending}
+                  isError={resetPasswordMutation.isError}
+                  errorMessage={getErrorMessage(resetPasswordMutation.error)}
+                  onSubmit={confirmResetPassword}
+                />
               ) : null}
 
               {!selectedUserIsSelf &&
@@ -572,69 +231,14 @@ export function AdminUserQueryTab({
                     解封用户
                   </Button>
                 ) : (
-                  <Dialog
-                    open={suspendDialogOpen}
-                    onOpenChange={setSuspendDialogOpen}
-                  >
-                    <DialogTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        disabled={isMutating}
-                      >
-                        <RiLockLine />
-                        封禁用户
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <form onSubmit={confirmSuspension} className="space-y-6">
-                        <DialogHeader>
-                          <DialogTitle>封禁用户</DialogTitle>
-                          <DialogDescription>
-                            用户 {selectedUser.id}{" "}
-                            将在封禁期间无法登录或继续操作。
-                          </DialogDescription>
-                        </DialogHeader>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="suspend-days">封禁天数</Label>
-                          <Input
-                            id="suspend-days"
-                            type="number"
-                            min={1}
-                            value={suspendDays}
-                            onChange={(event) =>
-                              setSuspendDays(
-                                Math.max(1, Number(event.target.value) || 30)
-                              )
-                            }
-                            autoFocus
-                          />
-                        </div>
-
-                        {suspendMutation.isError ? (
-                          <p className="text-sm text-destructive">
-                            {getErrorMessage(suspendMutation.error)}
-                          </p>
-                        ) : null}
-
-                        <DialogFooter>
-                          <DialogClose asChild>
-                            <Button type="button" variant="outline">
-                              取消
-                            </Button>
-                          </DialogClose>
-                          <Button
-                            type="submit"
-                            variant="destructive"
-                            disabled={suspendMutation.isPending}
-                          >
-                            确认封禁
-                          </Button>
-                        </DialogFooter>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
+                  <SuspendUserDialog
+                    userID={selectedUser.id}
+                    disabled={isMutating}
+                    isPending={suspendMutation.isPending}
+                    isError={suspendMutation.isError}
+                    errorMessage={getErrorMessage(suspendMutation.error)}
+                    onSubmit={confirmSuspension}
+                  />
                 ))}
             </div>
           </div>

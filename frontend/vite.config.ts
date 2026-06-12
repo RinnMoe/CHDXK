@@ -51,13 +51,6 @@ export default defineConfig({
   build: {
     rolldownOptions: {
       output: {
-        assetFileNames: (assetInfo) => {
-          if (
-            assetInfo.names.some((name) => /\.(woff2?|ttf|eot|otf)$/.test(name))
-          )
-            return "assets/fonts/[name].[ext]"
-          return "assets/[name]-[hash][extname]"
-        },
         chunkFileNames: "assets/[name]-[hash].js",
         entryFileNames: "assets/[name]-[hash].js",
         codeSplitting: {
