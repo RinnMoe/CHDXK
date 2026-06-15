@@ -177,12 +177,14 @@ function makeCourse(): CourseListItemDTO {
   const distribution = makeDistribution(count)
   const avg = avgFromDistribution(distribution)
   const mainTeacher = makeTeacher()
+  const lastSemester = pick(MOCK_COURSE_SEMESTERS)
   return {
     id: courseIDSeed++,
     code: group.code,
     name: group.name,
     credit: group.credit,
     department: mainTeacher.department,
+    last_semester: lastSemester,
     language: pick(LANGUAGES),
     target_years: pickMany(TARGET_YEARS, randInt(1, 2)),
     categories: pickMany(CATEGORIES, randInt(1, 2)),
@@ -237,6 +239,7 @@ mockCourses.push(
     name: "量子计算导论",
     credit: 3,
     department: "计算机科学与工程系",
+    last_semester: "2024-2025-2",
     language: "中文",
     target_years: ["大三", "大四"],
     categories: ["专业选修"],
@@ -249,6 +252,7 @@ mockCourses.push(
     name: "拓扑学基础",
     credit: 2,
     department: "数学科学学院",
+    last_semester: "2024-2025-2",
     language: "中文",
     target_years: ["研究生"],
     categories: ["专业必修"],
@@ -261,6 +265,7 @@ mockCourses.push(
     name: "天体物理",
     credit: 3,
     department: "物理与天文学院",
+    last_semester: "2024-2025-2",
     language: "英文",
     target_years: ["大三", "研究生"],
     categories: ["专业选修", "通识选修"],
@@ -293,7 +298,7 @@ export function makeCourseDetail(course: CourseListItemDTO): CourseDetailDTO {
     name: course.name,
     credit: course.credit,
     department: course.department,
-    last_semester: "2025-2026-1",
+    last_semester: course.last_semester,
     moderator_remark: "",
     language: course.language,
     target_years: course.target_years,
@@ -304,7 +309,7 @@ export function makeCourseDetail(course: CourseListItemDTO): CourseDetailDTO {
     notification_level: 0,
     offered_courses: [
       {
-        semester: "2025-2026-1",
+        semester: course.last_semester,
         language: course.language,
         target_years: course.target_years,
         categories: course.categories,

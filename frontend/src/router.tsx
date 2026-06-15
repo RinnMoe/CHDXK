@@ -10,6 +10,7 @@ import {
 
 import { Layout } from "@/components/layout/layout"
 import { PublicLayout } from "@/components/layout/public-layout"
+import { RouteErrorPage } from "@/components/layout/route-error-page"
 import { RouteFallback } from "@/components/layout/route-fallback"
 import { getSafeRedirectPath } from "@/lib/auth-redirect"
 import {
@@ -93,6 +94,7 @@ async function redirectAuthedUser({
 
 const rootRoute = createRootRouteWithContext<RouterContext>()({
   component: Outlet,
+  errorComponent: RouteErrorPage,
 })
 
 const publicRoute = createRoute({
@@ -119,20 +121,14 @@ export const loginRoute = createRoute({
   path: "/login",
   validateSearch: validateLoginSearch,
   beforeLoad: redirectAuthedUser,
-  component: lazyRouteComponent(
-    () => import("@/pages/login-page"),
-    "LoginPage"
-  ),
+  component: lazyRouteComponent(() => import("@/pages/login-page"), "LoginPage"),
 })
 
 export const registerRoute = createRoute({
   getParentRoute: () => publicRoute,
   path: "/register",
   beforeLoad: redirectAuthedUser,
-  component: lazyRouteComponent(
-    () => import("@/pages/register-page"),
-    "RegisterPage"
-  ),
+  component: lazyRouteComponent(() => import("@/pages/register-page"), "RegisterPage"),
 })
 
 export const passwordResetRoute = createRoute({
@@ -159,19 +155,13 @@ export const coursesRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/course",
   validateSearch: validateCourseListSearch,
-  component: lazyRouteComponent(
-    () => import("@/pages/courses-page"),
-    "CoursesPage"
-  ),
+  component: lazyRouteComponent(() => import("@/pages/courses-page"), "CoursesPage"),
 })
 
 export const hotCoursesRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/course/hot",
-  component: lazyRouteComponent(
-    () => import("@/pages/hot-courses-page"),
-    "HotCoursesPage"
-  ),
+  component: lazyRouteComponent(() => import("@/pages/hot-courses-page"), "HotCoursesPage"),
 })
 
 export const courseDetailRoute = createRoute({

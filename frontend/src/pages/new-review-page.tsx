@@ -10,6 +10,7 @@ import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { CourseHeaderMeta } from "@/components/course/course-header-meta"
 import { ReviewForm } from "@/components/review/review-form"
+import { WrongCourseWarning } from "@/components/review/wrong-course-warning"
 import { useCourseDetail } from "@/hooks/use-course"
 import { useCreateReview } from "@/hooks/use-review"
 import {
@@ -65,6 +66,11 @@ export function NewReviewPage() {
             <h1 className="text-lg font-medium">写点评</h1>
             {course && <CourseHeaderMeta course={course} />}
           </div>
+
+          <WrongCourseWarning
+            course={course}
+            currentSemester={currentSemester}
+          />
 
           <ReviewForm
             courseID={id}

@@ -38,6 +38,7 @@ export interface CourseListItemDTO {
   name: string
   credit: number
   department: string
+  last_semester: string
   language: string
   target_years?: string[]
   categories?: string[]
