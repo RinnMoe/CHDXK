@@ -25,29 +25,31 @@ func newRatingInfoDTO(info course.RatingInfo) RatingInfoDTO {
 
 // Read model: course list/search result
 type CourseListItemDTO struct {
-	ID          int           `json:"id"`
-	Code        string        `json:"code"`
-	Name        string        `json:"name"`
-	Credit      float32       `json:"credit"`
-	Department  string        `json:"department"`
-	Language    string        `json:"language"`
-	TargetYears []string      `json:"target_years"`
-	Categories  []string      `json:"categories"`
-	MainTeacher TeacherDTO    `json:"main_teacher"`
-	Rating      RatingInfoDTO `json:"rating"`
+	ID           int           `json:"id"`
+	Code         string        `json:"code"`
+	Name         string        `json:"name"`
+	Credit       float32       `json:"credit"`
+	Department   string        `json:"department"`
+	Language     string        `json:"language"`
+	TargetYears  []string      `json:"target_years"`
+	Categories   []string      `json:"categories"`
+	LastSemester string        `json:"last_semester"`
+	MainTeacher  TeacherDTO    `json:"main_teacher"`
+	Rating       RatingInfoDTO `json:"rating"`
 }
 
 func newCourseListItemDTO(c *course.CourseView) CourseListItemDTO {
 	item := CourseListItemDTO{
-		ID:          c.ID,
-		Code:        c.Code,
-		Name:        c.Name,
-		Credit:      c.Credit,
-		Department:  c.Department,
-		Language:    c.Language,
-		TargetYears: c.TargetYears,
-		Categories:  c.Categories,
-		Rating:      newRatingInfoDTO(c.Rating),
+		ID:           c.ID,
+		Code:         c.Code,
+		Name:         c.Name,
+		Credit:       c.Credit,
+		Department:   c.Department,
+		Language:     c.Language,
+		TargetYears:  c.TargetYears,
+		Categories:   c.Categories,
+		LastSemester: c.LastSemester,
+		Rating:       newRatingInfoDTO(c.Rating),
 	}
 	if c.MainTeacher != nil {
 		item.MainTeacher = newTeacherDTO(c.MainTeacher)
