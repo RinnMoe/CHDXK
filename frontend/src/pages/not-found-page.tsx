@@ -13,7 +13,7 @@ export function NotFoundPage() {
           <h1 className="mt-3 text-3xl font-bold tracking-normal sm:text-4xl">
             页面不存在
           </h1>
-          <p className="mt-3 max-w-md text-sm leading-7 text-muted-foreground">
+          <p className="mt-3 text-sm leading-7 text-muted-foreground">
             当前链接可能已失效，或者页面地址输入有误。你可以返回首页，或继续浏览课程信息。
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
