@@ -11,6 +11,8 @@ export const REVIEW_TEMPLATE_LABELS: readonly string[] = [
 
 export const DEFAULT_REVIEW_TEMPLATE = REVIEW_TEMPLATE_LABELS.join("\n\n")
 
+const TEXT_CONTENT_PATTERN = /[\p{L}\p{N}]/u
+
 function findTemplateLineIndex(lines: string[], label: string) {
   return lines.findIndex((line) => line.trimStart().startsWith(label))
 }
@@ -23,6 +25,20 @@ function templateLineHasUserInput(line: string, label: string) {
   const labelIndex = line.indexOf(label)
   if (labelIndex < 0) return false
   return line.slice(labelIndex + label.length).trim().length > 0
+}
+
+function removeTemplateLabel(line: string) {
+  const label = REVIEW_TEMPLATE_LABELS.find((templateLabel) =>
+    line.trimStart().startsWith(templateLabel)
+  )
+
+  return label ? line.trimStart().slice(label.length) : line
+}
+
+export function hasActualReviewContent(content: string) {
+  return content
+    .split("\n")
+    .some((line) => TEXT_CONTENT_PATTERN.test(removeTemplateLabel(line)))
 }
 
 export function addTemplateLine(content: string, label: string) {

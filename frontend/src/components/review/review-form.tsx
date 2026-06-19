@@ -28,6 +28,7 @@ import {
   CONTENT_MAX_LENGTH,
   CONTENT_MIN_LENGTH,
   DEFAULT_REVIEW_TEMPLATE,
+  hasActualReviewContent,
   SCORE_MAX_LENGTH,
 } from "./review-form-template"
 import type {
@@ -316,8 +317,8 @@ export function ReviewForm({
         name="content"
         validators={{
           onSubmit: ({ value }) => {
-            if (!isEdit && value.trim() === DEFAULT_REVIEW_TEMPLATE.trim()) {
-              return "请修改点评模板后再提交"
+            if (!hasActualReviewContent(value)) {
+              return "请填写点评正文后再提交"
             }
             if (value.trim().length < CONTENT_MIN_LENGTH) {
               return `点评内容至少需要 ${CONTENT_MIN_LENGTH} 个字符`
