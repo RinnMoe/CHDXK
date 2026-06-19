@@ -4,11 +4,12 @@ import type {
   RatingInfoDTO,
   TeacherDTO,
 } from "./types"
-export type { RatingInfoDTO } from "./types"
 import type { ReviewDTO, ReviewListFilter } from "./review"
 import { apiClient } from "./client"
 import { BASE_URL } from "./constants"
 import { buildQuery } from "./query"
+
+export type { RatingInfoDTO } from "./types"
 
 export interface CourseFilters {
   credits?: FilterItem[]

@@ -1,7 +1,7 @@
 import { http, HttpResponse } from "msw"
-import { findUserByID, mockSession } from "../fixtures/auth"
-import { getMockYesterdayStats, mockDailyStats } from "../fixtures/site-stats"
-import { randomDelay } from "../utils"
+import { findUserByID, mockSession } from "@/mocks/fixtures/auth"
+import { getMockYesterdayStats, mockDailyStats } from "@/mocks/fixtures/site-stats"
+import { randomDelay } from "@/mocks/utils"
 
 function requireAdmin() {
   if (!mockSession.userID) {

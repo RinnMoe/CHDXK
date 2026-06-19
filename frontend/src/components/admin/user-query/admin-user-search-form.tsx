@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { buildAuthEmail, normalizeAuthEmailPrefix } from "@/config/auth"
-import type { FormSubmitEvent } from "../admin-utils"
+import type { FormSubmitEvent } from "@/components/admin/admin-utils"
 
 export interface AdminUserLookupFormValue {
   email?: string

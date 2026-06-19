@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import type { FormSubmitEvent } from "../admin-utils"
+import type { FormSubmitEvent } from "@/components/admin/admin-utils"
 
 interface SuspendUserDialogProps {
   userID: number

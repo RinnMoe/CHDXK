@@ -4,9 +4,9 @@ import {
   createMockUserApiKey,
   deleteMockUserApiKey,
   listMockUserApiKeys,
-} from "../fixtures/api-keys"
-import { mockSession } from "../fixtures/auth"
-import { randomDelay } from "../utils"
+} from "@/mocks/fixtures/api-keys"
+import { mockSession } from "@/mocks/fixtures/auth"
+import { randomDelay } from "@/mocks/utils"
 
 export const apiKeyHandlers = [
   http.get("/api/api-key/", async () => {

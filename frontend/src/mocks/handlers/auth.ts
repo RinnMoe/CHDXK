@@ -9,9 +9,9 @@ import {
   setMockSessionUserID,
   setMockUserPassword,
   toAuthUserDTO,
-} from "../fixtures/auth"
+} from "@/mocks/fixtures/auth"
 import { getMockSystemSettingValue } from "./system-settings"
-import { randomDelay } from "../utils"
+import { randomDelay } from "@/mocks/utils"
 
 function parseStringList(value: string | undefined) {
   return (value ?? "@sjtu.edu.cn")

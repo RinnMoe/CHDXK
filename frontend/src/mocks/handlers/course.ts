@@ -3,10 +3,10 @@ import {
   mockCourses,
   makeCourseDetail,
   makeCourseFilters,
-} from "../fixtures/courses"
-import { findUserByID, mockSession } from "../fixtures/auth"
-import { mockReviews } from "../fixtures/reviews"
-import { randomDelay } from "../utils"
+} from "@/mocks/fixtures/courses"
+import { findUserByID, mockSession } from "@/mocks/fixtures/auth"
+import { mockReviews } from "@/mocks/fixtures/reviews"
+import { randomDelay } from "@/mocks/utils"
 import type {
   CourseNotificationLevel,
   CourseReviewTrendItemDTO,

@@ -5,8 +5,8 @@ import {
   type SystemSettingDTO,
   type UpdateSystemSettingCommand,
 } from "@/api/system-settings"
-import { MOCK_COURSE_SEMESTERS } from "../fixtures/courses"
-import { randomDelay } from "../utils"
+import { MOCK_COURSE_SEMESTERS } from "@/mocks/fixtures/courses"
+import { randomDelay } from "@/mocks/utils"
 
 let settings: SystemSettingDTO[] = [
   {

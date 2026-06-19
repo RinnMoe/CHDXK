@@ -18,8 +18,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import type { FilterItem } from "@/api/teacher"
-import type { TeacherFilters as TeacherFiltersDTO } from "@/api/teacher"
+import type { FilterItem, TeacherFilters as TeacherFiltersDTO } from "@/api/teacher"
 
 const ALL = "__all__"
 const routeApi = getRouteApi("/app/teacher")

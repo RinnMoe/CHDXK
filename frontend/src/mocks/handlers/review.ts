@@ -1,7 +1,7 @@
 import { http, HttpResponse } from "msw"
-import { mockReviews, findReview } from "../fixtures/reviews"
-import { findUserByID, mockSession } from "../fixtures/auth"
-import { randomDelay } from "../utils"
+import { mockReviews, findReview } from "@/mocks/fixtures/reviews"
+import { findUserByID, mockSession } from "@/mocks/fixtures/auth"
+import { randomDelay } from "@/mocks/utils"
 import type { ReviewDTO, ReviewRevisionDTO } from "@/api/review"
 
 const DEFAULT_PAGE = 1

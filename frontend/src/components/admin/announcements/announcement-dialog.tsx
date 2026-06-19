@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { getErrorMessage } from "../admin-utils"
+import { getErrorMessage } from "@/components/admin/admin-utils"
 import {
   buildAnnouncementCommand,
   toAnnouncementFormState,

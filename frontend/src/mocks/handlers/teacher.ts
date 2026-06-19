@@ -1,7 +1,7 @@
 import { http, HttpResponse } from "msw"
-import { getMockTeachers, makeTeacherFilters } from "../fixtures/teachers"
-import { mockCourses } from "../fixtures/courses"
-import { randomDelay } from "../utils"
+import { getMockTeachers, makeTeacherFilters } from "@/mocks/fixtures/teachers"
+import { mockCourses } from "@/mocks/fixtures/courses"
+import { randomDelay } from "@/mocks/utils"
 
 const DEFAULT_PAGE = 1
 const DEFAULT_PAGE_SIZE = 20

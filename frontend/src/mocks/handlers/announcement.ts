@@ -4,9 +4,9 @@ import {
   findUserByID,
   mockSession,
   setMockSessionUserID,
-} from "../fixtures/auth"
-import { mockAnnouncements } from "../fixtures/announcements"
-import { randomDelay } from "../utils"
+} from "@/mocks/fixtures/auth"
+import { mockAnnouncements } from "@/mocks/fixtures/announcements"
+import { randomDelay } from "@/mocks/utils"
 
 function requireMockUser() {
   if (!mockSession.userID) return null

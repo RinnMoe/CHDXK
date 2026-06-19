@@ -7,7 +7,7 @@ export default defineConfig({
   },
   ignorePatterns: ["dist", "public/mockServiceWorker.js"],
   jsPlugins: ["oxlint-tailwindcss"],
-  plugins: ["typescript", "react", "oxc", "unicorn", "react-perf"],
+  plugins: ["typescript", "react", "oxc", "unicorn", "react-perf", "import"],
   settings: {
     react: {
       version: "19.2.6",
@@ -33,6 +33,12 @@ export default defineConfig({
     "tailwindcss/no-hardcoded-colors": "warn",
     "tailwindcss/prefer-theme-tokens": "warn",
     "max-lines": ["error", { max: 400 }],
+    "import/first": "error",
+    "import/newline-after-import": "error",
+    "import/no-absolute-path": "error",
+    "import/no-duplicates": "error",
+    "import/no-relative-parent-imports": "error",
+    "import/no-self-import": "error",
     "react/exhaustive-deps": "error",
     "react/only-export-components": "error",
     "react/rules-of-hooks": "error",

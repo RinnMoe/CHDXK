@@ -1,7 +1,7 @@
 import { http, HttpResponse } from "msw"
-import { findUserByID, mockSession } from "../fixtures/auth"
-import { getMockPointRecords, getMockPointTotal } from "../fixtures/points"
-import { randomDelay } from "../utils"
+import { findUserByID, mockSession } from "@/mocks/fixtures/auth"
+import { getMockPointRecords, getMockPointTotal } from "@/mocks/fixtures/points"
+import { randomDelay } from "@/mocks/utils"
 
 const DEFAULT_PAGE = 1
 const DEFAULT_PAGE_SIZE = 20
