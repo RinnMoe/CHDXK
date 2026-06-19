@@ -132,8 +132,7 @@ func (r *AccountRepository) FindByUsername(ctx context.Context, username string)
 		}
 		return nil, err
 	}
-	d := newAccountDomain(&e)
-	return &d, nil
+	return new(newAccountDomain(&e)), nil
 }
 
 func (r *AccountRepository) FindByEmail(ctx context.Context, email string) (*identity.Account, error) {

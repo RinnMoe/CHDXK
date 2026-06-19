@@ -58,12 +58,10 @@ func (r *PointRepository) CreateTransfer(ctx context.Context, t *point.Transfer,
 		}
 		t.ID = transferEntity.ID
 
-		senderEntity := newPointRecordEntity(senderRecord)
-		recipientEntity := newPointRecordEntity(recipientRecord)
-		if err := tx.Create(&senderEntity).Error; err != nil {
+		if err := tx.Create(new(newPointRecordEntity(senderRecord))).Error; err != nil {
 			return err
 		}
-		return tx.Create(&recipientEntity).Error
+		return tx.Create(new(newPointRecordEntity(recipientRecord))).Error
 	}); err != nil {
 		return err
 	}

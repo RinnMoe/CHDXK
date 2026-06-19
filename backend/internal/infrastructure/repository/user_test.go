@@ -143,11 +143,9 @@ func TestUserRepository_FindByIDAndUpdateAuthFields(t *testing.T) {
 		t.Fatalf("user = %+v, want id=%d role=%q", u, e.ID, e.Role)
 	}
 
-	suspendedAt := time.Now().Add(-time.Hour)
-	suspendTill := time.Now().Add(time.Hour)
 	u.Role = auth.RoleAdmin
-	u.SuspendedAt = &suspendedAt
-	u.SuspendTill = &suspendTill
+	u.SuspendedAt = new(time.Now().Add(-time.Hour))
+	u.SuspendTill = new(time.Now().Add(time.Hour))
 	if err := repo.Update(ctx, u); err != nil {
 		t.Fatalf("Update: %v", err)
 	}

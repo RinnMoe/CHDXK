@@ -464,14 +464,13 @@ func materializeReviewCreateReward(reviewID int, reward point.Reward) point.Rewa
 func (r2 *ReviewRepository) Update(ctx context.Context, r *review.Review, rv review.Revision) error {
 	e := newReviewEntity(r)
 	if err := r2.db.Transaction(func(tx *gorm.DB) error {
-		rr := newReviewRevisionEntity(rv)
 		if _, err := gorm.G[ReviewEntity](tx).Where("id = ?", e.ID).Updates(ctx, e); err != nil {
 			return err
 		}
 		if err := refreshReviewSearchVector(tx, r2.searchConfig, e.ID); err != nil {
 			return err
 		}
-		if err := gorm.G[ReviewRevisionEntity](tx).Create(ctx, &rr); err != nil {
+		if err := gorm.G[ReviewRevisionEntity](tx).Create(ctx, new(newReviewRevisionEntity(rv))); err != nil {
 			return err
 		}
 		return r2.updateCourseStats(tx, r.CourseID)

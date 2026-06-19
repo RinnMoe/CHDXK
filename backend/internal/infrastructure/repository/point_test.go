@@ -241,7 +241,7 @@ func TestPointRepository_RevokeRewardsBySourcesIsIdempotent(t *testing.T) {
 			Description: "发布点评奖励",
 			Status:      string(point.RewardStatusGranted),
 			CreatedAt:   now,
-			GrantedAt:   ptrTime(now.Add(time.Minute)),
+			GrantedAt:   new(now.Add(time.Minute)),
 		},
 		{
 			UserID:      user.ID,
@@ -262,7 +262,7 @@ func TestPointRepository_RevokeRewardsBySourcesIsIdempotent(t *testing.T) {
 			Description: "其他课程首评奖励",
 			Status:      string(point.RewardStatusGranted),
 			CreatedAt:   now,
-			GrantedAt:   ptrTime(now.Add(time.Minute)),
+			GrantedAt:   new(now.Add(time.Minute)),
 		},
 	}
 	if err := db.Create(&rewards).Error; err != nil {

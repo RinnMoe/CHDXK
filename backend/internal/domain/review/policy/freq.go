@@ -57,10 +57,11 @@ func (p *FrequencyPolicy) CanCreate(ctx context.Context, u *auth.User, c *course
 	if p.config.MaxReviews <= 0 {
 		return nil
 	}
+	now := time.Now()
 
 	recent, _, err := p.query.FindBy(ctx, review.ReviewFilter{
 		UserID:       u.ID,
-		CreatedAfter: time.Now().Add(-p.config.Window),
+		CreatedAfter: now.Add(-p.config.Window),
 		OrderBy:      "created_at",
 		PageSize:     p.config.MaxReviews,
 		WithCourse:   true,
@@ -85,22 +86,23 @@ func (p *FrequencyPolicy) CanCreate(ctx context.Context, u *auth.User, c *course
 	}
 
 	if sameCourseCodeAll {
-		return p.newViolation(r, c, ErrSameCourseSpam)
+		return p.newViolation(r, c, ErrSameCourseSpam, now)
 	}
 
 	if similarCount*2 > len(recent) {
-		return p.newViolation(r, c, ErrSimilarContentDetected)
+		return p.newViolation(r, c, ErrSimilarContentDetected, now)
 	}
 
 	return nil
 }
 
-func (p *FrequencyPolicy) newViolation(r *review.Review, c *course.CourseView, reason error) error {
+func (p *FrequencyPolicy) newViolation(r *review.Review, c *course.CourseView, reason error, now time.Time) error {
 	return &review.FrequencyViolation{
 		Reason:          reason,
 		Review:          r,
 		Course:          c,
 		SuspendDuration: p.config.SuspendDuration,
+		BannedUntil:     now.Add(p.config.SuspendDuration),
 	}
 }
 

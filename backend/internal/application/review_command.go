@@ -63,8 +63,7 @@ func (s *ReviewCommandService) CreateReview(ctx context.Context, u *auth.User, c
 		Now:      now,
 	}, rewards)
 	if err != nil {
-		var violation *review.FrequencyViolation
-		if errors.As(err, &violation) {
+		if violation, ok := errors.AsType[*review.FrequencyViolation](err); ok {
 			s.enqueueFrequencyViolationTasks(ctx, violation, runtimeConfig.FrequencyViolationAdminEmails)
 		}
 		return err

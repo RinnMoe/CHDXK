@@ -268,8 +268,7 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 			return nil, err
 		}
 		if len(myReviews) > 0 {
-			myReview := newReviewDTO(&myReviews[0], true)
-			dto.MyReview = &myReview
+			dto.MyReview = new(newReviewDTO(&myReviews[0], true))
 		}
 	}
 

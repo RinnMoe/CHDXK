@@ -31,8 +31,7 @@ func (s *TeacherQueryService) GetTeacher(ctx context.Context, teacherID int) (*T
 		return nil, ErrTeacherNotFound
 	}
 
-	dto := newTeacherDTO(&teachers[0])
-	return &dto, nil
+	return new(newTeacherDTO(&teachers[0])), nil
 }
 
 func (s *TeacherQueryService) ListTeachers(ctx context.Context, f TeacherListFilter) (*PaginatedResult[TeacherDTO], error) {

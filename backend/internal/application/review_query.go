@@ -57,8 +57,7 @@ func (s *ReviewQueryService) buildDTOs(ctx context.Context, reviews []review.Rev
 		g := review.NewViewGuardian(u, &reviews[i])
 		items[i] = newReviewDTO(&reviews[i], g.CanViewPrivate())
 		if vote, ok := myVotes[reviews[i].ID]; ok {
-			vt := vote.VoteType
-			items[i].Vote.MyVote = &vt
+			items[i].Vote.MyVote = new(vote.VoteType)
 		}
 	}
 	return items, nil
@@ -242,8 +241,7 @@ func (s *ReviewQueryService) GetReviewByID(ctx context.Context, u *auth.User, re
 			return nil, err
 		}
 		if vote != nil {
-			vt := vote.VoteType
-			view.Vote.MyVote = &vt
+			view.Vote.MyVote = new(vote.VoteType)
 		}
 	}
 	return &view, nil

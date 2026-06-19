@@ -150,13 +150,11 @@ func TestAccountCommandService_LoginRejectsAccountWithoutPassword(t *testing.T) 
 
 func TestAccountCommandService_LoginRejectsSuspendedUser(t *testing.T) {
 	now := time.Now()
-	suspendedAt := now.Add(-time.Hour)
-	suspendTill := now.Add(time.Hour)
 	username := accountUsername(t, "alice@example.edu")
 	accountRepo := newFakeAccountRepo(map[string]*identity.Account{
 		"alice@example.edu": {ID: 1, Username: username, PasswordHash: mustHash(t, "secret")},
 	})
-	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser, SuspendedAt: &suspendedAt, SuspendTill: &suspendTill}})
+	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser, SuspendedAt: new(now.Add(-time.Hour)), SuspendTill: new(now.Add(time.Hour))}})
 	svc := newAccountService(accountRepo, userRepo, newFakeCodeRepo())
 
 	_, err := svc.Login(context.Background(), application.LoginCommand{Email: "alice@example.edu", Password: "secret"})
@@ -167,13 +165,11 @@ func TestAccountCommandService_LoginRejectsSuspendedUser(t *testing.T) {
 
 func TestAccountCommandService_LoginAllowsExpiredSuspensionAndEnqueuesCleanup(t *testing.T) {
 	now := time.Now()
-	suspendedAt := now.Add(-2 * time.Hour)
-	suspendTill := now.Add(-time.Hour)
 	username := accountUsername(t, "alice@example.edu")
 	accountRepo := newFakeAccountRepo(map[string]*identity.Account{
 		"alice@example.edu": {ID: 1, Username: username, PasswordHash: mustHash(t, "secret")},
 	})
-	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser, SuspendedAt: &suspendedAt, SuspendTill: &suspendTill}})
+	userRepo := newFakeAuthUserRepo(map[int]*auth.User{1: {ID: 1, Role: auth.RoleUser, SuspendedAt: new(now.Add(-2 * time.Hour)), SuspendTill: new(now.Add(-time.Hour))}})
 	enqueuer := &fakeEnqueuer{}
 	oldEnqueuer := task.SetEnqueuerForTest(enqueuer)
 	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })

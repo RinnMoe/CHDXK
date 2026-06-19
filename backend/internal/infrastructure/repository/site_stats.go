@@ -173,7 +173,6 @@ func (r *SiteDailyStatRepository) Collect(ctx context.Context, periodStart, peri
 }
 
 func (r *SiteDailyStatRepository) Upsert(ctx context.Context, s *stat.DailyStat) error {
-	e := newDailyStatEntity(s)
 	if err := r.db.WithContext(ctx).
 		Clauses(clause.OnConflict{
 			Columns: []clause.Column{{Name: "stat_date"}},
@@ -182,7 +181,7 @@ func (r *SiteDailyStatRepository) Upsert(ctx context.Context, s *stat.DailyStat)
 				"generated_at",
 				"updated_at",
 			}),
-		}).Create(&e).Error; err != nil {
+		}).Create(new(newDailyStatEntity(s))).Error; err != nil {
 		return err
 	}
 	cacheDelete(ctx, r.cache, cacheKey("site_daily_stat", s.StatDate.Format(time.DateOnly)))

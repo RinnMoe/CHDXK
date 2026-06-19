@@ -155,14 +155,12 @@ func TestResolveCurrentUserRejectsSuspendedSessionUser(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	now := time.Now()
-	suspendedAt := now.Add(-time.Hour)
-	suspendTill := now.Add(time.Hour)
 	repo := auth.NewMockUserRepository(map[int]*auth.User{
 		7: {
 			ID:          7,
 			Role:        auth.RoleUser,
-			SuspendedAt: &suspendedAt,
-			SuspendTill: &suspendTill,
+			SuspendedAt: new(now.Add(-time.Hour)),
+			SuspendTill: new(now.Add(time.Hour)),
 		},
 	})
 	currentUserSvc := auth.NewCurrentUserService(repo)

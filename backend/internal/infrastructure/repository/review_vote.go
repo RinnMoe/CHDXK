@@ -150,8 +150,7 @@ func (r *ReviewVoteRepository) CountTodayByUser(ctx context.Context, userID int)
 
 func (r *ReviewVoteRepository) Save(ctx context.Context, v *review.Vote) error {
 	if err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		e := newVoteEntity(v)
-		if err := tx.Save(&e).Error; err != nil {
+		if err := tx.Save(new(newVoteEntity(v))).Error; err != nil {
 			return err
 		}
 		return r.updateReviewVoteCounts(tx, v.ReviewID)

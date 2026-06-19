@@ -59,8 +59,7 @@ func (r *ApiKeyRepository) GetByID(ctx context.Context, id int64) (*auth.ApiKey,
 		}
 		return nil, err
 	}
-	d := newApiKeyDomain(&e)
-	return &d, nil
+	return new(newApiKeyDomain(&e)), nil
 }
 
 func (r *ApiKeyRepository) ListByUser(ctx context.Context, userID int) ([]auth.ApiKey, error) {

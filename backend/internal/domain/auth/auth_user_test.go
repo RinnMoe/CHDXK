@@ -12,9 +12,7 @@ import (
 func TestCurrentUserService_GetUserRejectsSuspendedUser(t *testing.T) {
 	repo := newCurrentUserServiceFakeRepo()
 	nowTime := time.Now()
-	suspendedAt := nowTime.Add(-time.Hour)
-	suspendTill := nowTime.Add(time.Hour)
-	repo.Users[1] = &User{ID: 1, SuspendedAt: &suspendedAt, SuspendTill: &suspendTill}
+	repo.Users[1] = &User{ID: 1, SuspendedAt: new(nowTime.Add(-time.Hour)), SuspendTill: new(nowTime.Add(time.Hour))}
 
 	_, err := NewCurrentUserService(repo).GetUser(context.Background(), 1)
 	if !errors.Is(err, ErrUserSuspended) {
@@ -28,9 +26,7 @@ func TestCurrentUserService_GetUserEnqueuesCleanupForExpiredSuspension(t *testin
 	taskEnqueuer = &fakeEnqueuer{}
 	oldEnqueuer := task.SetEnqueuerForTest(taskEnqueuer)
 	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
-	suspendedAt := nowTime.Add(-2 * time.Hour)
-	suspendTill := nowTime.Add(-time.Hour)
-	repo.Users[1] = &User{ID: 1, SuspendedAt: &suspendedAt, SuspendTill: &suspendTill}
+	repo.Users[1] = &User{ID: 1, SuspendedAt: new(nowTime.Add(-2 * time.Hour)), SuspendTill: new(nowTime.Add(-time.Hour))}
 
 	u, err := NewCurrentUserService(repo).GetUser(context.Background(), 1)
 	if err != nil {

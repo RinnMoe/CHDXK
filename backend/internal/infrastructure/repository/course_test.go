@@ -560,8 +560,7 @@ func TestCourseRepository_FindBy_ZeroCredit(t *testing.T) {
 	seedCourseRaw(t, db, "PE001", "体育", 0, "体育部", teacher.ID, "zh", []string{"公共课"}, []string{"2021"})
 	seedCourseRaw(t, db, "CS101", "数据结构", 3.0, "计算机学院", teacher.ID, "zh", []string{"核心课"}, []string{"2021"})
 
-	credit := float32(0)
-	results, total, err := repo.FindBy(ctx, course.CourseFilter{Credit: &credit})
+	results, total, err := repo.FindBy(ctx, course.CourseFilter{Credit: new(float32(0))})
 	if err != nil {
 		t.Fatalf("FindBy: %v", err)
 	}

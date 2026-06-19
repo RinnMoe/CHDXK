@@ -59,8 +59,7 @@ func newReviewDTO(r *review.ReviewView, showUserID bool) ReviewDTO {
 		dto.UserID = r.UserID
 	}
 	if r.Course != nil {
-		item := newCourseListItemDTO(r.Course)
-		dto.Course = &item
+		dto.Course = new(newCourseListItemDTO(r.Course))
 	}
 	return dto
 }

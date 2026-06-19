@@ -31,8 +31,7 @@ func (s *ApiKeyCommandService) CreateMyApiKey(ctx context.Context, userID int, c
 	if err != nil {
 		return nil, err
 	}
-	dto := newApiKeyDTO(*key, credential.Key())
-	return &dto, nil
+	return new(newApiKeyDTO(*key, credential.Key())), nil
 }
 
 func (s *ApiKeyCommandService) DeleteMyApiKey(ctx context.Context, userID int, id int64) error {
@@ -54,8 +53,7 @@ func (s *ApiKeyCommandService) CreateSystemApiKey(ctx context.Context, actor *au
 			"name": key.Name,
 		},
 	})
-	dto := newApiKeyDTO(*key, credential.Key())
-	return &dto, nil
+	return new(newApiKeyDTO(*key, credential.Key())), nil
 }
 
 func (s *ApiKeyCommandService) DeleteSystemApiKey(ctx context.Context, actor *auth.User, id int64) error {

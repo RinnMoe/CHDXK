@@ -8,7 +8,7 @@ import (
 	"jcourse/internal/domain/email"
 )
 
-//go:embed templates/*.txt
+//go:embed templates/*.html
 var emailTemplateFS embed.FS
 
 type EmailTemplateName string
@@ -52,7 +52,7 @@ func NewAccountBannedEmail(to string, data AccountBannedEmailData) (email.Email,
 }
 
 func renderEmailTemplate(name EmailTemplateName, data any) (string, error) {
-	tmpl, err := emailTemplateFS.ReadFile("templates/" + string(name) + ".txt")
+	tmpl, err := emailTemplateFS.ReadFile("templates/" + string(name) + ".html")
 	if err != nil {
 		return "", fmt.Errorf("read email template %s: %w", name, err)
 	}

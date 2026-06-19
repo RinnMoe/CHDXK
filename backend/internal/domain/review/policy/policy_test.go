@@ -85,7 +85,9 @@ func TestFrequencyPolicy_SameCourseAll(t *testing.T) {
 
 	targetCourse := &course.CourseView{ID: 10, Code: "CS101", Name: "Intro CS"}
 	targetReview := &review.Review{UserID: 1, CourseID: 10, Content: "z"}
+	before := time.Now()
 	err := p.CanCreate(context.Background(), &auth.User{ID: 1}, targetCourse, targetReview)
+	after := time.Now()
 	if !errors.Is(err, policy.ErrSameCourseSpam) {
 		t.Fatalf("expected ErrSameCourseSpam, got %v", err)
 	}
@@ -95,6 +97,9 @@ func TestFrequencyPolicy_SameCourseAll(t *testing.T) {
 	}
 	if violation.Review != targetReview || violation.Course != targetCourse || violation.SuspendDuration != 2*time.Hour {
 		t.Fatalf("violation = %+v", violation)
+	}
+	if violation.BannedUntil.Before(before.Add(2*time.Hour)) || violation.BannedUntil.After(after.Add(2*time.Hour)) {
+		t.Fatalf("BannedUntil = %s, want now + 2h", violation.BannedUntil)
 	}
 }
 
@@ -132,7 +137,9 @@ func TestFrequencyPolicy_SimilarContent(t *testing.T) {
 
 	targetCourse := &course.CourseView{ID: 99, Code: "CS999"}
 	targetReview := &review.Review{UserID: 1, CourseID: 99, Content: base}
+	before := time.Now()
 	err := p.CanCreate(context.Background(), &auth.User{ID: 1}, targetCourse, targetReview)
+	after := time.Now()
 	if !errors.Is(err, policy.ErrSimilarContentDetected) {
 		t.Fatalf("expected ErrSimilarContentDetected, got %v", err)
 	}
@@ -142,6 +149,9 @@ func TestFrequencyPolicy_SimilarContent(t *testing.T) {
 	}
 	if violation.Review != targetReview || violation.Course != targetCourse || violation.SuspendDuration != 3*time.Hour {
 		t.Fatalf("violation = %+v", violation)
+	}
+	if violation.BannedUntil.Before(before.Add(3*time.Hour)) || violation.BannedUntil.After(after.Add(3*time.Hour)) {
+		t.Fatalf("BannedUntil = %s, want now + 3h", violation.BannedUntil)
 	}
 }
 

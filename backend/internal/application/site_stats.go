@@ -32,8 +32,7 @@ func (s *SiteStatsCommandService) CollectDailyByDateString(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	dto := newSiteDailyStatDTO(daily)
-	return &dto, nil
+	return new(newSiteDailyStatDTO(daily)), nil
 }
 
 func (s *SiteStatsCommandService) CollectDaily(ctx context.Context, statDate time.Time) (*SiteDailyStatDTO, error) {
@@ -41,8 +40,7 @@ func (s *SiteStatsCommandService) CollectDaily(ctx context.Context, statDate tim
 	if err != nil {
 		return nil, err
 	}
-	dto := newSiteDailyStatDTO(daily)
-	return &dto, nil
+	return new(newSiteDailyStatDTO(daily)), nil
 }
 
 type SiteStatsQueryService struct {
@@ -66,8 +64,7 @@ func (s *SiteStatsQueryService) GetByDateString(ctx context.Context, dateStr str
 	if stat == nil {
 		return nil, nil
 	}
-	dto := newSiteDailyStatViewDTO(stat)
-	return &dto, nil
+	return new(newSiteDailyStatViewDTO(stat)), nil
 }
 
 func (s *SiteStatsQueryService) ListDaily(ctx context.Context, f SiteDailyStatListFilter) ([]SiteDailyStatDTO, error) {

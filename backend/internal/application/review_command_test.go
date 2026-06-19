@@ -314,7 +314,7 @@ func TestReviewCommandService_CreateReviewEnqueuesFrequencyViolationTasks(t *tes
 		t.Fatalf("tasks = %d, want 2", len(enqueuer.tasks))
 	}
 	assertSuspendTask(t, enqueuer.tasks[0], 10, duration)
-	assertEmailTask(t, enqueuer.tasks[1], "admin@example.edu", "10", "CS101", "Intro CS", "spam content", duration.String())
+	assertEmailTask(t, enqueuer.tasks[1], "admin@example.edu", "10", "CS101", "Intro CS", "spam content")
 }
 
 func TestReviewCommandService_UpdateReviewEnqueuesHotCourseActivity(t *testing.T) {
@@ -505,7 +505,7 @@ func assertSuspendTask(t *testing.T, taskItem task.Task, userID int, duration ti
 	}
 }
 
-func assertEmailTask(t *testing.T, taskItem task.Task, to string, userID string, courseCode string, courseName string, reviewContent string, duration string) {
+func assertEmailTask(t *testing.T, taskItem task.Task, to string, userID string, courseCode string, courseName string, reviewContent string) {
 	t.Helper()
 	if got := taskItem.Type(); got != domainemail.TaskTypeSendEmail {
 		t.Fatalf("task type = %q, want %q", got, domainemail.TaskTypeSendEmail)
@@ -517,7 +517,7 @@ func assertEmailTask(t *testing.T, taskItem task.Task, to string, userID string,
 	if payload.EmailType != review.SpamSuspensionEmailType {
 		t.Fatalf("email type = %q, want %q", payload.EmailType, review.SpamSuspensionEmailType)
 	}
-	if payload.Email.To != to || payload.Email.Subject == "" || !strings.Contains(payload.Email.Body, userID) || !strings.Contains(payload.Email.Body, courseCode) || !strings.Contains(payload.Email.Body, courseName) || !strings.Contains(payload.Email.Body, reviewContent) || !strings.Contains(payload.Email.Body, duration) {
+	if payload.Email.To != to || payload.Email.Subject == "" || !strings.Contains(payload.Email.Body, userID) || !strings.Contains(payload.Email.Body, courseCode) || !strings.Contains(payload.Email.Body, courseName) || !strings.Contains(payload.Email.Body, reviewContent) || !strings.Contains(payload.Email.Body, "封禁到") {
 		t.Fatalf("email payload = %+v", payload)
 	}
 }

@@ -34,7 +34,7 @@ func (s *SMTPSender) SendEmail(_ context.Context, email email.Email) error {
 	m.SetHeader("From", s.from)
 	m.SetHeader("To", email.To)
 	m.SetHeader("Subject", email.Subject)
-	m.SetBody("text/plain", email.Body)
+	m.SetBody("text/html", email.Body)
 
 	if err := s.dialer.DialAndSend(m); err != nil {
 		return fmt.Errorf("send email: %w", err)

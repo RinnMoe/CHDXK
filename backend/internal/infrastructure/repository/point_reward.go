@@ -58,8 +58,7 @@ func (r *PointRepository) GrantReward(ctx context.Context, rewardID int, now tim
 			return nil
 		}
 
-		recordEntity := newPointRecordEntity(reward.GrantRecord(now))
-		if err := tx.Create(&recordEntity).Error; err != nil {
+		if err := tx.Create(new(newPointRecordEntity(reward.GrantRecord(now)))).Error; err != nil {
 			return err
 		}
 
@@ -100,8 +99,7 @@ func (r *PointRepository) RevokeRewardsBySources(ctx context.Context, sources []
 						return err
 					}
 				case point.RewardStatusGranted:
-					recordEntity := newPointRecordEntity(reward.RevokeRecord(now))
-					if err := tx.Create(&recordEntity).Error; err != nil {
+					if err := tx.Create(new(newPointRecordEntity(reward.RevokeRecord(now)))).Error; err != nil {
 						return err
 					}
 					if err := tx.Model(&PointRewardEntity{}).Where("id = ?", reward.ID).Update("status", string(point.RewardStatusCanceled)).Error; err != nil {

@@ -14,7 +14,7 @@ const (
 	spamSuspensionEmailSubject = "选课社区用户封禁通知"
 )
 
-//go:embed templates/review_frequency_suspension.txt
+//go:embed templates/review_frequency_suspension.html
 var spamSuspensionEmailTemplate string
 
 type FrequencyViolation struct {
@@ -22,6 +22,7 @@ type FrequencyViolation struct {
 	Review          *Review
 	Course          *course.CourseView
 	SuspendDuration time.Duration
+	BannedUntil     time.Time
 }
 
 func (e *FrequencyViolation) Error() string {
@@ -52,13 +53,20 @@ func (e *FrequencyViolation) renderSpamSuspensionEmailBody() (string, error) {
 		"CourseName":      e.courseName(),
 		"MainTeacherName": e.mainTeacherName(),
 		"ReviewContent":   e.Review.Content,
-		"Duration":        e.SuspendDuration.String(),
+		"BannedUntil":     e.bannedUntilText(),
 		"Reason":          e.Reason.Error(),
 	})
 	if err != nil {
 		return "", err
 	}
 	return body, nil
+}
+
+func (e *FrequencyViolation) bannedUntilText() string {
+	if e.BannedUntil.IsZero() {
+		return ""
+	}
+	return e.BannedUntil.Format(time.DateTime)
 }
 
 func (e *FrequencyViolation) courseID() int {

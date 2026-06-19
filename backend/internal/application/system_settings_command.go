@@ -45,9 +45,8 @@ func (s *SystemSettingsCommandService) Update(ctx context.Context, actor *auth.U
 	})
 
 	def, _ := s.settings.Definition(updatedSetting.Key)
-	dto := newSystemSettingDTO(setting.EffectiveSystemSetting{
+	return new(newSystemSettingDTO(setting.EffectiveSystemSetting{
 		Definition: def,
 		Value:      updatedSetting.Value,
-	})
-	return &dto, nil
+	})), nil
 }

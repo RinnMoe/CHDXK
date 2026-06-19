@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+</head>
+<body style="margin:0;padding:0;background:#f6f7f9;color:#1f2937;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:640px;margin:0 auto;padding:32px 20px;">
+    <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;padding:28px;">
+      <p style="margin:0 0 16px;font-size:16px;line-height:1.7;">管理员您好：</p>
+      <p style="margin:0 0 20px;font-size:16px;line-height:1.7;">系统检测到用户触发点评频率策略，已创建封禁任务。</p>
+
+      <table role="presentation" style="width:100%;margin:0 0 20px;border-collapse:collapse;border-spacing:0;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;">
+        <tr>
+          <td style="width:120px;padding:12px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-size:14px;vertical-align:top;">用户 ID</td>
+          <td style="padding:12px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-size:14px;line-height:1.6;">{{.UserID}}</td>
+        </tr>
+        <tr>
+          <td style="width:120px;padding:12px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-size:14px;vertical-align:top;">课程</td>
+          <td style="padding:12px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-size:14px;line-height:1.6;">
+            <div>课程 ID：{{.CourseID}}</div>
+            {{if .CourseCode}}<div>课程代码：{{.CourseCode}}</div>{{end}}
+            {{if .CourseName}}<div>课程名称：{{.CourseName}}</div>{{end}}
+            {{if .MainTeacherName}}<div>主讲教师：{{.MainTeacherName}}</div>{{end}}
+          </td>
+        </tr>
+        <tr>
+          <td style="width:120px;padding:12px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-size:14px;vertical-align:top;">封禁到</td>
+          <td style="padding:12px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-size:14px;line-height:1.6;">{{.BannedUntil}}</td>
+        </tr>
+        <tr>
+          <td style="width:120px;padding:12px 14px;color:#6b7280;font-size:14px;vertical-align:top;">原因</td>
+          <td style="padding:12px 14px;color:#111827;font-size:14px;line-height:1.6;">{{.Reason}}</td>
+        </tr>
+      </table>
+
+      <div style="margin:0 0 20px;">
+        <div style="margin:0 0 8px;font-size:14px;color:#6b7280;">点评内容</div>
+        <div style="padding:14px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;color:#111827;font-size:14px;line-height:1.7;white-space:pre-wrap;">{{.ReviewContent}}</div>
+      </div>
+
+      <p style="margin:0;font-size:14px;line-height:1.7;color:#4b5563;">请在后台查看用户和点评记录。</p>
+    </div>
+    <p style="margin:16px 0 0;text-align:center;font-size:12px;color:#9ca3af;">选课社区</p>
+  </div>
+</body>
+</html>

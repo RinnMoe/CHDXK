@@ -100,8 +100,7 @@ func (r *AnnouncementRepository) GetByID(ctx context.Context, id int) (*announce
 		}
 		return nil, err
 	}
-	d := newAnnouncementDomain(&e)
-	return &d, nil
+	return new(newAnnouncementDomain(&e)), nil
 }
 
 func (r *AnnouncementRepository) Create(ctx context.Context, item *announcement.Announcement) error {

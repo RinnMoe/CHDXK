@@ -3,7 +3,7 @@ package email
 import (
 	"bytes"
 	"fmt"
-	"text/template"
+	"html/template"
 )
 
 func RenderTemplate(tmpl string, data any) (string, error) {
