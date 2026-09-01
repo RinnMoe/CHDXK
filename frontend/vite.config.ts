@@ -89,7 +89,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api/": {
-        target: "https://course.sjtu.plus",
+        target: "http://localhost:8080",
         changeOrigin: true,
       },
     },
