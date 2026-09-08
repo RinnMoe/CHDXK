@@ -103,6 +103,10 @@ cd backend
 go run cmd/importer/main.go --target-dsn "$TARGET_DSN" --semester 2025-2026-1
 ```
 
+## 长大教务课程数据源
+
+`tools/bkjw-course-source` 提供可复用的 TypeScript + Playwright CLI，从长大教务系统的全校开课查询页按学期保存列表与详情 JSON。首次使用运行 `pnpm --dir tools/bkjw-course-source start login`，按终端提示输入账号密码；需要验证码时查看浏览器中的图片并手动输入。登录验证成功后再使用 `semesters`、`fetch --semester` 或 `fetch --all`；详见 [工具说明](tools/bkjw-course-source/README.md)。
+
 ## 开发约定
 
 - Go 代码使用 `gofmt`，后端按 domain、application、infrastructure、interface 分层。
