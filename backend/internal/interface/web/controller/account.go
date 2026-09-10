@@ -1,7 +1,9 @@
 package controller
 
 import (
+	"errors"
 	"net/http"
+	"net/url"
 
 	"github.com/gin-gonic/gin"
 
@@ -14,10 +16,86 @@ import (
 type AccountController struct {
 	command *application.AccountCommandService
 	query   *application.AccountQueryService
+	sso     *application.ResHubSSOService
 }
 
-func NewAccountController(command *application.AccountCommandService, query *application.AccountQueryService) *AccountController {
-	return &AccountController{command: command, query: query}
+func NewAccountController(command *application.AccountCommandService, query *application.AccountQueryService, sso ...*application.ResHubSSOService) *AccountController {
+	ctrl := &AccountController{command: command, query: query}
+	if len(sso) > 0 {
+		ctrl.sso = sso[0]
+	}
+	return ctrl
+}
+
+func (ctrl *AccountController) SSOStart(c *gin.Context) {
+	returnPath := application.SafeReturnPath(c.Query("return_to"))
+	if ctrl.sso == nil {
+		ctrl.redirectSSOError(c, returnPath, "sso_unavailable")
+		return
+	}
+	state, err := application.NewSSOState()
+	if err != nil {
+		ctrl.redirectSSOError(c, returnPath, "sso_failed")
+		return
+	}
+	verifier, err := application.NewPKCEVerifier()
+	if err != nil {
+		ctrl.redirectSSOError(c, returnPath, "sso_failed")
+		return
+	}
+	if err := middleware.SetSSOState(c, state, verifier, returnPath); err != nil {
+		ctrl.redirectSSOError(c, returnPath, "sso_failed")
+		return
+	}
+	location, err := ctrl.sso.StartURL(state, verifier)
+	if err != nil {
+		_ = middleware.ClearSession(c)
+		ctrl.redirectSSOError(c, returnPath, "sso_unavailable")
+		return
+	}
+	c.Redirect(http.StatusFound, location)
+}
+
+func (ctrl *AccountController) SSOCallback(c *gin.Context) {
+	state, verifier, returnPath, ok := middleware.TakeSSOState(c, c.Query("state"))
+	if !ok || state == "" {
+		_ = middleware.ClearSession(c)
+		ctrl.redirectSSOError(c, returnPath, "sso_failed")
+		return
+	}
+	if ctrl.sso == nil {
+		_ = middleware.ClearSession(c)
+		ctrl.redirectSSOError(c, returnPath, "sso_unavailable")
+		return
+	}
+	if remoteError := c.Query("error"); remoteError != "" {
+		_ = middleware.ClearSession(c)
+		ctrl.redirectSSOError(c, returnPath, "sso_denied")
+		return
+	}
+	user, token, err := ctrl.sso.Complete(c.Request.Context(), c.Query("code"), verifier)
+	if err != nil || user == nil || token == "" {
+		_ = middleware.ClearSession(c)
+		code := "sso_failed"
+		if errors.Is(err, auth.ErrResHubUnavailable) {
+			code = "sso_unavailable"
+		}
+		ctrl.redirectSSOError(c, returnPath, code)
+		return
+	}
+	if err := middleware.SetSessionIntegration(c, user.ID, token); err != nil {
+		_ = middleware.ClearSession(c)
+		ctrl.redirectSSOError(c, returnPath, "sso_failed")
+		return
+	}
+	c.Redirect(http.StatusFound, application.SafeReturnPath(returnPath))
+}
+
+func (ctrl *AccountController) redirectSSOError(c *gin.Context, returnPath, code string) {
+	query := url.Values{}
+	query.Set("error", code)
+	query.Set("redirect", application.SafeReturnPath(returnPath))
+	c.Redirect(http.StatusFound, "/login?"+query.Encode())
 }
 
 func (ctrl *AccountController) SendRegisterCode(c *gin.Context) {
@@ -93,8 +171,21 @@ func (ctrl *AccountController) Login(c *gin.Context) {
 }
 
 func (ctrl *AccountController) Logout(c *gin.Context) {
-	if err := middleware.ClearSession(c); err != nil {
-		respondError(c, err)
+	token := middleware.IntegrationToken(c)
+	var remoteErr error
+	if token != "" && ctrl.sso != nil {
+		remoteErr = ctrl.sso.Logout(c.Request.Context(), token)
+	}
+	clearErr := middleware.ClearSession(c)
+	if clearErr != nil {
+		if remoteErr != nil {
+			remoteErr = errors.Join(remoteErr, clearErr)
+		} else {
+			remoteErr = clearErr
+		}
+	}
+	if remoteErr != nil {
+		respondError(c, remoteErr)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "ok"})

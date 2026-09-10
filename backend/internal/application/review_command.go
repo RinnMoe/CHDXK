@@ -18,11 +18,12 @@ import (
 )
 
 type ReviewCommandService struct {
-	courseRepo  course.CourseRepository
-	reviewRepo  review.ReviewRepository
-	reviewQuery review.ReviewQuery
-	voteRepo    review.VoteRepository
-	settings    SiteSettingsProvider
+	courseRepo              course.CourseRepository
+	reviewRepo              review.ReviewRepository
+	reviewQuery             review.ReviewQuery
+	voteRepo                review.VoteRepository
+	settings                SiteSettingsProvider
+	globalSuspensionEnabled bool
 }
 
 func NewReviewCommandService(
@@ -37,12 +38,20 @@ func NewReviewCommandService(
 	}
 	reviewQuery, _ := reviewRepo.(review.ReviewQuery)
 	return &ReviewCommandService{
-		courseRepo:  courseRepo,
-		reviewRepo:  reviewRepo,
-		reviewQuery: reviewQuery,
-		voteRepo:    voteRepo,
-		settings:    settings,
+		courseRepo:              courseRepo,
+		reviewRepo:              reviewRepo,
+		reviewQuery:             reviewQuery,
+		voteRepo:                voteRepo,
+		settings:                settings,
+		globalSuspensionEnabled: true,
 	}
+}
+
+// SetGlobalSuspensionEnabled disables the legacy local suspension side effect
+// when the identity authority is res-hub. Content moderation and notifications
+// continue to run independently.
+func (s *ReviewCommandService) SetGlobalSuspensionEnabled(enabled bool) {
+	s.globalSuspensionEnabled = enabled
 }
 
 func (s *ReviewCommandService) CreateReview(ctx context.Context, u *auth.User, cmd *CreateReviewCommand) error {
@@ -236,8 +245,10 @@ func (s *ReviewCommandService) enqueueFrequencyViolationTasks(ctx context.Contex
 		return
 	}
 	userID := violation.Review.UserID
-	if err := task.Enqueue(ctx, auth.NewSuspendUserTask(userID, violation.SuspendDuration)); err != nil {
-		logx.Warn(ctx, "enqueue frequency violation suspension", "user_id", userID, "err", err)
+	if s.globalSuspensionEnabled {
+		if err := task.Enqueue(ctx, auth.NewSuspendUserTask(userID, violation.SuspendDuration)); err != nil {
+			logx.Warn(ctx, "enqueue frequency violation suspension", "user_id", userID, "err", err)
+		}
 	}
 	mails, err := violation.NewSpamSuspensionEmails(adminEmails)
 	if err != nil {

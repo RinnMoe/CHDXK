@@ -7,6 +7,8 @@ import (
 )
 
 type PointRecordDTO struct {
+	ID          int                `json:"id,omitempty"`
+	ExternalID  string             `json:"external_id,omitempty"`
 	Reason      point.RecordReason `json:"reason"`
 	Amount      int                `json:"amount"`
 	Description string             `json:"description"`
@@ -20,6 +22,8 @@ type PointSummaryDTO struct {
 
 func newPointRecordDTO(r *point.Record) PointRecordDTO {
 	return PointRecordDTO{
+		ID:          r.ID,
+		ExternalID:  r.ExternalID,
 		Reason:      r.Reason,
 		Amount:      r.Amount,
 		Description: r.Description,

@@ -9,6 +9,7 @@ type RecordReason string
 
 type Record struct {
 	ID          int
+	ExternalID  string
 	UserID      int
 	Reason      RecordReason
 	Amount      int

@@ -76,7 +76,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	courseEnrollmentSyncController := controller.NewCourseEnrollmentSyncController(container.CourseCommand, conf.JAccount)
 	teacherController := controller.NewTeacherController(container.TeacherQuery, container.CourseQuery)
 	pointController := controller.NewPointController(container.PointQuery)
-	accountController := controller.NewAccountController(container.AccountCommand, container.AccountQuery)
+	accountController := controller.NewAccountController(container.AccountCommand, container.AccountQuery, container.ResHubSSO)
 	apiKeyController := controller.NewApiKeyController(container.ApiKeyQuery, container.ApiKeyCommand)
 	systemSettingsController := controller.NewSystemSettingsController(container.SystemSettingsQuery, container.SystemSettingsCommand)
 	siteStatsController := controller.NewSiteStatsController(container.SiteStatsQuery)
@@ -88,16 +88,23 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	publicAuthGroup := apiGroup.Group("/auth")
 	{
 		publicAuthGroup.GET("/csrf", func(c *gin.Context) { c.Status(http.StatusNoContent) })
-		publicAuthGroup.POST("/register/code", accountController.SendRegisterCode)
-		publicAuthGroup.POST("/register", accountController.Register)
-		publicAuthGroup.POST("/login", accountController.Login)
-		publicAuthGroup.POST("/password-reset/code", accountController.SendResetCode)
-		publicAuthGroup.POST("/password-reset", accountController.ResetPassword)
+		if conf.ResHub.Enabled {
+			publicAuthGroup.GET("/sso/start", accountController.SSOStart)
+			publicAuthGroup.GET("/sso/callback", accountController.SSOCallback)
+		} else {
+			publicAuthGroup.POST("/register/code", accountController.SendRegisterCode)
+			publicAuthGroup.POST("/register", accountController.Register)
+			publicAuthGroup.POST("/login", accountController.Login)
+			publicAuthGroup.POST("/password-reset/code", accountController.SendResetCode)
+			publicAuthGroup.POST("/password-reset", accountController.ResetPassword)
+		}
 	}
 
-	extGroup := apiGroup.Group("/ext", middleware.SystemAPIKeyAuth())
-	{
-		extGroup.GET("/point", pointController.GetPointsByEmail)
+	if !conf.ResHub.Enabled {
+		extGroup := apiGroup.Group("/ext", middleware.SystemAPIKeyAuth())
+		{
+			extGroup.GET("/point", pointController.GetPointsByEmail)
+		}
 	}
 
 	enrollmentSyncGroup := apiGroup.Group("/course/enrollment-sync")
@@ -153,11 +160,13 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		userGroup.GET("/:userID/point", middleware.RequireSelfOrAdmin("userID"), pointController.GetUserPoints)
 		userGroup.GET("/:userID/review", middleware.RequireSelfOrAdmin("userID"), reviewController.ListUserReviews)
 	}
-	apiKeyGroup := apiGroup.Group("/api-key")
-	{
-		apiKeyGroup.GET("/", apiKeyController.ListMyApiKeys)
-		apiKeyGroup.POST("/", apiKeyController.CreateMyApiKey)
-		apiKeyGroup.DELETE("/:apiKeyID", apiKeyController.DeleteMyApiKey)
+	if !conf.ResHub.Enabled {
+		apiKeyGroup := apiGroup.Group("/api-key")
+		{
+			apiKeyGroup.GET("/", apiKeyController.ListMyApiKeys)
+			apiKeyGroup.POST("/", apiKeyController.CreateMyApiKey)
+			apiKeyGroup.DELETE("/:apiKeyID", apiKeyController.DeleteMyApiKey)
+		}
 	}
 	systemSettingsGroup := apiGroup.Group("/system-settings")
 	{
@@ -168,15 +177,17 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		siteStatsGroup.GET("/daily/:date", siteStatsController.GetByDate)
 		siteStatsGroup.GET("/daily", siteStatsController.ListDaily)
 	}
-	adminUserGroup := apiGroup.Group("/admin/user", middleware.RequireAdmin())
-	{
-		adminUserGroup.GET("", adminUserController.GetUser)
-		adminUserGroup.GET("/admin", adminUserController.ListAdmins)
-		adminUserGroup.PUT("/:userID/suspension", adminUserController.SuspendUser)
-		adminUserGroup.DELETE("/:userID/suspension", adminUserController.ClearSuspension)
-		adminUserGroup.PUT("/:userID/password", middleware.RequireSuperAdmin(), adminUserController.ResetPassword)
-		adminUserGroup.PUT("/:userID/admin", middleware.RequireSuperAdmin(), adminUserController.GrantAdmin)
-		adminUserGroup.DELETE("/:userID/admin", middleware.RequireSuperAdmin(), adminUserController.RevokeAdmin)
+	if !conf.ResHub.Enabled {
+		adminUserGroup := apiGroup.Group("/admin/user", middleware.RequireAdmin())
+		{
+			adminUserGroup.GET("", adminUserController.GetUser)
+			adminUserGroup.GET("/admin", adminUserController.ListAdmins)
+			adminUserGroup.PUT("/:userID/suspension", adminUserController.SuspendUser)
+			adminUserGroup.DELETE("/:userID/suspension", adminUserController.ClearSuspension)
+			adminUserGroup.PUT("/:userID/password", middleware.RequireSuperAdmin(), adminUserController.ResetPassword)
+			adminUserGroup.PUT("/:userID/admin", middleware.RequireSuperAdmin(), adminUserController.GrantAdmin)
+			adminUserGroup.DELETE("/:userID/admin", middleware.RequireSuperAdmin(), adminUserController.RevokeAdmin)
+		}
 	}
 	adminApiKeyGroup := apiGroup.Group("/admin/api-key", middleware.RequireAdmin())
 	{

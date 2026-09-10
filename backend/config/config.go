@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/viper"
@@ -35,6 +36,7 @@ type AppConfig struct {
 	Stats    stat.Config                `mapstructure:"stats"`
 	SMTP     smtp.SMTPConfig            `mapstructure:"smtp"`
 	JAccount JAccountConfig             `mapstructure:"jaccount"`
+	ResHub   ResHubConfig               `mapstructure:"reshub"`
 }
 
 type AuthConfig struct {
@@ -71,6 +73,20 @@ type JAccountConfig struct {
 	FrontendCallbackURL string   `mapstructure:"frontend_callback_url"`
 	Scopes              []string `mapstructure:"scopes"`
 	CourseSyncEnabled   bool     `mapstructure:"course_sync_enabled"`
+}
+
+// ResHubConfig contains only xk-side client configuration. The res-hub
+// service remains a separate deployment and owns the protocol implementation.
+type ResHubConfig struct {
+	Enabled         bool          `mapstructure:"enabled"`
+	AuthorizeURL    string        `mapstructure:"authorize_url"`
+	InternalBaseURL string        `mapstructure:"internal_base_url"`
+	ClientID        string        `mapstructure:"client_id"`
+	ClientSecret    string        `mapstructure:"client_secret"`
+	RedirectURI     string        `mapstructure:"redirect_uri"`
+	LogoutReturnURI string        `mapstructure:"logout_return_uri"`
+	Timeout         time.Duration `mapstructure:"timeout"`
+	PointsBasePath  string        `mapstructure:"points_base_path"`
 }
 
 func Load(configPath string) (AppConfig, error) {
@@ -116,6 +132,23 @@ func Load(configPath string) (AppConfig, error) {
 	}
 	if strings.TrimSpace(conf.Auth.UsernameDeriver.Salt) == "" {
 		return AppConfig{}, fmt.Errorf("auth.username_deriver.salt is required")
+	}
+	if conf.ResHub.Enabled {
+		if strings.TrimSpace(conf.ResHub.AuthorizeURL) == "" {
+			return AppConfig{}, fmt.Errorf("reshub.authorize_url is required when reshub is enabled")
+		}
+		if strings.TrimSpace(conf.ResHub.InternalBaseURL) == "" {
+			return AppConfig{}, fmt.Errorf("reshub.internal_base_url is required when reshub is enabled")
+		}
+		if strings.TrimSpace(conf.ResHub.ClientID) == "" {
+			return AppConfig{}, fmt.Errorf("reshub.client_id is required when reshub is enabled")
+		}
+		if strings.TrimSpace(conf.ResHub.ClientSecret) == "" {
+			return AppConfig{}, fmt.Errorf("reshub.client_secret is required when reshub is enabled")
+		}
+		if strings.TrimSpace(conf.ResHub.RedirectURI) == "" {
+			return AppConfig{}, fmt.Errorf("reshub.redirect_uri is required when reshub is enabled")
+		}
 	}
 	return conf, nil
 }
@@ -173,6 +206,11 @@ func setDefaults(v *viper.Viper) {
 		"api_base_url":        "https://api.sjtu.edu.cn/",
 		"scopes":              []string{},
 		"course_sync_enabled": false,
+	})
+	setSectionDefaults(v, "reshub", map[string]any{
+		"enabled":          false,
+		"timeout":          3 * time.Second,
+		"points_base_path": "/api/integrations/v1",
 	})
 }
 

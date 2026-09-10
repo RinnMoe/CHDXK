@@ -135,6 +135,24 @@ func (UserEntity) TableName() string {
 	return "users"
 }
 
+// UserIdentityEntity stores the res-hub subject separately from the local
+// projection used by course and review foreign keys.
+type UserIdentityEntity struct {
+	UserID       int       `gorm:"column:user_id;primaryKey"`
+	Issuer       string    `gorm:"column:issuer;uniqueIndex:uniq_user_identities_issuer_subject"`
+	Subject      string    `gorm:"column:subject;uniqueIndex:uniq_user_identities_issuer_subject"`
+	Username     string    `gorm:"column:username"`
+	Email        string    `gorm:"column:email"`
+	IdentityRole string    `gorm:"column:identity_role"`
+	IdentityType string    `gorm:"column:identity_type"`
+	CreatedAt    time.Time `gorm:"column:created_at"`
+	UpdatedAt    time.Time `gorm:"column:updated_at"`
+}
+
+func (UserIdentityEntity) TableName() string {
+	return "user_identities"
+}
+
 type SystemSettingsEntity struct {
 	Key       string    `gorm:"column:key;primaryKey"`
 	Value     string    `gorm:"column:value"`
@@ -160,16 +178,22 @@ func (UserPointRecordEntity) TableName() string {
 }
 
 type PointRewardEntity struct {
-	ID          int        `gorm:"column:id"`
-	UserID      int        `gorm:"column:user_id;index"`
-	Reason      string     `gorm:"column:reason;uniqueIndex:uniq_point_rewards_reason_source"`
-	Amount      int        `gorm:"column:amount"`
-	SourceType  string     `gorm:"column:source_type;uniqueIndex:uniq_point_rewards_reason_source"`
-	SourceKey   string     `gorm:"column:source_key;uniqueIndex:uniq_point_rewards_reason_source"`
-	Description string     `gorm:"column:description"`
-	Status      string     `gorm:"column:status;index"`
-	CreatedAt   time.Time  `gorm:"column:created_at"`
-	GrantedAt   *time.Time `gorm:"column:granted_at"`
+	ID                  int        `gorm:"column:id"`
+	UserID              int        `gorm:"column:user_id;index"`
+	Reason              string     `gorm:"column:reason;uniqueIndex:uniq_point_rewards_reason_source"`
+	Amount              int        `gorm:"column:amount"`
+	SourceType          string     `gorm:"column:source_type;uniqueIndex:uniq_point_rewards_reason_source"`
+	SourceKey           string     `gorm:"column:source_key;uniqueIndex:uniq_point_rewards_reason_source"`
+	Description         string     `gorm:"column:description"`
+	Status              string     `gorm:"column:status;index"`
+	CreatedAt           time.Time  `gorm:"column:created_at"`
+	GrantedAt           *time.Time `gorm:"column:granted_at"`
+	OperationKey        string     `gorm:"column:operation_key"`
+	ExternalOperationID string     `gorm:"column:external_operation_id"`
+	ExternalReversalID  string     `gorm:"column:external_reversal_id"`
+	Attempts            int        `gorm:"column:attempts"`
+	LastError           string     `gorm:"column:last_error"`
+	NextRetryAt         *time.Time `gorm:"column:next_retry_at;index"`
 }
 
 func (PointRewardEntity) TableName() string {

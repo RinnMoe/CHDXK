@@ -13,31 +13,43 @@ import (
 
 func newPointRewardEntity(r *point.Reward) PointRewardEntity {
 	return PointRewardEntity{
-		ID:          r.ID,
-		UserID:      r.UserID,
-		Reason:      string(r.Reason),
-		Amount:      r.Amount,
-		SourceType:  r.SourceType,
-		SourceKey:   r.SourceKey,
-		Description: r.Description,
-		Status:      string(r.Status),
-		CreatedAt:   r.CreatedAt,
-		GrantedAt:   r.GrantedAt,
+		ID:                  r.ID,
+		UserID:              r.UserID,
+		Reason:              string(r.Reason),
+		Amount:              r.Amount,
+		SourceType:          r.SourceType,
+		SourceKey:           r.SourceKey,
+		Description:         r.Description,
+		Status:              string(r.Status),
+		CreatedAt:           r.CreatedAt,
+		GrantedAt:           r.GrantedAt,
+		OperationKey:        r.OperationKey,
+		ExternalOperationID: r.ExternalOperationID,
+		ExternalReversalID:  r.ExternalReversalID,
+		Attempts:            r.Attempts,
+		LastError:           r.LastError,
+		NextRetryAt:         r.NextRetryAt,
 	}
 }
 
 func newPointRewardDomain(e *PointRewardEntity) point.Reward {
 	return point.Reward{
-		ID:          e.ID,
-		UserID:      e.UserID,
-		Reason:      point.RewardReason(e.Reason),
-		Amount:      e.Amount,
-		SourceType:  e.SourceType,
-		SourceKey:   e.SourceKey,
-		Description: e.Description,
-		Status:      point.RewardStatus(e.Status),
-		CreatedAt:   e.CreatedAt,
-		GrantedAt:   e.GrantedAt,
+		ID:                  e.ID,
+		UserID:              e.UserID,
+		Reason:              point.RewardReason(e.Reason),
+		Amount:              e.Amount,
+		SourceType:          e.SourceType,
+		SourceKey:           e.SourceKey,
+		Description:         e.Description,
+		Status:              point.RewardStatus(e.Status),
+		CreatedAt:           e.CreatedAt,
+		GrantedAt:           e.GrantedAt,
+		OperationKey:        e.OperationKey,
+		ExternalOperationID: e.ExternalOperationID,
+		ExternalReversalID:  e.ExternalReversalID,
+		Attempts:            e.Attempts,
+		LastError:           e.LastError,
+		NextRetryAt:         e.NextRetryAt,
 	}
 }
 

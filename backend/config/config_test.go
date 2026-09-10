@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestLoadMergesSectionDefaults(t *testing.T) {
@@ -110,5 +111,60 @@ auth:
 
 	if !conf.Server.Debug {
 		t.Fatal("server debug = false, want true")
+	}
+}
+
+func TestLoadResHubRequiresClientConfigurationWhenEnabled(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	contents := []byte(`
+reshub:
+  enabled: true
+session:
+  secret: "replace-with-at-least-32-random-characters"
+auth:
+  username_deriver:
+    salt: "SALT"
+`)
+	if err := os.WriteFile(path, contents, 0o600); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	if _, err := Load(path); err == nil {
+		t.Fatal("Load succeeded with incomplete res-hub configuration")
+	}
+}
+
+func TestLoadResHubConfiguration(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	contents := []byte(`
+reshub:
+  enabled: true
+  authorize_url: "https://hub.example.test/#/sso/authorize"
+  internal_base_url: "http://127.0.0.1:3421"
+  client_id: "xk"
+  client_secret: "secret"
+  redirect_uri: "https://xk.example.test/api/auth/sso/callback"
+  logout_return_uri: "https://xk.example.test/"
+  timeout: "5s"
+  points_base_path: "/api/integrations/v1"
+session:
+  secret: "replace-with-at-least-32-random-characters"
+auth:
+  username_deriver:
+    salt: "SALT"
+`)
+	if err := os.WriteFile(path, contents, 0o600); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	conf, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if !conf.ResHub.Enabled || conf.ResHub.ClientID != "xk" {
+		t.Fatalf("res-hub config = %#v", conf.ResHub)
+	}
+	if conf.ResHub.Timeout != 5*time.Second {
+		t.Fatalf("res-hub timeout = %s, want 5s", conf.ResHub.Timeout)
 	}
 }

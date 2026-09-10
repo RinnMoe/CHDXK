@@ -13,10 +13,22 @@ const (
 )
 
 type User struct {
-	ID          int
-	Role        string
-	SuspendedAt *time.Time
-	SuspendTill *time.Time
+	ID               int
+	Role             string
+	Subject          string
+	Username         string
+	Email            string
+	IdentityRole     string
+	IdentityType     string
+	PermissionMode   string
+	ViolationCount   int
+	InitialPassword  bool
+	HasPointsAccount bool
+	SessionID        string
+	ExpiresAt        time.Time
+	ImpersonatedBy   string
+	SuspendedAt      *time.Time
+	SuspendTill      *time.Time
 }
 
 func (u *User) IsSuspended() bool {

@@ -10,9 +10,11 @@ import (
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/email"
+	"jcourse/internal/domain/point"
 	"jcourse/internal/infrastructure/jaccount"
 	"jcourse/internal/infrastructure/persistence"
 	"jcourse/internal/infrastructure/repository"
+	"jcourse/internal/infrastructure/reshub"
 	"jcourse/internal/infrastructure/smtp"
 )
 
@@ -44,6 +46,7 @@ type ServiceContainer struct {
 	AuditLogQuery         *application.AuditLogQueryService
 	AuditLogCommand       *application.AuditLogCommandService
 	EmailSender           email.Sender
+	ResHubSSO             *application.ResHubSSOService
 }
 
 func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
@@ -59,6 +62,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	announcementRepo := repository.NewAnnouncementRepository(db)
 	notificationRepo := repository.NewCourseNotificationRepository(db, redisClient)
 	pointRepo := repository.NewPointRepository(db, redisClient)
+	identityProjection := repository.NewUserIdentityRepository(db)
 	accountRepo := repository.NewAccountRepository(db, redisClient)
 	userRepo := repository.NewUserRepository(db, redisClient)
 	systemSettingsRepo := repository.NewSystemSettingsRepository(db, redisClient)
@@ -67,7 +71,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	apiKeyRepo := repository.NewApiKeyRepository(db)
 	auditLogRepo := repository.NewAuditLogRepository(db)
 	accessTracker := repository.NewAccessTrackerRepository(db, redisClient, conf.Auth.Access.FlushBatchSize)
-	statRepo := repository.NewSiteDailyStatRepository(db, redisClient)
+	statRepo := repository.NewSiteDailyStatRepositoryWithIntegration(db, redisClient, conf.ResHub.Enabled)
 	courseHotRepo := repository.NewGormCourseHotRepository(db, redisClient)
 	verificationRepo := repository.NewVerificationCodeRepository(redisClient)
 	resetCodeRepo := repository.NewVerificationCodeRepositoryWithPrefix(redisClient, "reset")
@@ -82,6 +86,9 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		voteRepo,
 		siteSettings,
 	)
+	if conf.ResHub.Enabled {
+		reviewCommand.SetGlobalSuspensionEnabled(false)
+	}
 	courseHotService := course.NewCourseHotService(courseHotRepo)
 	courseService := course.NewService(courseRepo)
 	courseRatingCommand := course.NewCourseRatingCommandService(courseRepo, conf.Course.RatingScore)
@@ -100,8 +107,22 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	teacherQuery := application.NewTeacherQueryService(teacherRepo)
 	announcementQuery := application.NewAnnouncementQueryService(announcementRepo)
 	announcementService := announcement.NewService(announcementRepo)
-	pointQuery := application.NewPointQueryService(pointRepo, accountRepo, usernameDeriver)
-	pointRewardCommand := application.NewPointRewardCommandService(pointRepo)
+	var pointQueryRepository point.Query = pointRepo
+	var rewardRepository point.RewardRepository = pointRepo
+	var resHubSSO *application.ResHubSSOService
+	var resHubDependency []application.ResHubAuthDependency
+	if conf.ResHub.Enabled {
+		resHubClient := reshub.NewClient(conf.ResHub)
+		pointQueryRepository = reshub.NewPointQuery(resHubClient, identityProjection)
+		rewardRepository = reshub.NewRewardRepository(db, resHubClient, identityProjection)
+		resHubSSO = application.NewResHubSSOService(resHubClient, identityProjection, conf.ResHub.RedirectURI)
+		resHubDependency = append(resHubDependency, application.ResHubAuthDependency{
+			Client:     resHubClient,
+			Projection: identityProjection,
+		})
+	}
+	pointQuery := application.NewPointQueryService(pointQueryRepository, accountRepo, usernameDeriver)
+	pointRewardCommand := application.NewPointRewardCommandService(rewardRepository)
 	statsConfig := conf.Stats
 	siteStatsQuery := application.NewSiteStatsQueryService(statRepo, statsConfig)
 	siteStatsCommand := application.NewSiteStatsCommandService(statRepo, statRepo, statsConfig)
@@ -139,7 +160,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		siteSettings,
 	)
 	apiKeySvc := auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, conf.APIKey)
-	authResolution := application.NewAuthResolutionService(currentUserService, apiKeySvc, accessTracker, sessionAuthService)
+	authResolution := application.NewAuthResolutionService(currentUserService, apiKeySvc, accessTracker, sessionAuthService, resHubDependency...)
 	apiKeyQuery := application.NewApiKeyQueryService(apiKeySvc)
 	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc, siteSettings)
 	systemSettingsQuery := application.NewSystemSettingsQueryService(systemSettingsService)
@@ -175,5 +196,6 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		AuditLogQuery:         auditLogQuery,
 		AuditLogCommand:       auditLogCommand,
 		EmailSender:           smtpSender,
+		ResHubSSO:             resHubSSO,
 	}
 }

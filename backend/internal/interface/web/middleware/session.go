@@ -13,10 +13,14 @@ import (
 )
 
 const (
-	sessionKeyUserID    = "user_id"
-	sessionKeyAuthHash  = "auth_hash"
-	sessionKeyCSRFToken = "csrf_token"
-	sessionRedisPrefix  = "jcourse:session:"
+	sessionKeyUserID           = "user_id"
+	sessionKeyAuthHash         = "auth_hash"
+	sessionKeyIntegrationToken = "integration_token"
+	sessionKeySSOState         = "sso_state"
+	sessionKeySSOVerifier      = "sso_verifier"
+	sessionKeySSOReturn        = "sso_return"
+	sessionKeyCSRFToken        = "csrf_token"
+	sessionRedisPrefix         = "jcourse:session:"
 )
 
 type SessionConfig struct {
@@ -62,6 +66,51 @@ func SetSessionUser(c *gin.Context, userID int, authHash string) error {
 		s.Set(sessionKeyAuthHash, authHash)
 	}
 	return s.Save()
+}
+
+func SetSessionIntegration(c *gin.Context, userID int, token string) error {
+	if userID <= 0 || token == "" {
+		return fmt.Errorf("invalid integration session")
+	}
+	if err := resetSession(c); err != nil {
+		return err
+	}
+	s := sessions.Default(c)
+	s.Set(sessionKeyUserID, userID)
+	s.Set(sessionKeyIntegrationToken, token)
+	return s.Save()
+}
+
+func IntegrationToken(c *gin.Context) string {
+	s := sessions.Default(c)
+	token, _ := sessionString(s, sessionKeyIntegrationToken)
+	return token
+}
+
+func SetSSOState(c *gin.Context, state, verifier, returnPath string) error {
+	s := sessions.Default(c)
+	s.Set(sessionKeySSOState, state)
+	s.Set(sessionKeySSOVerifier, verifier)
+	s.Set(sessionKeySSOReturn, returnPath)
+	return s.Save()
+}
+
+func TakeSSOState(c *gin.Context, expectedState ...string) (state, verifier, returnPath string, ok bool) {
+	s := sessions.Default(c)
+	state, stateOK := sessionString(s, sessionKeySSOState)
+	verifier, verifierOK := sessionString(s, sessionKeySSOVerifier)
+	returnPath, returnOK := sessionString(s, sessionKeySSOReturn)
+	if !stateOK || !verifierOK || !returnOK {
+		return "", "", "", false
+	}
+	if len(expectedState) > 0 && state != expectedState[0] {
+		return state, verifier, returnPath, false
+	}
+	s.Delete(sessionKeySSOState)
+	s.Delete(sessionKeySSOVerifier)
+	s.Delete(sessionKeySSOReturn)
+	_ = s.Save()
+	return state, verifier, returnPath, true
 }
 
 func ClearSession(c *gin.Context) error {

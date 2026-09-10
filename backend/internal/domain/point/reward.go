@@ -39,16 +39,22 @@ var DefaultRewardConfig = RewardConfig{
 }
 
 type Reward struct {
-	ID          int
-	UserID      int
-	Reason      RewardReason
-	Amount      int
-	SourceType  string
-	SourceKey   string
-	Description string
-	Status      RewardStatus
-	CreatedAt   time.Time
-	GrantedAt   *time.Time
+	ID                  int
+	UserID              int
+	Reason              RewardReason
+	Amount              int
+	SourceType          string
+	SourceKey           string
+	Description         string
+	Status              RewardStatus
+	CreatedAt           time.Time
+	GrantedAt           *time.Time
+	OperationKey        string
+	ExternalOperationID string
+	ExternalReversalID  string
+	Attempts            int
+	LastError           string
+	NextRetryAt         *time.Time
 }
 
 type RewardSource struct {

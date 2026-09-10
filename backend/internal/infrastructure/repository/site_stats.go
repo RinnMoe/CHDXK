@@ -15,8 +15,9 @@ import (
 )
 
 type SiteDailyStatRepository struct {
-	db    *gorm.DB
-	cache *redis.Client
+	db                *gorm.DB
+	cache             *redis.Client
+	integrationPoints bool
 }
 
 func NewSiteDailyStatRepository(db *gorm.DB, cache ...*redis.Client) *SiteDailyStatRepository {
@@ -25,6 +26,10 @@ func NewSiteDailyStatRepository(db *gorm.DB, cache ...*redis.Client) *SiteDailyS
 		client = cache[0]
 	}
 	return &SiteDailyStatRepository{db: db, cache: client}
+}
+
+func NewSiteDailyStatRepositoryWithIntegration(db *gorm.DB, cache *redis.Client, integrationPoints bool) *SiteDailyStatRepository {
+	return &SiteDailyStatRepository{db: db, cache: cache, integrationPoints: integrationPoints}
 }
 
 func metricsToJSONMap(metrics stat.Metrics) datatypes.JSONMap {
@@ -130,11 +135,20 @@ func (r *SiteDailyStatRepository) Collect(ctx context.Context, periodStart, peri
 	}
 
 	var newPointAmount int64
-	if err := r.db.WithContext(ctx).Model(&UserPointRecordEntity{}).
-		Select("COALESCE(SUM(amount), 0)").
-		Where("created_at >= ? AND created_at < ? AND amount > 0", periodStart, periodEnd).
-		Scan(&newPointAmount).Error; err != nil {
-		return nil, err
+	if r.integrationPoints {
+		if err := r.db.WithContext(ctx).Model(&PointRewardEntity{}).
+			Select("COALESCE(SUM(amount), 0)").
+			Where("created_at >= ? AND created_at < ? AND amount > 0 AND status = ? AND external_operation_id <> ''", periodStart, periodEnd, "granted").
+			Scan(&newPointAmount).Error; err != nil {
+			return nil, err
+		}
+	} else {
+		if err := r.db.WithContext(ctx).Model(&UserPointRecordEntity{}).
+			Select("COALESCE(SUM(amount), 0)").
+			Where("created_at >= ? AND created_at < ? AND amount > 0", periodStart, periodEnd).
+			Scan(&newPointAmount).Error; err != nil {
+			return nil, err
+		}
 	}
 
 	var reviewedCourses int64

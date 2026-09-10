@@ -15,20 +15,31 @@ import (
 
 func ResolveCurrentUser(authResolution *application.AuthResolutionService) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// SSO start and callback must remain reachable when the browser carries
+		// an expired integration session. Otherwise an old token can prevent the
+		// user from starting a fresh authorization flow or consuming its code.
+		if isPublicSSORoute(c.Request.URL.Path) {
+			c.Next()
+			return
+		}
 		if auth.GetUserFromCtx(c.Request.Context()) != nil || auth.GetApiKeyFromCtx(c.Request.Context()) != nil {
 			c.Next()
 			return
 		}
 
-		resolved, err := authResolution.Resolve(c.Request.Context(), bearerToken(c), sessionUserID(c), sessionAuthHash(c))
+		resolved, err := authResolution.Resolve(c.Request.Context(), bearerToken(c), sessionUserID(c), sessionAuthHash(c), IntegrationToken(c))
 		if err != nil {
-			if errors.Is(err, auth.ErrInvalidSession) {
+			if errors.Is(err, auth.ErrInvalidSession) || errors.Is(err, auth.ErrResHubSession) {
 				_ = ClearSession(c)
-				c.Next()
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 				return
 			}
 			if errors.Is(err, auth.ErrUserSuspended) {
 				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": err.Error()})
+				return
+			}
+			if errors.Is(err, auth.ErrResHubUnavailable) {
+				c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": err.Error()})
 				return
 			}
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
@@ -44,6 +55,10 @@ func ResolveCurrentUser(authResolution *application.AuthResolutionService) gin.H
 		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}
+}
+
+func isPublicSSORoute(path string) bool {
+	return path == "/api/auth/sso/start" || path == "/api/auth/sso/callback"
 }
 
 func sessionAuthHash(c *gin.Context) string {
