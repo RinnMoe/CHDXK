@@ -65,7 +65,7 @@ async function requireAuth({
   context: RouterContext
   location: { pathname: string; searchStr: string; hash: string }
 }) {
-  const user = await context.queryClient.ensureQueryData(authMeQueryOptions())
+  const user = await context.queryClient.fetchQuery(authMeQueryOptions())
   if (!user) {
     throw redirect({
       to: "/login",
@@ -83,7 +83,7 @@ async function redirectAuthedUser({
   context: RouterContext
   search?: { redirect?: string }
 }) {
-  const user = await context.queryClient.ensureQueryData(authMeQueryOptions())
+  const user = await context.queryClient.fetchQuery(authMeQueryOptions())
   if (user) {
     throw redirect({
       to: getSafeRedirectPath(search?.redirect),

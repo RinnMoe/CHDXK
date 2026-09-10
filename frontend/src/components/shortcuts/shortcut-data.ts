@@ -50,7 +50,6 @@ export type PageShortcut = {
     | "/review/mine"
     | "/course/mine"
     | "/point"
-    | "/api-key"
     | "/admin/site-stat"
   requiresAuth?: boolean
   requiresAdmin?: boolean
@@ -116,13 +115,6 @@ export const pageShortcuts: PageShortcut[] = [
     title: "积分",
     description: "查看积分流水",
     path: "/point",
-    requiresAuth: true,
-  },
-  {
-    keys: "G K",
-    title: "API Keys",
-    description: "管理 API Key",
-    path: "/api-key",
     requiresAuth: true,
   },
   {

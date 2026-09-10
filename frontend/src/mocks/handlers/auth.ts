@@ -30,6 +30,18 @@ function isAllowedRegistrationEmail(email: string) {
 }
 
 export const authHandlers = [
+  // Development-only stand-in for the cross-service redirect. The real
+  // backend performs state, PKCE and token exchange before returning here.
+  http.get("/api/auth/sso/start", async ({ request }) => {
+    await randomDelay()
+    const requested = new URL(request.url).searchParams.get("return_to") ?? "/"
+    const returnTo = requested.startsWith("/") && !requested.startsWith("//")
+      ? requested
+      : "/"
+    setMockSessionUserID(1)
+    return HttpResponse.redirect(new URL(returnTo, request.url).toString())
+  }),
+
   http.post("/api/auth/register/code", async ({ request }) => {
     await randomDelay()
     const body = (await request.json()) as { email: string }

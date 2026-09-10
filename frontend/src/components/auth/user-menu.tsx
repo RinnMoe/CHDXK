@@ -29,12 +29,9 @@ export function UserMenu() {
 
   if (!user) {
     return (
-      <div className="flex gap-2">
+      <div>
         <Button variant="ghost" size="sm" asChild>
           <Link to="/login">登录</Link>
-        </Button>
-        <Button variant="default" size="sm" asChild>
-          <Link to="/register">注册</Link>
         </Button>
       </div>
     )
@@ -68,9 +65,6 @@ export function UserMenu() {
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link to="/point">积分</Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link to="/api-key">API Keys</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link to="/settings">设置</Link>

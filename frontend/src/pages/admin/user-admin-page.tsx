@@ -1,18 +1,15 @@
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { AuditLogsTab } from "@/components/admin/audit-logs-tab"
-import { AdminUserQueryTab } from "@/components/admin/admin-user-query-tab"
-import { AdminUsersTab } from "@/components/admin/admin-users-tab"
 import { AnnouncementsTab } from "@/components/admin/announcements-tab"
 import { SystemApiKeysTab } from "@/components/admin/system-api-keys-tab"
 import { SystemSettingsTab } from "@/components/admin/system-settings-tab"
 import { PageTitle } from "@/components/common/page-title"
 import { PageShell } from "@/components/layout/page-shell"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/contexts/auth-context"
 
 const adminTabs = [
-  "user",
-  "admin",
   "system-api-key",
   "system-settings",
   "announcement",
@@ -22,7 +19,9 @@ type AdminTab = (typeof adminTabs)[number]
 const routeApi = getRouteApi("/app/admin/user")
 
 function getAdminTab(value: string | null): AdminTab {
-  return adminTabs.includes(value as AdminTab) ? (value as AdminTab) : "user"
+  return adminTabs.includes(value as AdminTab)
+    ? (value as AdminTab)
+    : "system-settings"
 }
 
 export function UserAdminPage() {
@@ -61,29 +60,25 @@ export function UserAdminPage() {
         <div className="space-y-6">
           <h1 className="text-2xl font-semibold">管理</h1>
 
+          <Card>
+            <CardHeader>
+              <CardTitle>用户和角色由主站管理</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm leading-6 text-muted-foreground">
+                res-hub 是账号、角色、会话和账户状态的唯一来源。本站管理员权限会
+                按当前主站会话生效，用户、角色和会话状态请在主站管理。
+              </p>
+            </CardContent>
+          </Card>
+
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="w-full justify-start overflow-x-auto sm:w-fit">
-              <TabsTrigger value="user">用户查询</TabsTrigger>
-              <TabsTrigger value="admin">管理员查询</TabsTrigger>
               <TabsTrigger value="system-api-key">系统 API Key</TabsTrigger>
               <TabsTrigger value="system-settings">系统设置</TabsTrigger>
               <TabsTrigger value="announcement">公告</TabsTrigger>
               <TabsTrigger value="audit-log">审计日志</TabsTrigger>
             </TabsList>
-
-            <TabsContent value="user" className="space-y-6">
-              <AdminUserQueryTab
-                currentUserID={user.id}
-                currentUserIsSuperAdmin={user.is_super_admin()}
-              />
-            </TabsContent>
-
-            <TabsContent value="admin" className="space-y-3">
-              <AdminUsersTab
-                currentUserID={user.id}
-                currentUserIsSuperAdmin={user.is_super_admin()}
-              />
-            </TabsContent>
 
             <TabsContent value="system-api-key" className="space-y-4">
               <SystemApiKeysTab />

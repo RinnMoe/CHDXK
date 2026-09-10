@@ -6,6 +6,16 @@ export interface AuthUserDTO {
   username: string
   email: string
   role: string
+  subject?: string
+  identity_role?: string
+  identity_type?: string
+  permission_mode?: string
+  violation_count?: number
+  initial_password?: boolean
+  has_points_account?: boolean
+  session_id?: string
+  expires_at?: string
+  impersonated_by?: string
   is_admin: () => boolean
   is_super_admin: () => boolean
 }
@@ -18,6 +28,14 @@ export function normalizeAuthUser(user: AuthUserResponse): AuthUserDTO {
     is_admin: () => user.role === "admin" || user.role === "super_admin",
     is_super_admin: () => user.role === "super_admin",
   }
+}
+
+/** Build the browser navigation URL for the xk-side SSO entry point. */
+export function getSSOStartURL(returnPath?: string) {
+  const params = new URLSearchParams()
+  if (returnPath) params.set("return_to", returnPath)
+  const query = params.toString()
+  return `${BASE_URL}/auth/sso/start${query ? `?${query}` : ""}`
 }
 
 export interface SendRegisterCodeCommand {

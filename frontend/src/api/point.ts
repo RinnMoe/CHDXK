@@ -6,6 +6,8 @@ import { buildQuery } from "./query"
 export type RecordReason = string
 
 export interface PointRecordDTO {
+  id?: number
+  external_id?: string
   reason: RecordReason
   amount: number
   description: string

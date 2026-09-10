@@ -21,7 +21,6 @@ import type {
   RegisterCommand,
   ResetPasswordCommand,
 } from "@/api/auth"
-import { removeAuthSnapshot, saveAuthSnapshot } from "@/lib/auth-snapshot"
 import { clearOfflineReadCaches } from "@/lib/offline-cache"
 
 interface AuthContextValue {
@@ -83,18 +82,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     login: async (cmd) => {
       const loggedInUser = await loginMutation.mutateAsync(cmd)
-      saveAuthSnapshot(loggedInUser)
       await clearBackendInterfaceCaches(queryClient, loggedInUser)
       return loggedInUser
     },
     logout: async () => {
       await logoutMutation.mutateAsync()
-      removeAuthSnapshot()
       await clearBackendInterfaceCaches(queryClient, null)
     },
     register: async (cmd) => {
       const registeredUser = await registerMutation.mutateAsync(cmd)
-      saveAuthSnapshot(registeredUser)
       await clearBackendInterfaceCaches(queryClient, registeredUser)
       return registeredUser
     },

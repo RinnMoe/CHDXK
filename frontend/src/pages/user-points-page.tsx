@@ -6,12 +6,13 @@ import { PageTitle } from "@/components/common/page-title"
 import { PointRecordList } from "@/components/point/point-record-list"
 import { useUserPoints } from "@/hooks/use-point"
 import { useAuth } from "@/contexts/auth-context"
+import { getErrorMessage } from "@/components/admin/admin-utils"
 
 export function UserPointsPage() {
   const { user } = useAuth()
   const [page] = useState(1)
   const [pageSize] = useState(20)
-  const { data, isLoading } = useUserPoints(user?.id ?? 0, {
+  const { data, isLoading, isError, error } = useUserPoints(user?.id ?? 0, {
     page,
     page_size: pageSize,
   })
@@ -35,16 +36,7 @@ export function UserPointsPage() {
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold">我的积分</h1>
             <p className="text-sm text-muted-foreground">
-              积分可在合作网站兑换使用，目前支持
-              <a
-                href="https://share.dyweb.sjtu.cn"
-                target="_blank"
-                rel="noreferrer"
-                className="font-medium text-foreground underline underline-offset-4"
-              >
-                传承·交大
-              </a>
-              。
+              余额和流水由 res-hub 主站提供，本站产生的奖励会以集成操作记录。
             </p>
           </div>
 
@@ -69,6 +61,10 @@ export function UserPointsPage() {
                   <Skeleton key={i} className="h-14 w-full" />
                 ))}
               </div>
+            ) : isError ? (
+              <p className="text-sm text-destructive" role="alert">
+                {getErrorMessage(error)}
+              </p>
             ) : (
               <PointRecordList records={data?.records.items ?? []} />
             )}

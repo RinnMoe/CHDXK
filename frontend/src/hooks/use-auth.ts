@@ -13,41 +13,16 @@ import {
   type SendRegisterCodeCommand,
   type SendResetCodeCommand,
 } from "@/api/auth"
-import {
-  loadAuthSnapshot,
-  removeAuthSnapshot,
-  saveAuthSnapshot,
-} from "@/lib/auth-snapshot"
-
-function isNetworkFailure(err: unknown) {
-  return err instanceof TypeError
-}
-
-async function getCurrentUserWithOfflineFallback() {
-  try {
-    const user = await getCurrentUser()
-    if (user) {
-      saveAuthSnapshot(user)
-    } else {
-      removeAuthSnapshot()
-    }
-    return user
-  } catch (err) {
-    if (isNetworkFailure(err)) {
-      const snapshot = loadAuthSnapshot()
-      if (snapshot) return snapshot
-    }
-
-    throw err
-  }
-}
 
 export function authMeQueryOptions() {
   return {
     queryKey: ["auth", "me"] as const,
-    queryFn: getCurrentUserWithOfflineFallback,
+    // The backend introspects the res-hub session on every request. Keep the
+    // browser cache short-lived so role or account changes become visible.
+    queryFn: getCurrentUser,
     retry: false,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   }
 }
 

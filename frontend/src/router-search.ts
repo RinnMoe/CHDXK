@@ -9,7 +9,10 @@ import {
 } from "@/lib/router/search"
 import { getSafeRedirectPath } from "@/lib/auth-redirect"
 
-export type LoginSearch = { redirect?: string }
+export type LoginSearch = {
+  redirect?: string
+  error?: "sso_denied" | "sso_failed" | "sso_unavailable"
+}
 export type CourseListSearch = {
   q?: string
   department?: string
@@ -72,6 +75,11 @@ export function validateLoginSearch(search: SearchRecord): LoginSearch {
     redirect: rawStringParam(search.redirect)
       ? getSafeRedirectPath(rawStringParam(search.redirect))
       : undefined,
+    error: enumParam(search.error, [
+      "sso_denied",
+      "sso_failed",
+      "sso_unavailable",
+    ] as const),
   }
 }
 
