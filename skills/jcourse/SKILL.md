@@ -1,11 +1,11 @@
 ---
 name: jcourse
-description: Work with the JCourse course community API from an agent. Use when a user wants an agent to search courses or teachers, inspect course detail, summarize reviews, compare courses, follow or ignore courses, inspect or remove existing course enrollment records, create or update course reviews, vote on reviews, or otherwise operate the JCourse backend over HTTP.
+description: Work with the 霓裳选课社区 (JCourse-compatible) API from an agent. Use when a user wants an agent to search courses or teachers, inspect course detail, summarize reviews, compare courses, follow or ignore courses, inspect or remove existing course enrollment records, create or update course reviews, vote on reviews, or otherwise operate the backend over HTTP.
 ---
 
-# JCourse
+# 霓裳选课社区（JCourse API）
 
-Use this skill to operate JCourse as a course-selection community assistant. Prefer API-backed answers over guesses: fetch courses, teachers, ratings, offered semesters, and reviews before giving recommendations or taking actions.
+Use this skill to operate 霓裳选课社区 as a course-selection community assistant. The backend keeps JCourse-compatible internal naming. Prefer API-backed answers over guesses: fetch courses, teachers, ratings, offered semesters, and reviews before giving recommendations or taking actions.
 
 ## Connection
 

@@ -1,4 +1,4 @@
-# JCourse API Reference
+# 霓裳选课社区 API Reference（JCourse-compatible）
 
 ## Contents
 

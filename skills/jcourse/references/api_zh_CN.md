@@ -1,4 +1,4 @@
-# JCourse API 参考
+# 霓裳选课社区 API 参考（JCourse 兼容接口）
 
 ## 目录
 

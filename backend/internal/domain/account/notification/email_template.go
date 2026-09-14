@@ -17,8 +17,8 @@ const (
 	EmailTemplateVerificationCode EmailTemplateName = "verification_code"
 	EmailTemplateAccountBanned    EmailTemplateName = "account_banned"
 
-	VerificationCodeEmailSubject = "选课社区验证码"
-	AccountBannedEmailSubject    = "选课社区账号封禁通知"
+	VerificationCodeEmailSubject = "霓裳选课社区验证码"
+	AccountBannedEmailSubject    = "霓裳选课社区账号封禁通知"
 )
 
 type verificationCodeEmailData struct {
