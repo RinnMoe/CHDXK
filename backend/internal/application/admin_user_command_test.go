@@ -32,7 +32,7 @@ func TestAdminUserCommandServiceResetPassword(t *testing.T) {
 	accountRepo.PutAccount("", &identity.Account{
 		ID:           2,
 		Username:     "alice",
-		Email:        "alice@sjtu.edu.cn",
+		Email:        "alice@chd.edu.cn",
 		PasswordHash: "old_hash",
 	})
 	userRepo := auth.NewMockUserRepository(map[int]*auth.User{
@@ -65,7 +65,7 @@ func TestAdminUserCommandServiceResetPassword(t *testing.T) {
 	if payload.ActorUserID != actor.ID || payload.Action != audit.ActionUserPasswordReset || payload.TargetType != audit.TargetTypeUser || payload.TargetID != "2" {
 		t.Fatalf("audit payload = %+v", payload)
 	}
-	if payload.Details["email"] != "alice@sjtu.edu.cn" || payload.Details["had_password_before"] != true {
+	if payload.Details["email"] != "alice@chd.edu.cn" || payload.Details["had_password_before"] != true {
 		t.Fatalf("audit details = %+v", payload.Details)
 	}
 }
@@ -73,7 +73,7 @@ func TestAdminUserCommandServiceResetPassword(t *testing.T) {
 func TestAdminUserCommandServiceResetPasswordRejectsEmptyPassword(t *testing.T) {
 	hasher := credential.NewDjangoPBKDF2SHA256PasswordHasher(credential.PasswordHashConfig{Iterations: 1})
 	accountRepo := identity.NewMockRepository(map[string]*identity.Account{
-		"alice@sjtu.edu.cn": {ID: 2, Username: "alice", Email: "alice@sjtu.edu.cn", PasswordHash: "old_hash"},
+		"alice@chd.edu.cn": {ID: 2, Username: "alice", Email: "alice@chd.edu.cn", PasswordHash: "old_hash"},
 	})
 	userRepo := auth.NewMockUserRepository(map[int]*auth.User{
 		2: {ID: 2, Role: auth.RoleUser},

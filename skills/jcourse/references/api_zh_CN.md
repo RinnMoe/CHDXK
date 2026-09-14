@@ -15,9 +15,7 @@
 
 ## 认证和请求规则
 
-默认服务地址：`https://course.sjtu.plus`。
-
-默认 API 根地址：`https://course.sjtu.plus/api`。
+部署服务地址必须由用户提供，不要假设或默认使用任何公网服务地址。
 
 任意部署的基础路径：`/api`。
 
@@ -260,29 +258,13 @@ GET /api/course/enrolled
 
 返回 `[{"id":1,"course":{...},"semester":"2025-2026-1","created_at":"..."}]`。
 
-### 添加或删除选课记录
+### 删除选课记录
 
 ```http
-POST /api/course/{course_id}/enrollment
 DELETE /api/course/enrollment/{enrollment_id}
 ```
 
-创建请求体：
-
-```json
-{"semester":"2025-2026-1"}
-```
-
-学期必须是该课程开课学期，或满足后端对最近开课学期的策略。修改选课记录前先确认。
-
-### JAccount 选课同步
-
-```http
-GET /api/course/enrollment-sync/start?semester=2025-2026-1
-GET /api/course/enrollment-sync/callback?code=...&state=...
-```
-
-这是依赖浏览器 session 状态的 OAuth 类跳转流程。agent 场景优先使用手动选课记录；只有用户明确要求打开同步链接时再使用。
+选课记录由部署方的课程数据导入流程写入。删除前先确认记录。
 
 ## 用户、设置、API Key、积分和公告 API
 

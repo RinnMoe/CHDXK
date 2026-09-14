@@ -35,7 +35,6 @@ type AppConfig struct {
 	Asynq    task.Config                `mapstructure:"asynq"`
 	Stats    stat.Config                `mapstructure:"stats"`
 	SMTP     smtp.SMTPConfig            `mapstructure:"smtp"`
-	JAccount JAccountConfig             `mapstructure:"jaccount"`
 	ResHub   ResHubConfig               `mapstructure:"reshub"`
 }
 
@@ -63,19 +62,7 @@ type CorsConfig struct {
 	AllowedOrigins []string `mapstructure:"allowed_origins"`
 }
 
-type JAccountConfig struct {
-	ClientID            string   `mapstructure:"client_id"`
-	ClientSecret        string   `mapstructure:"client_secret"`
-	AuthorizeURL        string   `mapstructure:"authorize_url"`
-	TokenURL            string   `mapstructure:"token_url"`
-	APIBaseURL          string   `mapstructure:"api_base_url"`
-	RedirectURL         string   `mapstructure:"redirect_url"`
-	FrontendCallbackURL string   `mapstructure:"frontend_callback_url"`
-	Scopes              []string `mapstructure:"scopes"`
-	CourseSyncEnabled   bool     `mapstructure:"course_sync_enabled"`
-}
-
-// ResHubConfig contains only xk-side client configuration. The res-hub
+// ResHubConfig contains only CHDXK-side client configuration. The res-hub
 // service remains a separate deployment and owns the protocol implementation.
 type ResHubConfig struct {
 	Enabled         bool          `mapstructure:"enabled"`
@@ -199,13 +186,6 @@ func setDefaults(v *viper.Viper) {
 	})
 	setSectionDefaults(v, "api_key", map[string]any{
 		"snowflake_node_id": auth.DefaultApiKeyConfig.SnowflakeNodeID,
-	})
-	setSectionDefaults(v, "jaccount", map[string]any{
-		"authorize_url":       "https://jaccount.sjtu.edu.cn/oauth2/authorize",
-		"token_url":           "https://jaccount.sjtu.edu.cn/oauth2/token",
-		"api_base_url":        "https://api.sjtu.edu.cn/",
-		"scopes":              []string{},
-		"course_sync_enabled": false,
 	})
 	setSectionDefaults(v, "reshub", map[string]any{
 		"enabled":          false,

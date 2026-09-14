@@ -73,7 +73,7 @@ export function RegisterForm() {
                     value={field.state.value}
                     onChange={(value) => field.handleChange(value)}
                     onBlur={field.handleBlur}
-                    placeholder="jAccount"
+                    placeholder="邮箱前缀"
                     emailDomain={emailDomain}
                   />
                   {error && (

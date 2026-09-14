@@ -44,7 +44,7 @@ export function FaqPage() {
 
             <section className="space-y-3 p-4">
               <h2 className="font-medium">
-                选课社区是用来找到“水课”的吗？这是否会伤害教学质量？
+                {brand.name} 是用来找到“水课”的吗？这是否会伤害教学质量？
               </h2>
               <div className="space-y-2 text-sm leading-7 text-muted-foreground">
                 <p>
@@ -90,9 +90,9 @@ export function FaqPage() {
             </section>
 
             <section className="space-y-3 p-4">
-              <h2 className="font-medium">选课社区由谁来管理？</h2>
+              <h2 className="font-medium">{brand.name} 由谁来管理？</h2>
               <p className="text-sm leading-7 text-muted-foreground">
-                上海交通大学在校（或/与曾经在校）生，包括创始者和一些其他合作人。我们会确保此站的管理员中至少有一人为目前的在校生。
+                {brand.name} 由部署方和社区维护者共同管理，课程数据、内容审核和服务规则以当前部署的公开说明为准。
               </p>
             </section>
 
@@ -102,17 +102,13 @@ export function FaqPage() {
               </h2>
               <div className="space-y-2 text-sm leading-7 text-muted-foreground">
                 <p>
-                  尽管我们使用 jAccount
-                  注册和登录（用于避免刷赞），但数据库里只存放了其哈希值。
+                  登录由部署方配置的统一身份服务处理。点评内容、账户映射和操作记录的保存方式以部署方的隐私说明为准。
                 </p>
                 <p>
-                  如果有人找到我们，我们也无法把你交出来，因为我们不知道你是谁，除非你自己在点评里自报家门。
+                  请不要在点评中主动公开不必要的个人信息；任何匿名或隐私保护说明都不应被理解为对法律或部署方管理流程的承诺。
                 </p>
                 <p>
-                  当然我们希望在匿名保护下你的点评依然是真实而客观的。请不要吝啬你的评价，无论是批评还是赞扬。
-                </p>
-                <p>
-                  当然我们相信开明的上海交通大学行政机构和教职工不会因为对本科生课程的评价就试图约谈学生。
+                  我们鼓励在保护个人隐私的前提下，基于真实经历发表客观、具体的评价。
                 </p>
               </div>
             </section>
@@ -137,7 +133,7 @@ export function FaqPage() {
                   <li>违反用户所在地区法律的其他内容。</li>
                 </ul>
                 <p>
-                  社区管理员将删除此类内容，并视情况在一段时间内禁止该用户使用选课社区。
+                  社区管理员将删除此类内容，并视情况在一段时间内禁止该用户使用 {brand.name}。
                 </p>
                 <p>
                   原则上我们不修改内容，只修正事实性错误和重新排版，如修改错误的课程、学期、成绩格式，删去无内容的占位符等。
@@ -152,7 +148,7 @@ export function FaqPage() {
               <h2 className="font-medium">如何界定社区内容的版权问题？</h2>
               <div className="space-y-2 text-sm leading-7 text-muted-foreground">
                 <p>
-                  向选课社区提交点评时，您同意向社区提供对您提交的点评内容的永久、不可撤回、非独占、全球有效无限制的许可。您依然享有您提交的内容的全部版权。
+                  向 {brand.name} 提交点评时，您同意向社区提供对您提交的点评内容的永久、不可撤回、非独占、全球有效无限制的许可。您依然享有您提交的内容的全部版权。
                 </p>
                 <p>
                   任何人（除了原始所有权人）不得在未经社区许可的条件下，转载社区内容（包括全部或部分内容）。
@@ -165,57 +161,47 @@ export function FaqPage() {
             </section>
 
             <section className="space-y-3 p-4">
-              <h2 className="font-medium">选课社区收集我的多少信息？</h2>
+              <h2 className="font-medium">{brand.name} 收集我的多少信息？</h2>
               <p className="text-sm leading-7 text-muted-foreground">
                 请参考关于中“隐私”一节。
               </p>
             </section>
 
-            <section className="space-y-3 p-4">
-              <h2 className="font-medium">如何联系你们？</h2>
-              <p className="text-sm leading-7 text-muted-foreground">
-                请通过反馈或者邮件{" "}
-                <a
-                  href={`mailto:${brand.feedbackEmail}`}
-                  className="font-medium text-primary hover:underline"
-                >
-                  {brand.feedbackEmail}
-                </a>{" "}
-                向社区提出意见和建议。
-              </p>
-            </section>
+            {brand.feedbackEmail && (
+              <>
+                <section className="space-y-3 p-4">
+                  <h2 className="font-medium">如何联系部署方？</h2>
+                  <p className="text-sm leading-7 text-muted-foreground">
+                    请通过邮件{" "}
+                    <a
+                      href={`mailto:${brand.feedbackEmail}`}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      {brand.feedbackEmail}
+                    </a>{" "}
+                    提出意见和建议。
+                  </p>
+                </section>
 
-            <section className="space-y-3 p-4">
-              <h2 className="font-medium">我是课程老师……</h2>
-              <div className="space-y-2 text-sm leading-7 text-muted-foreground">
-                <p>
-                  <span className="font-medium text-foreground">
-                    我希望回复某一个关于我的点评。
-                  </span>
-                  感谢您的重视，我们随时欢迎老师也参与选课社区。请使用学校邮箱发信到{" "}
-                  <a
-                    href={`mailto:${brand.feedbackEmail}`}
-                    className="font-medium text-primary hover:underline"
-                  >
-                    {brand.feedbackEmail}
-                  </a>
-                  ，并提供希望回复的点评和您的回复。确认身份后我们可以将您的回复与点评一起呈现。
-                </p>
-                <p>
-                  <span className="font-medium text-foreground">
-                    我认为课程点评中存在虚假内容。
-                  </span>
-                  请使用学校邮箱发信到{" "}
-                  <a
-                    href={`mailto:${brand.feedbackEmail}`}
-                    className="font-medium text-primary hover:underline"
-                  >
-                    {brand.feedbackEmail}
-                  </a>
-                  ，并提供相关点评和澄清内容。我们希望能够协助您澄清。
-                </p>
-              </div>
-            </section>
+                <section className="space-y-3 p-4">
+                  <h2 className="font-medium">我是课程老师……</h2>
+                  <div className="space-y-2 text-sm leading-7 text-muted-foreground">
+                    <p>
+                      <span className="font-medium text-foreground">
+                        我希望回复某一个关于我的点评。
+                      </span>
+                      请联系部署方并提供希望回复的点评和您的回复；确认身份后，部署方可以将回复与点评一起呈现。
+                    </p>
+                    <p>
+                      <span className="font-medium text-foreground">
+                        我认为课程点评中存在虚假内容。
+                      </span>
+                      请提供相关点评和澄清内容，部署方会按照当前内容管理规则处理。
+                    </p>
+                  </div>
+                </section>
+              </>
+            )}
           </div>
         </div>
       </PageShell>

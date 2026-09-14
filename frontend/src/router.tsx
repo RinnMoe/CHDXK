@@ -15,7 +15,6 @@ import { RouteFallback } from "@/components/layout/route-fallback"
 import { getSafeRedirectPath } from "@/lib/auth-redirect"
 import {
   validateCourseDetailSearch,
-  validateCourseEnrollmentSyncCallbackSearch,
   validateCourseListSearch,
   validateLoginSearch,
   validatePageSearch,
@@ -34,7 +33,6 @@ type RouterContext = {
 
 export type {
   CourseDetailSearch,
-  CourseEnrollmentSyncCallbackSearch,
   CourseListSearch,
   LoginSearch,
   PageSearch,
@@ -138,16 +136,6 @@ export const passwordResetRoute = createRoute({
   component: lazyRouteComponent(
     () => import("@/pages/password-reset-page"),
     "PasswordResetPage"
-  ),
-})
-
-export const courseEnrollmentSyncCallbackRoute = createRoute({
-  getParentRoute: () => publicRoute,
-  path: "/course/mine/sync-callback",
-  validateSearch: validateCourseEnrollmentSyncCallbackSearch,
-  component: lazyRouteComponent(
-    () => import("@/pages/course-enrollment-sync-callback-page"),
-    "CourseEnrollmentSyncCallbackPage"
   ),
 })
 
@@ -345,7 +333,6 @@ const routeTree = rootRoute.addChildren([
     loginRoute,
     registerRoute,
     passwordResetRoute,
-    courseEnrollmentSyncCallbackRoute,
   ]),
   appRoute.addChildren([
     homeRoute,

@@ -67,14 +67,6 @@ func (s *CourseCommandService) RecordActivity(ctx context.Context, payload cours
 	return s.hotService.RecordActivityWithScores(ctx, payload, scores)
 }
 
-func (s *CourseCommandService) StartEnrollmentSync(ctx context.Context, semester, state string) (string, string, error) {
-	return s.enrollmentService.StartSync(ctx, semester, state)
-}
-
-func (s *CourseCommandService) SyncEnrollmentFromCode(ctx context.Context, userID int, semester, code string) (*course.CourseEnrollmentSyncResult, error) {
-	return s.enrollmentService.SyncFromCode(ctx, userID, semester, code)
-}
-
 func (s *CourseCommandService) RefreshRatingScores(ctx context.Context) error {
 	return s.ratingCommandService.RefreshRatingScores(ctx)
 }

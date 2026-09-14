@@ -6,6 +6,11 @@ FROM node:${NODE_VERSION}-alpine AS builder
 
 WORKDIR /app
 
+ARG VITE_SITE_NAME=CHDXK
+ARG VITE_SUPPORT_EMAIL=""
+ENV VITE_SITE_NAME=${VITE_SITE_NAME}
+ENV VITE_SUPPORT_EMAIL=${VITE_SUPPORT_EMAIL}
+
 RUN corepack enable
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./

@@ -60,7 +60,7 @@ Hexagonal / Clean DDD layering under `backend/internal/`:
 ```
 domain/         entities, repository + query interfaces, domain services, policies, mocks (build tag: test)
 application/    use-case services, CQRS-style command/query split, DTOs
-infrastructure/ persistence (gorm + redis), repository (gorm impls), smtp, jaccount, moderation, task (asynq)
+infrastructure/ persistence (gorm + redis), repository (gorm impls), smtp, reshub, moderation, task (asynq)
 interface/web   Gin controllers, middleware, router
 interface/async Asynq task handler registration
 app/container.go  manual DI wiring
@@ -77,12 +77,12 @@ cmd/{api,taskworker,importer,migrate_v1}  entrypoints
 - **PostgreSQL features**: tsvector + GIN indexes for full-text search (incl. pinyin via `pg_jieba`), `int[]` array columns for categories / teacher IDs.
 - **Redis**: session store (`jcourse:session:` prefix), hot-course sorted sets, verification codes, login-attempt lockout, repository JSON caches (default 30 min TTL — see `backend/CACHE_KEYS.md`).
 - **Async tasks**: `domain/task` defines pure `Task` / `Enqueuer` ports; `infrastructure/task` provides the Asynq backend; `interface/async` registers handlers. The API process injects an enqueuer at startup; `cmd/taskworker` runs the Asynq server with SIGINT/SIGTERM graceful shutdown.
-- **Auth**: email/password with verification codes (Django-compatible PBKDF2-SHA256 hashes), `Auth.EmailWhitelist` domain restriction, password reset flow, login lockout. JAccount OAuth is also wired in for SJTU course enrollment sync. External clients use `APIKeyAuth` for `/api/ext/*`.
+- **Auth**: email/password with verification codes (Django-compatible PBKDF2-SHA256 hashes), `Auth.EmailWhitelist` domain restriction, password reset flow, login lockout. When enabled, res-hub provides unified SSO, identity and points integration. External clients use `APIKeyAuth` for `/api/ext/*`.
 - **Config** via Viper. Any field is overridable with a `JCOURSE_` env var (e.g. `JCOURSE_POSTGRES_DSN`, `JCOURSE_SERVER_ADDR`). Never commit `config/config.yaml`.
 
 **Routing:** all routes are mounted under `/api` in `internal/interface/web/router.go`. Most need session auth; site-stats and parts of review moderation require admin; `/api/ext/*` uses API-key auth. When adding endpoints, verify the auth middleware in this file.
 
-**Domain model overview:** `Course → OfferedCourse ↔ TeacherGroup`, `Review → ReviewRevision / ReviewVote`, `User → PointRecord / PointTransfer`, plus `Announcement`, `SiteDailyStat`, `Account` (JAccount link), `AuditLog`.
+**Domain model overview:** `Course → OfferedCourse ↔ TeacherGroup`, `Review → ReviewRevision / ReviewVote`, `User → PointRecord / PointTransfer`, plus `Announcement`, `SiteDailyStat`, `UserIdentity` (res-hub projection), `AuditLog`.
 
 **Database migrations:** `backend/script/` holds four-digit numbered up/down SQL migration pairs (`0001_schema_pgsql.up.sql`, `0001_schema_pgsql.down.sql`, ...). When changing schema, **add a new numbered up/down pair — never edit an existing migration.**
 

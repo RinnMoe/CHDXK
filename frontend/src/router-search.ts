@@ -62,14 +62,6 @@ export type UserAdminSearch = {
   audit_actor_user_id?: number
 }
 export type SiteStatsSearch = { start_date?: string; end_date?: string }
-export type CourseEnrollmentSyncCallbackSearch = {
-  status?: "ok" | "error"
-  semester?: string
-  message?: string
-  matched?: number
-  total?: number
-}
-
 export function validateLoginSearch(search: SearchRecord): LoginSearch {
   return {
     redirect: rawStringParam(search.redirect)
@@ -80,18 +72,6 @@ export function validateLoginSearch(search: SearchRecord): LoginSearch {
       "sso_failed",
       "sso_unavailable",
     ] as const),
-  }
-}
-
-export function validateCourseEnrollmentSyncCallbackSearch(
-  search: SearchRecord
-): CourseEnrollmentSyncCallbackSearch {
-  return {
-    status: enumParam(search.status, ["ok", "error"] as const) ?? "error",
-    semester: rawStringParam(search.semester) ?? "",
-    message: rawStringParam(search.message),
-    matched: numberParam(search.matched) ?? 0,
-    total: numberParam(search.total) ?? 0,
   }
 }
 

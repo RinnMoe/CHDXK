@@ -33,7 +33,7 @@ func newSystemSettingsService(repo setting.SystemRepository, courseRepo course.C
 			Label:        "邮箱后缀",
 			Description:  "登录、注册和重置密码表单默认拼接的邮箱后缀",
 			Type:         setting.ValueTypeString,
-			DefaultValue: "@sjtu.edu.cn",
+			DefaultValue: "@chd.edu.cn",
 			Public:       true,
 			Validator:    setting.ValueValidatorFunc(emailDomainSetting),
 		},
@@ -43,7 +43,7 @@ func newSystemSettingsService(repo setting.SystemRepository, courseRepo course.C
 			Label:        "注册邮箱白名单",
 			Description:  "允许注册的邮箱或邮箱后缀，多个值用逗号或换行分隔",
 			Type:         setting.ValueTypeStringList,
-			DefaultValue: "@sjtu.edu.cn",
+			DefaultValue: "@chd.edu.cn",
 			Validator:    setting.ValueValidatorFunc(nonEmptyStringListSetting),
 		},
 		{

@@ -1,6 +1,6 @@
 ---
 name: jcourse
-description: 在 agent 中使用 JCourse 选课社区 API。适用于搜索课程或教师、查看课程详情、总结评价、比较课程、关注或忽略课程、管理选课记录、创建或更新课程评价、给评价投票，以及通过 HTTP 操作 JCourse 后端的场景。
+description: 在 agent 中使用 JCourse 选课社区 API。适用于搜索课程或教师、查看课程详情、总结评价、比较课程、关注或忽略课程、查看或删除已有选课记录、创建或更新课程评价、给评价投票，以及通过 HTTP 操作 JCourse 后端的场景。
 ---
 
 # JCourse
@@ -9,9 +9,7 @@ description: 在 agent 中使用 JCourse 选课社区 API。适用于搜索课�
 
 ## 连接方式
 
-默认服务地址是 `https://course.sjtu.plus`。
-
-默认 API 根地址是 `https://course.sjtu.plus/api`。如果用户提供了其他部署地址，改用用户提供的地址；除非用户给出的地址已经以 `/api` 结尾，否则 API 根地址为 `${base_url}/api`。
+使用这个 skill 前必须由用户提供部署地址。不要推断或默认使用任何公网服务地址；除非用户给出的地址已经以 `/api` 结尾，否则 API 根地址为 `${base_url}/api`。
 
 如果用户没有提供用户 API Key，先向用户索取。
 
@@ -28,7 +26,7 @@ Content-Type: application/json
 
 ## 工作流程
 
-1. 判断任务是只读还是会修改数据。创建、更新、删除、投票、关注、忽略或登记选课前，先向用户确认。
+1. 判断任务是只读还是会修改数据。创建、更新、删除、投票、关注或忽略前，先向用户确认。
 2. 做课程推荐时，先广泛搜索，再查看最相关课程的详情和评价。不要只按评分均值排序；同时考虑评分人数、评分 score、评价新旧、教师、开课学期、院系、学分和用户约束。
 3. 总结评价时，把 API 返回的事实和 agent 的推断区分开。评价数量少时说明样本量有限。
 4. 执行课程相关操作前，先把课程名称解析为明确的 `course_id`，并向用户展示匹配到的课程代码、课程名和教师。
@@ -46,4 +44,4 @@ Content-Type: application/json
 
 ## 参考资料
 
-需要精确端点、查询参数、JSON 结构或错误处理方式时，读取 [references/api_zh_CN.md](references/api_ZH.md)。
+需要精确端点、查询参数、JSON 结构或错误处理方式时，读取 [references/api_zh_CN.md](references/api_zh_CN.md)。

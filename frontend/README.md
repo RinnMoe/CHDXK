@@ -1,4 +1,4 @@
-# jcourse Frontend
+# CHDXK Frontend
 
 这是 `jcourse` 的 React/Vite 前端，提供课程检索、教师检索、课程详情、点评发布与浏览、个人课程、积分、API Key、设置和后台管理页面。
 
@@ -63,6 +63,12 @@ go run cmd/api/main.go --config config/config.yaml
 ```
 
 前端 API 基础路径定义在 `src/api/constants.ts`，默认为相对路径 `/api`。
+
+站点名称和反馈邮箱在生产构建时注入：`VITE_SITE_NAME` 默认是 `CHDXK`，`VITE_SUPPORT_EMAIL` 未配置时不显示联系邮箱或反馈链接。例如：
+
+```bash
+VITE_SITE_NAME=CHDXK VITE_SUPPORT_EMAIL=support@example.com pnpm build
+```
 
 ## Mock 模式
 

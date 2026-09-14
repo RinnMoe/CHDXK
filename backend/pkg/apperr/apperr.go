@@ -73,10 +73,7 @@ var (
 
 	ErrCourseNotFound           = NotFound("课程不存在")
 	ErrTeacherNotFound          = NotFound("教师不存在")
-	ErrSemesterRequired         = BadRequest("学期不能为空")
 	ErrOfferedCourseNotFound    = BadRequest("该学期未开设此课程")
-	ErrInvalidSyncSemester      = BadRequest("学期无效")
-	ErrEnrollmentSyncDisabled   = ServiceUnavailable("选课同步功能已关闭")
 	ErrInvalidHotCoursePeriod   = BadRequest("热门课程周期无效")
 	ErrInvalidHotCourseActivity = BadRequest("热门课程活动类型无效")
 
@@ -107,7 +104,4 @@ var (
 	ErrInvalidCurrentSemester = BadRequest("当前学期无效")
 	ErrInvalidDateRange       = BadRequest("日期范围无效")
 	ErrInvalidAuditTimeRange  = BadRequest("审计日志时间范围无效")
-
-	ErrJAccountDisabled         = ServiceUnavailable("JAccount 选课同步功能已关闭")
-	ErrJAccountSemesterRequired = BadRequest("学期不能为空")
 )

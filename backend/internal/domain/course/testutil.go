@@ -178,23 +178,8 @@ func containsInt(values []int, target int) bool {
 type MockCourseEnrollmentRepository struct {
 	DeletedEnrollmentID int
 	DeletedUserID       int
-	SyncedUserID        int
-	SyncedSemester      string
-	SyncedPairs         []CourseCodeTeacher
-	SyncCount           int64
 
-	OnSyncFromCoursePairs func(context.Context, int, string, []CourseCodeTeacher) (int64, error)
-	OnDelete              func(context.Context, int, int) error
-}
-
-func (r *MockCourseEnrollmentRepository) SyncFromCoursePairs(ctx context.Context, userID int, semester string, pairs []CourseCodeTeacher) (int64, error) {
-	if r.OnSyncFromCoursePairs != nil {
-		return r.OnSyncFromCoursePairs(ctx, userID, semester, pairs)
-	}
-	r.SyncedUserID = userID
-	r.SyncedSemester = semester
-	r.SyncedPairs = append([]CourseCodeTeacher(nil), pairs...)
-	return r.SyncCount, nil
+	OnDelete func(context.Context, int, int) error
 }
 
 func (r *MockCourseEnrollmentRepository) Delete(ctx context.Context, enrollmentID, userID int) error {

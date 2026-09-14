@@ -13,7 +13,7 @@ This directory is the React/Vite frontend for `jcourse`. Application code lives 
 - `pnpm test` runs Vitest with `--passWithNoTests`.
 - `pnpm preview` serves the built app locally.
 - `pnpm format` runs oxfmt across the project.
-- `VITE_ENABLE_MOCKS=true pnpm dev` starts Vite with MSW mocks instead of requiring a live backend.
+- `VITE_ENABLE_MOCKS=true pnpm dev` starts Vite with MSW mocks instead of requiring a live backend. `VITE_SITE_NAME` and `VITE_SUPPORT_EMAIL` configure the public brand and optional contact link at build time.
 
 ## Coding Style & Naming Conventions
 

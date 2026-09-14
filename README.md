@@ -1,6 +1,6 @@
-# jcourse
+# CHDXK
 
-`jcourse` 是一个课程点评与选课辅助系统，包含 Go 后端和 React/Vite 前端。项目提供课程与教师检索、课程点评、评分趋势、关注课程、课程通知、个人课程、积分转账、API Key、站点统计和后台用户管理等能力。
+CHDXK 是一个课程点评与选课辅助系统，包含 Go 后端和 React/Vite 前端。项目提供课程与教师检索、课程点评、评分趋势、关注课程、课程通知、个人课程、积分转账、API Key、站点统计和后台用户管理等能力。`jcourse` 仅作为内部 Go module、数据库和兼容配置命名保留。
 
 ## 目录结构
 
@@ -67,7 +67,7 @@ pnpm --dir frontend dev
 cd backend
 go build ./...
 go test -tags test ./...
-go vet ./...
+go vet -tags test ./...
 ```
 
 后端 Go 测试统一带 `-tags test`，用于启用测试环境的共享 repository mock。

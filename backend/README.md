@@ -24,7 +24,7 @@ backend/
 ├── internal/
 │   ├── domain/       # 领域模型、策略与接口
 │   ├── application/  # 用例服务、命令、查询和 DTO
-│   ├── infrastructure/ # Gorm、Redis、邮件、JAccount、任务适配器
+│   ├── infrastructure/ # Gorm、Redis、邮件、res-hub、任务适配器
 │   └── interface/    # Web controller/middleware 与 async handler
 ├── pkg/              # 通用包
 └── script/           # PostgreSQL schema 与迁移 SQL
@@ -72,6 +72,16 @@ go run cmd/api/main.go --config config/config.yaml
 
 服务默认监听 `http://localhost:8080`，路由前缀为 `/api`。
 
+### 构建和部署镜像
+
+`build_docker.sh` 默认构建本地 `chdxk/api:latest` 和 `chdxk/taskworker:latest`，不会自动推送。部署时通过环境变量指定镜像仓库和标签，需要推送时显式设置 `PUSH_IMAGES=true`：
+
+```bash
+REGISTRY=registry.example.com IMAGE_NAMESPACE=chdxk IMAGE_TAG=2026-09-14 PUSH_IMAGES=true ./build_docker.sh
+```
+
+Compose 中的 `CHDXK_API_IMAGE`、`CHDXK_TASKWORKER_IMAGE` 和容器名也可由部署环境覆盖；数据库名、表名和 `JCOURSE_` 配置前缀保持兼容。
+
 ### 5. 启动异步 worker
 
 如果需要处理异步任务或定时站点统计，另开终端执行：
@@ -85,7 +95,7 @@ go run cmd/taskworker/main.go --config config/config.yaml
 ```bash
 go build ./...
 go test -tags test ./...
-go vet ./...
+go vet -tags test ./...
 ```
 
 Go 测试统一带 `-tags test`，因为 domain 包下复用的 repository mock 使用 `//go:build test` 约束。
@@ -120,14 +130,14 @@ go run cmd/importer/main.go --target-dsn "$TARGET_DSN" --semester 2025-2026-1
 - `session`：会话密钥、过期时间和 secure cookie 开关
 - `auth`：注册、重置密码、登录限制和密码哈希参数
 - `smtp`：邮件验证码发送配置
-- `jaccount`：JAccount OAuth 与课程同步配置
+- `reshub`：统一身份、会话和积分服务配置；密钥只从部署环境注入
 - `stats` / `asynq`：定时统计和异步任务配置
 
 不要提交真实的 `config/config.yaml`、SMTP 密码、OAuth secret 或 session secret。
 
 ## API 与权限
 
-路由集中定义在 `internal/interface/web/router.go`。公开接口包括注册、登录、密码重置、CSRF token 和课程同步 callback；大多数 `/api` 接口需要登录；后台用户、站点统计和部分点评管理接口需要管理员权限。
+路由集中定义在 `internal/interface/web/router.go`。公开接口包括注册、登录、密码重置和 CSRF token；启用 res-hub 后，登录相关公开路由由统一身份服务接管；大多数 `/api` 接口需要登录；后台用户、站点统计和部分点评管理接口需要管理员权限。
 
 前端开发服务器默认从 `http://localhost:5173` 访问后端。CORS 默认允许 `*`，可通过 `server.cors.allowed_origins` 或 `JCOURSE_SERVER_CORS_ALLOWED_ORIGINS` 覆盖，并启用 cookie 凭据。
 

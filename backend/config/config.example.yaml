@@ -77,30 +77,19 @@ smtp:
   password: ""
   from: "noreply@example.com"
 
-jaccount:
-  course_sync_enabled: false
-  client_id: ""
-  client_secret: ""
-  authorize_url: "https://jaccount.sjtu.edu.cn/oauth2/authorize"
-  token_url: "https://jaccount.sjtu.edu.cn/oauth2/token"
-  api_base_url: "https://api.sjtu.edu.cn/"
-  redirect_url: "http://localhost:8080/api/course/enrollment-sync/callback"
-  frontend_callback_url: "http://localhost:5173/course/mine/sync-callback"
-  scopes: []
-
-# xk uses res-hub as the only user, role, session and points authority.
+# CHDXK uses res-hub as the unified user, role, session and points authority.
 # Keep this disabled until the res-hub client is registered and the internal
 # service address is reachable.
 reshub:
   enabled: false
   # res-hub is a hash-routed Vue application; keep the route in the fragment.
-  authorize_url: "https://qbot.evian.asia/#/sso/authorize"
+  authorize_url: "https://res-hub.example.com/#/sso/authorize"
   # The private API listener is separate from the public HTTPS reverse proxy.
   internal_base_url: "http://127.0.0.1:3421"
-  client_id: "xk"
+  client_id: "chdxk"
   client_secret: ""
   # Register this exact URL in res-hub; scheme, host, path and trailing slash matter.
-  redirect_uri: "https://xk.example.com/api/auth/sso/callback"
-  logout_return_uri: "https://xk.example.com/"
+  redirect_uri: "https://chdxk.example.com/api/auth/sso/callback"
+  logout_return_uri: "https://chdxk.example.com/"
   timeout: "3s"
   points_base_path: "/api/integrations/v1"

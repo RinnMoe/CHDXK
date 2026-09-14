@@ -2,12 +2,12 @@ services:
   api:
     build:
       dockerfile: api.Dockerfile
-    image: dujiajun/jcourse_api
-    container_name: jcourse_api
+    image: ${CHDXK_API_IMAGE:-chdxk/api:latest}
+    container_name: ${CHDXK_API_CONTAINER:-chdxk_api}
     environment:
       TZ: Asia/Shanghai
       ARMS_ENABLE: true
-      ARMS_APP_NAME: jcourse_api
+      ARMS_APP_NAME: ${CHDXK_API_ARMS_APP_NAME:-chdxk_api}
       ARMS_REGION_ID: cn-shanghai
       ARMS_LICENSE_KEY: ""
     ports:
@@ -16,11 +16,11 @@ services:
   task_worker:
     build:
       dockerfile: taskworker.Dockerfile
-    image: dujiajun/jcourse_task_worker
-    container_name: jcourse_task_worker
+    image: ${CHDXK_TASKWORKER_IMAGE:-chdxk/taskworker:latest}
+    container_name: ${CHDXK_TASKWORKER_CONTAINER:-chdxk_taskworker}
     environment:
       TZ: Asia/Shanghai
       ARMS_ENABLE: true
-      ARMS_APP_NAME: jcourse_task_worker
+      ARMS_APP_NAME: ${CHDXK_TASKWORKER_ARMS_APP_NAME:-chdxk_taskworker}
       ARMS_REGION_ID: cn-shanghai
       ARMS_LICENSE_KEY: ""

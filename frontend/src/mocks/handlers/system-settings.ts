@@ -23,8 +23,8 @@ let settings: SystemSettingDTO[] = [
   },
   {
     key: SYSTEM_SETTING_AUTH_EMAIL_DOMAIN,
-    value: "@sjtu.edu.cn",
-    default_value: "@sjtu.edu.cn",
+    value: "@chd.edu.cn",
+    default_value: "@chd.edu.cn",
     type: "string",
     group: "auth",
     label: "邮箱后缀",
@@ -35,8 +35,8 @@ let settings: SystemSettingDTO[] = [
   },
   {
     key: "auth.registration.email_whitelist",
-    value: "@sjtu.edu.cn",
-    default_value: "@sjtu.edu.cn",
+    value: "@chd.edu.cn",
+    default_value: "@chd.edu.cn",
     type: "string_list",
     group: "auth",
     label: "注册邮箱白名单",

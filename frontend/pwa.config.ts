@@ -1,6 +1,6 @@
 import type { VitePWA } from "vite-plugin-pwa"
 
-const appName = "SJTU选课社区"
+const appName = process.env.VITE_SITE_NAME?.trim() || "CHDXK"
 const appDescription = "课程检索、教师检索与课程点评社区"
 
 export const pwaOptions: Parameters<typeof VitePWA>[0] = {
@@ -10,7 +10,7 @@ export const pwaOptions: Parameters<typeof VitePWA>[0] = {
   manifest: {
     id: "/",
     name: appName,
-    short_name: "选课社区",
+    short_name: appName,
     description: appDescription,
     start_url: "/",
     scope: "/",

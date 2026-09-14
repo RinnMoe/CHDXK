@@ -16,7 +16,7 @@ interface CourseDetailOverviewProps {
   course: CourseDetailDTO
   courseSemesters: string[]
   selectedSemesters: string[]
-  feedbackMailto: string
+  feedbackMailto?: string
   isAdmin: boolean
 }
 
@@ -110,17 +110,19 @@ export function CourseDetailOverview({
               courseID={course.id}
               level={course.notification_level}
             />
-            <Button
-              asChild
-              size="sm"
-              variant="outline"
-              className="h-8 px-2 text-muted-foreground hover:text-foreground"
-            >
-              <a href={feedbackMailto}>
-                <RiMailLine data-icon="inline-start" />
-                反馈
-              </a>
-            </Button>
+            {feedbackMailto && (
+              <Button
+                asChild
+                size="sm"
+                variant="outline"
+                className="h-8 px-2 text-muted-foreground hover:text-foreground"
+              >
+                <a href={feedbackMailto}>
+                  <RiMailLine data-icon="inline-start" />
+                  反馈
+                </a>
+              </Button>
+            )}
             {isAdmin && <CourseModeratorRemarkButton course={course} />}
           </div>
         </div>

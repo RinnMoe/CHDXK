@@ -15,9 +15,7 @@
 
 ## Authentication and Request Rules
 
-Default service URL: `https://course.sjtu.plus`.
-
-Default API root: `https://course.sjtu.plus/api`.
+The deployment service URL must be provided by the user. Do not assume a public service URL.
 
 Base path on any deployment: `/api`.
 
@@ -260,29 +258,13 @@ GET /api/course/enrolled
 
 Returns `[{"id":1,"course":{...},"semester":"2025-2026-1","created_at":"..."}]`.
 
-### Add or Remove Enrollment
+### Remove an Enrollment
 
 ```http
-POST /api/course/{course_id}/enrollment
 DELETE /api/course/enrollment/{enrollment_id}
 ```
 
-Create body:
-
-```json
-{"semester":"2025-2026-1"}
-```
-
-The semester must be offered for that course, unless it equals the course last semester according to backend policy. Confirm before changing enrollment records.
-
-### JAccount Enrollment Sync
-
-```http
-GET /api/course/enrollment-sync/start?semester=2025-2026-1
-GET /api/course/enrollment-sync/callback?code=...&state=...
-```
-
-This is an OAuth-like browser flow. In agent contexts, prefer manual enrollment unless the user explicitly wants to open the sync URL.
+Enrollment records are populated by the deployment's course data import flow. Confirm the record before removing it.
 
 ## User, Settings, API Key, Point, and Announcement APIs
 

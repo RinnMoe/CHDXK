@@ -24,14 +24,14 @@ const initialUsers: MockUser[] = [
   normalizeMockUser({
     id: 1,
     username: "demo",
-    email: "demo@sjtu.edu.cn",
+    email: "demo@chd.edu.cn",
     password: "password",
     role: "user",
   }),
   normalizeMockUser({
     id: 2,
     username: "admin",
-    email: "admin@sjtu.edu.cn",
+    email: "admin@chd.edu.cn",
     password: "password",
     role: "super_admin",
   }),

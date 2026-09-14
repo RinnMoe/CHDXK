@@ -14,7 +14,7 @@ import { getMockSystemSettingValue } from "./system-settings"
 import { randomDelay } from "@/mocks/utils"
 
 function parseStringList(value: string | undefined) {
-  return (value ?? "@sjtu.edu.cn")
+  return (value ?? "@chd.edu.cn")
     .split(/[\s,]+/)
     .map((item) => item.trim().toLowerCase())
     .filter(Boolean)

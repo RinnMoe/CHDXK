@@ -11,7 +11,6 @@ import (
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/email"
 	"jcourse/internal/domain/point"
-	"jcourse/internal/infrastructure/jaccount"
 	"jcourse/internal/infrastructure/persistence"
 	"jcourse/internal/infrastructure/repository"
 	"jcourse/internal/infrastructure/reshub"
@@ -93,8 +92,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	courseService := course.NewService(courseRepo)
 	courseRatingCommand := course.NewCourseRatingCommandService(courseRepo, conf.Course.RatingScore)
 	courseQuery := application.NewCourseQueryService(courseRepo, teacherRepo, reviewRepo, notificationRepo, courseEnrollmentRepo, courseHotRepo)
-	jaccountClient := jaccount.NewOAuthClient(conf.JAccount)
-	courseEnrollmentService := course.NewEnrollmentService(courseRepo, courseEnrollmentRepo, jaccountClient)
+	courseEnrollmentService := course.NewEnrollmentService(courseEnrollmentRepo)
 	courseCommand := application.NewCourseCommandService(
 		courseService,
 		course.NewNotificationService(courseRepo, notificationRepo),

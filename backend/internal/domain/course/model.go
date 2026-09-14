@@ -15,8 +15,3 @@ type CourseRepository interface {
 	OfferedCourseExists(ctx context.Context, courseID int, semester string) (bool, error)
 	OfferedSemesterExists(ctx context.Context, semester string) (bool, error)
 }
-
-type CourseCodeTeacher struct {
-	Code        string
-	TeacherName string
-}

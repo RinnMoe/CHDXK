@@ -1,6 +1,6 @@
 export const brand = {
-  name: "SJTU选课社区",
-  feedbackEmail: "course@sjtu.plus",
+  name: import.meta.env.VITE_SITE_NAME?.trim() || "CHDXK",
+  feedbackEmail: import.meta.env.VITE_SUPPORT_EMAIL?.trim() || undefined,
 } as const
 
 export function formatPageTitle(pageTitle?: string) {

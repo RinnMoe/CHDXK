@@ -64,7 +64,7 @@ export function AdminUserSearchForm({
             value={emailPrefix}
             emailDomain={emailDomain}
             onChange={setEmailPrefix}
-            placeholder="jAccount"
+            placeholder="邮箱前缀"
           />
         </div>
         <div className="min-w-48 flex-1">

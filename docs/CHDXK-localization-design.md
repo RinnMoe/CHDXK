@@ -1,6 +1,8 @@
 # CHDXK 本地化改造设计方案
 
-*面向 CHDXK 单站部署的全面本地化改造设计；基于当前仓库源码盘点，版本 v0.1，更新时间 2026-09-01。*
+*面向 CHDXK 单站部署的本地化改造设计与实施记录；基于当前仓库源码盘点，版本 v0.2，更新时间 2026-09-14。*
+
+本文中的 SJTU、JAccount 和上游域名仅用于标注历史基线、迁移来源或设计风险；它们不属于 CHDXK 的运行时、部署默认值或用户入口。
 
 ---
 
@@ -17,16 +19,23 @@
 - PostgreSQL、Redis、异步任务、邮件、外部服务和部署；
 - 数据迁移、兼容策略、安全隐私、测试和发布验收。
 
-本文档是设计和改造清单，不代表本地化功能已经实现。除当前仓库已有行为外，目标方案均应在对应任务完成并通过验收后才可视为落地。
+本文档同时保留改造前的上游耦合盘点和 provenance 记录；其中“当前行为/目标设计”章节可能描述历史方案，最终运行时行为以代码、示例配置和 [res-hub 部署文档](./reshub-integration.md) 为准。
+
+### 2026-09-14 实施状态
+
+- 对外品牌采用 `CHDXK`，默认兼容邮箱域为 `@chd.edu.cn`，反馈邮箱由 `VITE_SUPPORT_EMAIL` 注入。
+- res-hub SSO、身份投影和积分集成保留；JAccount OAuth、课程同步路由、适配器和前端入口已移除。
+- 本轮不新增 CHD 在线课表同步；`tools/bkjw-course-source` 继续作为独立课程数据采集工具，课程发布仍走现有导入流程。
+- 内部 `jcourse`/`JCOURSE`、数据库/表名和 Redis key 保持兼容；`0015` 只迁移精确匹配的旧邮箱默认值并保存回滚备份。
 
 ### 结论摘要
 
 推荐采用“保留核心业务、抽离本地配置、适配外部系统、增量迁移数据”的路线：
 
 1. 保留课程浏览、教师信息、点评、投票、课程关注、通知、管理和审计等通用能力。
-2. 将 SJTU 品牌、域名、邮箱域、身份提供方、课程数据源、学期格式、联系渠道和外部链接移出业务代码硬编码。
+2. 将上游品牌、域名、邮箱域、机构身份和联系渠道移出运行时与部署硬编码。
 3. 第一阶段保持现有前端路由和 /api 接口契约，避免同时进行 API 改名、数据库表重命名和 UI 大改版。
-4. 将 jAccount 变成可插拔的身份/教务适配器；CHDXK 的正式登录方式和课程同步方式由本地部署配置决定。
+4. 使用 res-hub 作为统一登录、身份和积分服务；本轮不保留机构 OAuth 课程同步能力。
 5. 现有数据库先做加法式迁移，增加身份映射、数据源、导入批次和来源标识；不直接删除旧字段、不清空现有点评、不覆盖无法确认来源的数据。
 6. 先完成单站可运营版本，再评估多学校、多校区、多语言或多租户，不为尚未确认的需求提前引入复杂度。
 
@@ -35,8 +44,8 @@
 | 范围 | 本文覆盖内容 | 第一阶段非目标 |
 | --- | --- | --- |
 | 产品身份 | CHDXK 名称、简称、域名、Logo、联系方式、协议和隐私文案 | 不在没有视觉稿的情况下重做整体视觉系统 |
-| 用户身份 | 邮箱登录、机构 OAuth、账号迁移、会话和权限 | 不在未确认身份方案前强行接入新的真实认证系统 |
-| 课程数据 | 本地课程源、教师源、学期、导入、去重、数据质量 | 不凭空制造课程、教师或用户数据 |
+| 用户身份 | res-hub SSO、本地兼容账号、会话和权限 | 不在本轮接入新的机构 OAuth 或在线课表同步 |
+| 课程数据 | 独立 CHD 采集工具、CSV 导入、教师源、学期、去重、数据质量 | 不凭空制造课程、教师或用户数据 |
 | 社区业务 | 点评、投票、积分、审核、通知、管理员操作 | 不擅自改变积分经济、点评版权或内容处理政策 |
 | 技术架构 | 配置分层、适配器、数据库兼容、部署与验收 | 不将单站直接改造成完整多租户平台 |
 | 交付方式 | 设计文档、改造清单、阶段门禁、回滚方案 | 不把规划文档当作代码实现或生产验收证明 |
@@ -59,31 +68,31 @@
 
 | 层次 | 当前实现 | 本地化影响 |
 | --- | --- | --- |
-| 前端 | frontend 下的 React、TypeScript、Vite、TanStack Router/Query、Tailwind、PWA、MSW、Vitest | 品牌和文案集中度有限，页面与 mock 中仍有 SJTU 邮箱和 jAccount 语义 |
-| 后端 | backend 下的 Go/Gin/GORM，按领域、应用、基础设施和 Web 接口分层 | 核心领域可以复用，但配置结构、模块名、错误文案和适配器仍使用 jcourse/JAccount 语义 |
-| 数据库 | PostgreSQL 17，依赖 pg_jieba 和 pg_trgm；迁移脚本为 0001 至 0013 | 搜索和数据结构已经具有中文场景假设；课程源标识和身份提供方标识不足 |
+| 前端 | frontend 下的 React、TypeScript、Vite、TanStack Router/Query、Tailwind、PWA、MSW、Vitest | 已完成 CHDXK 品牌、邮箱、联系入口和课程同步入口清理 |
+| 后端 | backend 下的 Go/Gin/GORM，按领域、应用、基础设施和 Web 接口分层 | 保留 jcourse/JCOURSE 内部兼容命名；res-hub SSO 保留，JAccount 适配器和在线课程同步已移除 |
+| 数据库 | PostgreSQL 17，依赖 pg_jieba 和 pg_trgm；迁移脚本为 0001 至 0015 | 搜索和数据结构已经具有中文场景假设；课程源标识和身份提供方标识不足 |
 | 缓存与异步 | Redis 7、Asynq、任务 worker、课程热度、验证码、会话、限流和统计任务 | 需要确保本地化后的站点配置变化能触发缓存失效和任务重载 |
 | 课程导入 | backend/cmd/importer 读取 backend/data/<semester>.csv，按课程代码和主讲教师聚合 | 目前是强约束的 CSV 导入，应抽象成来源适配器并加入校验、预览、幂等和回滚 |
-| 认证 | 邮箱注册/验证码/密码登录为主，jAccount 用于课程选课同步 | 登录身份和教务选课身份被部分混在同一产品叙事中，需要拆分 |
+| 认证 | res-hub SSO；本地账号仅保留兼容配置 | 登录身份与课程数据导入保持边界，不提供在线课表同步 |
 | 前端 API | frontend/src/api 以 /api 为基地址，非安全方法前先获取 CSRF token | 首阶段应保留契约，只替换站点配置和外部适配行为 |
 | 部署 | docker/docker-compose.yaml 提供 PostgreSQL 和 Redis；前端 Dockerfile 使用 Node 24 构建、Nginx 提供静态文件 | 尚未形成 CHDXK 的生产反向代理、秘密注入、备份、迁移和发布流程 |
 
-### 已确认的 SJTU 绑定点
+### 历史上游绑定点及处理状态
 
 | 类别 | 当前锚点 | 影响 | 建议处理 |
 | --- | --- | --- | --- |
 | 代码命名 | Go module 为 jcourse，环境变量前缀为 JCOURSE，容器和数据库名为 jcourse | 全局改名会影响导入路径、迁移脚本、部署和既有数据 | 第一阶段保留内部技术命名，建立 CHDXK 对外标识；后续另行制定命名迁移 |
 | 前端品牌 | frontend/src/config/brand.ts、frontend/pwa.config.ts、main.tsx、页眉页脚、页面标题 | 用户可见名称、PWA 安装名和邮件联系地址仍是上游品牌 | 统一由站点档案提供，并保留单一品牌入口 |
-| 停机页 | frontend/public/maintenance.html 中含 SJTU选课社区 | 维护期间仍会暴露上游身份 | 使用同一品牌配置生成或手工同步停机页，增加版本检查 |
-| 邮箱身份 | frontend/src/config/auth.ts、mock、后端 site_settings.go 默认使用 @sjtu.edu.cn | 新站点可能无法注册或会误收拦截 | 改成部署配置和管理员可见设置，默认值必须由 CHDXK 决策提供 |
-| jAccount | backend/config/config.go、config.example.yaml、internal/infrastructure/jaccount、课程同步控制器和前端同步弹窗 | 真实认证端点、回调、课程接口和 UI 文案全部具有机构特定性 | 抽象身份/选课适配器；jAccount 仅作为可选实现 |
-| 上游网址 | backend/loadtest 中的 course.sjtu.plus，前端当前开发代理已指向本地 API | 压测、文档、运行环境容易误打真实上游 | 所有目标地址通过环境变量或部署配置注入，并增加危险目标保护 |
-| 外部链接 | user-points-page.tsx 仍指向 share.dyweb.sjtu.cn | 可能把 CHDXK 用户带到无关站点 | 逐条确认用途，改为 CHDXK 联系/帮助/积分说明或移除 |
+| 停机页 | frontend/public/maintenance.html 曾含上游品牌 | 维护期间会暴露错误身份 | 已改为 CHDXK；反馈/品牌配置由构建时注入 |
+| 邮箱身份 | 前端 mock、后端 site_settings.go 曾默认使用 @sjtu.edu.cn | 新站点可能无法注册或会误收拦截 | 已改为 @chd.edu.cn；数据库精确旧值由 0015 迁移 |
+| jAccount | backend/config、internal/infrastructure/jaccount、课程同步控制器和前端同步入口 | 认证端点、回调、课程接口和 UI 文案全部具有机构特定性 | 已移除；不新增在线课表同步 |
+| 上游网址 | backend/loadtest 曾默认指向 course.sjtu.plus | 压测、文档、运行环境容易误打真实上游 | 已改为本地默认；skill 要求用户提供部署地址 |
+| 外部链接 | user-points-page.tsx 曾指向 share.dyweb.sjtu.cn | 可能把 CHDXK 用户带到无关站点 | 已移除未经确认的上游链接；后续新增链接需明确 owner 和用途 |
 | 邮件模板 | 验证码、封禁、频率限制通知中使用“选课社区” | 邮件发送后仍会显示上游产品名 | 模板变量化：站点名、支持邮箱、帮助链接、运营主体 |
-| 内容说明 | about-content.tsx、faq-page.tsx 写有上海交通大学、jAccount、学校邮箱和既有运营承诺 | 文案会产生错误的身份、隐私和责任预期 | 依据 CHDXK 实际运营规则重新审核，不做机械替换 |
+| 内容说明 | about-content.tsx、faq-page.tsx 曾写有上海交通大学、jAccount、学校邮箱和既有运营承诺 | 文案会产生错误的身份、隐私和责任预期 | 已改为 CHDXK/部署方语义，未配置邮箱时隐藏联系链接 |
 | 数据字典 | 课程、教师、院系、年级、语言、学期和教师关系以现有上游数据形态为基线 | 其他学校可能字段含义不同或缺少字段 | 建立源字段契约和规范化映射，保留未知值和来源 |
 | 搜索 | pg_jieba 中文分词、tsvector、pg_trgm 索引 | 分词词典、字段组合和排序可能不适合目标数据 | 通过目标课程样本验证，不先更换搜索技术 |
-| 构建发布 | Docker 和 loadtest 仍有上游镜像/域名/架构假设 | 部署时可能推送到错误仓库或依赖 ARM APM | 配置化镜像、域名和可选观测组件，默认关闭无关外部服务 |
+| 构建发布 | Docker 和 loadtest 曾有上游镜像/域名/架构假设 | 部署时可能推送到错误仓库或依赖 ARM APM | 镜像名和前端品牌已配置化，观测组件仍由部署环境决定 |
 | 历史迁移 | backend/cmd/migrate_v1 使用旧 JCourse/Django 表和 DSN | 可能误把上游旧数据导入 CHDXK | 单独做数据盘点和映射评审，未批准前不执行生产迁移 |
 
 ### 现有可复用的运行时能力
@@ -278,12 +287,12 @@ flowchart TB
 
 #### 当前行为与问题
 
-当前系统包含邮箱验证码注册、密码登录、密码重置、登录失败锁定、Session、CSRF 和管理员角色；auth.email_domain 与注册白名单已有 system_settings 支持。jAccount 代码主要用于课程选课同步，但前端产品叙事、账号 placeholder、关于页和 FAQ 又把 jAccount 描述成用户身份的一部分。
+当前系统包含邮箱验证码注册、密码登录、密码重置、登录失败锁定、Session、CSRF 和管理员角色；auth.email_domain 与注册白名单已有 system_settings 支持。res-hub 负责生产环境的统一身份与积分集成，本地账号继续作为兼容模式；JAccount 代码、在线课程同步控制器和前端入口已移除，已有选课记录仍可查询和删除。
 
 这会带来四类本地化风险：
 
-- CHDXK 未必拥有 SJTU jAccount，继续显示 jAccount 会让用户误判登录方式；
-- 课程同步系统的身份不一定等于站点登录身份；
+- 旧上游 jAccount 不是 CHDXK 登录前提，继续显示它会让用户误判登录方式；
+- 在线课程同步并非本轮能力，课程记录写入应继续走独立课程导入流程；
 - users.username、email 和密码迁移若直接覆盖，可能破坏点评归属和审计；
 - 只把 @sjtu.edu.cn 替换为新域名，无法解决机构 OAuth、教师账号、校友账号或多域名规则。
 
@@ -296,23 +305,21 @@ flowchart TB
 | user | CHDXK 内部用户、角色、封禁、创建时间和最后活跃时间 |
 | user_identity | provider、外部 subject 的不可逆标识、绑定时间、验证状态和用户 ID |
 | identity_provider | provider 的显示名、类型、启用状态和公开端点；秘密不进入数据库 |
-| enrollment_identity | 用于课程同步的外部选课身份或授权引用；与站点登录身份可相同，也可不同 |
 | session | Redis 中的会话和过期信息，使用现有 Session 机制 |
 
-建议抽象以下接口，不让 domain 直接依赖 jAccount：
+当前认证与课程记录边界如下：
 
-- StartLogin、HandleCallback、GetProfile；
-- VerifyEmail、SendVerification、ResetPassword；
-- StartEnrollmentSync、ExchangeEnrollmentCode、FetchEnrollments；
-- ProviderError 的内部错误分类和面向用户的安全错误文案。
+- res-hub SSO 适配器负责外部登录、身份内省和积分接口；
+- 本地账号兼容模式继续使用邮箱域和注册白名单设置；
+- `course_enrollments` 仅保留已有记录的查询和删除，课程数据通过独立采集工具及现有导入流程发布。
 
 #### 登录方案决策
 
-推荐优先级：
+本轮决策：
 
-1. 若 CHDXK 有稳定的机构 OAuth/OIDC，使用机构身份登录，并保留邮箱验证作为找回或辅助绑定渠道。
-2. 若没有机构身份系统，使用目标邮箱域的邮箱验证码 + 本地密码，或仅使用邮箱验证码；是否允许个人邮箱必须明确。
-3. 若确实需要 jAccount，仅将其放进可选适配器，并在未配置时让课程同步明确显示“功能未启用”，不把 jAccount 写进整个站点品牌。
+1. 生产环境继续使用 res-hub SSO；res-hub 的 client secret 和内网地址只由部署环境注入。
+2. 本地账号保留为兼容模式，默认邮箱域和注册白名单使用 `@chd.edu.cn`。
+3. 不新增 CHD 在线课表同步；`tools/bkjw-course-source` 作为独立课程数据采集工具，课程发布继续走现有导入流程。
 
 必须明确：
 
@@ -387,7 +394,7 @@ flowchart TB
 目标设计：
 
 - 引入 semester_normalizer，把来源值映射为稳定的 period_id、display_name、start_at、end_at、status；
-- 规范值用于查询、排序、唯一约束和选课同步，显示值用于用户界面；
+- 规范值用于查询、排序、唯一约束和课程导入，显示值用于用户界面；
 - 若存在校区、学院、专业、教学班或培养层次，将其作为开课维度，而不是拼接进课程名称；
 - 保留原始 semester/source value 以支持追溯；
 - current_semester 只表示默认查询/导入上下文，不代表数据库中只有一个学期；
@@ -459,7 +466,7 @@ flowchart TB
 
 - 把 brand.ts 从硬编码品牌改为站点档案入口；
 - 将认证 placeholder、错误文案和说明从 jAccount 语义改成目标身份方案；
-- 将课程同步按钮改成由 enrollment provider 能力决定；未启用时不显示死链；
+- 移除课程同步按钮、回调页、广播状态和 `/api/course/enrollment-sync/*` 路由；保留选课记录查询和删除；
 - 重写 about、FAQ、用户协议、隐私、版权、教师联系和运营说明；
 - 替换 PWA manifest、图标、主题色、快捷方式和维护页；
 - 同步 MSW handlers、fixtures、演示账号邮箱和 system-settings 默认值；
@@ -487,11 +494,12 @@ flowchart TB
 | 集成 | 当前形态 | CHDXK 设计 |
 | --- | --- | --- |
 | SMTP | 配置化 SMTP sender，Asynq 异步发送验证码和封禁通知 | 站点名、support_email、帮助链接模板化；配置缺失时显式禁用并提示管理员 |
-| JAccount | OAuth 与课程 Lessons API | 改成 provider adapter；默认关闭；不把 endpoint 和 client secret写死 |
+| res-hub SSO | 外部登录、身份内省和积分接口 | 保留 provider adapter；默认配置关闭；endpoint 和 client secret 只由部署环境注入 |
+| CHD 课程采集 | `tools/bkjw-course-source` 独立采集工具 | 不在本站新增在线同步；通过现有导入流程发布课程数据 |
 | 内容审核 | Aliyun Green 适配器 | provider 可选；第一阶段 manual；审核结果、版本和人工覆盖需留痕 |
 | Redis | 会话、缓存、验证码、限流、热度、任务队列依赖 | key 前缀增加 site_code 或部署隔离；切换站点配置后定义失效策略 |
-| 百度统计 | 关于页明确写有访问统计 | 默认关闭，启用前审查告知、数据目的、域名和脚本来源 |
-| 外部积分/帮助站点 | 前端存在 dyweb.sjtu.cn 链接 | 逐项迁移为 CHDXK 链接，找不到替代物则隐藏而不是保留上游链接 |
+| 站点统计 | 由部署方决定是否启用访问统计 | 未经部署方说明和审查不在前端作出固定统计承诺 |
+| 外部积分/帮助站点 | 前端曾存在上游链接 | 未确认用途的链接隐藏；新增链接须使用 CHDXK/部署方地址 |
 | APM/镜像仓库 | 构建和 Docker 可能包含 Aliyun ARM APM/镜像地址 | 改为可选配置，发布脚本默认只操作 CHDXK 仓库 |
 
 所有外部集成都要满足：超时、重试上限、脱敏日志、熔断/禁用、健康检查、权限最小化和本地 fake 实现。外部服务故障不能阻塞课程浏览、已有点评读取和管理员登录。
@@ -523,18 +531,17 @@ flowchart TB
 
 ## 🔁 关键流程与时序
 
-### 认证与课程同步边界
+### 认证与课程数据边界
 
 ```mermaid
 sequenceDiagram
-    accTitle: CHDXK 认证与选课同步边界
-    accDescr: 站点登录先建立 CHDXK 内部账号和会话；选课同步单独调用选课身份适配器，避免把外部教务身份直接等同于站点身份。
+    accTitle: CHDXK 认证与业务数据边界
+    accDescr: 站点登录先建立 CHDXK 内部账号和会话；课程数据由独立采集工具进入现有导入流程，不通过站点在线课表同步。
 
     actor learner as 用户
     participant web_client as Web 客户端
     participant web_api as Go API
     participant identity_adapter as 身份适配器
-    participant enrollment_adapter as 选课适配器
     participant user_database as PostgreSQL 用户库
     participant session_store as Redis 会话
 
@@ -545,17 +552,6 @@ sequenceDiagram
     web_api->>user_database: 查找或创建 user_identity
     web_api->>session_store: 创建 CHDXK 会话
     web_api-->>web_client: 返回用户状态
-
-    learner->>web_client: 选择学期并同步课程
-    web_client->>web_api: 请求启动课程同步
-    web_api->>enrollment_adapter: 创建授权地址
-    enrollment_adapter-->>web_client: 返回一次性授权地址
-    learner->>enrollment_adapter: 完成选课系统授权
-    enrollment_adapter-->>web_api: 返回短期授权结果
-    web_api->>enrollment_adapter: 获取规范化选课记录
-    enrollment_adapter-->>web_api: 课程与学期记录
-    web_api->>user_database: 幂等写入 course_enrollments
-    web_api-->>web_client: 返回同步摘要
 ```
 
 ### 课程数据导入
@@ -763,12 +759,12 @@ flowchart LR
 | --- | --- | --- | --- | --- |
 | GOV-001 | 站点身份 | README、brand.ts、pwa.config.ts | 确认正式名、简称、域名、Logo、邮箱、运营主体；形成站点档案 | 负责人决策 |
 | GOV-002 | 用户范围 | auth 配置、FAQ | 确认目标用户、邮箱域、教师/校友策略和机构边界 | 负责人决策 |
-| GOV-003 | 数据权限 | importer、jAccount、选课同步 | 确认课程源所有权、同步授权、保留期和撤销方式 | 数据/运营负责人 |
+| GOV-003 | 数据权限 | importer、course_enrollments | 确认课程源所有权、导入授权、保留期和撤销方式 | 数据/运营负责人 |
 | REP-001 | 内部命名 | go.mod、JCOURSE 配置、compose | 决定首阶段保留内部 jcourse 命名还是另开命名迁移；形成允许残留清单 | GOV-001 |
 | BRD-001 | 站点档案 | brand.ts、system settings | 前后端读取统一公开档案，缺字段时安全失败 | GOV-001 |
 | BRD-002 | 品牌资源 | PWA、维护页、favicon、页眉页脚 | 构建产物、manifest、停机页和页面标题无未批准上游品牌 | BRD-001 |
 | BRD-003 | 政策文案 | about-content、faq-page、邮件模板 | 完成 CHDXK 协议/隐私/版权/内容/联系方式审阅 | GOV-001、GOV-002 |
-| AUTH-001 | 认证决策 | config JAccount、auth 页面 | 选定 email、OIDC/OAuth、jAccount 或组合方案，记录关闭能力 | GOV-002 |
+| AUTH-001 | 认证决策 | res-hub 配置、auth 页面 | 继续使用 res-hub SSO，本地账号作为兼容模式，记录关闭能力 | GOV-002 |
 | DATA-001 | 来源契约 | importer/parser.go | 定义课程、教师、开课、选课和枚举 schema_version | GOV-003 |
 | DATA-002 | 学期规则 | current_semester、semester 字段 | 定义规范 period、显示值、校区和历史数据策略 | DATA-001 |
 | SEC-001 | 秘密边界 | config.example、Docker、日志 | 秘密只在环境注入；扫描 Git、构建产物和日志样例 | GOV-003 |
@@ -780,9 +776,9 @@ flowchart LR
 | ID | 范围 | 当前锚点 | 目标与验收 | 依赖 |
 | --- | --- | --- | --- | --- |
 | AUTH-002 | 邮箱规则 | auth.ts、site_settings.go、mock | 邮箱后缀/白名单运行时可配置，前端 fallback 与后端一致 | AUTH-001 |
-| AUTH-003 | provider 抽象 | internal/domain/jaccount、container.go | domain 不直接依赖 jAccount；fake provider 可完成单测 | AUTH-001 |
+| AUTH-003 | res-hub 适配 | internal/infrastructure/reshub、container.go | domain 不直接依赖外部身份服务；密钥由部署环境注入 | AUTH-001 |
 | AUTH-004 | 身份映射 | users、auth application | 增加 user_identity；登录、绑定、解绑、合并有审计 | AUTH-003 |
-| AUTH-005 | 课程同步 | enrollment controller、sync dialog | 目标 provider 未启用时无死链；启用后有授权、TTL、重放和故障测试 | AUTH-003、DATA-002 |
+| AUTH-005 | 课程记录 | course_enrollments、我的课程 | 保留已有记录查询和删除；不提供在线课表同步入口 | DATA-002 |
 | DATA-003 | 导入 staging | cmd/importer | 支持预览、差异、阈值、幂等、发布和回滚 | DATA-001 |
 | DATA-004 | 来源映射 | courses、teachers、offered_courses | 记录 source_id/external_id/source_hash，不用名称作唯一键 | DATA-003 |
 | DATA-005 | 退役语义 | importer、查询服务 | 来源消失记录标记 retired，不删除已有点评关联 | DATA-004 |
@@ -838,7 +834,7 @@ flowchart LR
 - GET /api/auth/providers：返回启用的登录能力和显示文案；
 - POST /api/auth/provider/:provider/start：开始外部登录；
 - GET /api/auth/provider/:provider/callback：处理一次性回调；
-- POST /api/course/enrollment-sync/:provider/start：开始选课同步；
+- 本轮不提供 `/api/course/enrollment-sync/*`；选课记录只保留查询和删除接口，课程数据通过现有导入工具发布。
 - POST /api/course/import/preview：管理员预览导入差异；
 - POST /api/course/import/:run_id/publish：管理员发布已校验批次；
 - GET /api/course/import/:run_id：查看批次状态、差异和回滚信息。
@@ -850,7 +846,7 @@ flowchart LR
 ### 静态盘点
 
 - 扫描 frontend、backend、docker、CI、README、邮件模板、PWA、停机页和测试 fixture；
-- 对 SJTU、jAccount、@sjtu.edu.cn、course.sjtu.plus、dyweb.sjtu.cn、选课社区、jcourse、JCOURSE 做 allowlist 扫描；
+- 对历史上游字符串和内部兼容名做 allowlist 扫描；生产代码、配置、构建产物和部署文档不得出现未批准的上游品牌、域名或邮箱。
 - 扫描 HTTP/HTTPS URL、mailto、OAuth redirect、镜像仓库和 APM 配置；
 - 确认构建产物、source map、PWA manifest、邮件 HTML 和日志样例不泄露秘密；
 - 检查所有新增配置都有示例、默认值、验证、文档和失败行为。
@@ -908,10 +904,10 @@ flowchart LR
 | 编号 | 问题 | 推荐默认值 | 阻塞范围 |
 | --- | --- | --- | --- |
 | D-01 | CHDXK 的正式中文名、英文名、简称、Logo 和品牌色是什么 | 先使用配置占位，不把上游品牌复制为默认值 | 品牌、PWA、邮件 |
-| D-02 | 运营主体和公开联系邮箱是什么 | 使用独立 support_email，不复用 course@sjtu.plus | 协议、隐私、客服 |
+| D-02 | 运营主体和公开联系邮箱是什么 | 使用部署时注入的 VITE_SUPPORT_EMAIL；未配置则隐藏联系链接 | 协议、隐私、客服 |
 | D-03 | 目标学校、校区、用户和邮箱范围是什么 | 单站、一个明确用户群；多域名显式白名单 | 注册、数据导入 |
-| D-04 | 登录方式是什么 | 首选目标机构 OIDC/OAuth；没有则邮箱验证/密码 | AUTH 全部 |
-| D-05 | 是否需要课程选课同步 | 未完成 provider、授权和隐私评审前关闭 | 我的课程、course sync |
+| D-04 | 登录方式是什么 | 继续使用 res-hub SSO；本地账号仅作兼容模式 | AUTH 全部 |
+| D-05 | 是否需要课程选课同步 | 本轮不提供在线同步；使用独立 CHD 采集工具和现有导入流程 | 我的课程、course sync |
 | D-06 | 课程数据从哪里来、授权范围和更新周期是什么 | 先用版本化 CSV + staging，确认后再接 API | importer、学期 |
 | D-07 | 课程是否按校区/专业/教学班区分 | 不确定时保留来源字段，不把维度拼进名称 | schema、唯一约束 |
 | D-08 | 是否保留点评、投票、积分、转账和奖励 | 首版保留点评读取/提交，积分经济默认待审 | review、point |
@@ -949,11 +945,11 @@ flowchart LR
 - [backend/AGENTS.md](../backend/AGENTS.md)：后端分层、测试和迁移约束。
 - [frontend/AGENTS.md](../frontend/AGENTS.md)：前端编辑、格式化和验证约束。
 - [后端配置定义](../backend/config/config.go)：运行时配置、默认值和校验。
-- [后端示例配置](../backend/config/config.example.yaml)：数据库、邮件、JAccount 和课程同步配置入口。
+- [后端示例配置](../backend/config/config.example.yaml)：数据库、邮件和 res-hub 配置入口。
 - [站点设置注册表](../backend/internal/app/site_settings.go)：当前学期、邮箱域、审核、积分和频率限制。
 - [Web 路由](../backend/internal/interface/web/router.go)：认证、课程、点评、管理、公告和系统设置接口。
 - [数据库实体](../backend/internal/infrastructure/repository/entity.go)：教师、课程、开课、用户、点评、积分和站点实体。
-- [迁移脚本目录](../backend/script/)：当前 0001 至 0013 的数据库演进记录。
+- [迁移脚本目录](../backend/script/)：当前 0001 至 0015 的数据库演进记录。
 - [课程导入入口](../backend/cmd/importer/)：CSV 解析、聚合和导入流程。
 - [前端品牌配置](../frontend/src/config/brand.ts)：当前品牌名、反馈邮箱和页面标题。
 - [前端认证配置](../frontend/src/config/auth.ts)：当前邮箱域和密码校验默认值。

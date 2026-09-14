@@ -14,7 +14,7 @@ import { Counter, Rate, Trend } from "k6/metrics";
 //   环境变量仍可临时覆盖同名配置项，优先级：环境变量 > 配置文件 > 默认值。
 //
 // 配置项说明：
-//   baseURL / BASE_URL：目标站点根地址，默认 https://course.sjtu.plus。
+//   baseURL / BASE_URL：目标站点根地址，默认本机部署 http://127.0.0.1:8080。
 //   apiKey / APIKEY：Bearer API key，请求会携带 Authorization: Bearer <apiKey>。
 //   cookie / COOKIE：浏览器登录态 Cookie，与 apiKey 二选一。
 //   vus / VUS：升压结束后的虚拟用户数，默认 20。
@@ -28,7 +28,7 @@ import { Counter, Rate, Trend } from "k6/metrics";
 //   expect429 / EXPECT_429：是否预期触发限流；测限流时设为 true，默认 false。
 
 const defaultConfig = {
-  baseURL: "https://course.sjtu.plus",
+  baseURL: "http://127.0.0.1:8080",
   apiKey: "",
   cookie: "",
   vus: 20,

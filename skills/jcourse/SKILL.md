@@ -1,6 +1,6 @@
 ---
 name: jcourse
-description: Work with the JCourse course community API from an agent. Use when a user wants an agent to search courses or teachers, inspect course detail, summarize reviews, compare courses, follow or ignore courses, manage course enrollments, create or update course reviews, vote on reviews, or otherwise operate the JCourse backend over HTTP.
+description: Work with the JCourse course community API from an agent. Use when a user wants an agent to search courses or teachers, inspect course detail, summarize reviews, compare courses, follow or ignore courses, inspect or remove existing course enrollment records, create or update course reviews, vote on reviews, or otherwise operate the JCourse backend over HTTP.
 ---
 
 # JCourse
@@ -9,7 +9,7 @@ Use this skill to operate JCourse as a course-selection community assistant. Pre
 
 ## Connection
 
-Use `https://course.sjtu.plus` as the default JCourse service URL. The default API root is `https://course.sjtu.plus/api`. If the user provides another deployment URL, use that instead; the API root is `${base_url}/api` unless the user already gives a URL ending in `/api`.
+The user must provide the deployment URL before using this skill. Do not infer or assume a public service address. The API root is `${base_url}/api` unless the user already gives a URL ending in `/api`.
 
 Ask the user for a user API key if they did not provide one.
 
@@ -26,7 +26,7 @@ Before doing personalized work, verify auth with `GET /api/auth/me`. If it retur
 
 ## Workflow
 
-1. Determine whether the task is read-only or mutating. Confirm before creating, updating, deleting, voting, following, ignoring, or enrolling.
+1. Determine whether the task is read-only or mutating. Confirm before creating, updating, deleting, voting, following, or ignoring.
 2. For course recommendations, search broadly first, then inspect the most relevant course details and reviews. Do not rank only by rating average; include rating count, rating score, review recency, teacher, semester availability, department, credit, and fit to user constraints.
 3. For review summaries, separate factual API data from inferred judgment. Mention sample size when review count is small.
 4. For course actions, resolve names to exact `course_id` and show the matched course code/name/teacher before executing.

@@ -11,6 +11,8 @@ export function byRatingDesc(
 }
 
 export function buildFeedbackMailto(course: CourseDetailDTO) {
+  if (!brand.feedbackEmail) return undefined
+
   const subject = `[课程信息反馈] ${course.code} ${course.name}`
   const courseURL =
     typeof window === "undefined"

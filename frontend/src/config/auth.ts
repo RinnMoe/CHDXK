@@ -1,4 +1,4 @@
-export const defaultAuthEmailDomain = "@sjtu.edu.cn"
+export const defaultAuthEmailDomain = "@chd.edu.cn"
 
 export const authPasswordPolicy = {
   minLength: 10,

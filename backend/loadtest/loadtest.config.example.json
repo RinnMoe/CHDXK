@@ -1,5 +1,5 @@
 {
-  "baseURL": "https://course.sjtu.plus",
+  "baseURL": "http://127.0.0.1:8080",
   "apiKey": "",
   "cookie": "",
   "vus": 20,
