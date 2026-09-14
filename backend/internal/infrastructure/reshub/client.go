@@ -83,7 +83,15 @@ func (c *Client) AuthorizeURL(state, codeChallenge string) (string, error) {
 		fragmentQuery := fragmentURL.Query()
 		setAuthorizeQuery(fragmentQuery)
 		fragmentURL.RawQuery = fragmentQuery.Encode()
-		u.Fragment = fragmentURL.String()
+		// URL.String escapes an already encoded fragment a second time when it
+		// is assigned through Fragment. Preserve the encoded fragment hint so
+		// browsers pass redirect_uri to the hash router exactly once-decoded.
+		fragmentReference, fragmentReferenceErr := url.Parse("#" + fragmentURL.String())
+		if fragmentReferenceErr != nil {
+			return "", auth.ErrResHubUnavailable
+		}
+		u.Fragment = fragmentReference.Fragment
+		u.RawFragment = fragmentReference.RawFragment
 	} else {
 		query := u.Query()
 		setAuthorizeQuery(query)

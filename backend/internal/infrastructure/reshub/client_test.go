@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"jcourse/config"
@@ -54,6 +55,9 @@ func TestClientAuthorizeURLAndSSORequests(t *testing.T) {
 	parsed, err := url.Parse(authorizeURL)
 	if err != nil {
 		t.Fatalf("parse authorize URL: %v", err)
+	}
+	if !strings.Contains(authorizeURL, "redirect_uri=https%3A%2F%2Fxk.example.test%2Fapi%2Fauth%2Fsso%2Fcallback") || strings.Contains(authorizeURL, "redirect_uri=https%25") {
+		t.Fatalf("authorize URL encoded redirect_uri incorrectly: %s", authorizeURL)
 	}
 	authorizeQuery := parsed.Query()
 	if parsed.Fragment != "" {
