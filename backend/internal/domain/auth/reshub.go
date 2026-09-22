@@ -11,6 +11,7 @@ import (
 // Role and account state are intentionally request-scoped and must not be
 // treated as a local authorization cache.
 type ResHubIdentity struct {
+	Issuer           string
 	Subject          string
 	Username         string
 	Email            string
@@ -27,8 +28,10 @@ type ResHubIdentity struct {
 }
 
 type ResHubSession struct {
-	Token     string
-	ExpiresAt time.Time
+	AccessToken string
+	IDToken     string
+	SessionID   string
+	ExpiresAt   time.Time
 }
 
 var (
@@ -38,17 +41,15 @@ var (
 	ErrIdentityNotFound  = apperr.NotFound("本站主体映射不存在")
 )
 
-// ResHubClient contains only the versioned first-party contract consumed by
-// xk. Its implementation belongs to infrastructure.
-type ResHubClient interface {
-	Exchange(ctx context.Context, code, codeVerifier, redirectURI string) (ResHubSession, error)
-	Introspect(ctx context.Context, token string) (*ResHubIdentity, error)
-	Logout(ctx context.Context, token string) error
-}
-
-type ResHubAuthorizeClient interface {
-	ResHubClient
-	AuthorizeURL(state, codeChallenge string) (string, error)
+// ResHubOIDCClient is the standard OIDC contract consumed by xk. Discovery,
+// authorization-code exchange, userinfo, client credentials and logout are
+// implemented by the infrastructure adapter.
+type ResHubOIDCClient interface {
+	AuthorizationURL(ctx context.Context, state, codeChallenge, nonce string) (string, error)
+	Exchange(ctx context.Context, code, codeVerifier, nonce, redirectURI string) (ResHubSession, error)
+	UserInfo(ctx context.Context, accessToken string) (*ResHubIdentity, error)
+	ClientCredentialsToken(ctx context.Context, scopes []string) (string, error)
+	Logout(ctx context.Context, idTokenHint, postLogoutRedirectURI string) error
 }
 
 // IdentityProjectionRepository maps an external subject to xk's local

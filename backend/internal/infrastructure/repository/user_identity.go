@@ -14,18 +14,21 @@ import (
 	"jcourse/internal/domain/auth"
 )
 
-const resHubIssuer = "res-hub"
-
 type UserIdentityRepository struct {
-	db *gorm.DB
+	db     *gorm.DB
+	issuer string
 }
 
-func NewUserIdentityRepository(db *gorm.DB) *UserIdentityRepository {
-	return &UserIdentityRepository{db: db}
+func NewUserIdentityRepository(db *gorm.DB, issuer string) *UserIdentityRepository {
+	issuer = strings.TrimRight(strings.TrimSpace(issuer), "/")
+	return &UserIdentityRepository{db: db, issuer: issuer}
 }
 
 func (r *UserIdentityRepository) Upsert(ctx context.Context, snapshot *auth.ResHubIdentity) (*auth.User, error) {
-	if snapshot == nil || strings.TrimSpace(snapshot.Subject) == "" {
+	if r.issuer == "" || snapshot == nil || strings.TrimSpace(snapshot.Subject) == "" || strings.TrimSpace(snapshot.Issuer) == "" {
+		return nil, auth.ErrIdentityNotFound
+	}
+	if snapshot.Issuer != "" && strings.TrimRight(snapshot.Issuer, "/") != r.issuer {
 		return nil, auth.ErrIdentityNotFound
 	}
 
@@ -42,7 +45,7 @@ func (r *UserIdentityRepository) Upsert(ctx context.Context, snapshot *auth.ResH
 		// retry through the update path once; other failures are returned as-is.
 		var existing UserIdentityEntity
 		if findErr := r.db.WithContext(ctx).
-			Where("issuer = ? AND subject = ?", resHubIssuer, snapshot.Subject).
+			Where("issuer = ? AND subject = ?", r.issuer, snapshot.Subject).
 			Take(&existing).Error; findErr != nil {
 			return nil, err
 		}
@@ -55,7 +58,7 @@ func (r *UserIdentityRepository) upsertOnce(ctx context.Context, snapshot *auth.
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var identity UserIdentityEntity
 		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-			Where("issuer = ? AND subject = ?", resHubIssuer, snapshot.Subject).
+			Where("issuer = ? AND subject = ?", r.issuer, snapshot.Subject).
 			Take(&identity).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
@@ -64,7 +67,7 @@ func (r *UserIdentityRepository) upsertOnce(ctx context.Context, snapshot *auth.
 		now := time.Now()
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			user := UserEntity{
-				Username:     internalUsername(snapshot.Subject),
+				Username:     internalUsername(r.issuer, snapshot.Subject),
 				Role:         normalizeRole(snapshot.EffectiveRole),
 				PasswordHash: "",
 				CreatedAt:    now,
@@ -75,7 +78,7 @@ func (r *UserIdentityRepository) upsertOnce(ctx context.Context, snapshot *auth.
 			}
 			identity = UserIdentityEntity{
 				UserID:       user.ID,
-				Issuer:       resHubIssuer,
+				Issuer:       r.issuer,
 				Subject:      snapshot.Subject,
 				Username:     snapshot.Username,
 				Email:        snapshot.Email,
@@ -118,7 +121,7 @@ func (r *UserIdentityRepository) SubjectByUserID(ctx context.Context, userID int
 		return "", auth.ErrIdentityNotFound
 	}
 	var identity UserIdentityEntity
-	if err := r.db.WithContext(ctx).Where("issuer = ? AND user_id = ?", resHubIssuer, userID).Take(&identity).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("issuer = ? AND user_id = ?", r.issuer, userID).Take(&identity).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", auth.ErrIdentityNotFound
 		}
@@ -146,9 +149,9 @@ func userFromSnapshot(userID int, snapshot *auth.ResHubIdentity) *auth.User {
 	}
 }
 
-func internalUsername(subject string) string {
-	sum := sha256.Sum256([]byte(resHubIssuer + ":" + subject))
-	return "sso_" + hex.EncodeToString(sum[:])[:40]
+func internalUsername(issuer, subject string) string {
+	sum := sha256.Sum256([]byte(issuer + ":" + subject))
+	return "oidc_" + hex.EncodeToString(sum[:])[:40]
 }
 
 func normalizeRole(role string) string {

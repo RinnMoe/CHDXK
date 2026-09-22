@@ -44,7 +44,7 @@ internal/
     persistence/  gorm + redis connection setup
     repository/   gorm-based implementations of domain repository + query interfaces
     smtp/         SMTP verification-code sender (gopkg.in/gomail.v2)
-    reshub/       res-hub SSO, identity and points adapter
+    reshub/       res-hub OIDC, identity and points adapter
     moderation/   review safety / moderation backend
     task/         Asynq Enqueuer + Server adapters
   interface/
@@ -67,7 +67,7 @@ pkg/              small generic utilities
 - **PostgreSQL features**: tsvector + GIN indexes for full-text and pinyin search (via `pg_jieba`); `int[]` arrays for categories/teacher IDs.
 - **Redis**: session store (`jcourse:session:` prefix), hot-course sorted sets, verification codes, login-attempt lockout, and repository JSON caches with a 30-min default TTL. Cache keys and invalidation rules are documented in `CACHE_KEYS.md` — keep that file in sync when adding caches.
 - **Async tasks**: `domain/task` defines pure `Task` / `Enqueuer` ports plus a package-level `Enqueue` function. `infrastructure/task` provides the Asynq backend; the API process calls `task.SetEnqueuer` at startup; `cmd/taskworker` runs the Asynq server.
-- **Auth**: email/password registration with verification codes, Django-compatible PBKDF2-SHA256 hashes, `Auth.EmailWhitelist` domain restriction, password reset flow, login lockout via `login_attempt` repository. When enabled, res-hub handles unified SSO, identity and points integration. External clients use `APIKeyAuth` for `/api/ext/*`.
+- **Auth**: res-hub is the sole account authority. CHDXK uses Authorization Code + PKCE OIDC, validates ID Token and userinfo claims, and projects `issuer + sub` to local users. There is no local password or user API-key compatibility path. System API keys remain available for server-to-server administration.
 - **Points & transfers**: per-user balance with transfers between users; fee = `max(amount * RateBps / 10000, MinFee)` configured under `point.transfer_fee_rate_bps` and `point.transfer_min_fee`.
 - **Audit logs**: admin actions (suspensions, role grants, system API keys, moderator remarks) are recorded via the `audit` domain.
 
@@ -75,7 +75,7 @@ pkg/              small generic utilities
 
 All routes mounted under `/api` in `internal/interface/web/router.go`. Auth tiers:
 
-- **Public**: `/api/auth/{csrf,register,register/code,login,password-reset,password-reset/code}`; with res-hub enabled, SSO start and callback are exposed instead.
+- **Public**: `/api/auth/{csrf,oidc/start,oidc/callback}`. OIDC start and callback are the only account entry points.
 - **API key (`APIKeyAuth`)**: `/api/ext/*` (e.g. `GET /api/ext/point`)
 - **Session auth (`RequireAuth`)**: most `/api/*` routes — course/teacher/review browsing and writes, points, API keys, user settings, announcements
 - **Admin (`RequireAdmin`)**: `/api/site-stats/*`, `/api/admin/{users,api-keys,audit}/*`, review revision listing, moderator remark updates

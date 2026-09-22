@@ -17,7 +17,7 @@ export function PasswordResetPage() {
                 请在 res-hub 主站完成密码修改或找回，本站不处理主站密码。
               </p>
               <a
-                href="/api/auth/sso/start?return_to=/"
+                href="/api/auth/oidc/start?return_to=/"
                 className="text-sm font-medium text-foreground underline underline-offset-4"
               >
                 前往主站

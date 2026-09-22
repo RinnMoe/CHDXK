@@ -13,14 +13,16 @@ import (
 )
 
 const (
-	sessionKeyUserID           = "user_id"
-	sessionKeyAuthHash         = "auth_hash"
-	sessionKeyIntegrationToken = "integration_token"
-	sessionKeySSOState         = "sso_state"
-	sessionKeySSOVerifier      = "sso_verifier"
-	sessionKeySSOReturn        = "sso_return"
-	sessionKeyCSRFToken        = "csrf_token"
-	sessionRedisPrefix         = "jcourse:session:"
+	sessionKeyUserID          = "user_id"
+	sessionKeyAuthHash        = "auth_hash"
+	sessionKeyOIDCAccessToken = "oidc_access_token"
+	sessionKeyOIDCIDToken     = "oidc_id_token"
+	sessionKeyOIDCState       = "oidc_state"
+	sessionKeyOIDCVerifier    = "oidc_verifier"
+	sessionKeyOIDCNonce       = "oidc_nonce"
+	sessionKeyOIDCReturn      = "oidc_return"
+	sessionKeyCSRFToken       = "csrf_token"
+	sessionRedisPrefix        = "jcourse:session:"
 )
 
 type SessionConfig struct {
@@ -68,49 +70,59 @@ func SetSessionUser(c *gin.Context, userID int, authHash string) error {
 	return s.Save()
 }
 
-func SetSessionIntegration(c *gin.Context, userID int, token string) error {
-	if userID <= 0 || token == "" {
-		return fmt.Errorf("invalid integration session")
+func SetSessionOIDC(c *gin.Context, userID int, accessToken, idToken string) error {
+	if userID <= 0 || accessToken == "" || idToken == "" {
+		return fmt.Errorf("invalid oidc session")
 	}
 	if err := resetSession(c); err != nil {
 		return err
 	}
 	s := sessions.Default(c)
 	s.Set(sessionKeyUserID, userID)
-	s.Set(sessionKeyIntegrationToken, token)
+	s.Set(sessionKeyOIDCAccessToken, accessToken)
+	s.Set(sessionKeyOIDCIDToken, idToken)
 	return s.Save()
 }
 
-func IntegrationToken(c *gin.Context) string {
+func OIDCAccessToken(c *gin.Context) string {
 	s := sessions.Default(c)
-	token, _ := sessionString(s, sessionKeyIntegrationToken)
+	token, _ := sessionString(s, sessionKeyOIDCAccessToken)
 	return token
 }
 
-func SetSSOState(c *gin.Context, state, verifier, returnPath string) error {
+func OIDCIDToken(c *gin.Context) string {
 	s := sessions.Default(c)
-	s.Set(sessionKeySSOState, state)
-	s.Set(sessionKeySSOVerifier, verifier)
-	s.Set(sessionKeySSOReturn, returnPath)
+	token, _ := sessionString(s, sessionKeyOIDCIDToken)
+	return token
+}
+
+func SetOIDCState(c *gin.Context, state, verifier, nonce, returnPath string) error {
+	s := sessions.Default(c)
+	s.Set(sessionKeyOIDCState, state)
+	s.Set(sessionKeyOIDCVerifier, verifier)
+	s.Set(sessionKeyOIDCNonce, nonce)
+	s.Set(sessionKeyOIDCReturn, returnPath)
 	return s.Save()
 }
 
-func TakeSSOState(c *gin.Context, expectedState ...string) (state, verifier, returnPath string, ok bool) {
+func TakeOIDCState(c *gin.Context, expectedState ...string) (state, verifier, nonce, returnPath string, ok bool) {
 	s := sessions.Default(c)
-	state, stateOK := sessionString(s, sessionKeySSOState)
-	verifier, verifierOK := sessionString(s, sessionKeySSOVerifier)
-	returnPath, returnOK := sessionString(s, sessionKeySSOReturn)
-	if !stateOK || !verifierOK || !returnOK {
-		return "", "", "", false
+	state, stateOK := sessionString(s, sessionKeyOIDCState)
+	verifier, verifierOK := sessionString(s, sessionKeyOIDCVerifier)
+	nonce, nonceOK := sessionString(s, sessionKeyOIDCNonce)
+	returnPath, returnOK := sessionString(s, sessionKeyOIDCReturn)
+	if !stateOK || !verifierOK || !nonceOK || !returnOK {
+		return "", "", "", "", false
 	}
 	if len(expectedState) > 0 && state != expectedState[0] {
-		return state, verifier, returnPath, false
+		return state, verifier, nonce, returnPath, false
 	}
-	s.Delete(sessionKeySSOState)
-	s.Delete(sessionKeySSOVerifier)
-	s.Delete(sessionKeySSOReturn)
+	s.Delete(sessionKeyOIDCState)
+	s.Delete(sessionKeyOIDCVerifier)
+	s.Delete(sessionKeyOIDCNonce)
+	s.Delete(sessionKeyOIDCReturn)
 	_ = s.Save()
-	return state, verifier, returnPath, true
+	return state, verifier, nonce, returnPath, true
 }
 
 func ClearSession(c *gin.Context) error {

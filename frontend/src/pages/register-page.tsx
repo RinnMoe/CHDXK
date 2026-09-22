@@ -17,7 +17,7 @@ export function RegisterPage() {
                 请在 res-hub 主站完成注册和账号设置，本站不保存独立账号。
               </p>
               <a
-                href="/api/auth/sso/start?return_to=/"
+                href="/api/auth/oidc/start?return_to=/"
                 className="text-sm font-medium text-foreground underline underline-offset-4"
               >
                 前往主站

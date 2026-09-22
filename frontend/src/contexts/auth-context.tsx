@@ -8,30 +8,15 @@ import {
 import { useQueryClient, type QueryClient } from "@tanstack/react-query"
 import {
   useCurrentUser,
-  useLogin,
   useLogout,
-  useRegister,
-  useResetPassword,
-  useSendRegisterCode,
-  useSendResetCode,
 } from "@/hooks/use-auth"
-import type {
-  AuthUserDTO,
-  LoginCommand,
-  RegisterCommand,
-  ResetPasswordCommand,
-} from "@/api/auth"
+import type { AuthUserDTO } from "@/api/auth"
 import { clearOfflineReadCaches } from "@/lib/offline-cache"
 
 interface AuthContextValue {
   user: AuthUserDTO | null | undefined
   isLoading: boolean
-  login: (cmd: LoginCommand) => Promise<AuthUserDTO>
   logout: () => Promise<void>
-  register: (cmd: RegisterCommand) => Promise<AuthUserDTO>
-  sendRegisterCode: (email: string) => Promise<void>
-  sendResetCode: (email: string) => Promise<void>
-  resetPassword: (cmd: ResetPasswordCommand) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -51,12 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
   const { data: user, isLoading } = useCurrentUser()
   const previousUserID = useRef<number | null | undefined>(undefined)
-  const loginMutation = useLogin()
   const logoutMutation = useLogout()
-  const registerMutation = useRegister()
-  const sendRegisterCodeMutation = useSendRegisterCode()
-  const sendResetCodeMutation = useSendResetCode()
-  const resetPasswordMutation = useResetPassword()
 
   useEffect(() => {
     void clearOfflineReadCaches()
@@ -80,28 +60,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextValue = {
     user,
     isLoading,
-    login: async (cmd) => {
-      const loggedInUser = await loginMutation.mutateAsync(cmd)
-      await clearBackendInterfaceCaches(queryClient, loggedInUser)
-      return loggedInUser
-    },
     logout: async () => {
       await logoutMutation.mutateAsync()
       await clearBackendInterfaceCaches(queryClient, null)
-    },
-    register: async (cmd) => {
-      const registeredUser = await registerMutation.mutateAsync(cmd)
-      await clearBackendInterfaceCaches(queryClient, registeredUser)
-      return registeredUser
-    },
-    sendRegisterCode: async (email) => {
-      await sendRegisterCodeMutation.mutateAsync({ email })
-    },
-    sendResetCode: async (email) => {
-      await sendResetCodeMutation.mutateAsync({ email })
-    },
-    resetPassword: async (cmd) => {
-      await resetPasswordMutation.mutateAsync(cmd)
     },
   }
 

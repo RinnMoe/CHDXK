@@ -77,7 +77,7 @@ cmd/{api,taskworker,importer,migrate_v1}  entrypoints
 - **PostgreSQL features**: tsvector + GIN indexes for full-text search (incl. pinyin via `pg_jieba`), `int[]` array columns for categories / teacher IDs.
 - **Redis**: session store (`jcourse:session:` prefix), hot-course sorted sets, verification codes, login-attempt lockout, repository JSON caches (default 30 min TTL — see `backend/CACHE_KEYS.md`).
 - **Async tasks**: `domain/task` defines pure `Task` / `Enqueuer` ports; `infrastructure/task` provides the Asynq backend; `interface/async` registers handlers. The API process injects an enqueuer at startup; `cmd/taskworker` runs the Asynq server with SIGINT/SIGTERM graceful shutdown.
-- **Auth**: email/password with verification codes (Django-compatible PBKDF2-SHA256 hashes), `Auth.EmailWhitelist` domain restriction, password reset flow, login lockout. When enabled, res-hub provides unified SSO, identity and points integration. External clients use `APIKeyAuth` for `/api/ext/*`.
+- **Auth**: res-hub is the sole account authority. CHDXK uses Authorization Code + PKCE OIDC, validates ID Token and userinfo claims, and projects `issuer + sub` to local users. There is no local password or user API-key compatibility path. System API keys remain available for server-to-server administration.
 - **Config** via Viper. Any field is overridable with a `JCOURSE_` env var (e.g. `JCOURSE_POSTGRES_DSN`, `JCOURSE_SERVER_ADDR`). Never commit `config/config.yaml`.
 
 **Routing:** all routes are mounted under `/api` in `internal/interface/web/router.go`. Most need session auth; site-stats and parts of review moderation require admin; `/api/ext/*` uses API-key auth. When adding endpoints, verify the auth middleware in this file.

@@ -11,7 +11,7 @@ import { getSafeRedirectPath } from "@/lib/auth-redirect"
 
 export type LoginSearch = {
   redirect?: string
-  error?: "sso_denied" | "sso_failed" | "sso_unavailable"
+  error?: "oidc_denied" | "oidc_failed" | "oidc_unavailable"
 }
 export type CourseListSearch = {
   q?: string
@@ -68,9 +68,9 @@ export function validateLoginSearch(search: SearchRecord): LoginSearch {
       ? getSafeRedirectPath(rawStringParam(search.redirect))
       : undefined,
     error: enumParam(search.error, [
-      "sso_denied",
-      "sso_failed",
-      "sso_unavailable",
+      "oidc_denied",
+      "oidc_failed",
+      "oidc_unavailable",
     ] as const),
   }
 }

@@ -1,66 +1,98 @@
-# CHDXK 接入 res-hub
+# res-hub OIDC 接入
 
-这份文档描述 CHDXK 侧的实现边界。`res-hub` 仍是独立仓库和独立服务，负责账号、角色、有效会话、账户状态和积分余额；CHDXK 只保存本站业务所需的本地投影，并通过内网 HTTP 调用主站集成接口。
+res-hub 是 CHDXK 的唯一账户、角色、会话和积分来源。CHDXK 作为 OIDC
+Relying Party 使用标准 Authorization Code + PKCE；浏览器只参与授权跳转，
+client secret、access token 和 ID token 均由 CHDXK 后端保存和使用。
 
-## 登录流程
+## 接入边界
 
-生产环境将 `reshub.enabled` 设为 `true` 后，CHDXK 不再提供本地注册、密码登录、密码重置或用户 API Key 路由。未登录用户访问 `/login` 或任意需要登录的页面时，前端跳转到 `GET /api/auth/sso/start?return_to=<本站路径>`。
+CHDXK 不再提供独立的登录账户来源。用户登录、注册、密码修改和账号状态由
+res-hub 管理；CHDXK 只维护本地课程、评价等业务数据，以及 `issuer + sub`
+到本地整数用户 ID 的投影。
 
-`reshub.enabled: false` 仅用于客户端尚未在主站登记时的安全关闭状态，不是支持独立本地账号登录的运行模式；启用前，浏览器登录会保持不可用。
-
-1. CHDXK 生成一次性 `state` 和 PKCE `code_verifier`，只放入服务端会话。
-2. CHDXK 重定向到配置的主站授权页（res-hub 使用 `/#/sso/authorize`），携带 `client_id`、精确回调地址、`state` 和 S256 challenge。授权参数必须放在 hash 路由内部的查询字符串中。
-3. 主站完成登录（已登录时跳过密码输入）后，只把授权码和 `state` 返回 CHDXK 的 `/api/auth/sso/callback`。
-4. CHDXK 后端通过内网 `POST /api/sso/v1/token` 兑换不透明集成会话令牌，再调用 `POST /api/sso/v1/introspect` 获取当前身份。
-5. CHDXK 在 `user_identities` 建立 `(issuer, subject)` 映射，现有课程、点评和关联表继续使用本地整数 `users.id`。令牌仅保存在服务端 Redis 会话，浏览器不保存令牌。
-6. 之后每个请求都以内省结果为准；主站降权、删除主体、退出或会话失效会立即影响本站。主站不可用返回 503，失效会话返回 401，前端不会把这两类错误当成同一种情况反复跳转。
-
-回调失败只重定向到本站 `/login?error=...`，不会把授权码、令牌或主站错误详情放进前端页面。本站退出时调用 `POST /api/sso/v1/logout`，再清除本站会话。
-
-## 身份和权限
-
-`subject` 是主站返回的带命名空间主体 ID，CHDXK 不根据邮箱或昵称匹配账户。`effective_role` 映射为 CHDXK 的 `user`、`admin` 或 `super_admin`，每次请求以内省快照为准；CHDXK 不提供修改主站用户、管理员、密码或封禁状态的入口。管理员仍可使用 CHDXK 自己的内容审核、公告、系统设置和站点统计能力，这些路由使用当前主站角色做鉴权。
-
-配置型管理员可能没有积分账户。CHDXK 展示积分时会把主站的 `no_points_account` 稳定错误直接返回，不自动创建账户。
-
-## 积分流程
-
-CHDXK 的点评奖励仍先写入本地 `point_rewards`，再由现有异步任务调用主站积分接口：
-
-- 查询余额：`GET /api/integrations/v1/points/{subject}`
-- 查询流水：`GET /api/integrations/v1/points/ledger?subject=...&page=...&page_size=...`
-- 变动积分：`POST /api/integrations/v1/points/operations`，请求包含 `subject`、带符号 `amount`、`reason` 和 `operation_key`
-- 查询操作：`GET /api/integrations/v1/points/operations/{operation_key}`
-- 完整冲正：`POST /api/integrations/v1/points/operations/{operation_id}/reverse`
-
-这些路径对应 res-hub 的第一方集成契约；冲正路径使用主站返回的不透明 `operation_id`，业务键只用于幂等查询。若主站最终路径或字段名调整，只需要修改 `backend/internal/infrastructure/reshub/client.go`，不改业务层。当前客户端使用独立的 `client_id`/`client_secret` Basic 认证，所有请求只从 CHDXK 后端发往内网地址。
-
-每个奖励使用稳定键 `chdxk:point-reward:<本地奖励 ID>`。重复任务会得到主站幂等结果；网络失败会保留待处理奖励、记录尝试次数和下一次重试时间。删除点评时，已发放奖励调用主站完整冲正，待发放奖励只在本站标记取消。积分流水页明确展示主站返回的操作记录，不通过本站历史记录推算主站余额。
-
-## 配置和数据库
-
-从 `backend/config/config.example.yaml` 复制配置并填写：
+配置中的 `reshub.issuer` 必须是 res-hub 的稳定公共 HTTPS Issuer。其余 OIDC
+端点一律从 `/.well-known/openid-configuration` 读取，不在 CHDXK 配置中复制
+部署地址。
 
 ```yaml
 reshub:
   enabled: true
-  authorize_url: "https://res-hub.example.com/#/sso/authorize"
-  internal_base_url: "http://127.0.0.1:3421"
+  issuer: "https://res-hub.example.com"
   client_id: "chdxk"
-  client_secret: "由部署系统注入"
-  redirect_uri: "https://chdxk.example.com/api/auth/sso/callback"
+  client_secret: "由 res-hub OIDC 接入管理签发的密钥"
+  redirect_uri: "https://chdxk.example.com/api/auth/oidc/callback"
   logout_return_uri: "https://chdxk.example.com/"
   timeout: "3s"
   points_base_path: "/api/integrations/v1"
 ```
 
-主站登记的回调地址必须与 `redirect_uri` 完全一致。示例中的 res-hub 地址和 CHDXK 外部域名均需替换为部署环境的实际值；`client_secret` 不提交仓库。反向代理需公开主站 Web、登录及其所需的公开认证路由；兑换、内省、退出和积分请求走服务器内网（默认监听 `127.0.0.1:3421`）。
+在 res-hub 中为同一个 client 登记：
 
-全新部署须按项目迁移机制从 `0001` 顺序应用到 `0015`，不能只执行 `backend/script/0014_add_reshub_identity_and_point_operations.up.sql`，因为后续设置迁移和它都依赖前置表。`0014` 只创建 CHDXK 的主体映射表和积分操作状态字段，不回填旧用户或旧积分数据，也不连接主站数据库；`0015` 只迁移精确匹配的旧邮箱默认值，并保留回滚备份。回滚时先禁用客户端入口，保留已发生的积分变动和新增表，不能只恢复本站余额。
+- `authorization_code` grant；
+- `openid profile res_hub_identity` scope；
+- 与配置逐字符一致的回调地址；
+- `post_logout_redirect_uri` 为 `logout_return_uri`；
+- 积分功能所需的 `client_credentials` grant，以及 `points.read`、
+  `points.write` scope。
 
-## 联调顺序
+`enabled: false` 只表示当前部署没有启用远端配置；CHDXK 不会因此回退到本地
+注册、密码登录、用户 API Key 或本地积分实现。
 
-1. 在主站登记 `client_id`、密钥、回调地址及积分权限。
-2. 在 CHDXK 应用迁移并填写内网地址，确认两个服务均使用 HTTPS 外部入口和独立服务会话密钥。
-3. 用测试主体验证：已登录主站直达、首次登录、取消授权、PKCE 重放、主站退出、角色降权、无积分账户、奖励幂等、余额不足和完整冲正。
-4. 再开启点评奖励和生产客户端。真实主站网络联调需要单独记录，仓库测试不会替代这一步。
+## 登录流程
+
+1. 前端访问 `GET /api/auth/oidc/start?return_to=/目标路径`。
+2. CHDXK 后端生成不可预测的 `state`、PKCE `code_verifier` 和 `nonce`，将它们
+   与安全的站内返回路径保存到 Redis 会话。
+3. 后端从 Discovery 得到 authorization endpoint，并请求
+   `response_type=code`、`scope=openid profile res_hub_identity`、`state`、
+   `nonce`、`code_challenge` 和 `code_challenge_method=S256`。
+4. res-hub 完成登录后，将一次性 authorization code 和 `state` 回调到
+   `/api/auth/oidc/callback`。
+5. CHDXK 后端通过 token endpoint 的 `client_secret_basic` 兑换 code，验证
+   ID Token 的签名、`iss`、`aud`、`exp`、`nonce`、`sid` 和 `at_hash`，再用
+   access token 请求 userinfo。
+6. userinfo 的 `sub` 与配置的 Issuer 一起写入本地身份投影；后端会话只保存
+   OIDC access token 和 ID token。前端不会接触 token。
+
+userinfo 使用 res-hub 当前直接 claims：`sub`、`name`、
+`preferred_username`、`res_hub_identity_type`、`res_hub_role`、
+`res_hub_effective_role`、`res_hub_permission_mode` 和可选的
+`res_hub_operator_subject`。不根据本地旧字段猜测账号状态或权限。
+
+## 当前请求和退出
+
+除 OIDC 开始与回调外，受保护请求都从 HttpOnly Redis 会话取出 OIDC access
+token，并以 `Authorization: Bearer` 请求 userinfo。userinfo 失败或令牌失效时，
+CHDXK 清理本站会话并要求重新登录；身份投影每次以 res-hub 返回的当前角色更新。
+
+退出时，CHDXK 使用 Discovery 的 `end_session_endpoint`，携带
+`id_token_hint`、`client_id` 和已登记的 `post_logout_redirect_uri`，然后清理
+本站会话。不会把 access token 当作注销凭证。
+
+## 积分 API
+
+CHDXK 使用 OIDC `client_credentials` 获取服务 access token，并按资源请求使用
+`points.read` 或 `points.write` scope。获取 token 时使用
+`client_secret_basic`；调用积分资源时只发送：
+
+```http
+Authorization: Bearer <OIDC access token>
+```
+
+当前资源路径为：
+
+- `GET /api/integrations/v1/points/user:<id>`：查询余额；
+- `GET /api/integrations/v1/points/ledger?subject=user:<id>`：查询流水；
+- `POST /api/integrations/v1/points/operations`：创建积分操作；
+- `GET /api/integrations/v1/points/operations/<operation_key>`：按业务键查询；
+- `POST /api/integrations/v1/points/operations/<operation_id>/reverse`：冲正。
+
+创建操作的 JSON 必须包含 `subject`、`amount`、`reason` 和
+`operation_key`。同一 client 的业务键用于幂等重试；客户端不会自动重放普通
+写请求。冲正使用 res-hub 返回的不可变 `operation_id`。
+
+## 反向代理要求
+
+反向代理必须在 SPA fallback 之前转发 Discovery、`/oidc/` 和积分 API，并按
+res-hub 部署要求提供 HTTPS、mTLS 或可信代理配置。CHDXK 不再依赖 res-hub 的
+私有 API listener、共享会话 Cookie 或非标准登录路径。

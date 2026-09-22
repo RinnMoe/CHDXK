@@ -45,7 +45,7 @@ type ServiceContainer struct {
 	AuditLogQuery         *application.AuditLogQueryService
 	AuditLogCommand       *application.AuditLogCommandService
 	EmailSender           email.Sender
-	ResHubSSO             *application.ResHubSSOService
+	ResHubOIDC            *application.ResHubOIDCService
 }
 
 func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
@@ -61,7 +61,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	announcementRepo := repository.NewAnnouncementRepository(db)
 	notificationRepo := repository.NewCourseNotificationRepository(db, redisClient)
 	pointRepo := repository.NewPointRepository(db, redisClient)
-	identityProjection := repository.NewUserIdentityRepository(db)
+	identityProjection := repository.NewUserIdentityRepository(db, conf.ResHub.Issuer)
 	accountRepo := repository.NewAccountRepository(db, redisClient)
 	userRepo := repository.NewUserRepository(db, redisClient)
 	systemSettingsRepo := repository.NewSystemSettingsRepository(db, redisClient)
@@ -70,7 +70,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	apiKeyRepo := repository.NewApiKeyRepository(db)
 	auditLogRepo := repository.NewAuditLogRepository(db)
 	accessTracker := repository.NewAccessTrackerRepository(db, redisClient, conf.Auth.Access.FlushBatchSize)
-	statRepo := repository.NewSiteDailyStatRepositoryWithIntegration(db, redisClient, conf.ResHub.Enabled)
+	statRepo := repository.NewSiteDailyStatRepositoryWithIntegration(db, redisClient, true)
 	courseHotRepo := repository.NewGormCourseHotRepository(db, redisClient)
 	verificationRepo := repository.NewVerificationCodeRepository(redisClient)
 	resetCodeRepo := repository.NewVerificationCodeRepositoryWithPrefix(redisClient, "reset")
@@ -85,9 +85,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		voteRepo,
 		siteSettings,
 	)
-	if conf.ResHub.Enabled {
-		reviewCommand.SetGlobalSuspensionEnabled(false)
-	}
+	reviewCommand.SetGlobalSuspensionEnabled(false)
 	courseHotService := course.NewCourseHotService(courseHotRepo)
 	courseService := course.NewService(courseRepo)
 	courseRatingCommand := course.NewCourseRatingCommandService(courseRepo, conf.Course.RatingScore)
@@ -107,18 +105,14 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	announcementService := announcement.NewService(announcementRepo)
 	var pointQueryRepository point.Query = pointRepo
 	var rewardRepository point.RewardRepository = pointRepo
-	var resHubSSO *application.ResHubSSOService
-	var resHubDependency []application.ResHubAuthDependency
-	if conf.ResHub.Enabled {
-		resHubClient := reshub.NewClient(conf.ResHub)
-		pointQueryRepository = reshub.NewPointQuery(resHubClient, identityProjection)
-		rewardRepository = reshub.NewRewardRepository(db, resHubClient, identityProjection)
-		resHubSSO = application.NewResHubSSOService(resHubClient, identityProjection, conf.ResHub.RedirectURI)
-		resHubDependency = append(resHubDependency, application.ResHubAuthDependency{
-			Client:     resHubClient,
-			Projection: identityProjection,
-		})
-	}
+	resHubClient := reshub.NewClient(conf.ResHub)
+	pointQueryRepository = reshub.NewPointQuery(resHubClient, identityProjection)
+	rewardRepository = reshub.NewRewardRepository(db, resHubClient, identityProjection)
+	resHubOIDC := application.NewResHubOIDCService(resHubClient, identityProjection, conf.ResHub.RedirectURI, conf.ResHub.LogoutReturnURI)
+	resHubDependency := []application.ResHubAuthDependency{{
+		Client:     resHubClient,
+		Projection: identityProjection,
+	}}
 	pointQuery := application.NewPointQueryService(pointQueryRepository, accountRepo, usernameDeriver)
 	pointRewardCommand := application.NewPointRewardCommandService(rewardRepository)
 	statsConfig := conf.Stats
@@ -194,6 +188,6 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		AuditLogQuery:         auditLogQuery,
 		AuditLogCommand:       auditLogCommand,
 		EmailSender:           smtpSender,
-		ResHubSSO:             resHubSSO,
+		ResHubOIDC:            resHubOIDC,
 	}
 }

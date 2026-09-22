@@ -66,8 +66,7 @@ type CorsConfig struct {
 // service remains a separate deployment and owns the protocol implementation.
 type ResHubConfig struct {
 	Enabled         bool          `mapstructure:"enabled"`
-	AuthorizeURL    string        `mapstructure:"authorize_url"`
-	InternalBaseURL string        `mapstructure:"internal_base_url"`
+	Issuer          string        `mapstructure:"issuer"`
 	ClientID        string        `mapstructure:"client_id"`
 	ClientSecret    string        `mapstructure:"client_secret"`
 	RedirectURI     string        `mapstructure:"redirect_uri"`
@@ -121,11 +120,8 @@ func Load(configPath string) (AppConfig, error) {
 		return AppConfig{}, fmt.Errorf("auth.username_deriver.salt is required")
 	}
 	if conf.ResHub.Enabled {
-		if strings.TrimSpace(conf.ResHub.AuthorizeURL) == "" {
-			return AppConfig{}, fmt.Errorf("reshub.authorize_url is required when reshub is enabled")
-		}
-		if strings.TrimSpace(conf.ResHub.InternalBaseURL) == "" {
-			return AppConfig{}, fmt.Errorf("reshub.internal_base_url is required when reshub is enabled")
+		if strings.TrimSpace(conf.ResHub.Issuer) == "" {
+			return AppConfig{}, fmt.Errorf("reshub.issuer is required when reshub is enabled")
 		}
 		if strings.TrimSpace(conf.ResHub.ClientID) == "" {
 			return AppConfig{}, fmt.Errorf("reshub.client_id is required when reshub is enabled")

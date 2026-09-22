@@ -30,37 +30,12 @@ export function normalizeAuthUser(user: AuthUserResponse): AuthUserDTO {
   }
 }
 
-/** Build the browser navigation URL for the xk-side SSO entry point. */
-export function getSSOStartURL(returnPath?: string) {
+/** Build the browser navigation URL for the xk-side OIDC authorization entry point. */
+export function getOIDCStartURL(returnPath?: string) {
   const params = new URLSearchParams()
   if (returnPath) params.set("return_to", returnPath)
   const query = params.toString()
-  return `${BASE_URL}/auth/sso/start${query ? `?${query}` : ""}`
-}
-
-export interface SendRegisterCodeCommand {
-  email: string
-}
-
-export interface RegisterCommand {
-  email: string
-  code: string
-  password: string
-}
-
-export interface LoginCommand {
-  email: string
-  password: string
-}
-
-export interface SendResetCodeCommand {
-  email: string
-}
-
-export interface ResetPasswordCommand {
-  email: string
-  code: string
-  new_password: string
+  return `${BASE_URL}/auth/oidc/start${query ? `?${query}` : ""}`
 }
 
 export function getCurrentUser(): Promise<AuthUserDTO | null> {
@@ -79,49 +54,8 @@ export function getCurrentUser(): Promise<AuthUserDTO | null> {
     })
 }
 
-export function sendRegisterCode(
-  cmd: SendRegisterCodeCommand
-): Promise<{ message: string }> {
-  return apiClient(`${BASE_URL}/auth/register/code`, {
-    method: "POST",
-    body: JSON.stringify(cmd),
-  })
-}
-
-export function register(cmd: RegisterCommand): Promise<AuthUserDTO> {
-  return apiClient<AuthUserResponse>(`${BASE_URL}/auth/register`, {
-    method: "POST",
-    body: JSON.stringify(cmd),
-  }).then(normalizeAuthUser)
-}
-
-export function login(cmd: LoginCommand): Promise<AuthUserDTO> {
-  return apiClient<AuthUserResponse>(`${BASE_URL}/auth/login`, {
-    method: "POST",
-    body: JSON.stringify(cmd),
-  }).then(normalizeAuthUser)
-}
-
 export function logout(): Promise<{ message: string }> {
   return apiClient(`${BASE_URL}/auth/logout`, {
     method: "POST",
-  })
-}
-
-export function sendResetCode(
-  cmd: SendResetCodeCommand
-): Promise<{ message: string }> {
-  return apiClient(`${BASE_URL}/auth/password-reset/code`, {
-    method: "POST",
-    body: JSON.stringify(cmd),
-  })
-}
-
-export function resetPassword(
-  cmd: ResetPasswordCommand
-): Promise<{ message: string }> {
-  return apiClient(`${BASE_URL}/auth/password-reset`, {
-    method: "POST",
-    body: JSON.stringify(cmd),
   })
 }

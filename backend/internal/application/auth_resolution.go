@@ -17,12 +17,12 @@ type AuthResolutionService struct {
 	apiKeySvc      *auth.ApiKeyService
 	accessTracker  auth.AccessTracker
 	sessionAuth    *auth.SessionAuthService
-	reshub         auth.ResHubClient
+	reshub         auth.ResHubOIDCClient
 	projection     auth.IdentityProjectionRepository
 }
 
 type ResHubAuthDependency struct {
-	Client     auth.ResHubClient
+	Client     auth.ResHubOIDCClient
 	Projection auth.IdentityProjectionRepository
 }
 
@@ -35,16 +35,16 @@ func NewAuthResolutionService(currentUserSvc *auth.AuthUserService, apiKeySvc *a
 	return service
 }
 
-func (s *AuthResolutionService) Resolve(ctx context.Context, bearerToken string, sessionUserID int, sessionAuthHash string, integrationToken ...string) (*ResolvedAuth, error) {
+func (s *AuthResolutionService) Resolve(ctx context.Context, bearerToken string, sessionUserID int, sessionAuthHash string, oidcAccessToken ...string) (*ResolvedAuth, error) {
 	if bearerToken != "" {
 		return s.resolveAPIKey(ctx, bearerToken)
 	}
 	if sessionUserID > 0 {
 		if s.reshub != nil {
-			if len(integrationToken) == 0 || integrationToken[0] == "" || s.projection == nil {
+			if len(oidcAccessToken) == 0 || oidcAccessToken[0] == "" || s.projection == nil {
 				return &ResolvedAuth{}, auth.ErrResHubSession
 			}
-			return s.resolveResHubSession(ctx, integrationToken[0])
+			return s.resolveResHubSession(ctx, oidcAccessToken[0])
 		}
 		return s.resolveSessionUser(ctx, sessionUserID, sessionAuthHash)
 	}
@@ -75,7 +75,7 @@ func (s *AuthResolutionService) resolveAPIKey(ctx context.Context, token string)
 }
 
 func (s *AuthResolutionService) resolveResHubSession(ctx context.Context, token string) (*ResolvedAuth, error) {
-	snapshot, err := s.reshub.Introspect(ctx, token)
+	snapshot, err := s.reshub.UserInfo(ctx, token)
 	if err != nil {
 		return &ResolvedAuth{}, err
 	}

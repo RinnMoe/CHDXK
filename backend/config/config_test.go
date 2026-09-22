@@ -139,11 +139,10 @@ func TestLoadResHubConfiguration(t *testing.T) {
 	contents := []byte(`
 reshub:
   enabled: true
-  authorize_url: "https://hub.example.test/#/sso/authorize"
-  internal_base_url: "http://127.0.0.1:3421"
+  issuer: "https://hub.example.test"
   client_id: "xk"
   client_secret: "secret"
-  redirect_uri: "https://xk.example.test/api/auth/sso/callback"
+  redirect_uri: "https://xk.example.test/api/auth/oidc/callback"
   logout_return_uri: "https://xk.example.test/"
   timeout: "5s"
   points_base_path: "/api/integrations/v1"
@@ -161,7 +160,7 @@ auth:
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	if !conf.ResHub.Enabled || conf.ResHub.ClientID != "xk" {
+	if !conf.ResHub.Enabled || conf.ResHub.Issuer != "https://hub.example.test" || conf.ResHub.ClientID != "xk" {
 		t.Fatalf("res-hub config = %#v", conf.ResHub)
 	}
 	if conf.ResHub.Timeout != 5*time.Second {

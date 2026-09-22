@@ -2,139 +2,210 @@ package reshub
 
 import (
 	"context"
+	"crypto"
+	cryptorand "crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"io"
+	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"jcourse/config"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/point"
 )
 
-func TestClientAuthorizeURLAndSSORequests(t *testing.T) {
-	var tokenBody map[string]string
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !hasExpectedSecret(r) {
-			t.Errorf("missing client authentication")
-		}
-		if r.URL.Path == "/api/sso/v1/token" {
-			if err := json.NewDecoder(r.Body).Decode(&tokenBody); err != nil {
-				t.Errorf("decode token body: %v", err)
+func TestClientUsesStandardOIDCAndBearerPointAPI(t *testing.T) {
+	privateKey, err := rsa.GenerateKey(cryptorand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("generate signing key: %v", err)
+	}
+	var serviceTokenRequests atomic.Int32
+	var tokenRequestBody url.Values
+	var logoutQuery url.Values
+
+	var server *httptest.Server
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/.well-known/openid-configuration":
+			writeJSON(t, w, map[string]any{
+				"issuer":                                server.URL,
+				"authorization_endpoint":                server.URL + "/oidc/authorize",
+				"token_endpoint":                        server.URL + "/oidc/token",
+				"userinfo_endpoint":                     server.URL + "/oidc/userinfo",
+				"jwks_uri":                              server.URL + "/oidc/jwks.json",
+				"end_session_endpoint":                  server.URL + "/oidc/logout",
+				"token_endpoint_auth_methods_supported": []string{"client_secret_basic"},
+				"code_challenge_methods_supported":      []string{"S256"},
+			})
+		case "/oidc/jwks.json":
+			writeJSON(t, w, jwksFor(privateKey))
+		case "/oidc/token":
+			user, password, ok := r.BasicAuth()
+			if !ok || user != "xk" || password != "secret" {
+				http.Error(w, `{"error":"invalid_client"}`, http.StatusUnauthorized)
+				return
 			}
-			_, _ = io.WriteString(w, `{"access_token":"session-token","expires_at":"2030-01-02T03:04:05Z"}`)
-			return
-		}
-		if r.URL.Path == "/api/sso/v1/introspect" {
-			_, _ = io.WriteString(w, `{"active":true,"subject":"user:42","subject_id":"user:42","nickname":"Ada","role":"admin","effective_role":"admin","permission_mode":"admin","has_points_account":true,"identity_type":"admin","session":{"id":"sess-1","expires_at":1893563045}}`)
-			return
-		}
-		if r.URL.Path == "/api/sso/v1/logout" {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-		http.NotFound(w, r)
-	}))
-	defer server.Close()
-
-	client := NewClient(config.ResHubConfig{
-		AuthorizeURL:    server.URL + "/#/sso/authorize",
-		InternalBaseURL: server.URL,
-		ClientID:        "xk",
-		ClientSecret:    "secret",
-		RedirectURI:     "https://xk.example.test/api/auth/sso/callback",
-	})
-	authorizeURL, err := client.AuthorizeURL("state-value", "challenge-value")
-	if err != nil {
-		t.Fatalf("AuthorizeURL: %v", err)
-	}
-	parsed, err := url.Parse(authorizeURL)
-	if err != nil {
-		t.Fatalf("parse authorize URL: %v", err)
-	}
-	if !strings.Contains(authorizeURL, "redirect_uri=https%3A%2F%2Fxk.example.test%2Fapi%2Fauth%2Fsso%2Fcallback") || strings.Contains(authorizeURL, "redirect_uri=https%25") {
-		t.Fatalf("authorize URL encoded redirect_uri incorrectly: %s", authorizeURL)
-	}
-	authorizeQuery := parsed.Query()
-	if parsed.Fragment != "" {
-		fragment, fragmentErr := url.Parse(parsed.Fragment)
-		if fragmentErr != nil {
-			t.Fatalf("parse authorize fragment: %v", fragmentErr)
-		}
-		if fragment.Path != "/sso/authorize" || parsed.RawQuery != "" {
-			t.Fatalf("authorize URL route/query = %q / %q", fragment.Path, parsed.RawQuery)
-		}
-		authorizeQuery = fragment.Query()
-	}
-	for key, want := range map[string]string{
-		"client_id":             "xk",
-		"redirect_uri":          "https://xk.example.test/api/auth/sso/callback",
-		"response_type":         "code",
-		"state":                 "state-value",
-		"code_challenge":        "challenge-value",
-		"code_challenge_method": "S256",
-	} {
-		if got := authorizeQuery.Get(key); got != want {
-			t.Errorf("authorize query %s = %q, want %q", key, got, want)
-		}
-	}
-
-	session, err := client.Exchange(context.Background(), "auth-code", "verifier", "")
-	if err != nil {
-		t.Fatalf("Exchange: %v", err)
-	}
-	if session.Token != "session-token" || session.ExpiresAt.IsZero() {
-		t.Fatalf("session = %#v", session)
-	}
-	if tokenBody["client_id"] != "xk" || tokenBody["code"] != "auth-code" || tokenBody["code_verifier"] != "verifier" {
-		t.Fatalf("token body = %#v", tokenBody)
-	}
-
-	identity, err := client.Introspect(context.Background(), session.Token)
-	if err != nil {
-		t.Fatalf("Introspect: %v", err)
-	}
-	if identity.Subject != "user:42" || identity.Username != "Ada" || identity.IdentityRole != "admin" || identity.EffectiveRole != "admin" || identity.PermissionMode != "admin" || !identity.HasPointsAccount || identity.SessionID != "sess-1" || identity.ExpiresAt.Unix() != 1893563045 {
-		t.Fatalf("identity = %#v", identity)
-	}
-	if err := client.Logout(context.Background(), session.Token); err != nil {
-		t.Fatalf("Logout: %v", err)
-	}
-}
-
-func TestClientPointOperations(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch {
-		case r.URL.Path == "/api/integrations/v1/points/user:42":
-			_, _ = io.WriteString(w, `{"subject":"user:42","balance":17,"has_points_account":true}`)
-		case r.URL.Path == "/api/integrations/v1/points/ledger":
-			if r.Method != http.MethodGet {
-				t.Errorf("ledger method = %s", r.Method)
+			body, _ := io.ReadAll(r.Body)
+			tokenRequestBody, _ = url.ParseQuery(string(body))
+			if tokenRequestBody.Get("grant_type") == "authorization_code" {
+				accessToken := "user-access-token"
+				writeJSON(t, w, map[string]any{
+					"access_token": accessToken,
+					"token_type":   "Bearer",
+					"expires_in":   3600,
+					"scope":        "openid profile res_hub_identity",
+					"id_token":     signedIDToken(t, privateKey, server.URL, "xk", "nonce-value", accessToken),
+				})
+				return
 			}
-			_, _ = io.WriteString(w, `{"client_id":"xk","subject":"user:42","operations":[{"operation_id":"op-1","subject":"user:42","amount":2,"reason":"review_create","operation_key":"xk:key","balance_after":19,"created_at":1700000000}],"page":2,"page_size":10,"total":1}`)
-		case r.URL.Path == "/api/integrations/v1/points/operations" && r.Method == http.MethodPost:
-			_, _ = io.WriteString(w, `{"operation_id":"op-1","client_id":"xk","subject":"user:42","amount":2,"reason":"review_create","operation_key":"xk:key","balance_after":19,"created_at":1700000000}`)
-		case r.URL.Path == "/api/integrations/v1/points/operations/op-1/reverse":
-			_, _ = io.WriteString(w, `{"operation_id":"op-2","client_id":"xk","subject":"user:42","amount":-2,"reason":"review_create","operation_key":"xk:key:reverse:op-1","balance_after":17,"created_at":1700000001,"reversal_of":"op-1"}`)
-		case r.URL.Path == "/api/integrations/v1/points/operations/xk:key":
-			_, _ = io.WriteString(w, `{"operation_id":"op-1","client_id":"xk","subject":"user:42","amount":2,"reason":"review_create","operation_key":"xk:key","balance_after":19,"created_at":1700000000}`)
+			if tokenRequestBody.Get("grant_type") == "client_credentials" {
+				serviceTokenRequests.Add(1)
+				writeJSON(t, w, map[string]any{
+					"access_token": "service-token",
+					"token_type":   "Bearer",
+					"expires_in":   3600,
+					"scope":        tokenRequestBody.Get("scope"),
+				})
+				return
+			}
+			http.Error(w, `{"error":"invalid_grant"}`, http.StatusBadRequest)
+		case "/oidc/userinfo":
+			if r.Header.Get("Authorization") != "Bearer user-access-token" {
+				http.Error(w, `{"error":"invalid_token"}`, http.StatusUnauthorized)
+				return
+			}
+			writeJSON(t, w, map[string]any{
+				"sub":                     "user:42",
+				"name":                    "Ada",
+				"preferred_username":      "ada",
+				"res_hub_identity_type":   "member",
+				"res_hub_role":            "member",
+				"res_hub_effective_role":  "member",
+				"res_hub_permission_mode": "member",
+			})
+		case "/oidc/logout":
+			logoutQuery = r.URL.Query()
+			w.Header().Set("Location", logoutQuery.Get("post_logout_redirect_uri"))
+			w.WriteHeader(http.StatusFound)
+		case "/api/integrations/v1/points/user:42":
+			assertBearer(t, r)
+			writeJSON(t, w, map[string]any{"subject": "user:42", "balance": 17, "has_points_account": true})
+		case "/api/integrations/v1/points/ledger":
+			assertBearer(t, r)
+			writeJSON(t, w, map[string]any{
+				"client_id": "xk", "subject": "user:42", "page": 2, "page_size": 10, "total": 1,
+				"operations": []any{map[string]any{
+					"operation_id": "op-1", "client_id": "xk", "subject": "user:42", "amount": 2,
+					"reason": "review_create", "operation_key": "xk:key", "balance_after": 19,
+					"created_at": 1790121600,
+				}},
+			})
+		case "/api/integrations/v1/points/operations":
+			assertBearer(t, r)
+			if r.Method != http.MethodPost {
+				http.Error(w, `{"detail":{"code":"invalid_request"}}`, http.StatusBadRequest)
+				return
+			}
+			writeJSON(t, w, map[string]any{
+				"operation_id": "op-1", "client_id": "xk", "subject": "user:42", "amount": 2,
+				"reason": "review_create", "operation_key": "xk:key", "balance_after": 19,
+				"created_at": 1790121600,
+			})
+		case "/api/integrations/v1/points/operations/xk:key":
+			assertBearer(t, r)
+			writeJSON(t, w, map[string]any{
+				"operation_id": "op-1", "client_id": "xk", "subject": "user:42", "amount": 2,
+				"reason": "review_create", "operation_key": "xk:key", "balance_after": 19,
+				"created_at": 1790121600,
+			})
+		case "/api/integrations/v1/points/operations/op-1/reverse":
+			assertBearer(t, r)
+			writeJSON(t, w, map[string]any{
+				"operation_id": "op-2", "client_id": "xk", "subject": "user:42", "amount": -2,
+				"reason": "review_create", "operation_key": "xk:key:reverse:op-1", "balance_after": 17,
+				"created_at": 1790121601, "reversal_of": "op-1",
+			})
 		default:
 			http.NotFound(w, r)
 		}
 	}))
 	defer server.Close()
-	client := NewClient(config.ResHubConfig{InternalBaseURL: server.URL, ClientID: "xk", ClientSecret: "secret"})
+
+	client := NewClient(config.ResHubConfig{
+		Issuer:          server.URL,
+		ClientID:        "xk",
+		ClientSecret:    "secret",
+		RedirectURI:     "https://xk.example.test/api/auth/oidc/callback",
+		LogoutReturnURI: "https://xk.example.test/",
+	})
+
+	authorizeURL, err := client.AuthorizationURL(context.Background(), "state-value", "challenge-value", "nonce-value")
+	if err != nil {
+		t.Fatalf("AuthorizationURL: %v", err)
+	}
+	parsed, err := url.Parse(authorizeURL)
+	if err != nil {
+		t.Fatalf("parse authorize URL: %v", err)
+	}
+	if parsed.Fragment != "" {
+		t.Fatalf("authorization endpoint unexpectedly uses fragment: %s", authorizeURL)
+	}
+	for key, want := range map[string]string{
+		"client_id":             "xk",
+		"redirect_uri":          "https://xk.example.test/api/auth/oidc/callback",
+		"response_type":         "code",
+		"scope":                 "openid profile res_hub_identity",
+		"state":                 "state-value",
+		"nonce":                 "nonce-value",
+		"code_challenge":        "challenge-value",
+		"code_challenge_method": "S256",
+	} {
+		if got := parsed.Query().Get(key); got != want {
+			t.Errorf("authorize query %s = %q, want %q", key, got, want)
+		}
+	}
+
+	session, err := client.Exchange(context.Background(), "auth-code", "verifier", "nonce-value", "")
+	if err != nil {
+		t.Fatalf("Exchange: %v", err)
+	}
+	if session.AccessToken != "user-access-token" || session.IDToken == "" || session.SessionID != "session-1" || session.ExpiresAt.IsZero() {
+		t.Fatalf("session = %#v", session)
+	}
+	if tokenRequestBody.Get("grant_type") != "authorization_code" || tokenRequestBody.Get("code") != "auth-code" || tokenRequestBody.Get("code_verifier") != "verifier" || tokenRequestBody.Get("redirect_uri") != "https://xk.example.test/api/auth/oidc/callback" {
+		t.Fatalf("token body = %#v", tokenRequestBody)
+	}
+
+	identity, err := client.UserInfo(context.Background(), session.AccessToken)
+	if err != nil {
+		t.Fatalf("UserInfo: %v", err)
+	}
+	if identity.Issuer != server.URL || identity.Subject != "user:42" || identity.Username != "Ada" || identity.IdentityRole != "member" {
+		t.Fatalf("identity = %#v", identity)
+	}
+	if err := client.Logout(context.Background(), session.IDToken, "https://xk.example.test/"); err != nil {
+		t.Fatalf("Logout: %v", err)
+	}
+	if logoutQuery.Get("id_token_hint") != session.IDToken || logoutQuery.Get("client_id") != "xk" || logoutQuery.Get("post_logout_redirect_uri") != "https://xk.example.test/" {
+		t.Fatalf("logout query = %#v", logoutQuery)
+	}
 
 	balance, err := client.Balance(context.Background(), "user:42")
 	if err != nil || balance != 17 {
 		t.Fatalf("Balance = %d, %v", balance, err)
 	}
 	operations, total, err := client.ListOperations(context.Background(), "user:42", 2, 10)
-	if err != nil || total != 1 || len(operations) != 1 || operations[0].ID != "op-1" || operations[0].Reason != "review_create" || operations[0].OccurredAt.Unix() != 1700000000 {
+	if err != nil || total != 1 || len(operations) != 1 || operations[0].ID != "op-1" || operations[0].OccurredAt.IsZero() {
 		t.Fatalf("ListOperations = %#v, total=%d, err=%v", operations, total, err)
 	}
 	operation, err := client.Change(context.Background(), "user:42", 2, "review_create", "xk:key")
@@ -149,72 +220,119 @@ func TestClientPointOperations(t *testing.T) {
 	if err != nil || reversal.OriginalID != "op-1" {
 		t.Fatalf("Reverse = %#v, %v", reversal, err)
 	}
+	if serviceTokenRequests.Load() != 2 {
+		t.Fatalf("client credentials requests = %d, want one per scope", serviceTokenRequests.Load())
+	}
 }
 
-func TestClientMapsPointErrorsAndUnavailable(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func TestClientMapsStandardPointErrors(t *testing.T) {
+	privateKey, err := rsa.GenerateKey(cryptorand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("generate signing key: %v", err)
+	}
+	var server *httptest.Server
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusConflict)
-		_, _ = io.WriteString(w, `{"detail":{"code":"insufficient_points","message":"insufficient"}}`)
+		switch r.URL.Path {
+		case "/.well-known/openid-configuration":
+			writeJSON(t, w, map[string]any{
+				"issuer": server.URL, "token_endpoint": server.URL + "/oidc/token",
+				"authorization_endpoint": server.URL + "/oidc/authorize", "userinfo_endpoint": server.URL + "/oidc/userinfo",
+				"jwks_uri": server.URL + "/oidc/jwks.json", "end_session_endpoint": server.URL + "/oidc/logout",
+				"token_endpoint_auth_methods_supported": []string{"client_secret_basic"},
+				"code_challenge_methods_supported":      []string{"S256"},
+			})
+		case "/oidc/jwks.json":
+			writeJSON(t, w, jwksFor(privateKey))
+		case "/oidc/token":
+			writeJSON(t, w, map[string]any{"access_token": "service-token", "token_type": "Bearer", "expires_in": 3600})
+		case "/api/integrations/v1/points/operations":
+			assertBearer(t, r)
+			w.WriteHeader(http.StatusConflict)
+			_, _ = io.WriteString(w, `{"detail":{"code":"insufficient_points","message":"insufficient"}}`)
+		case "/api/integrations/v1/points/operations/op-missing/reverse":
+			assertBearer(t, r)
+			w.WriteHeader(http.StatusNotFound)
+			_, _ = io.WriteString(w, `{"detail":{"code":"operation_not_found","message":"missing"}}`)
+		default:
+			http.NotFound(w, r)
+		}
 	}))
 	defer server.Close()
-	client := NewClient(config.ResHubConfig{InternalBaseURL: server.URL, ClientID: "xk", ClientSecret: "secret"})
-	_, err := client.Change(context.Background(), "user:42", -2, "consume", "xk:key")
+	client := NewClient(config.ResHubConfig{Issuer: server.URL, ClientID: "xk", ClientSecret: "secret"})
+	_, err = client.Change(context.Background(), "user:42", -2, "consume", "xk:key")
 	if !errors.Is(err, point.ErrInsufficientBalance) {
 		t.Fatalf("Change error = %v, want insufficient balance", err)
 	}
-
-	unavailable := NewClient(config.ResHubConfig{InternalBaseURL: "http://127.0.0.1:1", ClientID: "xk", ClientSecret: "secret"})
-	_, err = unavailable.Introspect(context.Background(), "token")
-	if !errors.Is(err, auth.ErrResHubUnavailable) {
-		t.Fatalf("Introspect unavailable error = %v", err)
-	}
-}
-
-func TestClientMapsIntegrationConfigurationErrorsAsUnavailable(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusForbidden)
-		_, _ = io.WriteString(w, `{"detail":{"code":"private_network_required","message":"private network required"}}`)
-	}))
-	defer server.Close()
-
-	client := NewClient(config.ResHubConfig{InternalBaseURL: server.URL, ClientID: "xk", ClientSecret: "secret"})
-	_, err := client.Introspect(context.Background(), "token")
-	if !errors.Is(err, auth.ErrResHubUnavailable) {
-		t.Fatalf("Introspect error = %v, want unavailable", err)
-	}
-}
-
-func TestClientMapsMissingOperation(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		_, _ = io.WriteString(w, `{"detail":{"code":"operation_not_found","message":"operation not found"}}`)
-	}))
-	defer server.Close()
-
-	client := NewClient(config.ResHubConfig{InternalBaseURL: server.URL, ClientID: "xk", ClientSecret: "secret"})
-	_, err := client.Reverse(context.Background(), "user:42", "op-missing")
+	_, err = client.Reverse(context.Background(), "user:42", "op-missing")
 	if !errors.Is(err, point.ErrOperationNotFound) {
 		t.Fatalf("Reverse error = %v, want operation not found", err)
 	}
 }
 
-func TestClientRejectsInactiveIntrospectionResponse(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, _ = io.WriteString(w, `{"active":false,"subject":"user:42"}`)
-	}))
-	defer server.Close()
-
-	client := NewClient(config.ResHubConfig{InternalBaseURL: server.URL, ClientID: "xk", ClientSecret: "secret"})
-	_, err := client.Introspect(context.Background(), "token")
-	if !errors.Is(err, auth.ErrResHubSession) {
-		t.Fatalf("Introspect error = %v, want session error", err)
+func TestClientRejectsUnavailableDiscovery(t *testing.T) {
+	client := NewClient(config.ResHubConfig{Issuer: "http://127.0.0.1:1", ClientID: "xk", ClientSecret: "secret"})
+	_, err := client.UserInfo(context.Background(), "access-token")
+	if !errors.Is(err, auth.ErrResHubUnavailable) {
+		t.Fatalf("UserInfo unavailable error = %v", err)
 	}
 }
 
-func hasExpectedSecret(r *http.Request) bool {
-	user, password, ok := r.BasicAuth()
-	return ok && user == "xk" && password == "secret"
+func assertBearer(t *testing.T, r *http.Request) {
+	t.Helper()
+	if got := r.Header.Get("Authorization"); got != "Bearer service-token" {
+		t.Errorf("resource authorization = %q, want Bearer service-token", got)
+	}
+	if user, _, ok := r.BasicAuth(); ok || user != "" {
+		t.Errorf("resource request unexpectedly used Basic auth")
+	}
+}
+
+func writeJSON(t *testing.T, w http.ResponseWriter, value any) {
+	t.Helper()
+	if err := json.NewEncoder(w).Encode(value); err != nil {
+		t.Errorf("write JSON: %v", err)
+	}
+}
+
+func jwksFor(privateKey *rsa.PrivateKey) map[string]any {
+	publicKey := &privateKey.PublicKey
+	exponent := bigEndianBytes(publicKey.E)
+	return map[string]any{"keys": []any{map[string]any{
+		"kty": "RSA", "use": "sig", "alg": "RS256", "kid": "test-key",
+		"n": base64.RawURLEncoding.EncodeToString(publicKey.N.Bytes()),
+		"e": base64.RawURLEncoding.EncodeToString(exponent),
+	}}}
+}
+
+func signedIDToken(t *testing.T, privateKey *rsa.PrivateKey, issuer, audience, nonce, accessToken string) string {
+	t.Helper()
+	encode := func(value any) string {
+		data, err := json.Marshal(value)
+		if err != nil {
+			t.Fatalf("marshal token segment: %v", err)
+		}
+		return base64.RawURLEncoding.EncodeToString(data)
+	}
+	header := encode(map[string]string{"alg": "RS256", "kid": "test-key", "typ": "JWT"})
+	now := time.Now().Unix()
+	digest := sha256.Sum256([]byte(accessToken))
+	claims := map[string]any{
+		"iss": issuer, "sub": "user:42", "aud": audience,
+		"exp": now + 3600, "iat": now, "auth_time": now,
+		"nonce": nonce, "sid": "session-1",
+		"at_hash": base64.RawURLEncoding.EncodeToString(digest[:16]),
+	}
+	payload := encode(claims)
+	signingInput := header + "." + payload
+	signatureDigest := sha256.Sum256([]byte(signingInput))
+	signature, err := rsa.SignPKCS1v15(cryptorand.Reader, privateKey, crypto.SHA256, signatureDigest[:])
+	if err != nil {
+		t.Fatalf("sign token: %v", err)
+	}
+	return signingInput + "." + base64.RawURLEncoding.EncodeToString(signature)
+}
+
+func bigEndianBytes(value int) []byte {
+	return new(big.Int).SetInt64(int64(value)).Bytes()
 }

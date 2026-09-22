@@ -15,10 +15,10 @@ import (
 
 func ResolveCurrentUser(authResolution *application.AuthResolutionService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// SSO start and callback must remain reachable when the browser carries
-		// an expired integration session. Otherwise an old token can prevent the
-		// user from starting a fresh authorization flow or consuming its code.
-		if isPublicSSORoute(c.Request.URL.Path) {
+		// OIDC start and callback must remain reachable when the browser carries
+		// an expired access token. Otherwise an old token can prevent the user
+		// from starting a fresh authorization flow or consuming its code.
+		if isPublicOIDCRoute(c.Request.URL.Path) {
 			c.Next()
 			return
 		}
@@ -27,7 +27,7 @@ func ResolveCurrentUser(authResolution *application.AuthResolutionService) gin.H
 			return
 		}
 
-		resolved, err := authResolution.Resolve(c.Request.Context(), bearerToken(c), sessionUserID(c), sessionAuthHash(c), IntegrationToken(c))
+		resolved, err := authResolution.Resolve(c.Request.Context(), bearerToken(c), sessionUserID(c), sessionAuthHash(c), OIDCAccessToken(c))
 		if err != nil {
 			if errors.Is(err, auth.ErrInvalidSession) || errors.Is(err, auth.ErrResHubSession) {
 				_ = ClearSession(c)
@@ -57,8 +57,8 @@ func ResolveCurrentUser(authResolution *application.AuthResolutionService) gin.H
 	}
 }
 
-func isPublicSSORoute(path string) bool {
-	return path == "/api/auth/sso/start" || path == "/api/auth/sso/callback"
+func isPublicOIDCRoute(path string) bool {
+	return path == "/api/auth/oidc/start" || path == "/api/auth/oidc/callback"
 }
 
 func sessionAuthHash(c *gin.Context) string {
