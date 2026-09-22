@@ -3,33 +3,23 @@ package application
 import (
 	"context"
 
-	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 )
 
-type AccountQueryService struct {
-	accountRepo identity.Repository
+type AccountQueryService struct{}
+
+func NewAccountQueryService() *AccountQueryService {
+	return &AccountQueryService{}
 }
 
-func NewAccountQueryService(accountRepo identity.Repository) *AccountQueryService {
-	return &AccountQueryService{accountRepo: accountRepo}
-}
-
-func (s *AccountQueryService) CurrentUser(ctx context.Context, u *auth.User) (*AccountDTO, error) {
+func (s *AccountQueryService) CurrentUser(_ context.Context, u *auth.User) (*AccountDTO, error) {
 	if u == nil {
-		return nil, identity.ErrNotFound
+		return nil, auth.ErrResHubSession
 	}
-	if u.Subject != "" {
-		return newExternalAccountDTO(u), nil
+	if u.Subject == "" {
+		return nil, auth.ErrResHubSession
 	}
-	acct, err := s.accountRepo.FindByID(ctx, u.ID)
-	if err != nil {
-		return nil, err
-	}
-	if acct == nil {
-		return nil, identity.ErrNotFound
-	}
-	return newAccountDTO(acct, u), nil
+	return newExternalAccountDTO(u), nil
 }
 
 func newExternalAccountDTO(u *auth.User) *AccountDTO {

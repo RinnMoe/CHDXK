@@ -8,9 +8,8 @@ type MockUserRepository struct {
 	Users         map[int]*User
 	FindByIDCalls int
 
-	OnUpdate    func(context.Context, *User) error
-	OnFindByID  func(context.Context, int) (*User, error)
-	OnFindAdmin func(context.Context) ([]User, error)
+	OnUpdate   func(context.Context, *User) error
+	OnFindByID func(context.Context, int) (*User, error)
 }
 
 func NewMockUserRepository(users map[int]*User) *MockUserRepository {
@@ -44,20 +43,6 @@ func (r *MockUserRepository) FindByID(ctx context.Context, id int) (*User, error
 	return &copy, nil
 }
 
-func (r *MockUserRepository) FindAdmin(ctx context.Context) ([]User, error) {
-	if r.OnFindAdmin != nil {
-		return r.OnFindAdmin(ctx)
-	}
-	r.ensureMap()
-	users := make([]User, 0)
-	for _, u := range r.Users {
-		if u.IsAdmin() {
-			users = append(users, *u)
-		}
-	}
-	return users, nil
-}
-
 func (r *MockUserRepository) ensureMap() {
 	if r.Users == nil {
 		r.Users = map[int]*User{}
@@ -67,9 +52,7 @@ func (r *MockUserRepository) ensureMap() {
 type MockApiKeyRepository struct {
 	Key          *ApiKey
 	KeyByID      map[int64]*ApiKey
-	Keys         []ApiKey
 	SystemKeys   []ApiKey
-	Count        int
 	Created      *ApiKey
 	Deleted      bool
 	Touched      bool
@@ -77,12 +60,10 @@ type MockApiKeyRepository struct {
 	DeleteID     int64
 	GetByIDCalls int
 
-	OnGetByID     func(context.Context, int64) (*ApiKey, error)
-	OnListSystem  func(context.Context) ([]ApiKey, error)
-	OnListByUser  func(context.Context, int) ([]ApiKey, error)
-	OnCountByUser func(context.Context, int) (int, error)
-	OnCreate      func(context.Context, *ApiKey) error
-	OnDelete      func(context.Context, int64) (bool, error)
+	OnGetByID    func(context.Context, int64) (*ApiKey, error)
+	OnListSystem func(context.Context) ([]ApiKey, error)
+	OnCreate     func(context.Context, *ApiKey) error
+	OnDelete     func(context.Context, int64) (bool, error)
 }
 
 func (r *MockApiKeyRepository) GetByID(ctx context.Context, id int64) (*ApiKey, error) {
@@ -103,25 +84,11 @@ func (r *MockApiKeyRepository) GetByID(ctx context.Context, id int64) (*ApiKey, 
 	return nil, nil
 }
 
-func (r *MockApiKeyRepository) ListByUser(ctx context.Context, userID int) ([]ApiKey, error) {
-	if r.OnListByUser != nil {
-		return r.OnListByUser(ctx, userID)
-	}
-	return r.Keys, nil
-}
-
 func (r *MockApiKeyRepository) ListSystem(ctx context.Context) ([]ApiKey, error) {
 	if r.OnListSystem != nil {
 		return r.OnListSystem(ctx)
 	}
 	return r.SystemKeys, nil
-}
-
-func (r *MockApiKeyRepository) CountByUser(ctx context.Context, userID int) (int, error) {
-	if r.OnCountByUser != nil {
-		return r.OnCountByUser(ctx, userID)
-	}
-	return r.Count, nil
 }
 
 func (r *MockApiKeyRepository) Create(ctx context.Context, apiKey *ApiKey) error {

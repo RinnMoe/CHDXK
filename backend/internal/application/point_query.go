@@ -3,9 +3,7 @@ package application
 import (
 	"context"
 
-	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/point"
-	"jcourse/pkg/apperr"
 )
 
 type PointRecordListFilter struct {
@@ -14,13 +12,11 @@ type PointRecordListFilter struct {
 }
 
 type PointQueryService struct {
-	query       point.Query
-	accountRepo identity.Repository
-	usernames   identity.UsernameDeriver
+	query point.Query
 }
 
-func NewPointQueryService(query point.Query, accountRepo identity.Repository, usernames identity.UsernameDeriver) *PointQueryService {
-	return &PointQueryService{query: query, accountRepo: accountRepo, usernames: usernames}
+func NewPointQueryService(query point.Query) *PointQueryService {
+	return &PointQueryService{query: query}
 }
 
 func (s *PointQueryService) GetUserPoints(ctx context.Context, userID int, f PointRecordListFilter) (*PointSummaryDTO, error) {
@@ -52,21 +48,4 @@ func (s *PointQueryService) GetUserPoints(ctx context.Context, userID int, f Poi
 			PageSize: f.PageSize,
 		},
 	}, nil
-}
-
-var ErrPointUserNotFound = apperr.ErrPointUserNotFound
-
-func (s *PointQueryService) GetUserPointsByEmail(ctx context.Context, email string) (int, error) {
-	username, err := s.usernames.UsernameFromEmail(email)
-	if err != nil {
-		return 0, err
-	}
-	u, err := s.accountRepo.FindByUsername(ctx, username)
-	if err != nil {
-		return 0, err
-	}
-	if u == nil {
-		return 0, ErrPointUserNotFound
-	}
-	return s.query.SumByUser(ctx, u.ID)
 }

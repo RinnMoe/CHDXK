@@ -32,11 +32,6 @@ auth:
     flush_cron: "*/5 * * * *"
     scheduler_enabled: true
     flush_batch_size: 1000
-  password_hash:
-    iterations: 1200000
-    salt_length: 22
-  username_deriver:
-    salt: "SALT"
 
 course:
   rating_score:
@@ -78,9 +73,8 @@ smtp:
   from: "noreply@example.com"
 
 # CHDXK uses res-hub as the unified user, role, session and points authority.
-# Keep this disabled until the OIDC client is registered in res-hub.
+# OIDC configuration is required; there is no local-account fallback.
 reshub:
-  enabled: false
   # Discovery is read from this stable public OIDC issuer.
   issuer: "https://res-hub.example.com"
   client_id: "chdxk"

@@ -3,9 +3,6 @@ package app
 import (
 	"jcourse/config"
 	"jcourse/internal/application"
-	"jcourse/internal/domain/account"
-	"jcourse/internal/domain/account/credential"
-	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/announcement"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
@@ -29,9 +26,6 @@ type ServiceContainer struct {
 	SiteStatsQuery        *application.SiteStatsQueryService
 	SiteStatsCommand      *application.SiteStatsCommandService
 	AccountQuery          *application.AccountQueryService
-	AccountCommand        *application.AccountCommandService
-	AdminUserQuery        *application.AdminUserQueryService
-	AdminUserCommand      *application.AdminUserCommandService
 	AuthUserService       *auth.AuthUserService
 	AuthResolution        *application.AuthResolutionService
 	AccessTracker         auth.AccessTracker
@@ -62,7 +56,6 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	notificationRepo := repository.NewCourseNotificationRepository(db, redisClient)
 	pointRepo := repository.NewPointRepository(db, redisClient)
 	identityProjection := repository.NewUserIdentityRepository(db, conf.ResHub.Issuer)
-	accountRepo := repository.NewAccountRepository(db, redisClient)
 	userRepo := repository.NewUserRepository(db, redisClient)
 	systemSettingsRepo := repository.NewSystemSettingsRepository(db, redisClient)
 	systemSettingsService := newSystemSettingsService(systemSettingsRepo, courseRepo)
@@ -72,11 +65,6 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	accessTracker := repository.NewAccessTrackerRepository(db, redisClient, conf.Auth.Access.FlushBatchSize)
 	statRepo := repository.NewSiteDailyStatRepositoryWithIntegration(db, redisClient, true)
 	courseHotRepo := repository.NewGormCourseHotRepository(db, redisClient)
-	verificationRepo := repository.NewVerificationCodeRepository(redisClient)
-	resetCodeRepo := repository.NewVerificationCodeRepositoryWithPrefix(redisClient, "reset")
-	loginAttemptRepo := repository.NewLoginAttemptRepository(redisClient, account.DefaultLoginConfig.Lockout)
-	usernameDeriver := identity.NewBLAKE2bUsernameDeriver(conf.Auth.UsernameDeriver)
-
 	reviewQuery := application.NewReviewQueryService(reviewRepo, voteRepo, notificationRepo)
 
 	reviewCommand := application.NewReviewCommandService(
@@ -109,52 +97,18 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	pointQueryRepository = reshub.NewPointQuery(resHubClient, identityProjection)
 	rewardRepository = reshub.NewRewardRepository(db, resHubClient, identityProjection)
 	resHubOIDC := application.NewResHubOIDCService(resHubClient, identityProjection, conf.ResHub.RedirectURI, conf.ResHub.LogoutReturnURI)
-	resHubDependency := []application.ResHubAuthDependency{{
-		Client:     resHubClient,
-		Projection: identityProjection,
-	}}
-	pointQuery := application.NewPointQueryService(pointQueryRepository, accountRepo, usernameDeriver)
+	pointQuery := application.NewPointQueryService(pointQueryRepository)
 	pointRewardCommand := application.NewPointRewardCommandService(rewardRepository)
 	statsConfig := conf.Stats
 	siteStatsQuery := application.NewSiteStatsQueryService(statRepo, statsConfig)
 	siteStatsCommand := application.NewSiteStatsCommandService(statRepo, statRepo, statsConfig)
 	currentUserService := auth.NewCurrentUserService(userRepo)
-	accountQuery := application.NewAccountQueryService(accountRepo)
-	adminUserQuery := application.NewAdminUserQueryService(accountRepo, userRepo, reviewRepo, usernameDeriver)
-	hasher := credential.NewDjangoPBKDF2SHA256PasswordHasher(conf.Auth.PasswordHash)
-	adminUserCommand := application.NewAdminUserCommandService(userRepo, accountRepo, hasher)
+	accountQuery := application.NewAccountQueryService()
 	smtpSender := smtp.NewSMTPSender(conf.SMTP)
-	registrationService := account.NewRegistrationService(
-		accountRepo,
-		verificationRepo,
-		hasher,
-		usernameDeriver,
-	)
-	loginService := account.NewLoginService(
-		accountRepo,
-		hasher,
-		loginAttemptRepo,
-		usernameDeriver,
-	)
-	passwordResetService := account.NewPasswordResetService(
-		accountRepo,
-		resetCodeRepo,
-		hasher,
-		usernameDeriver,
-	)
-	sessionAuthService := auth.NewSessionAuthService(accountRepo, conf.Session.Secret)
-	accountCommand := application.NewAccountCommandService(
-		registrationService,
-		loginService,
-		passwordResetService,
-		currentUserService,
-		sessionAuthService,
-		siteSettings,
-	)
 	apiKeySvc := auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, conf.APIKey)
-	authResolution := application.NewAuthResolutionService(currentUserService, apiKeySvc, accessTracker, sessionAuthService, resHubDependency...)
+	authResolution := application.NewAuthResolutionService(apiKeySvc, accessTracker, resHubClient, identityProjection)
 	apiKeyQuery := application.NewApiKeyQueryService(apiKeySvc)
-	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc, siteSettings)
+	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc)
 	systemSettingsQuery := application.NewSystemSettingsQueryService(systemSettingsService)
 	systemSettingsCommand := application.NewSystemSettingsCommandService(systemSettingsService)
 	auditLogQuery := application.NewAuditLogQueryService(auditLogRepo)
@@ -172,9 +126,6 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		SiteStatsQuery:        siteStatsQuery,
 		SiteStatsCommand:      siteStatsCommand,
 		AccountQuery:          accountQuery,
-		AccountCommand:        accountCommand,
-		AdminUserQuery:        adminUserQuery,
-		AdminUserCommand:      adminUserCommand,
 		AuthUserService:       currentUserService,
 		AuthResolution:        authResolution,
 		AccessTracker:         accessTracker,

@@ -10,32 +10,11 @@ import (
 )
 
 type ApiKeyCommandService struct {
-	svc      *auth.ApiKeyService
-	settings SiteSettingsProvider
+	svc *auth.ApiKeyService
 }
 
-func NewApiKeyCommandService(svc *auth.ApiKeyService, settings SiteSettingsProvider) *ApiKeyCommandService {
-	if settings == nil {
-		defaults := NewDefaultSiteSettingsProvider()
-		settings = defaults
-	}
-	return &ApiKeyCommandService{svc: svc, settings: settings}
-}
-
-func (s *ApiKeyCommandService) CreateMyApiKey(ctx context.Context, userID int, cmd CreateApiKeyCommand) (*ApiKeyDTO, error) {
-	config, err := s.settings.ApiKeyConfig(ctx)
-	if err != nil {
-		return nil, err
-	}
-	key, credential, err := s.svc.CreateUserKeyWithConfig(ctx, userID, cmd.Name, config)
-	if err != nil {
-		return nil, err
-	}
-	return new(newApiKeyDTO(*key, credential.Key())), nil
-}
-
-func (s *ApiKeyCommandService) DeleteMyApiKey(ctx context.Context, userID int, id int64) error {
-	return s.svc.DeleteUserKey(ctx, userID, id)
+func NewApiKeyCommandService(svc *auth.ApiKeyService) *ApiKeyCommandService {
+	return &ApiKeyCommandService{svc: svc}
 }
 
 func (s *ApiKeyCommandService) CreateSystemApiKey(ctx context.Context, actor *auth.User, cmd CreateApiKeyCommand) (*ApiKeyDTO, error) {

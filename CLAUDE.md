@@ -42,7 +42,7 @@ The `test` build tag is required because shared repository mocks (`testutil.go` 
 pnpm dev                # Vite dev server (:5173, proxies /api → :8080)
 pnpm build              # tsc + vite build
 pnpm typecheck          # tsc only
-pnpm lint               # ESLint
+pnpm lint               # oxlint
 pnpm test               # Vitest
 pnpm preview            # serve dist/ for PWA verification
 pnpm format             # Prettier
@@ -75,12 +75,12 @@ cmd/{api,taskworker,importer,migrate_v1}  entrypoints
 - **Soft deletes** use a `deleted_at` unix-timestamp column; queries filter `deleted_at = 0`.
 - **Review revisions**: each update writes a `Revision` snapshot in the same transaction.
 - **PostgreSQL features**: tsvector + GIN indexes for full-text search (incl. pinyin via `pg_jieba`), `int[]` array columns for categories / teacher IDs.
-- **Redis**: session store (`jcourse:session:` prefix), hot-course sorted sets, verification codes, login-attempt lockout, repository JSON caches (default 30 min TTL — see `backend/CACHE_KEYS.md`).
+- **Redis**: session store (`jcourse:session:` prefix), hot-course sorted sets, rate limiting, task queues, repository JSON caches (default 30 min TTL — see `backend/CACHE_KEYS.md`).
 - **Async tasks**: `domain/task` defines pure `Task` / `Enqueuer` ports; `infrastructure/task` provides the Asynq backend; `interface/async` registers handlers. The API process injects an enqueuer at startup; `cmd/taskworker` runs the Asynq server with SIGINT/SIGTERM graceful shutdown.
-- **Auth**: res-hub is the sole account authority. CHDXK uses Authorization Code + PKCE OIDC, validates ID Token and userinfo claims, and projects `issuer + sub` to local users. There is no local password or user API-key compatibility path. System API keys remain available for server-to-server administration.
+- **Auth**: res-hub is the sole account authority. CHDXK uses Authorization Code + PKCE OIDC, validates ID Token and userinfo claims, and projects `issuer + sub` to local users. There is no local account, password-session, or user API-key compatibility path. System API keys remain available for server-to-server administration.
 - **Config** via Viper. Any field is overridable with a `JCOURSE_` env var (e.g. `JCOURSE_POSTGRES_DSN`, `JCOURSE_SERVER_ADDR`). Never commit `config/config.yaml`.
 
-**Routing:** all routes are mounted under `/api` in `internal/interface/web/router.go`. Most need session auth; site-stats and parts of review moderation require admin; `/api/ext/*` uses API-key auth. When adding endpoints, verify the auth middleware in this file.
+**Routing:** all routes are mounted under `/api` in `internal/interface/web/router.go`. OIDC start/callback and CSRF are public; most other routes require the res-hub-backed session; site stats, system settings, announcements, system API keys, and parts of review moderation require admin. When adding endpoints, verify the auth middleware in this file.
 
 **Domain model overview:** `Course → OfferedCourse ↔ TeacherGroup`, `Review → ReviewRevision / ReviewVote`, `User → PointRecord / PointTransfer`, plus `Announcement`, `SiteDailyStat`, `UserIdentity` (res-hub projection), `AuditLog`.
 
@@ -96,7 +96,7 @@ src/hooks/      TanStack Query hooks (useQuery + useMutation with cache invalida
 src/pages/      route components (kebab-case filenames, e.g. course-detail-page.tsx)
 src/components/ feature folders (auth/, course/, review/, teacher/, point/) + ui/ (shadcn primitives)
 src/mocks/      MSW handlers + fixtures (opt-in via VITE_ENABLE_MOCKS)
-src/contexts/   React contexts; src/lib/ shared utilities; src/config/ branding + auth config
+src/contexts/   React contexts; src/lib/ shared utilities; src/config/ branding configuration
 ```
 
 **Key patterns:**

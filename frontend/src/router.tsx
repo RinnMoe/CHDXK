@@ -122,23 +122,6 @@ export const loginRoute = createRoute({
   component: lazyRouteComponent(() => import("@/pages/login-page"), "LoginPage"),
 })
 
-export const registerRoute = createRoute({
-  getParentRoute: () => publicRoute,
-  path: "/register",
-  beforeLoad: redirectAuthedUser,
-  component: lazyRouteComponent(() => import("@/pages/register-page"), "RegisterPage"),
-})
-
-export const passwordResetRoute = createRoute({
-  getParentRoute: () => publicRoute,
-  path: "/password-reset",
-  beforeLoad: redirectAuthedUser,
-  component: lazyRouteComponent(
-    () => import("@/pages/password-reset-page"),
-    "PasswordResetPage"
-  ),
-})
-
 export const coursesRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/course",
@@ -331,8 +314,6 @@ const notFoundRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([
     loginRoute,
-    registerRoute,
-    passwordResetRoute,
   ]),
   appRoute.addChildren([
     homeRoute,

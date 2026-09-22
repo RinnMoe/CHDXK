@@ -6,7 +6,7 @@
 
 - React 19 + TypeScript
 - Vite
-- React Router
+- TanStack Router
 - TanStack Query
 - Tailwind CSS + shadcn/ui 风格组件
 - PWA（manifest 与 service worker）
@@ -41,7 +41,7 @@ frontend/
 pnpm install
 ```
 
-项目声明的包管理器为 `pnpm@11.2.2`。
+项目声明的包管理器为 `pnpm@11.22.0`。
 
 ### 2. 启动开发服务器
 
@@ -49,7 +49,7 @@ pnpm install
 pnpm dev
 ```
 
-默认访问地址为 `http://localhost:5173`。开发环境下，Vite 会将 `/api` 代理到 `http://localhost:8080`。
+默认访问地址为 `http://localhost:5173`。开发环境下，Vite 会将 `/api` 代理到 `http://localhost:8080`。登录由后端通过 res-hub OIDC Authorization Code + PKCE 完成，前端不保存 OIDC token。
 
 ### 3. 配合后端开发
 
@@ -124,7 +124,7 @@ pnpm format     # 使用 oxfmt 格式化
 
 `src/api/client.ts` 统一处理请求：
 
-- 默认携带 `credentials: "include"`，用于 session cookie。
+- 默认携带 `credentials: "include"`，用于保存 OIDC token 的 HttpOnly session cookie。
 - 非 GET/HEAD/OPTIONS 请求会先请求 `/api/auth/csrf` 并添加 `X-CSRF-Token`。
 - 非 2xx 响应会抛出 `HttpError`。
 

@@ -82,7 +82,7 @@ func (ctrl *AccountController) OIDCCallback(c *gin.Context) {
 		ctrl.redirectOIDCError(c, returnPath, code)
 		return
 	}
-	if err := middleware.SetSessionOIDC(c, user.ID, session.AccessToken, session.IDToken); err != nil {
+	if err := middleware.SetSessionOIDC(c, session.AccessToken, session.IDToken); err != nil {
 		_ = middleware.ClearSession(c)
 		ctrl.redirectOIDCError(c, returnPath, "oidc_failed")
 		return

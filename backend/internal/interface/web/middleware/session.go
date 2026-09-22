@@ -13,8 +13,6 @@ import (
 )
 
 const (
-	sessionKeyUserID          = "user_id"
-	sessionKeyAuthHash        = "auth_hash"
 	sessionKeyOIDCAccessToken = "oidc_access_token"
 	sessionKeyOIDCIDToken     = "oidc_id_token"
 	sessionKeyOIDCState       = "oidc_state"
@@ -54,31 +52,14 @@ func NewSessionStore(redisConf persistence.RedisConfig, sessionConf SessionConfi
 	return store, nil
 }
 
-func SetSessionUserID(c *gin.Context, userID int) error {
-	return SetSessionUser(c, userID, "")
-}
-
-func SetSessionUser(c *gin.Context, userID int, authHash string) error {
-	if err := resetSession(c); err != nil {
-		return err
-	}
-	s := sessions.Default(c)
-	s.Set(sessionKeyUserID, userID)
-	if authHash != "" {
-		s.Set(sessionKeyAuthHash, authHash)
-	}
-	return s.Save()
-}
-
-func SetSessionOIDC(c *gin.Context, userID int, accessToken, idToken string) error {
-	if userID <= 0 || accessToken == "" || idToken == "" {
+func SetSessionOIDC(c *gin.Context, accessToken, idToken string) error {
+	if accessToken == "" || idToken == "" {
 		return fmt.Errorf("invalid oidc session")
 	}
 	if err := resetSession(c); err != nil {
 		return err
 	}
 	s := sessions.Default(c)
-	s.Set(sessionKeyUserID, userID)
 	s.Set(sessionKeyOIDCAccessToken, accessToken)
 	s.Set(sessionKeyOIDCIDToken, idToken)
 	return s.Save()
@@ -180,21 +161,4 @@ func resetSession(c *gin.Context) error {
 	}
 	s.Clear()
 	return s.Save()
-}
-
-func sessionInt(s sessions.Session, key string) (int, bool) {
-	v := s.Get(key)
-	if v == nil {
-		return 0, false
-	}
-	switch n := v.(type) {
-	case int:
-		return n, true
-	case int64:
-		return int(n), true
-	case float64:
-		return int(n), true
-	default:
-		return 0, false
-	}
 }

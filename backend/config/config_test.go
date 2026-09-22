@@ -12,9 +12,11 @@ func TestLoadMergesSectionDefaults(t *testing.T) {
 	contents := []byte(`
 session:
   secret: "replace-with-at-least-32-random-characters"
-auth:
-  username_deriver:
-    salt: "SALT"
+reshub:
+  issuer: "https://hub.example.test"
+  client_id: "xk"
+  client_secret: "secret"
+  redirect_uri: "https://xk.example.test/api/auth/oidc/callback"
 `)
 	if err := os.WriteFile(path, contents, 0o600); err != nil {
 		t.Fatalf("write config: %v", err)
@@ -64,9 +66,11 @@ server:
       - "https://admin.example.edu"
 session:
   secret: "replace-with-at-least-32-random-characters"
-auth:
-  username_deriver:
-    salt: "SALT"
+reshub:
+  issuer: "https://hub.example.test"
+  client_id: "xk"
+  client_secret: "secret"
+  redirect_uri: "https://xk.example.test/api/auth/oidc/callback"
 `)
 	if err := os.WriteFile(path, contents, 0o600); err != nil {
 		t.Fatalf("write config: %v", err)
@@ -96,9 +100,11 @@ server:
   debug: true
 session:
   secret: "replace-with-at-least-32-random-characters"
-auth:
-  username_deriver:
-    salt: "SALT"
+reshub:
+  issuer: "https://hub.example.test"
+  client_id: "xk"
+  client_secret: "secret"
+  redirect_uri: "https://xk.example.test/api/auth/oidc/callback"
 `)
 	if err := os.WriteFile(path, contents, 0o600); err != nil {
 		t.Fatalf("write config: %v", err)
@@ -114,16 +120,12 @@ auth:
 	}
 }
 
-func TestLoadResHubRequiresClientConfigurationWhenEnabled(t *testing.T) {
+func TestLoadRequiresResHubClientConfiguration(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.yaml")
 	contents := []byte(`
 reshub:
-  enabled: true
 session:
   secret: "replace-with-at-least-32-random-characters"
-auth:
-  username_deriver:
-    salt: "SALT"
 `)
 	if err := os.WriteFile(path, contents, 0o600); err != nil {
 		t.Fatalf("write config: %v", err)
@@ -138,7 +140,6 @@ func TestLoadResHubConfiguration(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.yaml")
 	contents := []byte(`
 reshub:
-  enabled: true
   issuer: "https://hub.example.test"
   client_id: "xk"
   client_secret: "secret"
@@ -148,9 +149,6 @@ reshub:
   points_base_path: "/api/integrations/v1"
 session:
   secret: "replace-with-at-least-32-random-characters"
-auth:
-  username_deriver:
-    salt: "SALT"
 `)
 	if err := os.WriteFile(path, contents, 0o600); err != nil {
 		t.Fatalf("write config: %v", err)
@@ -160,7 +158,7 @@ auth:
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	if !conf.ResHub.Enabled || conf.ResHub.Issuer != "https://hub.example.test" || conf.ResHub.ClientID != "xk" {
+	if conf.ResHub.Issuer != "https://hub.example.test" || conf.ResHub.ClientID != "xk" {
 		t.Fatalf("res-hub config = %#v", conf.ResHub)
 	}
 	if conf.ResHub.Timeout != 5*time.Second {

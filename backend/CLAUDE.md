@@ -13,7 +13,7 @@ go test -tags test ./internal/infrastructure/repository -run TestX   # repositor
 go run cmd/api/main.go --config config/config.yaml                   # API (:8080)
 go run cmd/taskworker/main.go --config config/config.yaml            # async worker (Asynq)
 go run cmd/importer/main.go --config config/config.yaml --semester 2025-2026-1
-go run cmd/migrate_v1/main.go --config config/config.yaml            # legacy v1 → v2 data migration
+go run cmd/migrate_v1/main.go --source-dsn "$SOURCE_DSN" --target-dsn "$TARGET_DSN" --semester 2025-2026-1  # legacy v1 → v2 data migration
 ```
 
 **Always pass `-tags test` to `go test` and `go vet`.** Shared repository mocks live in `internal/domain/*/testutil.go` files guarded by `//go:build test`; without the tag, code that imports them fails to compile.
@@ -38,12 +38,12 @@ config/         AppConfig types + Viper loader (JCOURSE_ env override)
 script/         four-digit numbered up/down SQL migrations (0001_, 0002_, 0003_, ...)
 internal/
   domain/       models, repository + query interfaces, policies, mocks (//go:build test)
-    announcement, auth, course, point, review (incl. policy/), stat, task, teacher, account, audit
+    announcement, auth, course, point, review (incl. policy/), stat, task, teacher, audit
   application/  use-case services, CQRS-style command/query split, DTOs
   infrastructure/
     persistence/  gorm + redis connection setup
     repository/   gorm-based implementations of domain repository + query interfaces
-    smtp/         SMTP verification-code sender (gopkg.in/gomail.v2)
+    smtp/         SMTP sender for operational notifications (gopkg.in/gomail.v2)
     reshub/       res-hub OIDC, identity and points adapter
     moderation/   review safety / moderation backend
     task/         Asynq Enqueuer + Server adapters
@@ -65,20 +65,19 @@ pkg/              small generic utilities
 - **Review revisions**: each update writes a `Revision` snapshot in the same transaction as the review update.
 - **Course aggregate**: `Course` ↔ `OfferedCourse` (per-semester offering) ↔ `TeacherGroup` (ordered instructor list).
 - **PostgreSQL features**: tsvector + GIN indexes for full-text and pinyin search (via `pg_jieba`); `int[]` arrays for categories/teacher IDs.
-- **Redis**: session store (`jcourse:session:` prefix), hot-course sorted sets, verification codes, login-attempt lockout, and repository JSON caches with a 30-min default TTL. Cache keys and invalidation rules are documented in `CACHE_KEYS.md` — keep that file in sync when adding caches.
+- **Redis**: session store (`jcourse:session:` prefix), hot-course sorted sets, rate limiting, task queues, and repository JSON caches with a 30-min default TTL. Cache keys and invalidation rules are documented in `CACHE_KEYS.md` — keep that file in sync when adding caches.
 - **Async tasks**: `domain/task` defines pure `Task` / `Enqueuer` ports plus a package-level `Enqueue` function. `infrastructure/task` provides the Asynq backend; the API process calls `task.SetEnqueuer` at startup; `cmd/taskworker` runs the Asynq server.
-- **Auth**: res-hub is the sole account authority. CHDXK uses Authorization Code + PKCE OIDC, validates ID Token and userinfo claims, and projects `issuer + sub` to local users. There is no local password or user API-key compatibility path. System API keys remain available for server-to-server administration.
+- **Auth**: res-hub is the sole account authority. CHDXK uses Authorization Code + PKCE OIDC, validates ID Token and userinfo claims, and projects `issuer + sub` to local users. There is no local account, password-session, or user API-key compatibility path. System API keys remain available for server-to-server administration.
 - **Points & transfers**: per-user balance with transfers between users; fee = `max(amount * RateBps / 10000, MinFee)` configured under `point.transfer_fee_rate_bps` and `point.transfer_min_fee`.
-- **Audit logs**: admin actions (suspensions, role grants, system API keys, moderator remarks) are recorded via the `audit` domain.
+- **Audit logs**: system API key, system settings, announcement, and review/moderator actions are recorded via the `audit` domain; account and role administration remains in res-hub.
 
 ### Routes
 
 All routes mounted under `/api` in `internal/interface/web/router.go`. Auth tiers:
 
 - **Public**: `/api/auth/{csrf,oidc/start,oidc/callback}`. OIDC start and callback are the only account entry points.
-- **API key (`APIKeyAuth`)**: `/api/ext/*` (e.g. `GET /api/ext/point`)
-- **Session auth (`RequireAuth`)**: most `/api/*` routes — course/teacher/review browsing and writes, points, API keys, user settings, announcements
-- **Admin (`RequireAdmin`)**: `/api/site-stats/*`, `/api/admin/{users,api-keys,audit}/*`, review revision listing, moderator remark updates
+- **Session auth (`RequireAuth`)**: most `/api/*` routes — course/teacher/review browsing and writes, points, account session endpoints, and announcements
+- **Admin (`RequireAdmin`)**: `/api/site-stat/*`, `/api/admin/{api-key/system,system-settings,audit-log,announcement}/*`, review revision listing, moderator remark updates
 - **Self-or-admin (`RequireSelfOrAdmin("userID")`)**: `/api/user/:userID/{point,review}`
 
 When adding a route, set the auth requirement here — handlers should not gate access alone. Treat `router.go` as the canonical route reference; this list will go stale.

@@ -42,7 +42,7 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 
 	systemCredential := testMiddlewareCredential(1)
 	userCredential := testMiddlewareCredential(2)
-	repo := &auth.MockApiKeyRepository{Key: &auth.ApiKey{ID: systemCredential.KeyID, SecretHash: systemCredential.SecretHash, Role: auth.ApiKeyRoleSystem, UserID: 0}}
+	repo := &auth.MockApiKeyRepository{Key: &auth.ApiKey{ID: systemCredential.KeyID, SecretHash: systemCredential.SecretHash, Role: auth.ApiKeyRoleSystem}}
 	svc := auth.NewApiKeyService(repo, repo, auth.DefaultApiKeyConfig)
 
 	handler := middleware.SystemAPIKeyAuth()
@@ -60,36 +60,36 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 			authHeader: "",
 			wantStatus: http.StatusUnauthorized,
 			wantBody:   "missing authorization header",
-			apiKey:     &auth.ApiKey{ID: systemCredential.KeyID, SecretHash: systemCredential.SecretHash, Role: auth.ApiKeyRoleSystem, UserID: 0},
+			apiKey:     &auth.ApiKey{ID: systemCredential.KeyID, SecretHash: systemCredential.SecretHash, Role: auth.ApiKeyRoleSystem},
 		},
 		{
 			name:       "wrong format",
 			authHeader: "Basic abc123",
 			wantStatus: http.StatusUnauthorized,
 			wantBody:   "invalid authorization format",
-			apiKey:     &auth.ApiKey{ID: systemCredential.KeyID, SecretHash: systemCredential.SecretHash, Role: auth.ApiKeyRoleSystem, UserID: 0},
+			apiKey:     &auth.ApiKey{ID: systemCredential.KeyID, SecretHash: systemCredential.SecretHash, Role: auth.ApiKeyRoleSystem},
 		},
 		{
 			name:       "invalid key",
 			authHeader: "Bearer wrong-key",
 			wantStatus: http.StatusUnauthorized,
 			wantBody:   "invalid api key",
-			apiKey:     &auth.ApiKey{ID: systemCredential.KeyID, SecretHash: systemCredential.SecretHash, Role: auth.ApiKeyRoleSystem, UserID: 0},
+			apiKey:     &auth.ApiKey{ID: systemCredential.KeyID, SecretHash: systemCredential.SecretHash, Role: auth.ApiKeyRoleSystem},
 		},
 		{
 			name:       "valid key",
 			authHeader: "Bearer " + systemCredential.Key(),
 			wantStatus: http.StatusOK,
 			wantBody:   "ok",
-			apiKey:     &auth.ApiKey{ID: systemCredential.KeyID, SecretHash: systemCredential.SecretHash, Role: auth.ApiKeyRoleSystem, UserID: 0},
+			apiKey:     &auth.ApiKey{ID: systemCredential.KeyID, SecretHash: systemCredential.SecretHash, Role: auth.ApiKeyRoleSystem},
 			wantAccess: 1,
 		},
 		{
 			name:       "user key forbidden",
 			authHeader: "Bearer " + userCredential.Key(),
 			wantStatus: http.StatusForbidden,
-			wantBody:   "api key role is not allowed",
-			apiKey:     &auth.ApiKey{ID: userCredential.KeyID, SecretHash: userCredential.SecretHash, Role: auth.ApiKeyRoleUser, UserID: 7},
+			wantBody:   "API Key 角色无效",
+			apiKey:     &auth.ApiKey{ID: userCredential.KeyID, SecretHash: userCredential.SecretHash, Role: "user"},
 		},
 	}
 
@@ -100,12 +100,7 @@ func TestSystemAPIKeyAuth(t *testing.T) {
 
 			r := gin.New()
 			r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
-			r.Use(middleware.ResolveCurrentUser(application.NewAuthResolutionService(
-				auth.NewCurrentUserService(&systemAuthUserRepo{}),
-				svc,
-				tracker,
-				auth.NewSessionAuthService(nil, "test-session-secret"),
-			)))
+			r.Use(middleware.ResolveCurrentUser(application.NewAuthResolutionService(svc, tracker, nil, nil)))
 			r.Use(handler)
 			r.GET("/test", func(c *gin.Context) {
 				c.String(http.StatusOK, "ok")
@@ -145,12 +140,7 @@ func TestSystemAPIKeyAuth_RepoError(t *testing.T) {
 
 	r := gin.New()
 	r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
-	r.Use(middleware.ResolveCurrentUser(application.NewAuthResolutionService(
-		auth.NewCurrentUserService(&systemAuthUserRepo{}),
-		svc,
-		nil,
-		auth.NewSessionAuthService(nil, "test-session-secret"),
-	)))
+	r.Use(middleware.ResolveCurrentUser(application.NewAuthResolutionService(svc, nil, nil, nil)))
 	r.Use(handler)
 	r.GET("/test", func(c *gin.Context) {
 		c.String(http.StatusOK, "ok")
@@ -170,13 +160,13 @@ func TestSystemAPIKeyAuthReusesResolvedAPIKey(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	credential := testMiddlewareCredential(1)
-	repo := &auth.MockApiKeyRepository{Key: &auth.ApiKey{ID: credential.KeyID, SecretHash: credential.SecretHash, Role: auth.ApiKeyRoleSystem, UserID: 0}}
+	repo := &auth.MockApiKeyRepository{Key: &auth.ApiKey{ID: credential.KeyID, SecretHash: credential.SecretHash, Role: auth.ApiKeyRoleSystem}}
 	svc := auth.NewApiKeyService(repo, repo, auth.DefaultApiKeyConfig)
 	tracker := &fakeAccessTracker{}
 
 	r := gin.New()
 	r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
-	r.Use(middleware.ResolveCurrentUser(application.NewAuthResolutionService(auth.NewCurrentUserService(&systemAuthUserRepo{}), svc, tracker, auth.NewSessionAuthService(nil, "test-session-secret"))))
+	r.Use(middleware.ResolveCurrentUser(application.NewAuthResolutionService(svc, tracker, nil, nil)))
 	r.GET("/test", middleware.SystemAPIKeyAuth(), func(c *gin.Context) {
 		c.String(http.StatusOK, "ok")
 	})
@@ -195,16 +185,6 @@ func TestSystemAPIKeyAuthReusesResolvedAPIKey(t *testing.T) {
 	if tracker.apiKeyID != 1 {
 		t.Fatalf("recorded api key access id = %d, want 1", tracker.apiKeyID)
 	}
-}
-
-type systemAuthUserRepo struct{}
-
-func (systemAuthUserRepo) Update(context.Context, *auth.User) error { return nil }
-
-func (systemAuthUserRepo) FindByID(context.Context, int) (*auth.User, error) { return nil, nil }
-
-func (systemAuthUserRepo) FindAdmin(context.Context) ([]auth.User, error) {
-	return nil, nil
 }
 
 func testMiddlewareCredential(keyID int64) auth.ApiKeyCredential {

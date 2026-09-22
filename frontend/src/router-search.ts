@@ -45,16 +45,10 @@ export type TeacherDetailSearch = PageSearch & {
 }
 export type UserAdminSearch = {
   tab?:
-    | "user"
-    | "admin"
     | "system-api-key"
     | "system-settings"
     | "announcement"
     | "audit-log"
-  email?: string
-  username?: string
-  review_id?: number
-  page?: number
   audit_page?: number
   audit_start_time?: string
   audit_end_time?: string
@@ -153,17 +147,11 @@ export function validateTeacherDetailSearch(
 export function validateUserAdminSearch(search: SearchRecord): UserAdminSearch {
   return {
     tab: enumParam(search.tab, [
-      "user",
-      "admin",
       "system-api-key",
       "system-settings",
       "announcement",
       "audit-log",
     ] as const),
-    email: rawStringParam(search.email),
-    username: rawStringParam(search.username),
-    review_id: optionalPositiveIntParam(search.review_id),
-    page: numberParam(search.page),
     audit_page: numberParam(search.audit_page),
     audit_start_time: rawStringParam(search.audit_start_time),
     audit_end_time: rawStringParam(search.audit_end_time),

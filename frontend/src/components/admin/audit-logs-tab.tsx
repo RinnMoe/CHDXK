@@ -34,11 +34,6 @@ const allActionsValue = "__all__"
 const routeApi = getRouteApi("/app/admin/user")
 
 const actionOptions = [
-  { value: "user.suspend", label: "封禁用户" },
-  { value: "user.unsuspend", label: "解封用户" },
-  { value: "user.password_reset", label: "重置密码" },
-  { value: "admin.grant", label: "授予管理员" },
-  { value: "admin.revoke", label: "撤回管理员" },
   { value: "system_api_key.create", label: "新增系统 API Key" },
   { value: "system_api_key.delete", label: "删除系统 API Key" },
   { value: "system_settings.update", label: "修改系统设置" },

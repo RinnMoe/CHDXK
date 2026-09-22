@@ -16,7 +16,6 @@ res-hub 管理；CHDXK 只维护本地课程、评价等业务数据，以及 `i
 
 ```yaml
 reshub:
-  enabled: true
   issuer: "https://res-hub.example.com"
   client_id: "chdxk"
   client_secret: "由 res-hub OIDC 接入管理签发的密钥"
@@ -35,8 +34,8 @@ reshub:
 - 积分功能所需的 `client_credentials` grant，以及 `points.read`、
   `points.write` scope。
 
-`enabled: false` 只表示当前部署没有启用远端配置；CHDXK 不会因此回退到本地
-注册、密码登录、用户 API Key 或本地积分实现。
+OIDC 配置是 CHDXK 启动所需的必填配置；CHDXK 不会回退到本地注册、密码登录、
+用户 API Key 或本地积分实现。开发环境也应使用 res-hub 的测试 client。
 
 ## 登录流程
 

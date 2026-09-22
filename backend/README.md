@@ -1,6 +1,6 @@
 # jcourse Backend
 
-这是 `jcourse` 的 Go 后端，负责 HTTP API、认证会话、课程与教师检索、点评、积分、API Key、站点统计、异步任务和课程数据导入。
+这是 `jcourse` 的 Go 后端，负责 HTTP API、res-hub OIDC 会话、课程与教师检索、点评、积分、系统 API Key、站点统计、异步任务和课程数据导入。
 
 ## 技术栈
 
@@ -128,16 +128,16 @@ go run cmd/importer/main.go --target-dsn "$TARGET_DSN" --semester 2025-2026-1
 - `postgres.dsn`：PostgreSQL 连接串
 - `redis`：Redis 地址、账号、密码和 DB
 - `session`：会话密钥、过期时间和 secure cookie 开关
-- `auth`：注册、重置密码、登录限制和密码哈希参数
-- `smtp`：邮件验证码发送配置
-- `reshub`：统一身份、会话和积分服务配置；密钥只从部署环境注入
+- `auth.access`：访问记录批量刷新配置
+- `smtp`：点评风控等运营通知的邮件发送配置
+- `reshub`：必需的统一身份、会话和积分服务配置；密钥只从部署环境注入
 - `stats` / `asynq`：定时统计和异步任务配置
 
 不要提交真实的 `config/config.yaml`、SMTP 密码、OAuth secret 或 session secret。
 
 ## API 与权限
 
-路由集中定义在 `internal/interface/web/router.go`。公开接口包括注册、登录、密码重置和 CSRF token；启用 res-hub 后，登录相关公开路由由统一身份服务接管；大多数 `/api` 接口需要登录；后台用户、站点统计和部分点评管理接口需要管理员权限。
+路由集中定义在 `internal/interface/web/router.go`。公开接口只有 OIDC 开始/回调和 CSRF token；res-hub 是唯一账户、角色和会话来源，不存在本地注册、密码登录、密码重置或用户 API Key 入口。大多数 `/api` 接口需要 OIDC 会话；系统 API Key 仅用于管理员维护的服务端调用；站点统计、系统设置、公告、系统 API Key 和部分点评管理接口需要管理员权限。
 
 前端开发服务器默认从 `http://localhost:5173` 访问后端。CORS 默认允许 `*`，可通过 `server.cors.allowed_origins` 或 `JCOURSE_SERVER_CORS_ALLOWED_ORIGINS` 覆盖，并启用 cookie 凭据。
 

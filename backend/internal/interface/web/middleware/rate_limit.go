@@ -100,9 +100,6 @@ func (r *UserRateLimiter) limiterForRequest(c *gin.Context) *rate.Limiter {
 	}
 
 	apiKey := auth.GetApiKeyFromCtx(c.Request.Context())
-	if apiKey != nil && apiKey.UserID > 0 {
-		return r.limiterForKey(&r.userLimiters, apiKey.UserID)
-	}
 	if apiKey != nil && apiKey.ID > 0 {
 		return r.limiterForKey(&r.apiKeyLimiters, apiKey.ID)
 	}

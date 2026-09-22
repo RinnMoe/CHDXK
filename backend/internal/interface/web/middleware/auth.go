@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 
 	"jcourse/internal/application"
@@ -27,14 +26,18 @@ func ResolveCurrentUser(authResolution *application.AuthResolutionService) gin.H
 			return
 		}
 
-		resolved, err := authResolution.Resolve(c.Request.Context(), bearerToken(c), sessionUserID(c), sessionAuthHash(c), OIDCAccessToken(c))
+		resolved, err := authResolution.Resolve(c.Request.Context(), bearerToken(c), OIDCAccessToken(c))
 		if err != nil {
-			if errors.Is(err, auth.ErrInvalidSession) || errors.Is(err, auth.ErrResHubSession) {
+			if errors.Is(err, auth.ErrResHubSession) {
 				_ = ClearSession(c)
 				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 				return
 			}
 			if errors.Is(err, auth.ErrUserSuspended) {
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": err.Error()})
+				return
+			}
+			if errors.Is(err, auth.ErrInvalidApiKeyRole) {
 				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": err.Error()})
 				return
 			}
@@ -59,15 +62,6 @@ func ResolveCurrentUser(authResolution *application.AuthResolutionService) gin.H
 
 func isPublicOIDCRoute(path string) bool {
 	return path == "/api/auth/oidc/start" || path == "/api/auth/oidc/callback"
-}
-
-func sessionAuthHash(c *gin.Context) string {
-	s := sessions.Default(c)
-	hash, ok := sessionString(s, sessionKeyAuthHash)
-	if !ok {
-		return ""
-	}
-	return hash
 }
 
 func RequireAuth() gin.HandlerFunc {
@@ -130,13 +124,4 @@ func RequireSelfOrAdmin(userIDParam string) gin.HandlerFunc {
 		}
 		c.Next()
 	}
-}
-
-func sessionUserID(c *gin.Context) int {
-	s := sessions.Default(c)
-	userID, ok := sessionInt(s, sessionKeyUserID)
-	if !ok || userID == 0 {
-		return 0
-	}
-	return userID
 }

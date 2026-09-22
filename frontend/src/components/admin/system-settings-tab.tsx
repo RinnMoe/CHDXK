@@ -14,8 +14,6 @@ type ErrorMap = Record<string, string>
 
 const GROUP_LABELS: Record<string, string> = {
   admin: "管理",
-  api_key: "API key",
-  auth: "认证",
   course: "课程",
   review: "点评",
   review_reward: "点评积分",

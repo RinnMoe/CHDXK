@@ -2,132 +2,12 @@ package repository_test
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 	"time"
 
-	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/infrastructure/repository"
 )
-
-func TestAccountRepository_CreateAndFind(t *testing.T) {
-	db := newTestDB(t)
-	repo := repository.NewAccountRepository(db)
-	ctx := context.Background()
-
-	acct := &identity.Account{
-		Username:     "alice",
-		Email:        "alice@example.com",
-		PasswordHash: "secret",
-		CreatedAt:    time.Now(),
-		LastSeenAt:   time.Now(),
-	}
-	if err := repo.Create(ctx, acct); err != nil {
-		t.Fatalf("Create: %v", err)
-	}
-	if acct.ID == 0 {
-		t.Fatal("expected non-zero ID after Create")
-	}
-
-	got, err := repo.FindByID(ctx, acct.ID)
-	if err != nil {
-		t.Fatalf("FindByID: %v", err)
-	}
-	if got.Username != acct.Username || got.Email != acct.Email || got.PasswordHash != acct.PasswordHash {
-		t.Fatalf("account = %+v, want username/email/password_hash from %+v", got, acct)
-	}
-
-	userRepo := repository.NewUserRepository(db)
-	u, err := userRepo.FindByID(ctx, acct.ID)
-	if err != nil {
-		t.Fatalf("FindByID user: %v", err)
-	}
-	if u.Role != auth.RoleUser {
-		t.Fatalf("created user role = %q, want %q", u.Role, auth.RoleUser)
-	}
-}
-
-func TestAccountRepository_FindByUsernameAndEmail(t *testing.T) {
-	db := newTestDB(t)
-	repo := repository.NewAccountRepository(db)
-	ctx := context.Background()
-	e := seedUser(t, db)
-
-	byUsername, err := repo.FindByUsername(ctx, e.Username)
-	if err != nil {
-		t.Fatalf("FindByUsername: %v", err)
-	}
-	if byUsername.ID != e.ID || byUsername.Username != e.Username {
-		t.Fatalf("by username = %+v, want id=%d username=%q", byUsername, e.ID, e.Username)
-	}
-
-	byEmail, err := repo.FindByEmail(ctx, e.Email.String)
-	if err != nil {
-		t.Fatalf("FindByEmail: %v", err)
-	}
-	if byEmail.ID != e.ID || byEmail.Email != e.Email.String {
-		t.Fatalf("by email = %+v, want id=%d email=%q", byEmail, e.ID, e.Email.String)
-	}
-}
-
-func TestAccountRepository_CreateWithoutEmail(t *testing.T) {
-	db := newTestDB(t)
-	repo := repository.NewAccountRepository(db)
-	ctx := context.Background()
-
-	acct := &identity.Account{
-		Username:     "hashedusername",
-		PasswordHash: "secret",
-		CreatedAt:    time.Now(),
-		LastSeenAt:   time.Now(),
-	}
-	if err := repo.Create(ctx, acct); err != nil {
-		t.Fatalf("Create: %v", err)
-	}
-
-	var raw repository.UserEntity
-	if err := db.First(&raw, acct.ID).Error; err != nil {
-		t.Fatalf("load raw user: %v", err)
-	}
-	if raw.Email.Valid {
-		t.Fatalf("stored email = %q, want NULL", raw.Email.String)
-	}
-}
-
-func TestAccountRepository_NotFound(t *testing.T) {
-	db := newTestDB(t)
-	repo := repository.NewAccountRepository(db)
-	ctx := context.Background()
-
-	got, err := repo.FindByEmail(ctx, "nobody@example.com")
-	if err != nil {
-		t.Fatalf("FindByEmail: %v", err)
-	}
-	if got != nil {
-		t.Fatalf("FindByEmail got %+v, want nil", got)
-	}
-}
-
-func TestAccountRepository_UpdatePasswordHash(t *testing.T) {
-	db := newTestDB(t)
-	repo := repository.NewAccountRepository(db)
-	ctx := context.Background()
-	e := seedUser(t, db)
-
-	acct := &identity.Account{ID: e.ID, Username: e.Username, Email: e.Email.String, PasswordHash: "new_password", LastSeenAt: e.LastSeenAt.Add(time.Hour)}
-	if err := repo.Update(ctx, acct); err != nil {
-		t.Fatalf("Update: %v", err)
-	}
-
-	got, err := repo.FindByID(ctx, e.ID)
-	if err != nil {
-		t.Fatalf("FindByID: %v", err)
-	}
-	if got.PasswordHash != "new_password" {
-		t.Fatalf("password_hash = %q, want new_password", got.PasswordHash)
-	}
-}
 
 func TestUserRepository_FindByIDAndUpdateAuthFields(t *testing.T) {
 	db := newTestDB(t)
@@ -182,31 +62,5 @@ func TestUserRepository_FindByID_NotFound(t *testing.T) {
 	}
 	if got != nil {
 		t.Fatalf("FindByID got %+v, want nil", got)
-	}
-}
-
-func TestUserRepository_FindAdmin(t *testing.T) {
-	db := newTestDB(t)
-	repo := repository.NewUserRepository(db)
-	ctx := context.Background()
-	now := time.Now()
-	users := []repository.UserEntity{
-		{Username: "regular", Email: sql.NullString{String: "regular@example.com", Valid: true}, Role: auth.RoleUser, PasswordHash: "hash", CreatedAt: now, LastSeenAt: now},
-		{Username: "admin", Email: sql.NullString{String: "admin@example.com", Valid: true}, Role: auth.RoleAdmin, PasswordHash: "hash", CreatedAt: now, LastSeenAt: now},
-		{Username: "super", Email: sql.NullString{String: "super@example.com", Valid: true}, Role: auth.RoleSuperAdmin, PasswordHash: "hash", CreatedAt: now, LastSeenAt: now},
-	}
-	if err := db.Create(&users).Error; err != nil {
-		t.Fatalf("seed users: %v", err)
-	}
-
-	got, err := repo.FindAdmin(ctx)
-	if err != nil {
-		t.Fatalf("FindAdmin: %v", err)
-	}
-	if len(got) != 2 {
-		t.Fatalf("admin count = %d, want 2: %+v", len(got), got)
-	}
-	if got[0].Role != auth.RoleAdmin || got[1].Role != auth.RoleSuperAdmin {
-		t.Fatalf("admin roles = %q, %q", got[0].Role, got[1].Role)
 	}
 }

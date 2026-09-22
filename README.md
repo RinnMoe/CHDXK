@@ -1,6 +1,6 @@
 # 霓裳选课社区
 
-霓裳选课社区（项目标识：CHDXK）是一个课程点评与选课辅助系统，包含 Go 后端和 React/Vite 前端。项目提供课程与教师检索、课程点评、评分趋势、关注课程、课程通知、个人课程、积分转账、API Key、站点统计和后台用户管理等能力。`jcourse` 仅作为内部 Go module、数据库和兼容配置命名保留。
+霓裳选课社区（项目标识：CHDXK）是一个课程点评与选课辅助系统，包含 Go 后端和 React/Vite 前端。项目提供课程与教师检索、课程点评、评分趋势、关注课程、课程通知、个人课程、积分转账、系统 API Key、站点统计和后台运营能力。`jcourse` 仅作为内部 Go module、数据库和配置命名保留。
 
 ## 目录结构
 
@@ -49,6 +49,8 @@ API 默认监听 `http://localhost:8080`，接口前缀为 `/api`。需要异步
 cd backend
 go run cmd/taskworker/main.go --config config/config.yaml
 ```
+
+登录契约：CHDXK 必须配置 res-hub OIDC，res-hub 是账户、角色、会话和积分的唯一来源。本站不提供本地注册、密码登录、密码重置或用户 API Key；配置字段和回调登记见 [res-hub OIDC 接入说明](docs/reshub-integration.md)。
 
 ### 4. 启动前端
 

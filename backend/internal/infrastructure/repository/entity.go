@@ -270,7 +270,6 @@ type ApiKeyEntity struct {
 	Name       string     `gorm:"column:name"`
 	SecretHash string     `gorm:"column:secret_hash"`
 	Role       string     `gorm:"column:role"`
-	UserID     *int       `gorm:"column:user_id;index"`
 	LastUsedAt *time.Time `gorm:"column:last_used_at"`
 	CreatedAt  time.Time  `gorm:"column:created_at"`
 }

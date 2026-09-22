@@ -30,9 +30,7 @@ Redis keys owned internally by third-party libraries can have library-defined fo
 | `jcourse:site_daily_stat:{stat_date}` | `SiteDailyStatRepository.GetByDate` | `stat.DailyStatView` | `SiteDailyStatRepository.Upsert` |
 | `jcourse:teacher:{teacher_id}` | `TeacherRepository.GetByID` | `teacher.TeacherView` | TTL only |
 | `jcourse:teacher:filters` | `TeacherRepository.GetFilters` | `teacher.TeacherFilters` | TTL only |
-| `jcourse:user:{user_id}` | `UserRepository.FindByID` | `auth.User` | `UserRepository.Update` |
-| `jcourse:account:{user_id}` | `AccountRepository.FindByID` | `account.Account` | Account create/update/touch last seen, user update |
-| `jcourse:account:email:{email}` | `AccountRepository.FindByEmail` | `account.Account` | Account create/update/touch last seen, user update |
+| `jcourse:user:{user_id}` | `UserRepository.FindByID` | `auth.User` authorization projection | `UserRepository.Update` |
 
 `{period}` is `week` or `month`. `{period_key}` uses `HotCoursePeriodKey`: weekly keys are `YYYY-WW`, monthly keys are `YYYY-MM`. `{stat_date}` uses Go `time.DateOnly` format, `YYYY-MM-DD`.
 
@@ -40,11 +38,8 @@ Redis keys owned internally by third-party libraries can have library-defined fo
 
 | Key pattern | Owner | Data structure | TTL |
 | --- | --- | --- | --- |
-| `jcourse:auth:{prefix}:code:{lower_email}` | `VerificationCodeRepository.Save/Get/Delete` | String `{code}|{expires_at_unix}` | Verification code TTL from auth config |
-| `jcourse:auth:{prefix}:code_cooldown:{lower_email}` | `VerificationCodeRepository.ReserveSend` | String marker | Send interval from auth config |
-| `jcourse:auth:login_attempts:{lower_email}` | `LoginAttemptRepository` | Integer counter | Login lockout duration from auth config, set when counter is first created |
 | `jcourse:course:hot:week:{period_key}` | `CourseHotRepository` | Redis sorted set, member is course ID, score is hot score | No TTL currently set |
 | `jcourse:course:hot:month:{period_key}` | `CourseHotRepository` | Redis sorted set, member is course ID, score is hot score | No TTL currently set |
 | `jcourse:session:{session_id}` | Gin session Redis store | Serialized session payload | Session max age from session config |
 
-`VerificationCodeRepository` currently uses `register` and `reset` as prefixes.
+OIDC access/ID tokens, state, PKCE verifier, and nonce are stored in the session payload during the authorization-code flow. No local registration, password-reset, verification-code, or login-lockout Redis keys are owned by the application.

@@ -2,15 +2,6 @@ package setting
 
 const (
 	SystemSettingKeyCurrentSemester = "current_semester"
-	SystemSettingKeyAuthEmailDomain = "auth.email_domain"
-
-	SystemSettingKeyAuthRegistrationEmailWhitelist = "auth.registration.email_whitelist"
-	SystemSettingKeyAuthLoginMaxAttempts           = "auth.login.max_attempts"
-	SystemSettingKeyAuthLoginLockout               = "auth.login.lockout"
-	SystemSettingKeyAuthVerificationCodeInterval   = "auth.verification.code_interval"
-	SystemSettingKeyAuthVerificationCodeTTL        = "auth.verification.code_ttl"
-
-	SystemSettingKeyAPIKeyMaxUserKeys = "api_key.max_user_keys"
 
 	SystemSettingKeyReviewVoteMaxDailyVotes              = "review.vote.max_daily_votes"
 	SystemSettingKeyReviewRewardCourseFirstReviewEnabled = "review.rewards.course_first_review_enabled"

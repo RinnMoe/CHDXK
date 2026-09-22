@@ -8,11 +8,6 @@ import (
 )
 
 const (
-	ActionUserSuspend               = "user.suspend"
-	ActionUserUnsuspend             = "user.unsuspend"
-	ActionUserPasswordReset         = "user.password_reset"
-	ActionAdminGrant                = "admin.grant"
-	ActionAdminRevoke               = "admin.revoke"
 	ActionSystemAPIKeyCreate        = "system_api_key.create"
 	ActionSystemAPIKeyDelete        = "system_api_key.delete"
 	ActionSystemSettingsUpdate      = "system_settings.update"

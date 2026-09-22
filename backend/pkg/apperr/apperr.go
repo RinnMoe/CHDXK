@@ -49,27 +49,12 @@ func ServiceUnavailable(msg string) *AppError {
 var (
 	ErrUnauthorized = Unauthorized("未登录")
 
-	ErrUserAlreadyExists  = Conflict("用户已存在")
-	ErrUserNotFound       = NotFound("用户不存在")
-	ErrEmailNotAllowed    = Forbidden("邮箱不允许注册")
-	ErrPasswordRequired   = BadRequest("密码不能为空")
-	ErrPasswordNotSet     = BadRequest("该账户尚未设置密码，请先设置密码")
-	ErrInvalidCredentials = Unauthorized("邮箱或密码错误")
-	ErrLoginLocked        = TooManyRequests("登录失败次数过多，请稍后再试")
-
-	ErrVerificationSendTooSoon = TooManyRequests("验证码发送过于频繁")
-	ErrVerificationCodeInvalid = BadRequest("验证码无效")
-
-	ErrUserSuspended          = Forbidden("用户已被封禁")
-	ErrApiKeyNameRequired     = BadRequest("API Key 名称不能为空")
-	ErrApiKeyLimitExceeded    = BadRequest("API Key 数量已达上限")
-	ErrApiKeyNotFound         = NotFound("API Key 不存在")
-	ErrInvalidApiKey          = Unauthorized("API Key 无效")
-	ErrInvalidApiKeyRole      = BadRequest("API Key 角色无效")
-	ErrCannotSuspendAdmin     = Forbidden("不能封禁管理员用户")
-	ErrCannotOperateSelf      = Forbidden("不能操作自己")
-	ErrRequireSuperAdmin      = Forbidden("需要超级管理员权限")
-	ErrCannotModifySuperAdmin = Forbidden("不能修改超级管理员权限")
+	ErrUserSuspended      = Forbidden("用户已被封禁")
+	ErrApiKeyNameRequired = BadRequest("API Key 名称不能为空")
+	ErrApiKeyNotFound     = NotFound("API Key 不存在")
+	ErrInvalidApiKey      = Unauthorized("API Key 无效")
+	ErrInvalidApiKeyRole  = BadRequest("API Key 角色无效")
+	ErrRequireSuperAdmin  = Forbidden("需要超级管理员权限")
 
 	ErrCourseNotFound           = NotFound("课程不存在")
 	ErrTeacherNotFound          = NotFound("教师不存在")
@@ -99,7 +84,6 @@ var (
 	ErrPointTransferSelf                 = BadRequest("不能给自己转账")
 	ErrPointTransferRecipientAmountSmall = BadRequest("扣除手续费后到账积分过少")
 	ErrPointTransferRecipientNotFound    = NotFound("收款用户不存在")
-	ErrPointUserNotFound                 = NotFound("用户不存在")
 
 	ErrInvalidCurrentSemester = BadRequest("当前学期无效")
 	ErrInvalidDateRange       = BadRequest("日期范围无效")

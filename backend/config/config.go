@@ -9,8 +9,6 @@ import (
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/viper"
 
-	"jcourse/internal/domain/account/credential"
-	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/point"
@@ -39,9 +37,7 @@ type AppConfig struct {
 }
 
 type AuthConfig struct {
-	Access          auth.AccessConfig
-	PasswordHash    credential.PasswordHashConfig
-	UsernameDeriver identity.UsernameDeriverConfig
+	Access auth.AccessConfig
 }
 
 type CourseConfig struct {
@@ -65,7 +61,6 @@ type CorsConfig struct {
 // ResHubConfig contains only CHDXK-side client configuration. The res-hub
 // service remains a separate deployment and owns the protocol implementation.
 type ResHubConfig struct {
-	Enabled         bool          `mapstructure:"enabled"`
 	Issuer          string        `mapstructure:"issuer"`
 	ClientID        string        `mapstructure:"client_id"`
 	ClientSecret    string        `mapstructure:"client_secret"`
@@ -116,22 +111,17 @@ func Load(configPath string) (AppConfig, error) {
 	if conf.Session.MaxAge <= 0 {
 		return AppConfig{}, fmt.Errorf("session.max_age must be positive")
 	}
-	if strings.TrimSpace(conf.Auth.UsernameDeriver.Salt) == "" {
-		return AppConfig{}, fmt.Errorf("auth.username_deriver.salt is required")
+	if strings.TrimSpace(conf.ResHub.Issuer) == "" {
+		return AppConfig{}, fmt.Errorf("reshub.issuer is required")
 	}
-	if conf.ResHub.Enabled {
-		if strings.TrimSpace(conf.ResHub.Issuer) == "" {
-			return AppConfig{}, fmt.Errorf("reshub.issuer is required when reshub is enabled")
-		}
-		if strings.TrimSpace(conf.ResHub.ClientID) == "" {
-			return AppConfig{}, fmt.Errorf("reshub.client_id is required when reshub is enabled")
-		}
-		if strings.TrimSpace(conf.ResHub.ClientSecret) == "" {
-			return AppConfig{}, fmt.Errorf("reshub.client_secret is required when reshub is enabled")
-		}
-		if strings.TrimSpace(conf.ResHub.RedirectURI) == "" {
-			return AppConfig{}, fmt.Errorf("reshub.redirect_uri is required when reshub is enabled")
-		}
+	if strings.TrimSpace(conf.ResHub.ClientID) == "" {
+		return AppConfig{}, fmt.Errorf("reshub.client_id is required")
+	}
+	if strings.TrimSpace(conf.ResHub.ClientSecret) == "" {
+		return AppConfig{}, fmt.Errorf("reshub.client_secret is required")
+	}
+	if strings.TrimSpace(conf.ResHub.RedirectURI) == "" {
+		return AppConfig{}, fmt.Errorf("reshub.redirect_uri is required")
 	}
 	return conf, nil
 }
@@ -158,10 +148,6 @@ func setDefaults(v *viper.Viper) {
 		"scheduler_enabled": auth.DefaultAccessConfig.SchedulerEnabled,
 		"flush_batch_size":  auth.DefaultAccessConfig.FlushBatchSize,
 	})
-	setSectionDefaults(v, "auth.password_hash", map[string]any{
-		"iterations":  credential.DefaultPasswordHashConfig.Iterations,
-		"salt_length": credential.DefaultPasswordHashConfig.SaltLength,
-	})
 	setSectionDefaults(v, "point", map[string]any{
 		"rate_bps": point.DefaultTransferFeeConfig.RateBps,
 		"min_fee":  point.DefaultTransferFeeConfig.MinFee,
@@ -184,7 +170,6 @@ func setDefaults(v *viper.Viper) {
 		"snowflake_node_id": auth.DefaultApiKeyConfig.SnowflakeNodeID,
 	})
 	setSectionDefaults(v, "reshub", map[string]any{
-		"enabled":          false,
 		"timeout":          3 * time.Second,
 		"points_base_path": "/api/integrations/v1",
 	})

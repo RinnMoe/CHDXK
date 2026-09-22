@@ -68,5 +68,4 @@ func (u *User) ClearSuspension() {
 type UserRepository interface {
 	Update(ctx context.Context, u *User) error
 	FindByID(ctx context.Context, id int) (*User, error)
-	FindAdmin(ctx context.Context) ([]User, error)
 }

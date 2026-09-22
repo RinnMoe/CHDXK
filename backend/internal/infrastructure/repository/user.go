@@ -2,54 +2,17 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"errors"
-	"time"
 
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
-	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/auth"
 )
-
-func nullString(value string) sql.NullString {
-	return sql.NullString{String: value, Valid: value != ""}
-}
-
-type AccountRepository struct {
-	db    *gorm.DB
-	cache *redis.Client
-}
 
 type UserRepository struct {
 	db    *gorm.DB
 	cache *redis.Client
-}
-
-const accountCacheTTL = 5 * time.Minute
-
-func newAccountEntity(u *identity.Account) UserEntity {
-	return UserEntity{
-		ID:           u.ID,
-		Username:     u.Username,
-		Role:         auth.RoleUser,
-		Email:        nullString(u.Email),
-		PasswordHash: u.PasswordHash,
-		CreatedAt:    u.CreatedAt,
-		LastSeenAt:   u.LastSeenAt,
-	}
-}
-
-func newAccountDomain(e *UserEntity) identity.Account {
-	return identity.Account{
-		ID:           e.ID,
-		Username:     e.Username,
-		Email:        e.Email.String,
-		PasswordHash: e.PasswordHash,
-		CreatedAt:    e.CreatedAt,
-		LastSeenAt:   e.LastSeenAt,
-	}
 }
 
 func newUserDomain(e *UserEntity) auth.User {
@@ -61,104 +24,7 @@ func newUserDomain(e *UserEntity) auth.User {
 	}
 }
 
-func (r *AccountRepository) deleteAccountCache(ctx context.Context, userID int, emails ...string) {
-	keys := []string{cacheKey("account", userID)}
-	for _, email := range emails {
-		if email != "" {
-			keys = append(keys, cacheKey("account", "email", email))
-		}
-	}
-	cacheDelete(ctx, r.cache, keys...)
-}
-
-func (r *AccountRepository) cachedEmailByID(ctx context.Context, userID int) string {
-	var e UserEntity
-	if err := r.db.WithContext(ctx).Select("email").Where("id = ?", userID).Take(&e).Error; err != nil {
-		return ""
-	}
-	return e.Email.String
-}
-
-func (r *AccountRepository) Create(ctx context.Context, u *identity.Account) error {
-	e := newAccountEntity(u)
-	if err := gorm.G[UserEntity](r.db).Create(ctx, &e); err != nil {
-		return err
-	}
-	u.ID = e.ID
-	r.deleteAccountCache(ctx, u.ID, u.Email)
-	return nil
-}
-
-func (r *AccountRepository) Update(ctx context.Context, u *identity.Account) error {
-	oldEmail := r.cachedEmailByID(ctx, u.ID)
-	if err := r.db.WithContext(ctx).
-		Model(&UserEntity{}).
-		Where("id = ?", u.ID).
-		Updates(map[string]any{
-			"username":      u.Username,
-			"email":         nullString(u.Email),
-			"password_hash": u.PasswordHash,
-			"last_seen_at":  u.LastSeenAt,
-		}).Error; err != nil {
-		return err
-	}
-	r.deleteAccountCache(ctx, u.ID, oldEmail, u.Email)
-	return nil
-}
-
-func (r *AccountRepository) FindByID(ctx context.Context, id int) (*identity.Account, error) {
-	key := cacheKey("account", id)
-	if cached, ok := cacheGetJSON[identity.Account](ctx, r.cache, key); ok {
-		return cached, nil
-	}
-
-	e, err := gorm.G[UserEntity](r.db).Where("id = ?", id).Take(ctx)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	d := newAccountDomain(&e)
-	cacheSetJSONWithTTL(ctx, r.cache, key, &d, accountCacheTTL)
-	return &d, nil
-}
-
-func (r *AccountRepository) FindByUsername(ctx context.Context, username string) (*identity.Account, error) {
-	e, err := gorm.G[UserEntity](r.db).Where("username = ?", username).Take(ctx)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	return new(newAccountDomain(&e)), nil
-}
-
-func (r *AccountRepository) FindByEmail(ctx context.Context, email string) (*identity.Account, error) {
-	key := cacheKey("account", "email", email)
-	if cached, ok := cacheGetJSON[identity.Account](ctx, r.cache, key); ok {
-		return cached, nil
-	}
-
-	e, err := gorm.G[UserEntity](r.db).Where("email = ?", email).Take(ctx)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	d := newAccountDomain(&e)
-	cacheSetJSONWithTTL(ctx, r.cache, key, &d, accountCacheTTL)
-	return &d, nil
-}
-
 func (r *UserRepository) Update(ctx context.Context, u *auth.User) error {
-	var e UserEntity
-	email := ""
-	if err := r.db.WithContext(ctx).Select("email").Where("id = ?", u.ID).Take(&e).Error; err == nil {
-		email = e.Email.String
-	}
 	if err := r.db.WithContext(ctx).
 		Model(&UserEntity{}).
 		Where("id = ?", u.ID).
@@ -169,11 +35,7 @@ func (r *UserRepository) Update(ctx context.Context, u *auth.User) error {
 		}).Error; err != nil {
 		return err
 	}
-	keys := []string{cacheKey("user", u.ID), cacheKey("account", u.ID)}
-	if email != "" {
-		keys = append(keys, cacheKey("account", "email", email))
-	}
-	cacheDelete(ctx, r.cache, keys...)
+	cacheDelete(ctx, r.cache, cacheKey("user", u.ID))
 	return nil
 }
 
@@ -195,29 +57,6 @@ func (r *UserRepository) FindByID(ctx context.Context, id int) (*auth.User, erro
 	return &d, nil
 }
 
-func (r *UserRepository) FindAdmin(ctx context.Context) ([]auth.User, error) {
-	es, err := gorm.G[UserEntity](r.db).
-		Where("role IN ?", []string{auth.RoleSuperAdmin, auth.RoleAdmin}).
-		Order("id ASC").
-		Find(ctx)
-	if err != nil {
-		return nil, err
-	}
-	users := make([]auth.User, len(es))
-	for i := range es {
-		users[i] = newUserDomain(&es[i])
-	}
-	return users, nil
-}
-
-func NewAccountRepository(db *gorm.DB, cache ...*redis.Client) *AccountRepository {
-	var client *redis.Client
-	if len(cache) > 0 {
-		client = cache[0]
-	}
-	return &AccountRepository{db: db, cache: client}
-}
-
 func NewUserRepository(db *gorm.DB, cache ...*redis.Client) *UserRepository {
 	var client *redis.Client
 	if len(cache) > 0 {
@@ -226,5 +65,4 @@ func NewUserRepository(db *gorm.DB, cache ...*redis.Client) *UserRepository {
 	return &UserRepository{db: db, cache: client}
 }
 
-var _ identity.Repository = (*AccountRepository)(nil)
 var _ auth.UserRepository = (*UserRepository)(nil)

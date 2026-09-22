@@ -2,7 +2,6 @@ import { apiClient } from "./client"
 import { BASE_URL } from "./constants"
 
 export const SYSTEM_SETTING_CURRENT_SEMESTER = "current_semester"
-export const SYSTEM_SETTING_AUTH_EMAIL_DOMAIN = "auth.email_domain"
 
 export type SystemSettingType =
   | "string"

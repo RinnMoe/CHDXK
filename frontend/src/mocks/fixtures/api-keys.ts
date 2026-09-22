@@ -1,85 +1,64 @@
 import type { ApiKeyDTO } from "@/api/api-key"
 
-interface MockApiKey {
+interface MockSystemApiKey {
   id: string
   name: string
   key: string
-  role: string
-  user_id: number
   created_at: string
   last_used_at: string | null
 }
 
-interface MockApiKeyState {
-  keys: MockApiKey[]
-}
-
-interface PersistedMockApiKeyState {
+interface PersistedMockSystemApiKeyState {
   version: 1
-  keys: MockApiKey[]
+  keys: MockSystemApiKey[]
 }
 
-const MOCK_API_KEY_STORAGE_KEY = "jcourse:mock-api-key-state"
+const MOCK_API_KEY_STORAGE_KEY = "jcourse:mock-system-api-key-state"
 
-const initialApiKeys: MockApiKey[] = [
+const initialApiKeys: MockSystemApiKey[] = [
   {
     id: "1",
     name: "本地脚本",
     key: mockApiKeyValue("1"),
-    role: "user",
-    user_id: 1,
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString(),
     last_used_at: null,
   },
 ]
 
-function createMockApiKeyState(): MockApiKeyState {
-  return { keys: [...initialApiKeys] }
-}
-
-function readStoredMockApiKeyState(): MockApiKeyState | null {
+function readStoredKeys(): MockSystemApiKey[] | null {
   if (typeof window === "undefined") return null
-
   const raw = window.localStorage.getItem(MOCK_API_KEY_STORAGE_KEY)
   if (!raw) return null
 
   try {
-    const parsed = JSON.parse(raw) as Partial<PersistedMockApiKeyState>
-    if (parsed.version !== 1 || !Array.isArray(parsed.keys)) {
-      return null
-    }
-    return { keys: parsed.keys }
+    const parsed = JSON.parse(raw) as Partial<PersistedMockSystemApiKeyState>
+    if (parsed.version !== 1 || !Array.isArray(parsed.keys)) return null
+    return parsed.keys
   } catch {
     window.localStorage.removeItem(MOCK_API_KEY_STORAGE_KEY)
     return null
   }
 }
 
-function persistMockApiKeyState() {
+function persistKeys(keys: MockSystemApiKey[]) {
   if (typeof window === "undefined") return
-
-  const persisted: PersistedMockApiKeyState = {
-    version: 1,
-    keys: mockApiKeyState.keys,
-  }
-  window.localStorage.setItem(
-    MOCK_API_KEY_STORAGE_KEY,
-    JSON.stringify(persisted)
-  )
+  const value: PersistedMockSystemApiKeyState = { version: 1, keys }
+  window.localStorage.setItem(MOCK_API_KEY_STORAGE_KEY, JSON.stringify(value))
 }
 
-const mockApiKeyState: MockApiKeyState =
-  import.meta.hot?.data.mockApiKeyState ??
-  readStoredMockApiKeyState() ??
-  createMockApiKeyState()
+const hotMockSystemApiKeys = import.meta.hot?.data.mockSystemApiKeys as
+  | MockSystemApiKey[]
+  | undefined
+const mockApiKeyState: MockSystemApiKey[] =
+  hotMockSystemApiKeys ?? readStoredKeys() ?? [...initialApiKeys]
 
 if (import.meta.hot) {
   import.meta.hot.dispose((data) => {
-    data.mockApiKeyState = mockApiKeyState
+    data.mockSystemApiKeys = mockApiKeyState
   })
 }
 
-export const mockApiKeys = mockApiKeyState.keys
+export const mockSystemApiKeys = mockApiKeyState
 
 function maskApiKey(key: string) {
   const [prefix, keyID] = key.split("_")
@@ -112,21 +91,18 @@ function hex(bytes: Uint8Array) {
   )
 }
 
-export function toApiKeyDTO(key: MockApiKey, includeKey = false): ApiKeyDTO {
+function toApiKeyDTO(key: MockSystemApiKey, includeKey = false): ApiKeyDTO {
   return {
     id: key.id,
     name: key.name,
     key: includeKey ? key.key : maskApiKey(key.key),
-    role: key.role,
-    user_id: key.user_id,
     created_at: key.created_at,
     last_used_at: key.last_used_at,
   }
 }
 
-export function listMockUserApiKeys(userID: number): ApiKeyDTO[] {
-  return mockApiKeys
-    .filter((key) => key.role === "user" && key.user_id === userID)
+export function listMockSystemApiKeys(): ApiKeyDTO[] {
+  return [...mockSystemApiKeys]
     .sort(
       (a, b) =>
         b.created_at.localeCompare(a.created_at) || Number(b.id) - Number(a.id)
@@ -134,31 +110,26 @@ export function listMockUserApiKeys(userID: number): ApiKeyDTO[] {
     .map((key) => toApiKeyDTO(key))
 }
 
-export function createMockUserApiKey(userID: number, name: string): ApiKeyDTO {
-  const now = new Date().toISOString()
+export function createMockSystemApiKey(name: string): ApiKeyDTO {
   const id = String(
-    Math.max(0, ...mockApiKeys.map((key) => Number(key.id))) + 1
+    Math.max(0, ...mockSystemApiKeys.map((key) => Number(key.id))) + 1
   )
-  const key: MockApiKey = {
+  const key: MockSystemApiKey = {
     id,
     name,
     key: mockApiKeyValue(id),
-    role: "user",
-    user_id: userID,
-    created_at: now,
+    created_at: new Date().toISOString(),
     last_used_at: null,
   }
-  mockApiKeys.push(key)
-  persistMockApiKeyState()
+  mockSystemApiKeys.push(key)
+  persistKeys(mockSystemApiKeys)
   return toApiKeyDTO(key, true)
 }
 
-export function deleteMockUserApiKey(userID: number, id: string): boolean {
-  const index = mockApiKeys.findIndex(
-    (key) => key.id === id && key.role === "user" && key.user_id === userID
-  )
+export function deleteMockSystemApiKey(id: string): boolean {
+  const index = mockSystemApiKeys.findIndex((key) => key.id === id)
   if (index < 0) return false
-  mockApiKeys.splice(index, 1)
-  persistMockApiKeyState()
+  mockSystemApiKeys.splice(index, 1)
+  persistKeys(mockSystemApiKeys)
   return true
 }

@@ -16,7 +16,6 @@ import (
 
 const (
 	ApiKeyRoleSystem = "system"
-	ApiKeyRoleUser   = "user"
 
 	apiKeyPrefix       = "jc"
 	apiKeySecretLength = 16
@@ -24,11 +23,10 @@ const (
 )
 
 type ApiKeyConfig struct {
-	MaxUserKeys     int
 	SnowflakeNodeID int64
 }
 
-var DefaultApiKeyConfig = ApiKeyConfig{MaxUserKeys: 20, SnowflakeNodeID: 1}
+var DefaultApiKeyConfig = ApiKeyConfig{SnowflakeNodeID: 1}
 
 type ApiKeyCredential struct {
 	KeyID      int64
@@ -95,7 +93,6 @@ type ApiKey struct {
 	Name       string
 	SecretHash string
 	Role       string
-	UserID     int
 	CreatedAt  time.Time
 	LastUsedAt *time.Time
 }
@@ -112,21 +109,15 @@ type ApiKeyRepository interface {
 type ApiKeyQuery interface {
 	GetByID(ctx context.Context, id int64) (*ApiKey, error)
 	ListSystem(ctx context.Context) ([]ApiKey, error)
-	ListByUser(ctx context.Context, userID int) ([]ApiKey, error)
-	CountByUser(ctx context.Context, userID int) (int, error)
 }
 
 type ApiKeyService struct {
-	repo   ApiKeyRepository
-	query  ApiKeyQuery
-	node   *snowflake.Node
-	config ApiKeyConfig
+	repo  ApiKeyRepository
+	query ApiKeyQuery
+	node  *snowflake.Node
 }
 
 func NewApiKeyService(repo ApiKeyRepository, query ApiKeyQuery, config ApiKeyConfig) *ApiKeyService {
-	if config.MaxUserKeys <= 0 {
-		config.MaxUserKeys = DefaultApiKeyConfig.MaxUserKeys
-	}
 	if config.SnowflakeNodeID == 0 {
 		config.SnowflakeNodeID = DefaultApiKeyConfig.SnowflakeNodeID
 	}
@@ -134,22 +125,7 @@ func NewApiKeyService(repo ApiKeyRepository, query ApiKeyQuery, config ApiKeyCon
 	if err != nil {
 		panic(err)
 	}
-	return &ApiKeyService{repo: repo, query: query, node: node, config: config}
-}
-
-func NewUserApiKey(name string, userID int, credential ApiKeyCredential, now time.Time) (*ApiKey, error) {
-	name = strings.TrimSpace(name)
-	if name == "" {
-		return nil, ErrApiKeyNameRequired
-	}
-	return &ApiKey{
-		ID:         credential.KeyID,
-		Name:       name,
-		SecretHash: credential.SecretHash,
-		Role:       ApiKeyRoleUser,
-		UserID:     userID,
-		CreatedAt:  now,
-	}, nil
+	return &ApiKeyService{repo: repo, query: query, node: node}
 }
 
 func NewSystemApiKey(name string, credential ApiKeyCredential, now time.Time) (*ApiKey, error) {
@@ -167,15 +143,7 @@ func NewSystemApiKey(name string, credential ApiKeyCredential, now time.Time) (*
 }
 
 func (k ApiKey) IsSystem() bool {
-	return k.Role == ApiKeyRoleSystem && k.UserID == 0
-}
-
-func (k ApiKey) IsUser() bool {
-	return k.Role == ApiKeyRoleUser && k.UserID > 0
-}
-
-func (k ApiKey) BelongsTo(userID int) bool {
-	return k.IsUser() && k.UserID == userID
+	return k.Role == ApiKeyRoleSystem
 }
 
 func (s *ApiKeyService) ValidateKey(ctx context.Context, key string) (*ApiKey, error) {
@@ -194,10 +162,6 @@ func (s *ApiKeyService) ValidateKey(ctx context.Context, key string) (*ApiKey, e
 		return nil, nil
 	}
 	return apiKey, nil
-}
-
-func (s *ApiKeyService) ListUserKeys(ctx context.Context, userID int) ([]ApiKey, error) {
-	return s.query.ListByUser(ctx, userID)
 }
 
 func (s *ApiKeyService) ListSystemKeys(ctx context.Context) ([]ApiKey, error) {
@@ -221,54 +185,6 @@ func (s *ApiKeyService) CreateSystemKey(ctx context.Context, name string) (*ApiK
 		return nil, nil, err
 	}
 	return apiKey, &credential, nil
-}
-
-func (s *ApiKeyService) CreateUserKey(ctx context.Context, userID int, name string) (*ApiKey, *ApiKeyCredential, error) {
-	return s.CreateUserKeyWithConfig(ctx, userID, name, s.config)
-}
-
-func (s *ApiKeyService) CreateUserKeyWithConfig(ctx context.Context, userID int, name string, config ApiKeyConfig) (*ApiKey, *ApiKeyCredential, error) {
-	if config.MaxUserKeys <= 0 {
-		config.MaxUserKeys = DefaultApiKeyConfig.MaxUserKeys
-	}
-	credential, err := s.generateCredential()
-	if err != nil {
-		return nil, nil, err
-	}
-	apiKey, err := NewUserApiKey(name, userID, credential, time.Now())
-	if err != nil {
-		return nil, nil, err
-	}
-
-	count, err := s.query.CountByUser(ctx, userID)
-	if err != nil {
-		return nil, nil, err
-	}
-	if count >= config.MaxUserKeys {
-		return nil, nil, ErrApiKeyLimitExceeded
-	}
-	if err := s.repo.Create(ctx, apiKey); err != nil {
-		return nil, nil, err
-	}
-	return apiKey, &credential, nil
-}
-
-func (s *ApiKeyService) DeleteUserKey(ctx context.Context, userID int, id int64) error {
-	key, err := s.query.GetByID(ctx, id)
-	if err != nil {
-		return err
-	}
-	if key == nil || !key.BelongsTo(userID) {
-		return ErrApiKeyNotFound
-	}
-	deleted, err := s.repo.Delete(ctx, id)
-	if err != nil {
-		return err
-	}
-	if !deleted {
-		return ErrApiKeyNotFound
-	}
-	return nil
 }
 
 func (s *ApiKeyService) DeleteSystemKey(ctx context.Context, id int64) error {

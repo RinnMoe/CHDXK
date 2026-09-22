@@ -3,9 +3,6 @@ package application
 import (
 	"context"
 
-	"jcourse/internal/domain/account"
-	"jcourse/internal/domain/account/verification"
-	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/review"
@@ -15,8 +12,6 @@ import (
 
 type SiteSettingsProvider interface {
 	ReviewRuntimeConfig(ctx context.Context) (ReviewRuntimeConfig, error)
-	AccountRuntimeConfig(ctx context.Context) (AccountRuntimeConfig, error)
-	ApiKeyConfig(ctx context.Context) (auth.ApiKeyConfig, error)
 	HotScoreConfig(ctx context.Context) (course.HotScoreConfig, error)
 }
 
@@ -25,12 +20,6 @@ type ReviewRuntimeConfig struct {
 	Rewards                       point.RewardConfig
 	FrequencyPolicy               policy.FrequencyPolicyConfig
 	FrequencyViolationAdminEmails []string
-}
-
-type AccountRuntimeConfig struct {
-	Registration account.RegistrationConfig
-	Login        account.LoginConfig
-	Verification verification.Config
 }
 
 type SystemSiteSettingsProvider struct {
@@ -66,38 +55,6 @@ func (p *SystemSiteSettingsProvider) ReviewRuntimeConfig(ctx context.Context) (R
 	}, nil
 }
 
-func (p *SystemSiteSettingsProvider) AccountRuntimeConfig(ctx context.Context) (AccountRuntimeConfig, error) {
-	snapshot, err := p.settings.Snapshot(ctx)
-	if err != nil {
-		return AccountRuntimeConfig{}, err
-	}
-	return AccountRuntimeConfig{
-		Registration: account.RegistrationConfig{
-			EmailWhitelist: snapshot.StringList(setting.SystemSettingKeyAuthRegistrationEmailWhitelist),
-		},
-		Login: account.LoginConfig{
-			MaxAttempts: snapshot.Int(setting.SystemSettingKeyAuthLoginMaxAttempts),
-			Lockout:     snapshot.Duration(setting.SystemSettingKeyAuthLoginLockout),
-		},
-		Verification: verification.Config{
-			CodeInterval: snapshot.Duration(setting.SystemSettingKeyAuthVerificationCodeInterval),
-			CodeTTL:      snapshot.Duration(setting.SystemSettingKeyAuthVerificationCodeTTL),
-			CodeLength:   verification.DefaultConfig.CodeLength,
-		},
-	}, nil
-}
-
-func (p *SystemSiteSettingsProvider) ApiKeyConfig(ctx context.Context) (auth.ApiKeyConfig, error) {
-	snapshot, err := p.settings.Snapshot(ctx)
-	if err != nil {
-		return auth.ApiKeyConfig{}, err
-	}
-	return auth.ApiKeyConfig{
-		MaxUserKeys:     snapshot.Int(setting.SystemSettingKeyAPIKeyMaxUserKeys),
-		SnowflakeNodeID: auth.DefaultApiKeyConfig.SnowflakeNodeID,
-	}, nil
-}
-
 func (p *SystemSiteSettingsProvider) HotScoreConfig(ctx context.Context) (course.HotScoreConfig, error) {
 	snapshot, err := p.settings.Snapshot(ctx)
 	if err != nil {
@@ -111,10 +68,8 @@ func (p *SystemSiteSettingsProvider) HotScoreConfig(ctx context.Context) (course
 }
 
 type StaticSiteSettingsProvider struct {
-	ReviewRuntime  ReviewRuntimeConfig
-	AccountRuntime AccountRuntimeConfig
-	ApiKey         auth.ApiKeyConfig
-	HotScores      course.HotScoreConfig
+	ReviewRuntime ReviewRuntimeConfig
+	HotScores     course.HotScoreConfig
 }
 
 func NewDefaultSiteSettingsProvider() StaticSiteSettingsProvider {
@@ -125,26 +80,12 @@ func NewDefaultSiteSettingsProvider() StaticSiteSettingsProvider {
 			FrequencyPolicy:               policy.DefaultFrequencyPolicyConfig,
 			FrequencyViolationAdminEmails: []string{},
 		},
-		AccountRuntime: AccountRuntimeConfig{
-			Registration: account.DefaultRegistrationConfig,
-			Login:        account.DefaultLoginConfig,
-			Verification: verification.DefaultConfig,
-		},
-		ApiKey:    auth.DefaultApiKeyConfig,
 		HotScores: course.DefaultHotScoreConfig,
 	}
 }
 
 func (p StaticSiteSettingsProvider) ReviewRuntimeConfig(context.Context) (ReviewRuntimeConfig, error) {
 	return p.ReviewRuntime, nil
-}
-
-func (p StaticSiteSettingsProvider) AccountRuntimeConfig(context.Context) (AccountRuntimeConfig, error) {
-	return p.AccountRuntime, nil
-}
-
-func (p StaticSiteSettingsProvider) ApiKeyConfig(context.Context) (auth.ApiKeyConfig, error) {
-	return p.ApiKey, nil
 }
 
 func (p StaticSiteSettingsProvider) HotScoreConfig(context.Context) (course.HotScoreConfig, error) {

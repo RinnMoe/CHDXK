@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"jcourse/internal/application"
-	"jcourse/internal/domain/account/identity"
 	"jcourse/internal/domain/point"
 )
 
@@ -20,7 +19,7 @@ func TestPointQueryService_GetUserPoints(t *testing.T) {
 		},
 		recordTotal: 2,
 	}
-	svc := application.NewPointQueryService(repo, identity.NewMockRepository(nil), identity.NewBLAKE2bUsernameDeriver(identity.UsernameDeriverConfig{Salt: "SALT"}))
+	svc := application.NewPointQueryService(repo)
 
 	result, err := svc.GetUserPoints(context.Background(), 7, application.PointRecordListFilter{Page: 1, PageSize: 20})
 	if err != nil {
