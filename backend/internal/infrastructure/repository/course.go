@@ -186,15 +186,91 @@ func (r *CourseRepository) FindOfferedCourses(ctx context.Context, courseID int)
 	}
 
 	result := make([]course.OfferedCourseView, 0, len(entities))
+	offeringIDs := make([]int, 0, len(entities))
 	for _, e := range entities {
 		oc := course.OfferedCourseView{
 			ID:          e.ID,
+			CourseID:    e.CourseID,
 			Semester:    e.Semester,
 			Language:    e.Language,
 			TargetYears: e.TargetYears,
 			Categories:  e.Categories,
+			Sections:    []course.CourseSection{},
 		}
 		result = append(result, oc)
+		offeringIDs = append(offeringIDs, e.ID)
+	}
+	if len(offeringIDs) == 0 {
+		return result, nil
+	}
+
+	sections, err := gorm.G[CourseSectionEntity](r.db).
+		Where("offered_course_id IN ?", offeringIDs).
+		Order("id ASC").Find(ctx)
+	if err != nil {
+		return nil, err
+	}
+	teacherIDs := make([]int64, 0)
+	for _, section := range sections {
+		teacherIDs = append(teacherIDs, section.TeacherIDs...)
+	}
+	teacherNames := map[int]string{}
+	if len(teacherIDs) > 0 {
+		var teachers []TeacherEntity
+		if err := r.db.WithContext(ctx).Select("id, name").Where("id IN ?", teacherIDs).Find(&teachers).Error; err != nil {
+			return nil, err
+		}
+		for _, teacher := range teachers {
+			teacherNames[teacher.ID] = teacher.Name
+		}
+	}
+	offeringIndex := make(map[int]int, len(result))
+	for i, offering := range result {
+		offeringIndex[offering.ID] = i
+	}
+	for _, section := range sections {
+		index, ok := offeringIndex[section.OfferedCourseID]
+		if !ok {
+			continue
+		}
+		teachers := make([]string, 0, len(section.TeacherIDs))
+		profiles := make([]course.CourseSectionTeacher, 0, len(section.TeacherIDs))
+		for position, id := range section.TeacherIDs {
+			if name, ok := teacherNames[int(id)]; ok {
+				teachers = append(teachers, name)
+				role := "co-teacher"
+				if position == 0 {
+					role = "primary"
+				}
+				profiles = append(profiles, course.CourseSectionTeacher{ID: int(id), Name: name, Role: role, Position: position})
+			}
+		}
+		result[index].Sections = append(result[index].Sections, course.CourseSection{
+			ID:              section.ID,
+			SourceLessonID:  section.SourceLessonID,
+			LessonNo:        section.LessonNo,
+			CourseName:      section.CourseName,
+			CourseType:      section.CourseType,
+			Credit:          section.Credit,
+			Department:      section.Department,
+			Language:        section.Language,
+			Campus:          section.Campus,
+			Assessment:      section.Assessment,
+			TeachClass:      section.TeachClass,
+			ActualCount:     section.ActualCount,
+			LimitCount:      section.LimitCount,
+			CoursePeriod:    section.CoursePeriod,
+			TotalHours:      section.TotalHours,
+			WeeklyHours:     section.WeeklyHours,
+			WeekRange:       section.WeekRange,
+			StartWeek:       section.StartWeek,
+			EndWeek:         section.EndWeek,
+			WeekCount:       section.WeekCount,
+			Remark:          section.Remark,
+			SyllabusURL:     section.SyllabusURL,
+			Teachers:        teachers,
+			TeacherProfiles: profiles,
+		})
 	}
 	return result, nil
 }

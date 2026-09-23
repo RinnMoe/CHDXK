@@ -1,6 +1,7 @@
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { AuditLogsTab } from "@/components/admin/audit-logs-tab"
 import { AnnouncementsTab } from "@/components/admin/announcements-tab"
+import { CourseManagementTab } from "@/components/admin/course-management-tab"
 import { SystemApiKeysTab } from "@/components/admin/system-api-keys-tab"
 import { SystemSettingsTab } from "@/components/admin/system-settings-tab"
 import { PageTitle } from "@/components/common/page-title"
@@ -14,6 +15,7 @@ const adminTabs = [
   "system-settings",
   "announcement",
   "audit-log",
+  "course-data",
 ] as const
 type AdminTab = (typeof adminTabs)[number]
 const routeApi = getRouteApi("/app/admin/user")
@@ -74,6 +76,7 @@ export function UserAdminPage() {
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="w-full justify-start overflow-x-auto sm:w-fit">
+              <TabsTrigger value="course-data">课程管理</TabsTrigger>
               <TabsTrigger value="system-api-key">系统 API Key</TabsTrigger>
               <TabsTrigger value="system-settings">系统设置</TabsTrigger>
               <TabsTrigger value="announcement">公告</TabsTrigger>
@@ -82,6 +85,10 @@ export function UserAdminPage() {
 
             <TabsContent value="system-api-key" className="space-y-4">
               <SystemApiKeysTab />
+            </TabsContent>
+
+            <TabsContent value="course-data" className="space-y-4">
+              <CourseManagementTab />
             </TabsContent>
 
             <TabsContent value="system-settings" className="space-y-4">

@@ -47,7 +47,10 @@ async function fetchWithDefaults(
   csrf?: string
 ) {
   const headers = new Headers(init?.headers)
-  if (!headers.has("Content-Type"))
+  const multipartBody =
+    typeof FormData !== "undefined" && init?.body instanceof FormData
+  if (multipartBody) headers.delete("Content-Type")
+  else if (!headers.has("Content-Type"))
     headers.set("Content-Type", "application/json")
   if (csrf && !headers.has(CSRF_HEADER)) headers.set(CSRF_HEADER, csrf)
 

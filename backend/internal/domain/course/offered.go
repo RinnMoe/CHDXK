@@ -13,8 +13,10 @@ type OfferedCourse struct {
 // Read model: offered course query result
 type OfferedCourseView struct {
 	ID          int
+	CourseID    int
 	Semester    string
 	Language    string
 	TargetYears []string
 	Categories  []string
+	Sections    []CourseSection
 }

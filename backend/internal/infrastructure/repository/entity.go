@@ -42,6 +42,39 @@ func (OfferedCourseEntity) TableName() string {
 	return "offered_courses"
 }
 
+type CourseSectionEntity struct {
+	ID              int           `gorm:"column:id"`
+	OfferedCourseID int           `gorm:"column:offered_course_id;index"`
+	SourceLessonID  string        `gorm:"column:source_lesson_id"`
+	LessonNo        string        `gorm:"column:lesson_no"`
+	CourseName      string        `gorm:"column:course_name"`
+	CourseType      string        `gorm:"column:course_type"`
+	Credit          float32       `gorm:"column:credit"`
+	Department      string        `gorm:"column:department"`
+	Language        string        `gorm:"column:language"`
+	Campus          string        `gorm:"column:campus"`
+	Assessment      string        `gorm:"column:assessment"`
+	TeachClass      string        `gorm:"column:teach_class"`
+	ActualCount     *int          `gorm:"column:actual_count"`
+	LimitCount      *int          `gorm:"column:limit_count"`
+	CoursePeriod    string        `gorm:"column:course_period"`
+	TotalHours      *float32      `gorm:"column:total_hours"`
+	WeeklyHours     *float32      `gorm:"column:weekly_hours"`
+	WeekRange       string        `gorm:"column:week_range"`
+	StartWeek       *int          `gorm:"column:start_week"`
+	EndWeek         *int          `gorm:"column:end_week"`
+	WeekCount       *int          `gorm:"column:week_count"`
+	Remark          string        `gorm:"column:remark"`
+	SyllabusURL     string        `gorm:"column:syllabus_url"`
+	TeacherIDs      pq.Int64Array `gorm:"column:teacher_ids;type:integer[]"`
+	CreatedAt       time.Time     `gorm:"column:created_at"`
+	UpdatedAt       time.Time     `gorm:"column:updated_at"`
+}
+
+func (CourseSectionEntity) TableName() string {
+	return "course_sections"
+}
+
 type CourseEnrollmentEntity struct {
 	ID        int           `gorm:"column:id"`
 	UserID    int           `gorm:"column:user_id;index;uniqueIndex:uniq_course_enrollments_user_course_semester"`

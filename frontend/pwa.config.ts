@@ -1,6 +1,6 @@
 import type { VitePWA } from "vite-plugin-pwa"
 
-const appName = process.env.VITE_SITE_NAME?.trim() || "霓裳选课社区"
+const appName = process.env.VITE_SITE_NAME?.trim() || "频道课程榜"
 const appDescription = "课程检索、教师检索与课程点评社区"
 
 export const pwaOptions: Parameters<typeof VitePWA>[0] = {

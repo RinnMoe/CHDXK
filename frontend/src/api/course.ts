@@ -48,10 +48,47 @@ export interface CourseListItemDTO {
 }
 
 export interface OfferedCourseDTO {
-  semester: string
-  language: string
-  target_years?: string[]
-  categories?: string[]
+	id: number
+	course_id: number
+	semester: string
+	language: string
+	target_years?: string[]
+	categories?: string[]
+	sections: CourseSectionDTO[]
+}
+
+export interface CourseSectionDTO {
+	id: number
+	source_lesson_id: string
+	lesson_no: string
+	course_name: string
+	course_type: string
+	credit: number
+	department: string
+	language: string
+	campus: string
+	assessment: string
+	teach_class: string
+	actual_count?: number | null
+	limit_count?: number | null
+	course_period: string
+	total_hours?: number | null
+	weekly_hours?: number | null
+	week_range: string
+	start_week?: number | null
+	end_week?: number | null
+	week_count?: number | null
+	remark: string
+	syllabus_url: string
+	teachers: string[]
+	teacher_profiles?: CourseSectionTeacherDTO[]
+}
+
+export interface CourseSectionTeacherDTO {
+	id: number
+	name: string
+	role: "primary" | "co-teacher"
+	position: number
 }
 
 export interface CourseDetailDTO {

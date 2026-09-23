@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This repository contains `jcourse`, split into `backend/` and `frontend/`, with shared local dependency Compose files under `docker/`. Backend entrypoints live in `backend/cmd/api`, `backend/cmd/taskworker`, `backend/cmd/importer`, and `backend/cmd/migrate_v1`; core Go code is under `backend/internal` with `domain`, `application`, `infrastructure`, and `interface` layers. SQL migrations are in `backend/script`, config examples are in `backend/config`, and reusable backend packages are in `backend/pkg`. The React/Vite frontend lives in `frontend/src`, with pages in `src/pages`, API clients in `src/api`, hooks in `src/hooks`, routing in `src/router.tsx`, utilities in `src/lib`, UI primitives in `src/components/ui`, reusable feature components in `src/components/*`, and MSW handlers/fixtures in `src/mocks` plus the generated worker in `public/`.
+This repository contains `jcourse`, split into `backend/` and `frontend/`, with shared local dependency Compose files under `docker/`. Backend entrypoints live in `backend/cmd/api`, `backend/cmd/taskworker`, and `backend/cmd/migrate_v1`; course data is imported and maintained through the authenticated admin API. Core Go code is under `backend/internal` with `domain`, `application`, `infrastructure`, and `interface` layers. SQL migrations are in `backend/script`, config examples are in `backend/config`, and reusable backend packages are in `backend/pkg`. The React/Vite frontend lives in `frontend/src`, with pages in `src/pages`, API clients in `src/api`, hooks in `src/hooks`, routing in `src/router.tsx`, utilities in `src/lib`, UI primitives in `src/components/ui`, reusable feature components in `src/components/*`, and MSW handlers/fixtures in `src/mocks` plus the generated worker in `public/`.
 
 ## Build, Test, and Development Commands
 
@@ -12,7 +12,7 @@ This repository contains `jcourse`, split into `backend/` and `frontend/`, with 
 - `docker compose -f docker/docker-compose.yaml up -d postgres redis` starts local PostgreSQL and Redis from the repository root; PostgreSQL uses the custom image with `pg_jieba` support.
 - `cd backend && go run cmd/api/main.go --config config/config.yaml` starts the API.
 - `cd backend && go run cmd/taskworker/main.go --config config/config.yaml` starts the async worker and scheduled tasks.
-- `cd backend && go run cmd/importer/main.go --target-dsn "$TARGET_DSN" --semester 2025-2026-1` imports course CSV data from `backend/data/<semester>.csv`.
+- Course data is uploaded as a collector ZIP from the admin page; it must contain `semester.json` and `report.json`.
 - `cd backend && go run cmd/migrate_v1/main.go --source-dsn "$SOURCE_DSN" --target-dsn "$TARGET_DSN"` runs the legacy v1 data migration tool.
 - `cd frontend && pnpm dev` starts Vite locally.
 - `cd frontend && pnpm build` type-checks and builds the frontend.

@@ -1,6 +1,6 @@
 # 长大教务全校开课数据源
 
-这个独立工具从 `http://bkjw.chd.edu.cn/eams/stdSyllabus` 读取全校开课查询结果，按学期保存为本地 JSON。它不依赖当前学期的固定 ID，也不修改 jcourse 的数据库或 CSV 导入器。
+这个独立工具从 `http://bkjw.chd.edu.cn/eams/stdSyllabus` 读取全校开课查询结果，按学期保存为本地 JSON。它不依赖当前学期的固定 ID，也不直接连接 jcourse 数据库；采集结果由管理员通过站点后台上传。
 
 ## 安装
 
@@ -52,6 +52,16 @@ pnpm start fetch --semester 2025-2026-1 --resume
 文件采用临时文件写入后替换。中断或详情失败时仍会保存当前数据，但 `report.json.completed` 为 `false`，必须使用 `--resume` 完成后才会标记为 `true`。课程教师只保存网页展示的姓名，不推断不存在的教师工号、职称或主讲关系。
 
 JSON 文件使用稳定的 snake_case 键名（例如 `schema_version`、`fetched_at`、`expected_count`、`completed_lesson_ids`）；程序读取断点时也兼容此前的 camelCase 文件。
+
+## 后台导入
+
+采集完成且 `report.json.completed` 为 `true` 后，将这两个文件打包为一个 ZIP：
+
+```powershell
+Compress-Archive -Path "data/bkjw/2026-2027-1/semester.json", "data/bkjw/2026-2027-1/report.json" -DestinationPath "$env:TEMP/2026-2027-1.zip"
+```
+
+在频道课程榜管理员后台进入“课程与学期数据”上传 ZIP。服务端会检查来源、格式版本、学期、采集完整性、记录数量、课节 ID 和必要课程字段；重复上传会替换该学期的开课记录和教学班，课程评价继续保留。教师为空的课节允许导入。`checkpoint.json` 不需要上传。
 
 ## 开发检查
 

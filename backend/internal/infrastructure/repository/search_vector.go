@@ -94,7 +94,22 @@ func RefreshCourseSearchVectors(db *gorm.DB, semesters ...string) error {
 		query += "\n\t\tAND c.last_semester IN ?"
 		args = append(args, semesters)
 	}
-	return db.Exec(query, args...).Error
+	if err := db.Exec(query, args...).Error; err != nil {
+		return err
+	}
+	nullTeacherQuery := `
+		UPDATE courses AS c
+		SET search_vector =
+			setweight(to_tsvector(?::regconfig, coalesce(c.name, '')), 'A') ||
+			setweight(to_tsvector('simple', coalesce(c.code, '')), 'A')
+		WHERE c.main_teacher_id IS NULL
+	`
+	nullTeacherArgs := []any{config}
+	if len(semesters) > 0 {
+		nullTeacherQuery += " AND c.last_semester IN ?"
+		nullTeacherArgs = append(nullTeacherArgs, semesters)
+	}
+	return db.Exec(nullTeacherQuery, nullTeacherArgs...).Error
 }
 
 func RefreshReviewSearchVectors(db *gorm.DB) error {

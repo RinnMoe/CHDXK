@@ -3,7 +3,9 @@ package repository
 import (
 	"context"
 	"errors"
+	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -116,6 +118,7 @@ func (r2 *ReviewRepository) deleteReviewCache(ctx context.Context, reviewID, cou
 		)
 	}
 	cacheDelete(ctx, r2.cache, keys...)
+	cacheDeletePattern(ctx, r2.cache, "jcourse:review:courses:*")
 }
 
 func (r2 *ReviewRepository) updateCourseStats(tx *gorm.DB, courseID int) error {
@@ -204,7 +207,15 @@ func (r2 *ReviewRepository) GetByID(ctx context.Context, reviewID int) (*review.
 }
 
 func (r2 *ReviewRepository) GetCourseFilters(ctx context.Context, courseID int) (*review.ReviewFilters, error) {
-	key := cacheKey("review", "course", courseID, "filters")
+	return r2.GetCourseFiltersByCourseIDs(ctx, []int{courseID})
+}
+
+func (r2 *ReviewRepository) GetCourseFiltersByCourseIDs(ctx context.Context, courseIDs []int) (*review.ReviewFilters, error) {
+	courseIDs = normalizedCourseIDs(courseIDs)
+	if len(courseIDs) == 0 {
+		return &review.ReviewFilters{Semesters: []review.FilterItem{}, Ratings: []review.FilterItem{}}, nil
+	}
+	key := courseGroupReviewCacheKey(courseIDs, "filters")
 	if cached, ok := cacheGetJSON[review.ReviewFilters](ctx, r2.cache, key); ok {
 		return cached, nil
 	}
@@ -213,7 +224,7 @@ func (r2 *ReviewRepository) GetCourseFilters(ctx context.Context, courseID int) 
 	if err := r2.db.WithContext(ctx).
 		Model(&ReviewEntity{}).
 		Select("semester AS name, COUNT(*) AS count").
-		Where("course_id = ? AND semester <> ''", courseID).
+		Where("course_id IN ? AND semester <> ''", courseIDs).
 		Group("semester").
 		Order("semester DESC").
 		Scan(&semesters).Error; err != nil {
@@ -228,7 +239,7 @@ func (r2 *ReviewRepository) GetCourseFilters(ctx context.Context, courseID int) 
 	if err := r2.db.WithContext(ctx).
 		Model(&ReviewEntity{}).
 		Select("rating, COUNT(*) AS count").
-		Where("course_id = ?", courseID).
+		Where("course_id IN ?", courseIDs).
 		Group("rating").
 		Scan(&rows).Error; err != nil {
 		return nil, err
@@ -252,7 +263,15 @@ func (r2 *ReviewRepository) GetCourseFilters(ctx context.Context, courseID int) 
 }
 
 func (r2 *ReviewRepository) GetCourseTrend(ctx context.Context, courseID int) ([]review.ReviewTrendItem, error) {
-	key := cacheKey("review", "course", courseID, "trend")
+	return r2.GetCourseTrendByCourseIDs(ctx, []int{courseID})
+}
+
+func (r2 *ReviewRepository) GetCourseTrendByCourseIDs(ctx context.Context, courseIDs []int) ([]review.ReviewTrendItem, error) {
+	courseIDs = normalizedCourseIDs(courseIDs)
+	if len(courseIDs) == 0 {
+		return []review.ReviewTrendItem{}, nil
+	}
+	key := courseGroupReviewCacheKey(courseIDs, "trend")
 	if cached, ok := cacheGetJSON[[]review.ReviewTrendItem](ctx, r2.cache, key); ok {
 		return *cached, nil
 	}
@@ -261,7 +280,7 @@ func (r2 *ReviewRepository) GetCourseTrend(ctx context.Context, courseID int) ([
 	if err := r2.db.WithContext(ctx).
 		Model(&ReviewEntity{}).
 		Select("semester, AVG(rating) AS avg, COUNT(*) AS count").
-		Where("course_id = ? AND semester <> ''", courseID).
+		Where("course_id IN ? AND semester <> ''", courseIDs).
 		Group("semester").
 		Order("semester ASC").
 		Scan(&items).Error; err != nil {
@@ -269,6 +288,27 @@ func (r2 *ReviewRepository) GetCourseTrend(ctx context.Context, courseID int) ([
 	}
 	cacheSetJSON(ctx, r2.cache, key, items)
 	return items, nil
+}
+
+func normalizedCourseIDs(ids []int) []int {
+	ids = append([]int(nil), ids...)
+	sort.Ints(ids)
+	result := ids[:0]
+	for _, id := range ids {
+		if id <= 0 || (len(result) > 0 && result[len(result)-1] == id) {
+			continue
+		}
+		result = append(result, id)
+	}
+	return result
+}
+
+func courseGroupReviewCacheKey(ids []int, suffix string) string {
+	parts := make([]string, len(ids))
+	for i, id := range ids {
+		parts[i] = strconv.Itoa(id)
+	}
+	return cacheKey("review", "courses", strings.Join(parts, ","), suffix)
 }
 
 func (r2 *ReviewRepository) applyFilter(db *gorm.DB, filter review.ReviewFilter) *gorm.DB {

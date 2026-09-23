@@ -17,10 +17,8 @@ backend/
 ├── cmd/
 │   ├── api/          # HTTP API 服务
 │   ├── taskworker/   # Asynq worker 与定时任务
-│   ├── importer/     # 课程 CSV 导入
 │   └── migrate_v1/   # 旧版本数据迁移工具
 ├── config/           # 配置结构与示例配置
-├── data/             # 本地导入数据目录
 ├── internal/
 │   ├── domain/       # 领域模型、策略与接口
 │   ├── application/  # 用例服务、命令、查询和 DTO
@@ -111,13 +109,13 @@ go test -tags test ./internal/infrastructure/repository -run TestCourseHotReposi
 
 ## 数据导入
 
-课程导入工具默认读取 `data/<semester>.csv`：
+课程数据由管理员在前端“课程与学期数据”页面导入和维护。上传包含 `semester.json` 与 `report.json` 的采集器 ZIP；后端验证来源、版本、学期、采集完成状态、数量和课节 ID 后，在事务中替换该学期的开课记录及教学班。已有评价按课程代码继续保留并跨学期汇总。
 
-```bash
-go run cmd/importer/main.go --target-dsn "$TARGET_DSN" --semester 2025-2026-1
+```powershell
+Compress-Archive -Path "../tools/bkjw-course-source/data/bkjw/2026-2027-1/semester.json", "../tools/bkjw-course-source/data/bkjw/2026-2027-1/report.json" -DestinationPath "$env:TEMP/2026-2027-1.zip"
 ```
 
-对应文件路径为 `backend/data/2025-2026-1.csv`。
+完成后在管理员后台选择 ZIP 上传；同一学期再次上传会替换开课数据。课程详情按学期展示课程和教学班快照，历史评价记录保留原学期。
 
 ## 配置重点
 

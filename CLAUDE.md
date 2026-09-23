@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **jcourse** — a course review platform. Go 1.26 backend (Gin + GORM + PostgreSQL) and React 19 / TypeScript frontend (Vite + shadcn + TanStack Query). Repo layout:
 
 ```
-backend/   Go API, async worker, importer, SQL schema
+backend/   Go API, async worker, SQL schema
 frontend/  React/Vite SPA
 docker/    Local PostgreSQL + Redis compose
 jcourse_v1 Legacy reference; ignore for active work
@@ -28,7 +28,6 @@ PostgreSQL is `dujiajun/postgres-pg-jieba:17` (custom image with `pg_jieba` for 
 cp config/config.example.yaml config/config.yaml         # one-time
 go run cmd/api/main.go --config config/config.yaml       # API server (:8080)
 go run cmd/taskworker/main.go --config config/config.yaml  # async worker (Asynq)
-go run cmd/importer/main.go --config config/config.yaml --semester 2025-2026-1
 go build ./...
 go vet -tags test ./...
 go test -tags test ./...                                  # ALWAYS pass -tags test
@@ -64,7 +63,7 @@ infrastructure/ persistence (gorm + redis), repository (gorm impls), smtp, reshu
 interface/web   Gin controllers, middleware, router
 interface/async Asynq task handler registration
 app/container.go  manual DI wiring
-cmd/{api,taskworker,importer,migrate_v1}  entrypoints
+cmd/{api,taskworker,migrate_v1}  entrypoints
 ```
 
 **Key patterns:**

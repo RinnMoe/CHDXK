@@ -19,6 +19,7 @@ type ServiceContainer struct {
 	ReviewCommand         *application.ReviewCommandService
 	CourseQuery           *application.CourseQueryService
 	CourseCommand         *application.CourseCommandService
+	CourseManagement      *application.CourseManagementService
 	CourseEnrollmentQuery *application.CourseEnrollmentQueryService
 	TeacherQuery          *application.TeacherQueryService
 	PointQuery            *application.PointQueryService
@@ -65,7 +66,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	accessTracker := repository.NewAccessTrackerRepository(db, redisClient, conf.Auth.Access.FlushBatchSize)
 	statRepo := repository.NewSiteDailyStatRepositoryWithIntegration(db, redisClient, true)
 	courseHotRepo := repository.NewGormCourseHotRepository(db, redisClient)
-	reviewQuery := application.NewReviewQueryService(reviewRepo, voteRepo, notificationRepo)
+	reviewQuery := application.NewReviewQueryService(reviewRepo, voteRepo, notificationRepo, courseRepo)
 
 	reviewCommand := application.NewReviewCommandService(
 		courseRepo,
@@ -88,6 +89,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		siteSettings,
 	)
 	courseEnrollmentQuery := application.NewCourseEnrollmentQueryService(courseEnrollmentRepo)
+	courseManagement := application.NewCourseManagementService(courseRepo)
 	teacherQuery := application.NewTeacherQueryService(teacherRepo)
 	announcementQuery := application.NewAnnouncementQueryService(announcementRepo)
 	announcementService := announcement.NewService(announcementRepo)
@@ -119,6 +121,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		ReviewCommand:         reviewCommand,
 		CourseQuery:           courseQuery,
 		CourseCommand:         courseCommand,
+		CourseManagement:      courseManagement,
 		CourseEnrollmentQuery: courseEnrollmentQuery,
 		TeacherQuery:          teacherQuery,
 		PointQuery:            pointQuery,

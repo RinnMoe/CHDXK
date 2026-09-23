@@ -15,6 +15,11 @@ type ReviewQuery interface {
 	FindRevisions(ctx context.Context, reviewID int) ([]RevisionView, error)
 }
 
+type CourseGroupReviewQuery interface {
+	GetCourseFiltersByCourseIDs(ctx context.Context, courseIDs []int) (*ReviewFilters, error)
+	GetCourseTrendByCourseIDs(ctx context.Context, courseIDs []int) ([]ReviewTrendItem, error)
+}
+
 type FilterItem struct {
 	Name  string `json:"name"`
 	Count int    `json:"count"`

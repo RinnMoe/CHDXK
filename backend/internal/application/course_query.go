@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"sort"
 	"strings"
 	"time"
 
@@ -201,7 +202,7 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 		TargetYears:       detail.TargetYears,
 		Categories:        detail.Categories,
 		Rating:            newRatingInfoDTO(detail.Rating),
-		MainTeacher:       TeacherDTO{ID: detail.MainTeacherID},
+		MainTeacher:       TeacherDTO{ID: 0, Name: "教师信息暂缺"},
 		NotificationLevel: int(detail.NotificationLevel),
 	}
 	if detail.MainTeacher != nil {
@@ -219,17 +220,6 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 	}
 	dto.TeacherGroup = teacherGroup
 
-	dto.OfferedCourses = make([]OfferedCourseDTO, 0, len(detail.OfferedCourses))
-	for _, oc := range detail.OfferedCourses {
-		ocView := OfferedCourseDTO{
-			Semester:    oc.Semester,
-			Language:    oc.Language,
-			TargetYears: oc.TargetYears,
-			Categories:  oc.Categories,
-		}
-		dto.OfferedCourses = append(dto.OfferedCourses, ocView)
-	}
-
 	sameCodeCourses, _, err := s.courseRepo.FindBy(ctx, course.CourseFilter{
 		Code:      detail.Code,
 		ExcludeID: courseID,
@@ -238,18 +228,58 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 	if err != nil {
 		return nil, err
 	}
+	ratingInfos := make([]course.RatingInfo, 0, len(sameCodeCourses)+1)
+	ratingInfos = append(ratingInfos, detail.Rating)
+	for i := range sameCodeCourses {
+		ratingInfos = append(ratingInfos, sameCodeCourses[i].Rating)
+	}
+	dto.Rating = newRatingInfoDTO(aggregateCourseRatings(ratingInfos))
 	dto.SameCodeCourses = make([]CourseListItemDTO, len(sameCodeCourses))
 	for i, c := range sameCodeCourses {
 		dto.SameCodeCourses[i] = newCourseListItemDTO(&c)
 	}
 
-	sameTeacherCourses, _, err := s.courseRepo.FindBy(ctx, course.CourseFilter{
-		TeacherID: detail.MainTeacherID,
-		ExcludeID: courseID,
-		OrderBy:   "rating_score",
+	allCourseViews := make([]course.CourseView, 0, len(sameCodeCourses)+1)
+	allCourseViews = append(allCourseViews, course.CourseView{ID: detail.ID})
+	allCourseViews = append(allCourseViews, sameCodeCourses...)
+	dto.OfferedCourses = make([]OfferedCourseDTO, 0)
+	for _, matchingCourse := range allCourseViews {
+		offerings := detail.OfferedCourses
+		if matchingCourse.ID != detail.ID {
+			offerings, err = s.courseRepo.FindOfferedCourses(ctx, matchingCourse.ID)
+			if err != nil {
+				return nil, err
+			}
+		}
+		for _, oc := range offerings {
+			dto.OfferedCourses = append(dto.OfferedCourses, OfferedCourseDTO{
+				ID:          oc.ID,
+				CourseID:    matchingCourse.ID,
+				Semester:    oc.Semester,
+				Language:    oc.Language,
+				TargetYears: oc.TargetYears,
+				Categories:  oc.Categories,
+				Sections:    oc.Sections,
+			})
+		}
+	}
+	sort.SliceStable(dto.OfferedCourses, func(i, j int) bool {
+		if dto.OfferedCourses[i].Semester == dto.OfferedCourses[j].Semester {
+			return dto.OfferedCourses[i].CourseID < dto.OfferedCourses[j].CourseID
+		}
+		return dto.OfferedCourses[i].Semester > dto.OfferedCourses[j].Semester
 	})
-	if err != nil {
-		return nil, err
+
+	var sameTeacherCourses []course.CourseView
+	if detail.MainTeacherID > 0 {
+		sameTeacherCourses, _, err = s.courseRepo.FindBy(ctx, course.CourseFilter{
+			TeacherID: detail.MainTeacherID,
+			ExcludeID: courseID,
+			OrderBy:   "rating_score",
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	dto.SameTeacherCourses = make([]CourseListItemDTO, len(sameTeacherCourses))
 	for i, c := range sameTeacherCourses {
@@ -273,6 +303,25 @@ func (s *CourseQueryService) GetCourseDetail(ctx context.Context, user *auth.Use
 	}
 
 	return dto, nil
+}
+
+func aggregateCourseRatings(ratings []course.RatingInfo) course.RatingInfo {
+	var result course.RatingInfo
+	weightedAverage := 0.0
+	weightedScore := 0.0
+	for _, rating := range ratings {
+		result.Count += rating.Count
+		weightedAverage += rating.Avg * float64(rating.Count)
+		weightedScore += rating.Score * float64(rating.Count)
+		for i, count := range rating.Distribution {
+			result.Distribution[i] += count
+		}
+	}
+	if result.Count > 0 {
+		result.Avg = weightedAverage / float64(result.Count)
+		result.Score = weightedScore / float64(result.Count)
+	}
+	return result
 }
 
 func (s *CourseQueryService) ListTeacherCourses(ctx context.Context, teacherID int, f CourseListFilter) (*PaginatedResult[CourseListItemDTO], error) {

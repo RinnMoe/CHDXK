@@ -25,13 +25,21 @@ const (
 )
 
 func testDSN() string {
+	return testDSNFor(testDBName)
+}
+
+func testDSNFor(dbName string) string {
 	return fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		testDBHost, testDBPort, testDBUser, testDBPassword, testDBName,
+		testDBHost, testDBPort, testDBUser, testDBPassword, dbName,
 	)
 }
 
 func newTestDB(t *testing.T) *gorm.DB {
+	return newTestDBNamed(t, testDBName)
+}
+
+func newTestDBNamed(t *testing.T, dbName string) *gorm.DB {
 	t.Helper()
 
 	rootDSN := fmt.Sprintf(
@@ -48,12 +56,12 @@ func newTestDB(t *testing.T) *gorm.DB {
 	sqlDB, _ := rootDB.DB()
 	defer sqlDB.Close()
 
-	rootDB.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s", testDBName))
-	if err := rootDB.Exec(fmt.Sprintf("CREATE DATABASE %s", testDBName)).Error; err != nil {
+	rootDB.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s", dbName))
+	if err := rootDB.Exec(fmt.Sprintf("CREATE DATABASE %s", dbName)).Error; err != nil {
 		t.Fatalf("create test database: %v", err)
 	}
 
-	db, err := gorm.Open(postgres.Open(testDSN()), &gorm.Config{
+	db, err := gorm.Open(postgres.Open(testDSNFor(dbName)), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
 	if err != nil {
@@ -84,7 +92,7 @@ func newTestDB(t *testing.T) *gorm.DB {
 			s, _ := rootDB2.DB()
 			s.Close()
 		}()
-		rootDB2.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s WITH (FORCE)", testDBName))
+		rootDB2.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s WITH (FORCE)", dbName))
 	})
 
 	return db
@@ -96,6 +104,7 @@ func migrateTestDB(t *testing.T, db *gorm.DB) {
 		&repository.TeacherEntity{},
 		&repository.CourseEntity{},
 		&repository.OfferedCourseEntity{},
+		&repository.CourseSectionEntity{},
 		&repository.UserEntity{},
 		&repository.UserIdentityEntity{},
 		&repository.ApiKeyEntity{},

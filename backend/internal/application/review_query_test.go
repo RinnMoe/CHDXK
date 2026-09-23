@@ -109,6 +109,31 @@ func TestReviewQueryService_GetReviews_WithIgnoredCourses(t *testing.T) {
 	})
 }
 
+func TestReviewQueryService_GetReviewsByCourseIncludesSameCodeHistory(t *testing.T) {
+	reviewRepo := newFakeReviewQuery()
+	reviewRepo.reviews = []review.ReviewView{
+		{ID: 1, CourseID: 10, Semester: "2025-2026-1", Rating: 5},
+		{ID: 2, CourseID: 20, Semester: "2026-2027-1", Rating: 4},
+		{ID: 3, CourseID: 30, Semester: "2026-2027-1", Rating: 1},
+	}
+	courseRepo := course.NewMockCourseRepository()
+	courseRepo.Courses[10] = &course.CourseView{ID: 10, Code: "CS101"}
+	courseRepo.Courses[20] = &course.CourseView{ID: 20, Code: "CS101"}
+	courseRepo.Courses[30] = &course.CourseView{ID: 30, Code: "CS102"}
+	service := application.NewReviewQueryService(reviewRepo, &review.MockVoteRepository{}, nil, courseRepo)
+
+	result, err := service.GetReviewsByCourse(context.Background(), 10, nil, application.ReviewListFilter{})
+	if err != nil {
+		t.Fatalf("GetReviewsByCourse: %v", err)
+	}
+	if result.Total != 2 || len(result.Items) != 2 {
+		t.Fatalf("same-code review history was not aggregated: %#v", result)
+	}
+	if result.Items[0].Semester == result.Items[1].Semester {
+		t.Fatalf("review semesters were not retained: %#v", result.Items)
+	}
+}
+
 func TestReviewQueryService_GetReviews_AttachesMyVotes(t *testing.T) {
 	reviewRepo := newFakeReviewQuery()
 	reviewRepo.reviews = []review.ReviewView{

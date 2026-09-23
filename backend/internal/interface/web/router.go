@@ -72,6 +72,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 
 	reviewController := controller.NewReviewController(container.ReviewQuery, container.ReviewCommand)
 	courseController := controller.NewCourseController(container.CourseQuery, container.CourseCommand)
+	courseAdminController := controller.NewCourseAdminController(container.CourseManagement)
 	courseEnrollmentController := controller.NewCourseEnrollmentController(container.CourseEnrollmentQuery, container.CourseCommand)
 	teacherController := controller.NewTeacherController(container.TeacherQuery, container.CourseQuery)
 	pointController := controller.NewPointController(container.PointQuery)
@@ -167,6 +168,15 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		adminAnnouncementGroup.POST("", announcementController.CreateAnnouncement)
 		adminAnnouncementGroup.PUT("/:announcementID", announcementController.UpdateAnnouncement)
 		adminAnnouncementGroup.DELETE("/:announcementID", announcementController.DeleteAnnouncement)
+	}
+	adminCourseGroup := apiGroup.Group("/admin/course", middleware.RequireAdmin())
+	{
+		adminCourseGroup.GET("/semester", courseAdminController.ListSemesters)
+		adminCourseGroup.GET("", courseAdminController.List)
+		adminCourseGroup.POST("/import", courseAdminController.ImportArchive)
+		adminCourseGroup.POST("", courseAdminController.Create)
+		adminCourseGroup.PUT("/:offeringID", courseAdminController.Update)
+		adminCourseGroup.DELETE("/:offeringID", courseAdminController.Delete)
 	}
 	announcementGroup := apiGroup.Group("/announcement")
 	{

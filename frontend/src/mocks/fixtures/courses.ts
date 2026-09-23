@@ -309,16 +309,22 @@ export function makeCourseDetail(course: CourseListItemDTO): CourseDetailDTO {
     notification_level: 0,
     offered_courses: [
       {
+        id: course.id * 10 + 1,
+        course_id: course.id,
         semester: course.last_semester,
         language: course.language,
         target_years: course.target_years,
         categories: course.categories,
+        sections: [],
       },
       {
+        id: course.id * 10 + 2,
+        course_id: course.id,
         semester: "2024-2025-2",
         language: course.language,
         target_years: course.target_years,
         categories: course.categories,
+        sections: [],
       },
     ],
     same_code_courses: sameCode,

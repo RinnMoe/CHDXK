@@ -1,6 +1,6 @@
-# 霓裳选课社区
+# 频道课程榜
 
-霓裳选课社区（项目标识：CHDXK）是一个课程点评与选课辅助系统，包含 Go 后端和 React/Vite 前端。项目提供课程与教师检索、课程点评、评分趋势、关注课程、课程通知、个人课程、积分转账、系统 API Key、站点统计和后台运营能力。`jcourse` 仅作为内部 Go module、数据库和配置命名保留。
+频道课程榜（项目标识：CHDXK）是一个课程点评与选课辅助系统，包含 Go 后端和 React/Vite 前端。项目提供课程与教师检索、课程点评、评分趋势、关注课程、课程通知、个人课程、积分转账、系统 API Key、站点统计和后台运营能力。`jcourse` 仅作为内部 Go module、数据库和配置命名保留。
 
 ## 目录结构
 
@@ -98,11 +98,10 @@ JCOURSE_SERVER_ADDR=:9090 go run cmd/api/main.go --config config/config.yaml
 
 ## 数据导入
 
-课程导入入口位于 `backend/cmd/importer`，默认读取 `backend/data/<semester>.csv`：
+管理员可在站点后台的“课程与学期数据”页面上传长大教务采集器生成的学期 ZIP，并按学期查询、增改或删除课程开课记录和教学班。ZIP 需包含同一目录的 `semester.json` 与 `report.json`，且采集报告必须完整；上传会替换对应学期的开课数据，已有课程评价保留。教师信息缺失的课节也可导入。
 
-```bash
-cd backend
-go run cmd/importer/main.go --target-dsn "$TARGET_DSN" --semester 2025-2026-1
+```powershell
+Compress-Archive -Path "tools/bkjw-course-source/data/bkjw/2026-2027-1/semester.json", "tools/bkjw-course-source/data/bkjw/2026-2027-1/report.json" -DestinationPath "$env:TEMP/2026-2027-1.zip"
 ```
 
 ## 长大教务课程数据源

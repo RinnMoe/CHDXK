@@ -84,6 +84,66 @@ export function CourseDetailOverview({
             </section>
           )}
 
+          {course.offered_courses.length > 0 && (
+            <section className="space-y-3">
+              <h2 className="text-sm font-medium">同课号历年开课信息</h2>
+              {course.offered_courses.map((offering) => (
+                <article key={`${offering.id}-${offering.course_id}`} className="space-y-3 rounded-lg border p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CourseSemesterBadge semester={offering.semester} />
+                    <span className="text-xs text-muted-foreground">{offering.sections.length} 个教学班</span>
+                  </div>
+                  {offering.sections.map((section) => (
+                    <div key={`${offering.id}-${section.id}`} className="space-y-2 border-t pt-3 first:border-t-0 first:pt-0">
+                      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                        <span className="font-medium">{section.course_name}</span>
+                        {section.lesson_no && <span className="font-mono text-xs text-muted-foreground">{section.lesson_no}</span>}
+                        {section.teach_class && <span className="text-xs text-muted-foreground">{section.teach_class}</span>}
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        <span>开课单位：{section.department}</span>
+                        <span>学分：{section.credit}</span>
+                        {section.course_type && <span>类别：{section.course_type}</span>}
+                        {section.language && <span>语言：{section.language}</span>}
+                        {section.campus && <span>校区：{section.campus}</span>}
+                        {section.assessment && <span>考核：{section.assessment}</span>}
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        <span className="inline-flex flex-wrap items-center gap-1">
+                          <span>教师：</span>
+                          {section.teacher_profiles?.length ? section.teacher_profiles.map((teacher, index) => (
+                            <span key={teacher.id}>
+                              {index > 0 && <span className="mr-1">/</span>}
+                              <Link to="/teacher/$teacherID" params={{ teacherID: String(teacher.id) }} className="hover:text-primary hover:underline">
+                                {teacher.name}
+                              </Link>
+                              <span className="ml-1">{teacher.role === "primary" ? "（主讲）" : "（合讲）"}</span>
+                            </span>
+                          )) : section.teachers.length > 0 ? section.teachers.join(" / ") : "教师信息暂缺"}
+                        </span>
+                        <span>人数：{section.actual_count ?? "—"} / {section.limit_count ?? "—"}</span>
+                        {section.course_period && <span>课程周期：{section.course_period}</span>}
+                        {section.total_hours != null && <span>总课时：{section.total_hours}</span>}
+                        {section.weekly_hours != null && <span>周课时：{section.weekly_hours}</span>}
+                        {section.week_range && <span>周次：{section.week_range}</span>}
+                      </div>
+                      {(section.remark || section.syllabus_url) && (
+                        <div className="flex flex-wrap items-center gap-3 text-xs">
+                          {section.remark && <span className="text-muted-foreground">备注：{section.remark}</span>}
+                          {section.syllabus_url && (
+                            <a href={section.syllabus_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                              查看课程大纲
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </article>
+              ))}
+            </section>
+          )}
+
           <CourseModeratorRemark course={course} />
 
           {selectedSemesters.length > 0 && (

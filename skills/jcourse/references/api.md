@@ -1,4 +1,4 @@
-# 霓裳选课社区 API Reference（JCourse-compatible）
+# 频道课程榜 API Reference（JCourse-compatible）
 
 ## Contents
 

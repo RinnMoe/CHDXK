@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"sort"
 	"strings"
 
 	"jcourse/internal/domain/auth"
@@ -22,20 +23,66 @@ type ReviewListFilter struct {
 
 type ReviewQueryService struct {
 	repo             review.ReviewQuery
+	courseRepo       course.CourseRepository
 	voteRepo         review.VoteRepository
 	notificationRepo course.CourseNotificationRepository
 }
 
-func NewReviewQueryService(repo review.ReviewQuery, voteRepo review.VoteRepository, notificationRepo course.CourseNotificationRepository) *ReviewQueryService {
-	return &ReviewQueryService{repo: repo, voteRepo: voteRepo, notificationRepo: notificationRepo}
+func NewReviewQueryService(repo review.ReviewQuery, voteRepo review.VoteRepository, notificationRepo course.CourseNotificationRepository, courseRepos ...course.CourseRepository) *ReviewQueryService {
+	var courses course.CourseRepository
+	if len(courseRepos) > 0 {
+		courses = courseRepos[0]
+	}
+	return &ReviewQueryService{repo: repo, courseRepo: courses, voteRepo: voteRepo, notificationRepo: notificationRepo}
 }
 
 func (s *ReviewQueryService) GetCourseReviewFilters(ctx context.Context, courseID int) (*review.ReviewFilters, error) {
+	if grouped, ok := s.repo.(review.CourseGroupReviewQuery); ok {
+		ids, err := s.courseIDsByCode(ctx, courseID)
+		if err != nil {
+			return nil, err
+		}
+		return grouped.GetCourseFiltersByCourseIDs(ctx, ids)
+	}
 	return s.repo.GetCourseFilters(ctx, courseID)
 }
 
 func (s *ReviewQueryService) GetCourseReviewTrend(ctx context.Context, courseID int) ([]review.ReviewTrendItem, error) {
+	if grouped, ok := s.repo.(review.CourseGroupReviewQuery); ok {
+		ids, err := s.courseIDsByCode(ctx, courseID)
+		if err != nil {
+			return nil, err
+		}
+		return grouped.GetCourseTrendByCourseIDs(ctx, ids)
+	}
 	return s.repo.GetCourseTrend(ctx, courseID)
+}
+
+func (s *ReviewQueryService) courseIDsByCode(ctx context.Context, courseID int) ([]int, error) {
+	if s.courseRepo == nil {
+		return []int{courseID}, nil
+	}
+	current, err := s.courseRepo.Get(ctx, courseID)
+	if err != nil || current == nil {
+		return []int{courseID}, err
+	}
+	courses, _, err := s.courseRepo.FindBy(ctx, course.CourseFilter{Code: current.Code, Page: 1, PageSize: 10000})
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]int, 0, len(courses)+1)
+	ids = append(ids, courseID)
+	for _, item := range courses {
+		ids = append(ids, item.ID)
+	}
+	sort.Ints(ids)
+	unique := ids[:0]
+	for _, id := range ids {
+		if len(unique) == 0 || unique[len(unique)-1] != id {
+			unique = append(unique, id)
+		}
+	}
+	return unique, nil
 }
 
 func (s *ReviewQueryService) buildDTOs(ctx context.Context, reviews []review.ReviewView, u *auth.User) ([]ReviewDTO, error) {
@@ -69,15 +116,20 @@ func (s *ReviewQueryService) GetReviewsByCourse(ctx context.Context, courseID in
 		orderBy = f.Order
 	}
 	q := strings.TrimSpace(f.Q)
+	ids, err := s.courseIDsByCode(ctx, courseID)
+	if err != nil {
+		return nil, err
+	}
 	reviewFilter := review.ReviewFilter{
-		CourseID: courseID,
-		Q:        q,
-		Semester: f.Semester,
-		Rating:   f.Rating,
-		OrderBy:  orderBy,
-		Ascend:   f.Ascend,
-		Page:     f.Page,
-		PageSize: f.PageSize,
+		CourseIDs:  ids,
+		Q:          q,
+		Semester:   f.Semester,
+		Rating:     f.Rating,
+		OrderBy:    orderBy,
+		Ascend:     f.Ascend,
+		Page:       f.Page,
+		PageSize:   f.PageSize,
+		WithCourse: true,
 	}
 
 	reviews, total, err := s.repo.FindBy(ctx, reviewFilter)

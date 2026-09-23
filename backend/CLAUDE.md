@@ -12,7 +12,6 @@ go test -tags test ./internal/application -run TestCourseQuery       # focused
 go test -tags test ./internal/infrastructure/repository -run TestX   # repository test
 go run cmd/api/main.go --config config/config.yaml                   # API (:8080)
 go run cmd/taskworker/main.go --config config/config.yaml            # async worker (Asynq)
-go run cmd/importer/main.go --config config/config.yaml --semester 2025-2026-1
 go run cmd/migrate_v1/main.go --source-dsn "$SOURCE_DSN" --target-dsn "$TARGET_DSN" --semester 2025-2026-1  # legacy v1 → v2 data migration
 ```
 
@@ -32,7 +31,6 @@ Hexagonal / Clean DDD layering:
 cmd/
   api/          HTTP server entrypoint
   taskworker/   Asynq worker; SIGINT/SIGTERM graceful shutdown
-  importer/     CSV course importer (data/<semester>.csv)
   migrate_v1/   one-shot data migration from the v1 schema
 config/         AppConfig types + Viper loader (JCOURSE_ env override)
 script/         four-digit numbered up/down SQL migrations (0001_, 0002_, 0003_, ...)

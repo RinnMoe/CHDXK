@@ -11,7 +11,7 @@ import (
 
 const (
 	SpamSuspensionEmailType    = "account_banned"
-	spamSuspensionEmailSubject = "霓裳选课社区用户封禁通知"
+	spamSuspensionEmailSubject = "频道课程榜用户封禁通知"
 )
 
 //go:embed templates/review_frequency_suspension.html

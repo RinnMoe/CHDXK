@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="JCourse">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="频道课程榜">
   <rect width="512" height="512" rx="112" fill="#0f766e" />
   <path fill="#ccfbf1" d="M126 116h260a36 36 0 0 1 36 36v208a36 36 0 0 1-36 36H126a36 36 0 0 1-36-36V152a36 36 0 0 1 36-36Z" />
   <path fill="#115e59" d="M152 166h208v34H152zM152 238h128v34H152zM152 310h176v34H152z" />

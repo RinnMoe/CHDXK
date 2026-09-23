@@ -49,6 +49,7 @@ func newCourseListItemDTO(c *course.CourseView) CourseListItemDTO {
 		TargetYears:  c.TargetYears,
 		Categories:   c.Categories,
 		LastSemester: c.LastSemester,
+		MainTeacher:  TeacherDTO{ID: 0, Name: "教师信息暂缺"},
 		Rating:       newRatingInfoDTO(c.Rating),
 	}
 	if c.MainTeacher != nil {
@@ -59,10 +60,13 @@ func newCourseListItemDTO(c *course.CourseView) CourseListItemDTO {
 
 // Read model: offered course
 type OfferedCourseDTO struct {
-	Semester    string   `json:"semester"`
-	Language    string   `json:"language"`
-	TargetYears []string `json:"target_years"`
-	Categories  []string `json:"categories"`
+	ID          int                    `json:"id"`
+	CourseID    int                    `json:"course_id"`
+	Semester    string                 `json:"semester"`
+	Language    string                 `json:"language"`
+	TargetYears []string               `json:"target_years"`
+	Categories  []string               `json:"categories"`
+	Sections    []course.CourseSection `json:"sections"`
 }
 
 // Read model: course detail with offered courses, related courses, and rating distribution

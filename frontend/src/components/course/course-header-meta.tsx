@@ -25,13 +25,19 @@ export function CourseHeaderMeta({ course, className }: CourseHeaderMetaProps) {
         </span>
       </h1>
       <div className="inline-flex items-baseline gap-1.5">
-        <Link
-          to="/teacher/$teacherID"
-          params={{ teacherID: String(course.main_teacher.id) }}
-          className="text-lg font-semibold text-primary hover:underline"
-        >
-          {course.main_teacher.name}
-        </Link>
+        {course.main_teacher.id > 0 ? (
+          <Link
+            to="/teacher/$teacherID"
+            params={{ teacherID: String(course.main_teacher.id) }}
+            className="text-lg font-semibold text-primary hover:underline"
+          >
+            {course.main_teacher.name}
+          </Link>
+        ) : (
+          <span className="text-lg font-semibold text-muted-foreground">
+            {course.main_teacher.name || "教师信息暂缺"}
+          </span>
+        )}
         {course.main_teacher.title && (
           <TitleBadge>{course.main_teacher.title}</TitleBadge>
         )}
