@@ -12,6 +12,7 @@ import { buildQuery } from "./query"
 export type { RatingInfoDTO } from "./types"
 
 export interface CourseFilters {
+  campuses?: FilterItem[]
   credits?: FilterItem[]
   departments?: FilterItem[]
   categories?: FilterItem[]
@@ -136,6 +137,8 @@ export interface HotCourseListDTO {
 }
 
 export interface CourseListFilter {
+  semester?: string
+  campus?: string
   q?: string
   department?: string
   language?: string

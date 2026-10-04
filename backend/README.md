@@ -17,7 +17,6 @@ backend/
 ├── cmd/
 │   ├── api/          # HTTP API 服务
 │   ├── taskworker/   # Asynq worker 与定时任务
-│   └── migrate_v1/   # 旧版本数据迁移工具
 ├── config/           # 配置结构与示例配置
 ├── internal/
 │   ├── domain/       # 领域模型、策略与接口

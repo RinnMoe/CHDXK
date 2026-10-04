@@ -28,6 +28,8 @@ type CourseSearch = ReturnType<typeof routeApi.useSearch>
 type FilterKey = keyof Pick<
   CourseSearch,
   | "categories"
+  | "semester"
+  | "campus"
   | "credit"
   | "department"
   | "language"
@@ -90,6 +92,14 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
         </Tabs>
       </div>
 
+      {filters.semesters && (
+        <FilterSelectGroup label="开课学期" items={filters.semesters}
+          paramKey="semester" selected={search.semester ?? null} onChange={updateFilter} />
+      )}
+      {filters.campuses && (
+        <FilterSelectGroup label="校区" items={filters.campuses}
+          paramKey="campus" selected={search.campus ?? null} onChange={updateFilter} />
+      )}
       {filters.categories && (
         <FilterSelectGroup
           label="课程类别"
@@ -147,6 +157,8 @@ export function CourseFilters({ filters }: CourseFiltersProps) {
           void navigate({
             search: {
               q: search.q,
+              semester: undefined,
+              campus: undefined,
               department: undefined,
               language: undefined,
               categories: undefined,

@@ -14,6 +14,8 @@ type RatingInfo struct {
 }
 
 type CourseFilter struct {
+	Semester        string
+	Campus          string
 	CourseIDs       []int
 	TeacherID       int
 	ExcludeID       int
@@ -74,6 +76,7 @@ type CourseDetailView struct {
 type FilterItem = teacher.FilterItem
 
 type CourseFilters struct {
+	Campuses    []FilterItem `json:"campuses"`
 	Credits     []FilterItem `json:"credits"`
 	Departments []FilterItem `json:"departments"`
 	Categories  []FilterItem `json:"categories"`

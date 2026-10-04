@@ -35,7 +35,15 @@ func (r *CourseRepository) applyFilter(db gorm.ChainInterface[CourseEntity], f c
 		db = db.Where("courses.id IN ?", f.CourseIDs)
 	}
 	if f.TeacherID > 0 {
-		db = db.Where("courses.main_teacher_id = ?", f.TeacherID)
+		db = db.Where("(courses.main_teacher_id = ? OR EXISTS (SELECT 1 FROM offered_courses oc WHERE oc.course_id = courses.id AND ? = ANY(oc.teacher_ids)))", f.TeacherID, f.TeacherID)
+	}
+	if f.Semester != "" || f.Campus != "" {
+		// Both filters refer to the same teaching section, rather than matching
+		// a campus in one semester and a different semester in another row.
+		db = db.Where(`EXISTS (SELECT 1 FROM offered_courses oc
+			JOIN course_sections cs ON cs.offered_course_id = oc.id
+			WHERE oc.course_id = courses.id AND (? = '' OR oc.semester = ?)
+			AND (? = '' OR cs.campus = ?))`, f.Semester, f.Semester, f.Campus, f.Campus)
 	}
 	if f.ExcludeID > 0 {
 		db = db.Where("courses.id != ?", f.ExcludeID)
@@ -453,6 +461,13 @@ func (r *CourseRepository) GetFilters(ctx context.Context) (*course.CourseFilter
 		TargetYears: targetYears,
 		Languages:   languages,
 		Semesters:   semesters,
+	}
+	if err := r.db.WithContext(ctx).Table("course_sections cs").
+		Joins("JOIN offered_courses oc ON oc.id = cs.offered_course_id").
+		Select("cs.campus AS name, COUNT(DISTINCT oc.course_id) AS count").
+		Where("cs.campus != ''").Group("cs.campus").Order("cs.campus").
+		Scan(&filters.Campuses).Error; err != nil {
+		return nil, err
 	}
 	cacheSetJSON(ctx, r.cache, key, filters)
 	return filters, nil

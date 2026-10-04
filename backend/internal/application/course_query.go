@@ -13,6 +13,8 @@ import (
 )
 
 type CourseListFilter struct {
+	Semester    string   `form:"semester"`
+	Campus      string   `form:"campus"`
 	Q           string   `form:"q"`
 	Department  string   `form:"department"`
 	Language    string   `form:"language"`
@@ -82,6 +84,8 @@ func (s *CourseQueryService) ListCourses(ctx context.Context, f CourseListFilter
 	filter := course.CourseFilter{
 		Q:           q,
 		Department:  f.Department,
+		Semester:    f.Semester,
+		Campus:      f.Campus,
 		Language:    f.Language,
 		Categories:  f.Categories,
 		TargetYears: f.TargetYears,
@@ -330,6 +334,8 @@ func (s *CourseQueryService) ListTeacherCourses(ctx context.Context, teacherID i
 		TeacherID:   teacherID,
 		Q:           q,
 		Department:  f.Department,
+		Semester:    f.Semester,
+		Campus:      f.Campus,
 		Language:    f.Language,
 		Categories:  f.Categories,
 		TargetYears: f.TargetYears,

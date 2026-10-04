@@ -18,6 +18,8 @@ export function CoursesPage() {
   function toFilter() {
     return {
       q: search.q,
+      semester: search.semester,
+      campus: search.campus,
       department: search.department,
       language: search.language,
       categories: search.categories,

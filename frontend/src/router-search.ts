@@ -14,6 +14,8 @@ export type LoginSearch = {
   error?: "oidc_denied" | "oidc_failed" | "oidc_unavailable"
 }
 export type CourseListSearch = {
+  semester?: string
+  campus?: string
   q?: string
   department?: string
   language?: string
@@ -74,6 +76,8 @@ export function validateCourseListSearch(
   search: SearchRecord
 ): CourseListSearch {
   return {
+    semester: rawStringParam(search.semester),
+    campus: rawStringParam(search.campus),
     q: stringParam(search.q),
     department: rawStringParam(search.department),
     language: rawStringParam(search.language),

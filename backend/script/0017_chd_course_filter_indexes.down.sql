@@ -1,0 +1,1 @@
+DROP INDEX idx_course_sections_campus_offering;
