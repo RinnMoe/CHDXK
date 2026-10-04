@@ -9,3 +9,6 @@ data/
 backend/config/config.yaml
 backend/loadtest/loadtest.config.json
 .pnpm-store/
+
+# Isolated local integration runs
+.local/
