@@ -141,7 +141,7 @@ func TestClientUsesStandardOIDCAndBearerPointAPI(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(config.ResHubConfig{
+	client := mustNewClient(t, config.ResHubConfig{
 		Issuer:          server.URL,
 		ClientID:        "xk",
 		ClientSecret:    "secret",
@@ -259,7 +259,7 @@ func TestClientMapsStandardPointErrors(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-	client := NewClient(config.ResHubConfig{Issuer: server.URL, ClientID: "xk", ClientSecret: "secret"})
+	client := mustNewClient(t, config.ResHubConfig{Issuer: server.URL, ClientID: "xk", ClientSecret: "secret"})
 	_, err = client.Change(context.Background(), "user:42", -2, "consume", "xk:key")
 	if !errors.Is(err, point.ErrInsufficientBalance) {
 		t.Fatalf("Change error = %v, want insufficient balance", err)
@@ -271,7 +271,7 @@ func TestClientMapsStandardPointErrors(t *testing.T) {
 }
 
 func TestClientRejectsUnavailableDiscovery(t *testing.T) {
-	client := NewClient(config.ResHubConfig{Issuer: "http://127.0.0.1:1", ClientID: "xk", ClientSecret: "secret"})
+	client := mustNewClient(t, config.ResHubConfig{Issuer: "http://127.0.0.1:1", ClientID: "xk", ClientSecret: "secret"})
 	_, err := client.UserInfo(context.Background(), "access-token")
 	if !errors.Is(err, auth.ErrResHubUnavailable) {
 		t.Fatalf("UserInfo unavailable error = %v", err)
@@ -335,4 +335,13 @@ func signedIDToken(t *testing.T, privateKey *rsa.PrivateKey, issuer, audience, n
 
 func bigEndianBytes(value int) []byte {
 	return new(big.Int).SetInt64(int64(value)).Bytes()
+}
+
+func mustNewClient(t testing.TB, conf config.ResHubConfig) *Client {
+	t.Helper()
+	client, err := NewClient(conf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return client
 }

@@ -137,6 +137,9 @@ session:
 }
 
 func TestLoadResHubConfiguration(t *testing.T) {
+	t.Setenv("JCOURSE_RESHUB_CLIENT_CERT_FILE", "client.pem")
+	t.Setenv("JCOURSE_RESHUB_CLIENT_KEY_FILE", "client-key.pem")
+	t.Setenv("JCOURSE_RESHUB_CA_FILE", "issuer-ca.pem")
 	path := filepath.Join(t.TempDir(), "config.yaml")
 	contents := []byte(`
 reshub:
@@ -163,5 +166,8 @@ session:
 	}
 	if conf.ResHub.Timeout != 5*time.Second {
 		t.Fatalf("res-hub timeout = %s, want 5s", conf.ResHub.Timeout)
+	}
+	if conf.ResHub.ClientCertFile != "client.pem" || conf.ResHub.ClientKeyFile != "client-key.pem" || conf.ResHub.CAFile != "issuer-ca.pem" {
+		t.Fatalf("res-hub certificate environment overrides were not loaded")
 	}
 }

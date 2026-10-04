@@ -68,6 +68,9 @@ type ResHubConfig struct {
 	LogoutReturnURI string        `mapstructure:"logout_return_uri"`
 	Timeout         time.Duration `mapstructure:"timeout"`
 	PointsBasePath  string        `mapstructure:"points_base_path"`
+	ClientCertFile  string        `mapstructure:"client_cert_file"`
+	ClientKeyFile   string        `mapstructure:"client_key_file"`
+	CAFile          string        `mapstructure:"ca_file"`
 }
 
 func Load(configPath string) (AppConfig, error) {
@@ -123,6 +126,12 @@ func Load(configPath string) (AppConfig, error) {
 	if strings.TrimSpace(conf.ResHub.RedirectURI) == "" {
 		return AppConfig{}, fmt.Errorf("reshub.redirect_uri is required")
 	}
+	if (strings.TrimSpace(conf.ResHub.ClientCertFile) == "") != (strings.TrimSpace(conf.ResHub.ClientKeyFile) == "") {
+		return AppConfig{}, fmt.Errorf("reshub.client_cert_file and client_key_file must be configured together")
+	}
+	if (conf.ResHub.ClientCertFile != "" || conf.ResHub.CAFile != "") && !strings.HasPrefix(conf.ResHub.Issuer, "https://") {
+		return AppConfig{}, fmt.Errorf("reshub TLS configuration requires an HTTPS issuer")
+	}
 	return conf, nil
 }
 
@@ -172,6 +181,9 @@ func setDefaults(v *viper.Viper) {
 	setSectionDefaults(v, "reshub", map[string]any{
 		"timeout":          3 * time.Second,
 		"points_base_path": "/api/integrations/v1",
+		"client_cert_file": "",
+		"client_key_file":  "",
+		"ca_file":          "",
 	})
 }
 

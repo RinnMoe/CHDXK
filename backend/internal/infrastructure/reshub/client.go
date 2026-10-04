@@ -108,7 +108,11 @@ type jwkKey struct {
 // NewClient creates a client for the current res-hub OIDC provider. The
 // issuer is the only provider address configured locally; every other URL is
 // obtained from its Discovery document.
-func NewClient(conf config.ResHubConfig) *Client {
+func NewClient(conf config.ResHubConfig) (*Client, error) {
+	transport, err := newTransport(conf)
+	if err != nil {
+		return nil, err
+	}
 	timeout := conf.Timeout
 	if timeout <= 0 {
 		timeout = 3 * time.Second
@@ -119,7 +123,8 @@ func NewClient(conf config.ResHubConfig) *Client {
 	}
 	return &Client{
 		httpClient: &http.Client{
-			Timeout: timeout,
+			Transport: transport,
+			Timeout:   timeout,
 			CheckRedirect: func(*http.Request, []*http.Request) error {
 				return http.ErrUseLastResponse
 			},
@@ -131,7 +136,7 @@ func NewClient(conf config.ResHubConfig) *Client {
 		logoutReturnURI: strings.TrimSpace(conf.LogoutReturnURI),
 		pointsBasePath:  "/" + strings.Trim(pointsPath, "/"),
 		serviceTokens:   make(map[string]cachedToken),
-	}
+	}, nil
 }
 
 func (c *Client) AuthorizationURL(ctx context.Context, state, codeChallenge, nonce string) (string, error) {

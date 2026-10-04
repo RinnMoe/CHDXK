@@ -43,7 +43,10 @@ func main() {
 		logx.Fatal(ctx, "failed to load config", "err", err)
 	}
 
-	container := app.NewServiceContainer(conf)
+	container, err := app.NewServiceContainer(conf)
+	if err != nil {
+		logx.Fatal(ctx, "failed to initialize services", "err", err)
+	}
 	engine := web.NewRouter(container, conf)
 
 	taskClient := infratask.NewClient(conf.Redis)

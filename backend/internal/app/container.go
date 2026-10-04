@@ -44,7 +44,11 @@ type ServiceContainer struct {
 	ResHubOIDC            *application.ResHubOIDCService
 }
 
-func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
+func NewServiceContainer(conf config.AppConfig) (*ServiceContainer, error) {
+	resHubClient, err := reshub.NewClient(conf.ResHub)
+	if err != nil {
+		return nil, err
+	}
 
 	db := persistence.NewPostgres(conf.Postgres)
 	redisClient := persistence.NewRedisClient(conf.Redis)
@@ -96,7 +100,6 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 	announcementService := announcement.NewService(announcementRepo)
 	var pointQueryRepository point.Query = pointRepo
 	var rewardRepository point.RewardRepository = pointRepo
-	resHubClient := reshub.NewClient(conf.ResHub)
 	pointQueryRepository = reshub.NewPointQuery(resHubClient, identityProjection)
 	rewardRepository = reshub.NewRewardRepository(db, resHubClient, identityProjection)
 	resHubOIDC := application.NewResHubOIDCService(resHubClient, identityProjection, conf.ResHub.RedirectURI, conf.ResHub.LogoutReturnURI)
@@ -145,5 +148,5 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		AuditLogCommand:       auditLogCommand,
 		EmailSender:           smtpSender,
 		ResHubOIDC:            resHubOIDC,
-	}
+	}, nil
 }

@@ -84,3 +84,8 @@ reshub:
   logout_return_uri: "https://chdxk.example.com/"
   timeout: "3s"
   points_base_path: "/api/integrations/v1"
+  # Optional mTLS certificate files mounted into the CHDXK service.
+  client_cert_file: ""
+  client_key_file: ""
+  # Optional private CA bundle; public HTTPS issuers normally leave this empty.
+  ca_file: ""
