@@ -4,8 +4,16 @@ import {
   getTeacherFilters,
   listTeachers,
   listTeacherCourses,
+  listHotTeachers,
   type TeacherListFilter,
 } from "@/api/teacher"
+
+export function useHotTeachers(period: "week" | "month", limit = 50) {
+  return useQuery({
+    queryKey: ["hot-teachers", period, limit],
+    queryFn: () => listHotTeachers(period, limit),
+  })
+}
 
 export function useTeacherFilters() {
   return useQuery({

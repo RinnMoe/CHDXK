@@ -2,6 +2,7 @@ import { http, HttpResponse } from "msw"
 import { getMockTeachers, makeTeacherFilters } from "@/mocks/fixtures/teachers"
 import { mockCourses } from "@/mocks/fixtures/courses"
 import { randomDelay } from "@/mocks/utils"
+import { mockHotPeriodKey } from "./course"
 
 const DEFAULT_PAGE = 1
 const DEFAULT_PAGE_SIZE = 20
@@ -29,6 +30,45 @@ function paginate<T>(items: T[], page: number, pageSize: number) {
 }
 
 export const teacherHandlers = [
+  http.get("/api/teacher/hot", async ({ request }) => {
+    await randomDelay()
+    const url = new URL(request.url)
+    const period = url.searchParams.get("period") ?? "week"
+    const limit = Number(url.searchParams.get("limit") ?? "50")
+    if (
+      (period !== "week" && period !== "month") ||
+      !Number.isInteger(limit) ||
+      limit < 1 ||
+      limit > 100
+    )
+      return HttpResponse.json({ error: "invalid parameters" }, { status: 400 })
+    const items = getMockTeachers()
+      .map((teacher) => {
+        const courses = mockCourses
+          .map((course, index) => ({
+            course,
+            score: (mockCourses.length - index) * 10,
+          }))
+          .filter(({ course }) => course.main_teacher.id === teacher.id)
+        return {
+          teacher,
+          score: courses.reduce((sum, item) => sum + item.score, 0),
+          course_count: courses.length,
+        }
+      })
+      .filter((item) => item.score > 0)
+      .sort(
+        (a, b) =>
+          b.score - a.score ||
+          b.course_count - a.course_count ||
+          a.teacher.id - b.teacher.id
+      )
+    return HttpResponse.json({
+      period,
+      period_key: mockHotPeriodKey(period),
+      items: items.slice(0, limit),
+    })
+  }),
   http.get("/api/teacher/filter", async () => {
     await randomDelay()
     return HttpResponse.json(makeTeacherFilters())

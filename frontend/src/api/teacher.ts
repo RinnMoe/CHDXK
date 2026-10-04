@@ -22,6 +22,19 @@ export interface TeacherDTO {
   title?: string
 }
 
+export interface HotTeacherListDTO {
+  period: "week" | "month"
+  period_key: string
+  items: { teacher: TeacherDTO; score: number; course_count: number }[]
+}
+
+export function listHotTeachers(
+  period: "week" | "month",
+  limit = 50
+): Promise<HotTeacherListDTO> {
+  return apiClient(`${BASE_URL}/teacher/hot${buildQuery({ period, limit })}`)
+}
+
 export interface TeacherListFilter {
   department?: string
   title?: string

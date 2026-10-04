@@ -57,7 +57,7 @@ func (ctrl *CourseController) ListHotCourses(c *gin.Context) {
 	period := c.DefaultQuery("period", "week")
 	limitStr := c.DefaultQuery("limit", "5")
 	limit, err := strconv.Atoi(limitStr)
-	if err != nil || limit <= 0 {
+	if err != nil || limit <= 0 || limit > 100 {
 		respondBadRequest(c, "数量限制无效")
 		return
 	}

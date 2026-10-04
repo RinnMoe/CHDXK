@@ -45,7 +45,7 @@ function getNotificationLevel(courseID: number): CourseNotificationLevel {
   return notificationLevels.get(courseID) ?? 0
 }
 
-function mockHotPeriodKey(period: "week" | "month") {
+export function mockHotPeriodKey(period: "week" | "month") {
   const now = new Date()
   if (period === "month") {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`
@@ -228,7 +228,7 @@ export const courseHandlers = [
     )
     const items = mockCourses.slice(0, limit).map((course, i) => ({
       course,
-      score: (limit - i) * 10 + Math.floor(Math.random() * 6),
+      score: (mockCourses.length - i) * 10,
     }))
     return HttpResponse.json({
       period,

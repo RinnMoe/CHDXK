@@ -117,6 +117,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	teacherGroup := apiGroup.Group("/teacher")
 	{
 		teacherGroup.GET("/filter", teacherController.GetTeacherFilters)
+		teacherGroup.GET("/hot", controller.TeacherHotHandler(container.TeacherHotQuery))
 		teacherGroup.GET("/", teacherController.ListTeachers)
 		teacherGroup.GET("/:teacherID", teacherController.GetTeacher)
 		teacherGroup.GET("/:teacherID/course", teacherController.ListTeacherCourses)

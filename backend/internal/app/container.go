@@ -15,6 +15,7 @@ import (
 )
 
 type ServiceContainer struct {
+	TeacherHotQuery       *application.TeacherHotQueryService
 	ReviewQuery           *application.ReviewQueryService
 	ReviewCommand         *application.ReviewCommandService
 	CourseQuery           *application.CourseQueryService
@@ -124,6 +125,7 @@ func NewServiceContainer(conf config.AppConfig) *ServiceContainer {
 		CourseManagement:      courseManagement,
 		CourseEnrollmentQuery: courseEnrollmentQuery,
 		TeacherQuery:          teacherQuery,
+		TeacherHotQuery:       application.NewTeacherHotQueryService(courseHotRepo),
 		PointQuery:            pointQuery,
 		PointRewardCommand:    pointRewardCommand,
 		SiteStatsQuery:        siteStatsQuery,
