@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router"
 import { RiArrowLeftLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
@@ -52,12 +53,15 @@ export function TeacherDetailPage() {
 
   return (
     <>
-      <PageTitle>{teacher?.name ?? "教师"}</PageTitle>
+      <PageTitle>
+        {teacher?.name ??
+          copy("copy.user.pages.teacher-detail-page.a6654120cbec")}
+      </PageTitle>
       <PageShell>
         <Button asChild variant="ghost" size="sm" className="mb-4">
           <Link to="/teacher">
             <RiArrowLeftLine data-icon="inline-start" />
-            返回教师列表
+            {copy("copy.user.pages.teacher-detail-page.867a000ca687")}
           </Link>
         </Button>
 
@@ -90,7 +94,9 @@ export function TeacherDetailPage() {
                 <div className="font-mono text-sm text-muted-foreground">
                   #{id}
                 </div>
-                <h1 className="text-3xl font-bold">教师不存在</h1>
+                <h1 className="text-3xl font-bold">
+                  {copy("copy.user.pages.teacher-detail-page.91baccd86e58")}
+                </h1>
               </>
             )}
           </header>
@@ -98,18 +104,26 @@ export function TeacherDetailPage() {
           <section>
             <div className="mb-3 space-y-3">
               <div className="flex items-baseline justify-between">
-                <h2 className="text-lg font-semibold">开设课程</h2>
+                <h2 className="text-lg font-semibold">
+                  {copy("copy.user.pages.teacher-detail-page.0b104a19f59a")}
+                </h2>
                 {data && (
                   <span className="text-sm text-muted-foreground">
-                    共 {data.total} 门
+                    {copy("copy.user.pages.teacher-detail-page.2428420e407f")}
+                    {data.total}
+                    {copy("copy.user.pages.teacher-detail-page.c0f31a102088")}
                   </span>
                 )}
               </div>
               <div>
                 <Tabs value={selectedOrderBy} onValueChange={updateCourseSort}>
                   <TabsList>
-                    <TabsTrigger value="rating_score">综合评分</TabsTrigger>
-                    <TabsTrigger value="rating_count">点评数量</TabsTrigger>
+                    <TabsTrigger value="rating_score">
+                      {copy("copy.user.pages.teacher-detail-page.6408c2c76e3b")}
+                    </TabsTrigger>
+                    <TabsTrigger value="rating_count">
+                      {copy("copy.user.pages.teacher-detail-page.ed4a6ed53604")}
+                    </TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
@@ -149,7 +163,7 @@ export function TeacherDetailPage() {
               </>
             ) : (
               <p className="py-8 text-center text-sm text-muted-foreground">
-                暂无开设课程
+                {copy("copy.user.pages.teacher-detail-page.6e2ad17b1ccd")}
               </p>
             )}
           </section>

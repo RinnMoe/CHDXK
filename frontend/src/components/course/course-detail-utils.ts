@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import type { CourseDetailDTO } from "@/api/course"
 import { brand } from "@/config/brand"
 
@@ -13,7 +14,10 @@ export function byRatingDesc(
 export function buildFeedbackMailto(course: CourseDetailDTO) {
   if (!brand.feedbackEmail) return undefined
 
-  const subject = `[课程信息反馈] ${course.code} ${course.name}`
+  const subject = copy(
+    "copy.user.components.course.course-detail-utils.d586b094407c",
+    { v0: course.code, v1: course.name }
+  )
   const courseURL =
     typeof window === "undefined"
       ? ""
@@ -22,24 +26,54 @@ export function buildFeedbackMailto(course: CourseDetailDTO) {
     course.teacher_group && course.teacher_group.length > 0
       ? course.teacher_group.map((teacher) => teacher.name).join(" / ")
       : course.main_teacher.name
-  const targetYears = course.target_years?.join("、") || "未提供"
-  const categories = course.categories?.join("、") || "未提供"
+  const targetYears =
+    course.target_years?.join("、") ||
+    copy("copy.user.components.course.course-detail-utils.756762e293f2")
+  const categories =
+    course.categories?.join("、") ||
+    copy("copy.user.components.course.course-detail-utils.756762e293f2")
   const body = [
-    "请在这里描述需要反馈的问题：",
+    copy("copy.user.components.course.course-detail-utils.97fba4ee4556"),
     "\n",
-    "课程基本信息",
-    `课程ID：${course.id}`,
-    `课程代码：${course.code}`,
-    `课程名称：${course.name}`,
-    `院系：${course.department}`,
-    `学分：${course.credit}`,
-    `授课语言：${course.language}`,
-    `面向对象：${targetYears}`,
-    `课程分类：${categories}`,
-    `最近学期：${course.last_semester}`,
-    `主讲教师：${course.main_teacher.name}`,
-    `合上教师：${teacherNames}`,
-    courseURL ? `课程链接：${courseURL}` : undefined,
+    copy("copy.user.components.course.course-detail-utils.6a89b64321c6"),
+    copy("copy.user.components.course.course-detail-utils.77a97685633a", {
+      v0: course.id,
+    }),
+    copy("copy.user.components.course.course-detail-utils.d52fc7f53e59", {
+      v0: course.code,
+    }),
+    copy("copy.user.components.course.course-detail-utils.da647969ca34", {
+      v0: course.name,
+    }),
+    copy("copy.user.components.course.course-detail-utils.040e06692483", {
+      v0: course.department,
+    }),
+    copy("copy.user.components.course.course-detail-utils.a7aee2503dce", {
+      v0: course.credit,
+    }),
+    copy("copy.user.components.course.course-detail-utils.f41b1401daa2", {
+      v0: course.language,
+    }),
+    copy("copy.user.components.course.course-detail-utils.d07d1f8b938d", {
+      v0: targetYears,
+    }),
+    copy("copy.user.components.course.course-detail-utils.1f3043d9cb99", {
+      v0: categories,
+    }),
+    copy("copy.user.components.course.course-detail-utils.63296cdae076", {
+      v0: course.last_semester,
+    }),
+    copy("copy.user.components.course.course-detail-utils.a437ba1c813f", {
+      v0: course.main_teacher.name,
+    }),
+    copy("copy.user.components.course.course-detail-utils.01c108d51b41", {
+      v0: teacherNames,
+    }),
+    courseURL
+      ? copy("copy.user.components.course.course-detail-utils.60d2204afbb8", {
+          v0: courseURL,
+        })
+      : undefined,
   ]
     .filter((line): line is string => Boolean(line))
     .join("\n")

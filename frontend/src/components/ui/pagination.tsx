@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -12,7 +13,7 @@ function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
   return (
     <nav
       role="navigation"
-      aria-label="pagination"
+      aria-label={copy("copy.user.components.ui.pagination.c30ad110383e")}
       data-slot="pagination"
       className={cn("mx-auto flex w-full justify-center", className)}
       {...props}
@@ -67,12 +68,12 @@ function PaginationLink({
 
 function PaginationPrevious({
   className,
-  text = "上一页",
+  text = copy("copy.user.components.ui.pagination.c9b9ae7a6144"),
   ...props
 }: React.ComponentProps<typeof PaginationLink> & { text?: string }) {
   return (
     <PaginationLink
-      aria-label="Go to previous page"
+      aria-label={copy("copy.user.components.ui.pagination.2865e0f438b4")}
       size="default"
       className={cn("pl-2!", className)}
       {...props}
@@ -85,12 +86,12 @@ function PaginationPrevious({
 
 function PaginationNext({
   className,
-  text = "下一页",
+  text = copy("copy.user.components.ui.pagination.8a8542f69648"),
   ...props
 }: React.ComponentProps<typeof PaginationLink> & { text?: string }) {
   return (
     <PaginationLink
-      aria-label="Go to next page"
+      aria-label={copy("copy.user.components.ui.pagination.7e021afbf6ac")}
       size="default"
       className={cn("pr-2!", className)}
       {...props}
@@ -116,7 +117,9 @@ function PaginationEllipsis({
       {...props}
     >
       <RiMoreLine />
-      <span className="sr-only">More pages</span>
+      <span className="sr-only">
+        {copy("copy.user.components.ui.pagination.0418cd51e53f")}
+      </span>
     </span>
   )
 }

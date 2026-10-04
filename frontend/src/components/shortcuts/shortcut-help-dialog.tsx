@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { createPortal } from "react-dom"
 import {
   Dialog,
@@ -65,7 +66,9 @@ export function AccessHintOverlay({ hints }: { hints: AccessHint[] }) {
       aria-hidden="true"
     >
       <div className="absolute top-16 left-1/2 -translate-x-1/2 rounded-md border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-lg">
-        输入标记可点击或聚焦控件，Esc 退出
+        {copy(
+          "copy.user.components.shortcuts.shortcut-help-dialog.ff5a83daebf9"
+        )}
       </div>
       {hints.map((hint) => (
         <Kbd
@@ -100,16 +103,26 @@ export function ShortcutHelpDialog({
         className="max-h-[min(42rem,calc(100svh-2rem))] grid-rows-[auto_minmax(0,1fr)] overflow-hidden sm:max-w-2xl"
       >
         <DialogHeader>
-          <DialogTitle>快捷键</DialogTitle>
+          <DialogTitle>
+            {copy(
+              "copy.user.components.shortcuts.shortcut-help-dialog.ee2638183d3e"
+            )}
+          </DialogTitle>
           <DialogDescription>
-            页面跳转可先按 G 再按目标键；输入框内不会触发全局快捷键。
+            {copy(
+              "copy.user.components.shortcuts.shortcut-help-dialog.93c6900d289b"
+            )}
           </DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="-mx-2 min-h-0 pr-3">
           <div className="space-y-5 px-2 pb-1">
             <section>
-              <h3 className="mb-2 text-sm font-medium">页面</h3>
+              <h3 className="mb-2 text-sm font-medium">
+                {copy(
+                  "copy.user.components.shortcuts.shortcut-help-dialog.452c7b10d57a"
+                )}
+              </h3>
               <div className="space-y-1">
                 {pageShortcuts.map((shortcut) => {
                   const disabled = !availablePageShortcuts.includes(shortcut)
@@ -121,8 +134,12 @@ export function ShortcutHelpDialog({
                       description={
                         disabled
                           ? shortcut.requiresAdmin
-                            ? "需要管理员权限"
-                            : "需要登录"
+                            ? copy(
+                                "copy.user.components.shortcuts.shortcut-help-dialog.9228f9aa4c65"
+                              )
+                            : copy(
+                                "copy.user.components.shortcuts.shortcut-help-dialog.6eb1b64e260a"
+                              )
                           : shortcut.description
                       }
                       disabled={disabled}
@@ -133,7 +150,11 @@ export function ShortcutHelpDialog({
             </section>
 
             <section>
-              <h3 className="mb-2 text-sm font-medium">操作</h3>
+              <h3 className="mb-2 text-sm font-medium">
+                {copy(
+                  "copy.user.components.shortcuts.shortcut-help-dialog.ed31fbb483ee"
+                )}
+              </h3>
               <div className="space-y-1">
                 {actionShortcuts.map((shortcut) => (
                   <ShortcutRow

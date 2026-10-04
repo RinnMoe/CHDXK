@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useState } from "react"
 import { RiDeleteBinLine } from "@remixicon/react"
 import type { ApiKeyDTO } from "@/api/api-key"
@@ -39,7 +40,9 @@ interface ApiKeyTableProps {
 }
 
 function defaultGetDeleteErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "删除失败"
+  return error instanceof Error
+    ? error.message
+    : copy("copy.user.components.api-key.api-key-table.c228558cf257")
 }
 
 export function ApiKeyTable({
@@ -89,13 +92,21 @@ export function ApiKeyTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>名称</TableHead>
-            <TableHead>Key</TableHead>
-            <TableHead>创建时间</TableHead>
+            <TableHead>
+              {copy("copy.user.components.api-key.api-key-table.d44e9b3d3b31")}
+            </TableHead>
+            <TableHead>
+              {copy("copy.user.components.api-key.api-key-table.99a52df3ff3d")}
+            </TableHead>
+            <TableHead>
+              {copy("copy.user.components.api-key.api-key-table.07ec86e0f1d4")}
+            </TableHead>
             <TableHead>
               <LastUsedTableHead />
             </TableHead>
-            <TableHead className="w-16 text-right md:w-24">操作</TableHead>
+            <TableHead className="w-16 text-right md:w-24">
+              {copy("copy.user.components.api-key.api-key-table.ed31fbb483ee")}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -111,7 +122,12 @@ export function ApiKeyTable({
                 {formatNullableDateTime(key.created_at)}
               </TableCell>
               <TableCell className="text-muted-foreground">
-                {formatNullableDateTime(key.last_used_at, "从未使用")}
+                {formatNullableDateTime(
+                  key.last_used_at,
+                  copy(
+                    "copy.user.components.api-key.api-key-table.458529e06228"
+                  )
+                )}
               </TableCell>
               <TableCell className="text-right">
                 <AlertDialog>
@@ -134,7 +150,11 @@ export function ApiKeyTable({
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>取消</AlertDialogCancel>
+                      <AlertDialogCancel>
+                        {copy(
+                          "copy.user.components.api-key.api-key-table.2cd0f3be8738"
+                        )}
+                      </AlertDialogCancel>
                       <AlertDialogAction
                         variant="destructive"
                         onClick={() => handleDelete(key.id)}

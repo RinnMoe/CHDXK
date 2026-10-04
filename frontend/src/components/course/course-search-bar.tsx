@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useCallback } from "react"
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { DebouncedSearchInput } from "@/components/common/debounced-search-input"
@@ -30,7 +31,9 @@ export function CourseSearchBar() {
 
   return (
     <DebouncedSearchInput
-      placeholder="搜索课程名、课程号或教师名..."
+      placeholder={copy(
+        "copy.user.components.course.course-search-bar.a994c103e1d9"
+      )}
       value={q}
       debounceMs={SEARCH_DEBOUNCE_MS}
       onDebouncedChange={handleSearchChange}

@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import type { SiteDailyStatDTO } from "@/api/site-stats"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatDateInputValue } from "@/lib/date"
@@ -18,24 +19,72 @@ export function DailyStatsTable({ stats }: DailyStatsTableProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>每日统计</CardTitle>
+        <CardTitle>
+          {copy(
+            "copy.user.components.site-stats.daily-stats-table.9f34653227fc"
+          )}
+        </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>日期</TableHead>
-                <TableHead>活跃用户</TableHead>
-                <TableHead>新增用户</TableHead>
-                <TableHead>新增点评</TableHead>
-                <TableHead>新增积分</TableHead>
-                <TableHead>点评作者</TableHead>
-                <TableHead>新增点赞</TableHead>
-                <TableHead>新增点踩</TableHead>
-                <TableHead>用户总数</TableHead>
-                <TableHead>点评总数</TableHead>
-                <TableHead>被点评课程</TableHead>
+                <TableHead>
+                  {copy(
+                    "copy.user.components.site-stats.daily-stats-table.70d0c1b33626"
+                  )}
+                </TableHead>
+                <TableHead>
+                  {copy(
+                    "copy.user.components.site-stats.daily-stats-table.931f9c9d4123"
+                  )}
+                </TableHead>
+                <TableHead>
+                  {copy(
+                    "copy.user.components.site-stats.daily-stats-table.ebabc83b6830"
+                  )}
+                </TableHead>
+                <TableHead>
+                  {copy(
+                    "copy.user.components.site-stats.daily-stats-table.0b50583f022e"
+                  )}
+                </TableHead>
+                <TableHead>
+                  {copy(
+                    "copy.user.components.site-stats.daily-stats-table.a7d035e5fecb"
+                  )}
+                </TableHead>
+                <TableHead>
+                  {copy(
+                    "copy.user.components.site-stats.daily-stats-table.c1320b7dd4f9"
+                  )}
+                </TableHead>
+                <TableHead>
+                  {copy(
+                    "copy.user.components.site-stats.daily-stats-table.e1a2345cdc47"
+                  )}
+                </TableHead>
+                <TableHead>
+                  {copy(
+                    "copy.user.components.site-stats.daily-stats-table.77d13c083dba"
+                  )}
+                </TableHead>
+                <TableHead>
+                  {copy(
+                    "copy.user.components.site-stats.daily-stats-table.545a676083c8"
+                  )}
+                </TableHead>
+                <TableHead>
+                  {copy(
+                    "copy.user.components.site-stats.daily-stats-table.c5ddc469e1d4"
+                  )}
+                </TableHead>
+                <TableHead>
+                  {copy(
+                    "copy.user.components.site-stats.daily-stats-table.51f48f6d74a7"
+                  )}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { Link } from "@tanstack/react-router"
 import { RiDeleteBinLine } from "@remixicon/react"
 import {
@@ -52,7 +53,11 @@ export function CourseEnrollmentList({
   if (enrollments.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <p className="text-muted-foreground">暂无选课记录</p>
+        <p className="text-muted-foreground">
+          {copy(
+            "copy.user.components.course.course-enrollment-list.0cbe09090cfb"
+          )}
+        </p>
       </div>
     )
   }
@@ -104,25 +109,43 @@ export function CourseEnrollmentList({
                     variant="ghost"
                     size="icon-sm"
                     className="hover:bg-destructive/10 hover:text-destructive focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:hover:bg-destructive/20"
-                    aria-label="删除选课记录"
+                    aria-label={copy(
+                      "copy.user.components.course.course-enrollment-list.8d7021060db4"
+                    )}
                   >
                     <RiDeleteBinLine />
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent size="sm">
                   <AlertDialogHeader>
-                    <AlertDialogTitle>删除选课记录</AlertDialogTitle>
+                    <AlertDialogTitle>
+                      {copy(
+                        "copy.user.components.course.course-enrollment-list.8d7021060db4"
+                      )}
+                    </AlertDialogTitle>
                     <AlertDialogDescription>
-                      删除 {course.name} {enrollment.semester} 的选课记录。
+                      {copy(
+                        "copy.user.components.course.course-enrollment-list.b5e1bb61b32e"
+                      )}
+                      {course.name} {enrollment.semester}
+                      {copy(
+                        "copy.user.components.course.course-enrollment-list.a089fb8b0266"
+                      )}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>取消</AlertDialogCancel>
+                    <AlertDialogCancel>
+                      {copy(
+                        "copy.user.components.course.course-enrollment-list.2cd0f3be8738"
+                      )}
+                    </AlertDialogCancel>
                     <AlertDialogAction
                       variant="destructive"
                       onClick={() => deleteMutation.mutate(enrollment.id)}
                     >
-                      删除
+                      {copy(
+                        "copy.user.components.course.course-enrollment-list.2f9daa828907"
+                      )}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

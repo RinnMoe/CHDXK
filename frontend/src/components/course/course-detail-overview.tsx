@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { Link } from "@tanstack/react-router"
 import { RiMailLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
@@ -42,13 +43,21 @@ export function CourseDetailOverview({
           />
 
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <span>开课单位</span>
+            <span>
+              {copy(
+                "copy.user.components.course.course-detail-overview.6322fa286117"
+              )}
+            </span>
             <span className="font-medium">{course.department}</span>
           </div>
 
           {course.target_years && course.target_years.length > 0 && (
             <section className="flex flex-wrap items-center gap-2 text-sm">
-              <h2 className="text-sm text-muted-foreground">面向年级</h2>
+              <h2 className="text-sm text-muted-foreground">
+                {copy(
+                  "copy.user.components.course.course-detail-overview.3ca3a8a1fb00"
+                )}
+              </h2>
               {course.target_years.map((targetYear) => (
                 <CourseBadge key={targetYear} kind="targetYear">
                   {targetYear}
@@ -59,7 +68,11 @@ export function CourseDetailOverview({
 
           {teacherGroup.length > 1 && (
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm text-muted-foreground">
-              <span>合上教师</span>
+              <span>
+                {copy(
+                  "copy.user.components.course.course-detail-overview.a182f1486ada"
+                )}
+              </span>
               {teacherGroup.map((teacher, index) => (
                 <span key={teacher.id} className="inline-flex items-baseline">
                   {index > 0 && <span className="mr-2">/</span>}
@@ -77,7 +90,11 @@ export function CourseDetailOverview({
 
           {courseSemesters.length > 0 && (
             <section className="flex flex-wrap items-center gap-2 text-sm">
-              <h2 className="text-sm text-muted-foreground">开课学期</h2>
+              <h2 className="text-sm text-muted-foreground">
+                {copy(
+                  "copy.user.components.course.course-detail-overview.32090f3541c7"
+                )}
+              </h2>
               {courseSemesters.map((semester) => (
                 <CourseSemesterBadge key={semester} semester={semester} />
               ))}
@@ -86,53 +103,186 @@ export function CourseDetailOverview({
 
           {course.offered_courses.length > 0 && (
             <section className="space-y-3">
-              <h2 className="text-sm font-medium">同课号历年开课信息</h2>
+              <h2 className="text-sm font-medium">
+                {copy(
+                  "copy.user.components.course.course-detail-overview.7ff8048129b6"
+                )}
+              </h2>
               {course.offered_courses.map((offering) => (
-                <article key={`${offering.id}-${offering.course_id}`} className="space-y-3 rounded-lg border p-3">
+                <article
+                  key={`${offering.id}-${offering.course_id}`}
+                  className="space-y-3 rounded-lg border p-3"
+                >
                   <div className="flex flex-wrap items-center gap-2">
                     <CourseSemesterBadge semester={offering.semester} />
-                    <span className="text-xs text-muted-foreground">{offering.sections.length} 个教学班</span>
+                    <span className="text-xs text-muted-foreground">
+                      {offering.sections.length}
+                      {copy(
+                        "copy.user.components.course.course-detail-overview.8a76809069a1"
+                      )}
+                    </span>
                   </div>
                   {offering.sections.map((section) => (
-                    <div key={`${offering.id}-${section.id}`} className="space-y-2 border-t pt-3 first:border-t-0 first:pt-0">
+                    <div
+                      key={`${offering.id}-${section.id}`}
+                      className="space-y-2 border-t pt-3 first:border-t-0 first:pt-0"
+                    >
                       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                        <span className="font-medium">{section.course_name}</span>
-                        {section.lesson_no && <span className="font-mono text-xs text-muted-foreground">{section.lesson_no}</span>}
-                        {section.teach_class && <span className="text-xs text-muted-foreground">{section.teach_class}</span>}
+                        <span className="font-medium">
+                          {section.course_name}
+                        </span>
+                        {section.lesson_no && (
+                          <span className="font-mono text-xs text-muted-foreground">
+                            {section.lesson_no}
+                          </span>
+                        )}
+                        {section.teach_class && (
+                          <span className="text-xs text-muted-foreground">
+                            {section.teach_class}
+                          </span>
+                        )}
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                        <span>开课单位：{section.department}</span>
-                        <span>学分：{section.credit}</span>
-                        {section.course_type && <span>类别：{section.course_type}</span>}
-                        {section.language && <span>语言：{section.language}</span>}
-                        {section.campus && <span>校区：{section.campus}</span>}
-                        {section.assessment && <span>考核：{section.assessment}</span>}
+                        <span>
+                          {copy(
+                            "copy.user.components.course.course-detail-overview.808e510c384c"
+                          )}
+                          {section.department}
+                        </span>
+                        <span>
+                          {copy(
+                            "copy.user.components.course.course-detail-overview.f64cba59f8f6"
+                          )}
+                          {section.credit}
+                        </span>
+                        {section.course_type && (
+                          <span>
+                            {copy(
+                              "copy.user.components.course.course-detail-overview.8784ebab6637"
+                            )}
+                            {section.course_type}
+                          </span>
+                        )}
+                        {section.language && (
+                          <span>
+                            {copy(
+                              "copy.user.components.course.course-detail-overview.a540dbede76d"
+                            )}
+                            {section.language}
+                          </span>
+                        )}
+                        {section.campus && (
+                          <span>
+                            {copy(
+                              "copy.user.components.course.course-detail-overview.2254162264c1"
+                            )}
+                            {section.campus}
+                          </span>
+                        )}
+                        {section.assessment && (
+                          <span>
+                            {copy(
+                              "copy.user.components.course.course-detail-overview.8818c263d9b4"
+                            )}
+                            {section.assessment}
+                          </span>
+                        )}
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                         <span className="inline-flex flex-wrap items-center gap-1">
-                          <span>教师：</span>
-                          {section.teacher_profiles?.length ? section.teacher_profiles.map((teacher, index) => (
-                            <span key={teacher.id}>
-                              {index > 0 && <span className="mr-1">/</span>}
-                              <Link to="/teacher/$teacherID" params={{ teacherID: String(teacher.id) }} className="hover:text-primary hover:underline">
-                                {teacher.name}
-                              </Link>
-                              <span className="ml-1">{teacher.role === "primary" ? "（主讲）" : "（合讲）"}</span>
-                            </span>
-                          )) : section.teachers.length > 0 ? section.teachers.join(" / ") : "教师信息暂缺"}
+                          <span>
+                            {copy(
+                              "copy.user.components.course.course-detail-overview.8810575d0e7b"
+                            )}
+                          </span>
+                          {section.teacher_profiles?.length
+                            ? section.teacher_profiles.map((teacher, index) => (
+                                <span key={teacher.id}>
+                                  {index > 0 && <span className="mr-1">/</span>}
+                                  <Link
+                                    to="/teacher/$teacherID"
+                                    params={{ teacherID: String(teacher.id) }}
+                                    className="hover:text-primary hover:underline"
+                                  >
+                                    {teacher.name}
+                                  </Link>
+                                  <span className="ml-1">
+                                    {teacher.role === "primary"
+                                      ? copy(
+                                          "copy.user.components.course.course-detail-overview.430ea4d0e737"
+                                        )
+                                      : copy(
+                                          "copy.user.components.course.course-detail-overview.549cbbadcd8c"
+                                        )}
+                                  </span>
+                                </span>
+                              ))
+                            : section.teachers.length > 0
+                              ? section.teachers.join(" / ")
+                              : copy(
+                                  "copy.user.components.course.course-detail-overview.521ea9788171"
+                                )}
                         </span>
-                        <span>人数：{section.actual_count ?? "—"} / {section.limit_count ?? "—"}</span>
-                        {section.course_period && <span>课程周期：{section.course_period}</span>}
-                        {section.total_hours != null && <span>总课时：{section.total_hours}</span>}
-                        {section.weekly_hours != null && <span>周课时：{section.weekly_hours}</span>}
-                        {section.week_range && <span>周次：{section.week_range}</span>}
+                        <span>
+                          {copy(
+                            "copy.user.components.course.course-detail-overview.5a218b9ac440"
+                          )}
+                          {section.actual_count ?? "—"} /{" "}
+                          {section.limit_count ?? "—"}
+                        </span>
+                        {section.course_period && (
+                          <span>
+                            {copy(
+                              "copy.user.components.course.course-detail-overview.c3924adbfb99"
+                            )}
+                            {section.course_period}
+                          </span>
+                        )}
+                        {section.total_hours != null && (
+                          <span>
+                            {copy(
+                              "copy.user.components.course.course-detail-overview.879cbad53cbe"
+                            )}
+                            {section.total_hours}
+                          </span>
+                        )}
+                        {section.weekly_hours != null && (
+                          <span>
+                            {copy(
+                              "copy.user.components.course.course-detail-overview.0fd5935a1a32"
+                            )}
+                            {section.weekly_hours}
+                          </span>
+                        )}
+                        {section.week_range && (
+                          <span>
+                            {copy(
+                              "copy.user.components.course.course-detail-overview.7de8c3e515b1"
+                            )}
+                            {section.week_range}
+                          </span>
+                        )}
                       </div>
                       {(section.remark || section.syllabus_url) && (
                         <div className="flex flex-wrap items-center gap-3 text-xs">
-                          {section.remark && <span className="text-muted-foreground">备注：{section.remark}</span>}
+                          {section.remark && (
+                            <span className="text-muted-foreground">
+                              {copy(
+                                "copy.user.components.course.course-detail-overview.73226759270d"
+                              )}
+                              {section.remark}
+                            </span>
+                          )}
                           {section.syllabus_url && (
-                            <a href={section.syllabus_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                              查看课程大纲
+                            <a
+                              href={section.syllabus_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline"
+                            >
+                              {copy(
+                                "copy.user.components.course.course-detail-overview.11f49fad3a76"
+                              )}
                             </a>
                           )}
                         </div>
@@ -148,7 +298,11 @@ export function CourseDetailOverview({
 
           {selectedSemesters.length > 0 && (
             <section className="flex flex-wrap items-center gap-2 text-sm">
-              <h2 className="text-sm text-muted-foreground">已选学期</h2>
+              <h2 className="text-sm text-muted-foreground">
+                {copy(
+                  "copy.user.components.course.course-detail-overview.653fa47404b1"
+                )}
+              </h2>
               {selectedSemesters.map((semester) => (
                 <CourseSemesterBadge key={semester} semester={semester} />
               ))}
@@ -159,7 +313,9 @@ export function CourseDetailOverview({
                 className="h-7 px-2 text-muted-foreground hover:text-foreground"
               >
                 <Link to="/course/mine" search={{ type: "enrolled" }}>
-                  查看全部
+                  {copy(
+                    "copy.user.components.course.course-detail-overview.fa2ff3c379a7"
+                  )}
                 </Link>
               </Button>
             </section>
@@ -179,7 +335,9 @@ export function CourseDetailOverview({
               >
                 <a href={feedbackMailto}>
                   <RiMailLine data-icon="inline-start" />
-                  反馈
+                  {copy(
+                    "copy.user.components.course.course-detail-overview.8b2106ca1371"
+                  )}
                 </a>
               </Button>
             )}

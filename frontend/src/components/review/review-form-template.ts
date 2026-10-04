@@ -1,12 +1,14 @@
+import { copy } from "@/lib/copy"
+
 export const SCORE_MAX_LENGTH = 10
 export const CONTENT_MIN_LENGTH = 4
 export const CONTENT_MAX_LENGTH = 9681
 
 export const REVIEW_TEMPLATE_LABELS: readonly string[] = [
-  "课程内容：",
-  "上课自由度：",
-  "考核标准：",
-  "授课质量：",
+  copy("copy.user.components.review.review-form-template.daf6823736e9"),
+  copy("copy.user.components.review.review-form-template.dc3d37ce9a14"),
+  copy("copy.user.components.review.review-form-template.84a5a8034029"),
+  copy("copy.user.components.review.review-form-template.b6e48508c6f8"),
 ] as const
 
 export const DEFAULT_REVIEW_TEMPLATE = REVIEW_TEMPLATE_LABELS.join("\n\n")

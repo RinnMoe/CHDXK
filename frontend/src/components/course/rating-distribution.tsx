@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import type { RatingInfoDTO } from "@/api/course"
 import { RiStarFill, RiStarLine } from "@remixicon/react"
 import { Fragment } from "react"
@@ -31,7 +32,10 @@ export function RatingDistribution({ rating }: RatingDistributionProps) {
             )}
           </div>
           <span className="text-center text-sm text-muted-foreground">
-            {rating.count} 条点评
+            {rating.count}
+            {copy(
+              "copy.user.components.course.rating-distribution.1c0a8a53fbb5"
+            )}
           </span>
         </div>
       </div>
@@ -43,7 +47,10 @@ export function RatingDistribution({ rating }: RatingDistributionProps) {
           return (
             <Fragment key={star}>
               <span className="w-8 shrink-0 text-muted-foreground">
-                {star} 星
+                {star}
+                {copy(
+                  "copy.user.components.course.rating-distribution.d1005c4482ca"
+                )}
               </span>
               <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-muted">
                 <div
@@ -52,7 +59,10 @@ export function RatingDistribution({ rating }: RatingDistributionProps) {
                 />
               </div>
               <span className="shrink-0 text-right whitespace-nowrap text-muted-foreground tabular-nums">
-                {count} 条点评
+                {count}
+                {copy(
+                  "copy.user.components.course.rating-distribution.1c0a8a53fbb5"
+                )}
               </span>
             </Fragment>
           )

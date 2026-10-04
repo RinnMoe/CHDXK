@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -10,37 +11,41 @@ import { brand } from "@/config/brand"
 
 const agreementSections = [
   {
-    title: "机制",
+    title: copy("copy.user.components.about.about-content.d0f3e3298b26"),
     paragraphs: [
       <>
-        {brand.name} 使用部署方配置的统一身份服务登录。本站仅处理站点运行所需的账户映射与业务数据，课程记录来自部署方提供的课程数据。
-      </>,
-      <>{brand.name} 前台不展示用户的登录凭据；点评展示和账户关联以部署方实际规则为准。</>,
-    ],
-  },
-  {
-    title: "点评管理",
-    paragraphs: [
-      <>
-        在符合社区规范的情况下，我们不修改 {brand.name} 的点评内容，也不评价内容的真实性。如果您上过某一门课程并认为网站上的点评与事实不符，欢迎提交您的意见，我们相信全面的信息会给大家最好的答案。
+        {brand.name}
+        {copy("copy.user.components.about.about-content.5c3c998c13cc")}
       </>,
       <>
-        {brand.name} 管理员的责任仅限于维护系统的稳定，删除非课程点评内容和重复发帖，并维护课程和教师信息格式，方便进行数据的批量处理。
+        {brand.name}
+        {copy("copy.user.components.about.about-content.0555414e3117")}
       </>,
     ],
   },
   {
-    title: "隐私",
+    title: copy("copy.user.components.about.about-content.b4d4f455a802"),
     paragraphs: [
       <>
-        当您访问 {brand.name} 时，是否记录必要的访问日志或统计信息由部署配置决定，具体以部署方说明为准。
+        {copy("copy.user.components.about.about-content.84b13d2f7676")}
+        {brand.name}
+        {copy("copy.user.components.about.about-content.0949730fb040")}
       </>,
       <>
-        登录时，统一身份服务可能向本站提供完成登录所需的信息；本站仅保存运行所需的账户映射、操作记录和站点数据。
+        {brand.name}
+        {copy("copy.user.components.about.about-content.53037c66add5")}
       </>,
+    ],
+  },
+  {
+    title: copy("copy.user.components.about.about-content.86651d17a401"),
+    paragraphs: [
       <>
-        统一身份服务按照其隐私政策处理登录身份信息；具体数据范围和保存期限以当前部署方的说明为准。
+        {brand.name}
+        {copy("copy.user.components.about.about-content.98d673965b4e")}
       </>,
+      <>{copy("copy.user.components.about.about-content.86e835668ee2")}</>,
+      <>{copy("copy.user.components.about.about-content.bbcc08c43c0e")}</>,
     ],
   },
 ]
@@ -72,10 +77,13 @@ export function AboutContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">关于 {brand.name}</h1>
+        <h1 className="text-2xl font-bold">
+          {copy("copy.user.components.about.about-content.e499019ef2e3")}
+          {brand.name}
+        </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {brand.name}
-          为非官方网站，旨在让同学们了解课程的更多情况，不想也不能代替教务处的课程评教。
+          {copy("copy.user.components.about.about-content.25f8c737e369")}
         </p>
       </div>
 
@@ -83,16 +91,18 @@ export function AboutContent() {
 
       {brand.feedbackEmail && (
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">联系方式</h2>
+          <h2 className="text-lg font-semibold">
+            {copy("copy.user.components.about.about-content.323a881ebd47")}
+          </h2>
           <p className="text-sm leading-7 text-muted-foreground">
-            您可以通过邮件{" "}
+            {copy("copy.user.components.about.about-content.1d76ac77ffe8")}{" "}
             <a
               href={`mailto:${brand.feedbackEmail}`}
               className="font-medium text-primary hover:underline"
             >
               {brand.feedbackEmail}
             </a>{" "}
-            联系部署方。
+            {copy("copy.user.components.about.about-content.c4622260f7c7")}
           </p>
         </section>
       )}
@@ -104,19 +114,23 @@ export function AboutAgreementExcerpt() {
   return (
     <Dialog>
       <section className="mx-auto mt-8 max-w-sm text-center text-sm leading-7 text-muted-foreground">
-        登录或注册即表示您了解并接受
+        {copy("copy.user.components.about.about-content.dc616a9a0de1")}
         <DialogTrigger asChild>
           <Button variant="link" className="h-auto px-1 py-0 align-baseline">
-            用户协议与站点说明
+            {copy("copy.user.components.about.about-content.e36e41c3d53b")}
           </Button>
         </DialogTrigger>
         。
       </section>
 
       <DialogContent className="max-h-[calc(100dvh-4rem)] overflow-y-auto sm:max-w-3xl">
-        <DialogTitle className="sr-only">用户协议与站点说明</DialogTitle>
+        <DialogTitle className="sr-only">
+          {copy("copy.user.components.about.about-content.e36e41c3d53b")}
+        </DialogTitle>
         <DialogDescription className="sr-only">
-          阅读 {brand.name} 的用户协议、站点说明和隐私说明。
+          {copy("copy.user.components.about.about-content.52959a13f5c8")}
+          {brand.name}
+          {copy("copy.user.components.about.about-content.29725de3d959")}
         </DialogDescription>
         <AboutContent />
       </DialogContent>

@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { Link, useLocation, useNavigate } from "@tanstack/react-router"
 import { useLayoutEffect, useRef, useState } from "react"
 import { RiMenuLine, RiSearchLine } from "@remixicon/react"
@@ -39,25 +40,29 @@ type NavLinkItem = {
 }
 
 const navItems: NavLinkItem[] = [
-  { to: "/", label: "首页", match: (p: string) => p === "/" },
+  {
+    to: "/",
+    label: copy("copy.user.components.layout.site-header.203c08e0d44a"),
+    match: (p: string) => p === "/",
+  },
   {
     to: "/course",
-    label: "课程",
+    label: copy("copy.user.components.layout.site-header.60db1afb4022"),
     match: (p: string) => p === "/course" || /^\/course\/\d+(?:\/|$)/.test(p),
   },
   {
     to: "/teacher",
-    label: "教师",
+    label: copy("copy.user.components.layout.site-header.a6654120cbec"),
     match: (p: string) => p.startsWith("/teacher"),
   },
   {
     to: "/review",
-    label: "点评",
+    label: copy("copy.user.components.layout.site-header.d2469bc43d2c"),
     match: (p: string) => p.startsWith("/review"),
   },
   {
     to: "/course/hot",
-    label: "热门",
+    label: copy("copy.user.components.layout.site-header.cdc394e2e036"),
     match: (p: string) => p === "/course/hot",
   },
 ]
@@ -65,21 +70,30 @@ const navItems: NavLinkItem[] = [
 const adminNavItems: NavLinkItem[] = [
   {
     to: "/admin/user",
-    label: "管理",
+    label: copy("copy.user.components.layout.site-header.bb6d995724f4"),
     match: (p: string) => p === "/admin/user" || p.startsWith("/admin/user/"),
   },
   {
     to: "/admin/site-stat",
-    label: "统计",
+    label: copy("copy.user.components.layout.site-header.89abe8c6ac13"),
     match: (p: string) =>
       p === "/admin/site-stat" || p.startsWith("/admin/site-stat/"),
   },
 ]
 
 const searchTargets = [
-  { label: "课程", path: "/course" },
-  { label: "教师", path: "/teacher" },
-  { label: "点评", path: "/review" },
+  {
+    label: copy("copy.user.components.layout.site-header.60db1afb4022"),
+    path: "/course",
+  },
+  {
+    label: copy("copy.user.components.layout.site-header.a6654120cbec"),
+    path: "/teacher",
+  },
+  {
+    label: copy("copy.user.components.layout.site-header.d2469bc43d2c"),
+    path: "/review",
+  },
 ] as const
 
 function HeaderSearch() {
@@ -107,11 +121,15 @@ function HeaderSearch() {
           size="icon-sm"
           className="text-foreground"
           aria-expanded={open}
-          aria-label="搜索"
+          aria-label={copy(
+            "copy.user.components.layout.site-header.44ce7ae909bb"
+          )}
           data-shortcut-target="site-search"
         >
           <RiSearchLine />
-          <span className="sr-only">搜索</span>
+          <span className="sr-only">
+            {copy("copy.user.components.layout.site-header.44ce7ae909bb")}
+          </span>
         </Button>
       </PopoverTrigger>
 
@@ -123,8 +141,12 @@ function HeaderSearch() {
         <Command shouldFilter={false} loop>
           <CommandInput
             autoFocus
-            aria-label="搜索关键词"
-            placeholder="搜索..."
+            aria-label={copy(
+              "copy.user.components.layout.site-header.c00a21fdf784"
+            )}
+            placeholder={copy(
+              "copy.user.components.layout.site-header.c304ad38736d"
+            )}
             value={query}
             onValueChange={setQuery}
           />
@@ -137,7 +159,8 @@ function HeaderSearch() {
                   value={target.path}
                   onSelect={() => go(target.path)}
                 >
-                  搜索 "{keyword}" {target.label}
+                  {copy("copy.user.components.layout.site-header.859c3f6d9dff")}
+                  {keyword}" {target.label}
                 </CommandItem>
               ))}
             </CommandList>
@@ -234,12 +257,16 @@ export function SiteHeader() {
                 className="text-foreground md:hidden"
               >
                 <RiMenuLine />
-                <span className="sr-only">菜单</span>
+                <span className="sr-only">
+                  {copy("copy.user.components.layout.site-header.4ce4cafdd056")}
+                </span>
               </Button>
             </SheetTrigger>
             <SheetContent side="right">
               <SheetHeader>
-                <SheetTitle>导航</SheetTitle>
+                <SheetTitle>
+                  {copy("copy.user.components.layout.site-header.e72622fe470d")}
+                </SheetTitle>
               </SheetHeader>
               <nav className="flex flex-col gap-1 px-4">
                 {visibleNavItems.map((item) => {

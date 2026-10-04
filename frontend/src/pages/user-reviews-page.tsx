@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
@@ -29,28 +30,38 @@ export function UserReviewsPage() {
 
   return (
     <>
-      <PageTitle>我的点评</PageTitle>
+      <PageTitle>
+        {copy("copy.user.pages.user-reviews-page.477d1ac374fc")}
+      </PageTitle>
       <PageShell>
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-bold">我的点评</h1>
+            <h1 className="text-2xl font-bold">
+              {copy("copy.user.pages.user-reviews-page.477d1ac374fc")}
+            </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              管理你发布的所有课程点评
+              {copy("copy.user.pages.user-reviews-page.9608ec435fb4")}
             </p>
           </div>
 
           {!authLoading && !user && (
             <div className="py-12 text-center">
-              <p className="text-muted-foreground">登录后可以查看我的点评</p>
+              <p className="text-muted-foreground">
+                {copy("copy.user.pages.user-reviews-page.70507e72f6b8")}
+              </p>
               <Button asChild variant="link" className="mt-2">
-                <Link to="/login">登录</Link>
+                <Link to="/login">
+                  {copy("copy.user.pages.user-reviews-page.1e2df9c3075a")}
+                </Link>
               </Button>
             </div>
           )}
 
           {user && data && (
             <p className="text-sm text-muted-foreground">
-              共 {data.total} 条点评
+              {copy("copy.user.pages.user-reviews-page.2428420e407f")}
+              {data.total}
+              {copy("copy.user.pages.user-reviews-page.1c0a8a53fbb5")}
             </p>
           )}
 

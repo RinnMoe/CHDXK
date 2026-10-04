@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useState, type SyntheticEvent } from "react"
 import { RiFileCopyLine } from "@remixicon/react"
 import type { ApiKeyDTO, CreateApiKeyCommand } from "@/api/api-key"
@@ -27,7 +28,9 @@ interface ApiKeyCreateDialogProps {
 }
 
 function defaultGetErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "创建失败"
+  return error instanceof Error
+    ? error.message
+    : copy("copy.user.components.api-key.api-key-create-dialog.7e6a71efbf63")
 }
 
 export function ApiKeyCreateDialog({
@@ -50,9 +53,13 @@ export function ApiKeyCreateDialog({
     setCopyMessage("")
     try {
       await navigator.clipboard.writeText(value)
-      setCopyMessage("已复制")
+      setCopyMessage(
+        copy("copy.user.components.api-key.api-key-create-dialog.8f6f8d979c98")
+      )
     } catch {
-      setCopyMessage("复制失败")
+      setCopyMessage(
+        copy("copy.user.components.api-key.api-key-create-dialog.753d8bb0da99")
+      )
     }
   }
 
@@ -70,7 +77,9 @@ export function ApiKeyCreateDialog({
     event.preventDefault()
     const trimmed = name.trim()
     if (!trimmed) {
-      setError("请输入名称")
+      setError(
+        copy("copy.user.components.api-key.api-key-create-dialog.effa003332b6")
+      )
       return
     }
 
@@ -105,7 +114,9 @@ export function ApiKeyCreateDialog({
                 onClick={() => copyKey(createdKey.key)}
               >
                 <RiFileCopyLine data-icon="inline-start" />
-                复制
+                {copy(
+                  "copy.user.components.api-key.api-key-create-dialog.63d90d977348"
+                )}
               </Button>
             </div>
             {copyMessage ? (
@@ -113,14 +124,22 @@ export function ApiKeyCreateDialog({
             ) : null}
             <DialogFooter>
               <DialogClose asChild>
-                <Button>完成</Button>
+                <Button>
+                  {copy(
+                    "copy.user.components.api-key.api-key-create-dialog.c0b3fbff51cc"
+                  )}
+                </Button>
               </DialogClose>
             </DialogFooter>
           </div>
         ) : (
           <form className="space-y-4" onSubmit={handleCreate}>
             <div className="space-y-2">
-              <Label htmlFor={nameInputID}>名称</Label>
+              <Label htmlFor={nameInputID}>
+                {copy(
+                  "copy.user.components.api-key.api-key-create-dialog.d44e9b3d3b31"
+                )}
+              </Label>
               <Input
                 id={nameInputID}
                 value={name}
@@ -133,11 +152,19 @@ export function ApiKeyCreateDialog({
             <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="outline">
-                  取消
+                  {copy(
+                    "copy.user.components.api-key.api-key-create-dialog.2cd0f3be8738"
+                  )}
                 </Button>
               </DialogClose>
               <Button type="submit" disabled={isCreating}>
-                {isCreating ? "创建中" : "创建"}
+                {isCreating
+                  ? copy(
+                      "copy.user.components.api-key.api-key-create-dialog.67531c9da3b4"
+                    )
+                  : copy(
+                      "copy.user.components.api-key.api-key-create-dialog.cde2cd071d25"
+                    )}
               </Button>
             </DialogFooter>
           </form>

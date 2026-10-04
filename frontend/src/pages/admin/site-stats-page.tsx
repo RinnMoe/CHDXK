@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useState } from "react"
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import dayjs from "dayjs"
@@ -137,10 +138,12 @@ export function SiteStatsPage() {
   if (!user.is_admin()) {
     return (
       <>
-        <PageTitle>站点统计</PageTitle>
+        <PageTitle>
+          {copy("copy.admin.pages.admin.site-stats-page.c9cd3687fc73")}
+        </PageTitle>
         <PageShell>
           <p className="py-12 text-center text-muted-foreground">
-            需要管理员权限
+            {copy("copy.admin.pages.admin.site-stats-page.9228f9aa4c65")}
           </p>
         </PageShell>
       </>
@@ -149,29 +152,44 @@ export function SiteStatsPage() {
 
   return (
     <>
-      <PageTitle>站点统计</PageTitle>
+      <PageTitle>
+        {copy("copy.admin.pages.admin.site-stats-page.c9cd3687fc73")}
+      </PageTitle>
       <PageShell>
         <div className="space-y-6">
-          <h1 className="text-2xl font-semibold">站点统计</h1>
+          <h1 className="text-2xl font-semibold">
+            {copy("copy.admin.pages.admin.site-stats-page.c9cd3687fc73")}
+          </h1>
 
           {yLoading ? (
             <Skeleton className="h-40 w-full" />
           ) : yesterday ? (
-            <StatsCard stat={yesterday} title="昨日数据" />
+            <StatsCard
+              stat={yesterday}
+              title={copy(
+                "copy.admin.pages.admin.site-stats-page.883ababee8db"
+              )}
+            />
           ) : (
-            <p className="text-sm text-muted-foreground">暂无昨日数据</p>
+            <p className="text-sm text-muted-foreground">
+              {copy("copy.admin.pages.admin.site-stats-page.addbad62c46d")}
+            </p>
           )}
 
           <div className="flex flex-wrap items-end gap-2">
             <DatePicker
               id="start-date"
-              label="开始日期"
+              label={copy(
+                "copy.admin.pages.admin.site-stats-page.760506491eef"
+              )}
               value={startDate}
               onChange={(value) => updateDateRange({ start_date: value })}
             />
             <DatePicker
               id="end-date"
-              label="结束日期"
+              label={copy(
+                "copy.admin.pages.admin.site-stats-page.895cd52fbbb6"
+              )}
               value={endDate}
               onChange={(value) => updateDateRange({ end_date: value })}
             />
@@ -181,18 +199,18 @@ export function SiteStatsPage() {
                 size="sm"
                 onClick={() => updateDateRange(getQuickDateRange(30))}
               >
-                最近30天
+                {copy("copy.admin.pages.admin.site-stats-page.178393de565a")}
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => updateDateRange(getQuickDateRange(365))}
               >
-                最近一年
+                {copy("copy.admin.pages.admin.site-stats-page.80c3d880f104")}
               </Button>
               {(search.start_date || search.end_date) && (
                 <Button variant="ghost" size="sm" onClick={clearDateRange}>
-                  重置
+                  {copy("copy.admin.pages.admin.site-stats-page.cb5d682bac3d")}
                 </Button>
               )}
             </div>
@@ -200,8 +218,12 @@ export function SiteStatsPage() {
 
           <Tabs defaultValue="chart">
             <TabsList>
-              <TabsTrigger value="chart">图表</TabsTrigger>
-              <TabsTrigger value="detail">明细</TabsTrigger>
+              <TabsTrigger value="chart">
+                {copy("copy.admin.pages.admin.site-stats-page.8cb443ab8379")}
+              </TabsTrigger>
+              <TabsTrigger value="detail">
+                {copy("copy.admin.pages.admin.site-stats-page.206ea896472e")}
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="chart">
               {dLoading ? (
@@ -209,7 +231,9 @@ export function SiteStatsPage() {
               ) : daily && daily.length > 0 ? (
                 <DailyStatsChart stats={daily} />
               ) : (
-                <p className="text-sm text-muted-foreground">暂无统计数据</p>
+                <p className="text-sm text-muted-foreground">
+                  {copy("copy.admin.pages.admin.site-stats-page.1b8e57ace988")}
+                </p>
               )}
             </TabsContent>
             <TabsContent value="detail" className="space-y-4">

@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import type { SiteDailyStatDTO } from "@/api/site-stats"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatDateInputValue } from "@/lib/date"
@@ -32,34 +33,74 @@ const metricConfig: ReadonlyArray<{
   name: string
   color: string
 }> = [
-  { key: "active_user_count", name: "活跃用户", color: "var(--color-chart-3)" },
-  { key: "new_user_count", name: "新增用户", color: "var(--color-chart-4)" },
-  { key: "new_review_count", name: "新增点评", color: "var(--color-chart-5)" },
+  {
+    key: "active_user_count",
+    name: copy(
+      "copy.user.components.site-stats.daily-stats-chart.931f9c9d4123"
+    ),
+    color: "var(--color-chart-3)",
+  },
+  {
+    key: "new_user_count",
+    name: copy(
+      "copy.user.components.site-stats.daily-stats-chart.ebabc83b6830"
+    ),
+    color: "var(--color-chart-4)",
+  },
+  {
+    key: "new_review_count",
+    name: copy(
+      "copy.user.components.site-stats.daily-stats-chart.0b50583f022e"
+    ),
+    color: "var(--color-chart-5)",
+  },
   {
     key: "new_point_amount",
-    name: "新增积分",
+    name: copy(
+      "copy.user.components.site-stats.daily-stats-chart.a7d035e5fecb"
+    ),
     color: "var(--color-chart-2)",
   },
   {
     key: "review_author_count",
-    name: "点评作者",
+    name: copy(
+      "copy.user.components.site-stats.daily-stats-chart.c1320b7dd4f9"
+    ),
     color: "var(--color-primary)",
   },
-  { key: "new_like_count", name: "新增点赞", color: "var(--color-chart-1)" },
+  {
+    key: "new_like_count",
+    name: copy(
+      "copy.user.components.site-stats.daily-stats-chart.e1a2345cdc47"
+    ),
+    color: "var(--color-chart-1)",
+  },
   {
     key: "new_dislike_count",
-    name: "新增点踩",
+    name: copy(
+      "copy.user.components.site-stats.daily-stats-chart.77d13c083dba"
+    ),
     color: "var(--color-destructive)",
   },
-  { key: "total_user_count", name: "用户总数", color: "var(--color-chart-1)" },
+  {
+    key: "total_user_count",
+    name: copy(
+      "copy.user.components.site-stats.daily-stats-chart.545a676083c8"
+    ),
+    color: "var(--color-chart-1)",
+  },
   {
     key: "total_review_count",
-    name: "点评总数",
+    name: copy(
+      "copy.user.components.site-stats.daily-stats-chart.c5ddc469e1d4"
+    ),
     color: "var(--color-chart-2)",
   },
   {
     key: "reviewed_course_total",
-    name: "被点评课程",
+    name: copy(
+      "copy.user.components.site-stats.daily-stats-chart.51f48f6d74a7"
+    ),
     color: "var(--color-chart-5)",
   },
 ]

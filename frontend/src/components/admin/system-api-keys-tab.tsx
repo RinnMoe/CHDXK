@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useState } from "react"
 import { RiAddLine } from "@remixicon/react"
 import { ApiKeyCreateDialog } from "@/components/api-key/api-key-create-dialog"
@@ -20,10 +21,12 @@ export function SystemApiKeysTab() {
   return (
     <section className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <h2 className="text-lg font-medium">系统 API Key</h2>
+        <h2 className="text-lg font-medium">
+          {copy("copy.admin.components.admin.system-api-keys-tab.705fb8d9afda")}
+        </h2>
         <Button onClick={() => setIsCreateOpen(true)}>
           <RiAddLine data-icon="inline-start" />
-          新建系统 Key
+          {copy("copy.admin.components.admin.system-api-keys-tab.51d906a9ecd8")}
         </Button>
       </div>
 
@@ -32,10 +35,16 @@ export function SystemApiKeysTab() {
         onOpenChange={setIsCreateOpen}
         onCreate={(cmd) => createMutation.mutateAsync(cmd)}
         isCreating={createMutation.isPending}
-        title="新建系统 API Key"
-        description="创建成功后明文仅显示一次。"
+        title={copy(
+          "copy.admin.components.admin.system-api-keys-tab.921f96d4e427"
+        )}
+        description={copy(
+          "copy.admin.components.admin.system-api-keys-tab.98283370da3e"
+        )}
         nameInputID="system-api-key-name"
-        namePlaceholder="例如：外部积分查询服务"
+        namePlaceholder={copy(
+          "copy.admin.components.admin.system-api-keys-tab.5bae98259f10"
+        )}
         getErrorMessage={getErrorMessage}
       />
 
@@ -43,11 +52,21 @@ export function SystemApiKeysTab() {
         apiKeys={systemKeysQuery.data ?? []}
         isLoading={systemKeysQuery.isLoading}
         isDeleting={deleteMutation.isPending}
-        emptyText="暂无系统 API Key"
-        deleteAriaLabel="注销系统 API Key"
-        deleteDialogTitle="注销系统 API Key"
-        deleteDialogDescription="注销后使用该 key 的请求会立即失效。"
-        deleteActionLabel="注销"
+        emptyText={copy(
+          "copy.admin.components.admin.system-api-keys-tab.c6a9fed1e7d8"
+        )}
+        deleteAriaLabel={copy(
+          "copy.admin.components.admin.system-api-keys-tab.7951c979a42d"
+        )}
+        deleteDialogTitle={copy(
+          "copy.admin.components.admin.system-api-keys-tab.7951c979a42d"
+        )}
+        deleteDialogDescription={copy(
+          "copy.admin.components.admin.system-api-keys-tab.0303d805e868"
+        )}
+        deleteActionLabel={copy(
+          "copy.admin.components.admin.system-api-keys-tab.a48fa6108b57"
+        )}
         onDelete={(id) => deleteMutation.mutateAsync(id)}
         getDeleteErrorMessage={getErrorMessage}
       />

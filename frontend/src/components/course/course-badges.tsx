@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import type { ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -75,7 +76,10 @@ export function CourseBadges({
 
   return (
     <div className={cn("flex flex-wrap items-center gap-1.5", className)}>
-      <CourseBadge kind="credit">{credit} 学分</CourseBadge>
+      <CourseBadge kind="credit">
+        {credit}
+        {copy("copy.user.components.course.course-badges.b023876f7825")}
+      </CourseBadge>
       {language && language.trim() && (
         <CourseBadge kind="language">{language}</CourseBadge>
       )}

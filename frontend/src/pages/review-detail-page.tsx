@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { getRouteApi, useNavigate, useRouter } from "@tanstack/react-router"
 import { RiArrowLeftLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
@@ -28,7 +29,9 @@ export function ReviewDetailPage() {
   if (isLoading) {
     return (
       <>
-        <PageTitle>点评</PageTitle>
+        <PageTitle>
+          {copy("copy.user.pages.review-detail-page.d2469bc43d2c")}
+        </PageTitle>
         <PageShell>
           <Button
             type="button"
@@ -38,7 +41,7 @@ export function ReviewDetailPage() {
             onClick={handleBack}
           >
             <RiArrowLeftLine data-icon="inline-start" />
-            返回
+            {copy("copy.user.pages.review-detail-page.572cf45ba436")}
           </Button>
           <div className="space-y-4">
             <Skeleton className="h-8 w-1/2" />
@@ -52,17 +55,21 @@ export function ReviewDetailPage() {
   if (!review) {
     return (
       <>
-        <PageTitle>点评</PageTitle>
+        <PageTitle>
+          {copy("copy.user.pages.review-detail-page.d2469bc43d2c")}
+        </PageTitle>
         <PageShell>
           <div className="py-16 text-center">
-            <p className="text-muted-foreground">点评不存在</p>
+            <p className="text-muted-foreground">
+              {copy("copy.user.pages.review-detail-page.3dd156610922")}
+            </p>
             <Button
               type="button"
               variant="link"
               className="mt-4"
               onClick={handleBack}
             >
-              返回
+              {copy("copy.user.pages.review-detail-page.572cf45ba436")}
             </Button>
           </div>
         </PageShell>
@@ -72,7 +79,9 @@ export function ReviewDetailPage() {
 
   return (
     <>
-      <PageTitle>点评</PageTitle>
+      <PageTitle>
+        {copy("copy.user.pages.review-detail-page.d2469bc43d2c")}
+      </PageTitle>
       <PageShell>
         <Button
           type="button"
@@ -82,7 +91,7 @@ export function ReviewDetailPage() {
           onClick={handleBack}
         >
           <RiArrowLeftLine data-icon="inline-start" />
-          返回
+          {copy("copy.user.pages.review-detail-page.572cf45ba436")}
         </Button>
 
         <div className="space-y-4">

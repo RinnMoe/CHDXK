@@ -1,5 +1,7 @@
 "use client"
 
+import { copy } from "@/lib/copy"
+
 import * as React from "react"
 import { Dialog as SheetPrimitive } from "radix-ui"
 
@@ -76,7 +78,9 @@ function SheetContent({
               size="icon-sm"
             >
               <RiCloseLine />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">
+                {copy("copy.user.components.ui.sheet.7d9eb7acb13e")}
+              </span>
             </Button>
           </SheetPrimitive.Close>
         )}

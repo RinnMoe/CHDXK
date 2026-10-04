@@ -2,8 +2,10 @@ package application
 
 import (
 	"context"
+	"strings"
 
 	"jcourse/internal/domain/setting"
+	"jcourse/pkg/sitecopy"
 )
 
 type SystemSettingsQueryService struct {
@@ -31,9 +33,34 @@ func (s *SystemSettingsQueryService) ListAdmin(ctx context.Context) ([]SystemSet
 }
 
 func newSystemSettingDTOs(settings []setting.EffectiveSystemSetting) []SystemSettingDTO {
+	values := make(map[string]string)
+	for _, item := range settings {
+		if strings.HasPrefix(item.Definition.Key, "copy.") {
+			values[item.Definition.Key] = item.Value
+		}
+	}
+	ctx := sitecopy.WithValues(context.Background(), values)
 	items := make([]SystemSettingDTO, len(settings))
 	for i := range settings {
 		items[i] = newSystemSettingDTO(settings[i])
+		if !strings.HasPrefix(items[i].Key, "copy.") {
+			items[i].Label = sitecopy.Text(ctx, items[i].Label)
+			items[i].Description = sitecopy.Text(ctx, items[i].Description)
+		}
 	}
 	return items
+}
+
+func (s *SystemSettingsQueryService) PublicCopy(ctx context.Context) (map[string]string, error) {
+	items, err := s.settings.List(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	values := make(map[string]string)
+	for _, item := range items {
+		if strings.HasPrefix(item.Definition.Key, "copy.") {
+			values[item.Definition.Key] = item.Value
+		}
+	}
+	return values, nil
 }

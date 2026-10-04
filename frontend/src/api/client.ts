@@ -1,8 +1,19 @@
+import { copy, translateMessage } from "@/lib/copy"
 import type { ApiError } from "./types"
 import { BASE_URL } from "./constants"
 
 const CSRF_HEADER = "X-CSRF-Token"
 const CSRF_ERRORS = new Set(["csrf token missing", "csrf token mismatch"])
+
+const protocolMessages: Record<string, string> = {
+  unauthorized: copy("copy.user.api.client.ab1e950a6480"),
+  forbidden: copy("copy.user.api.client.10f0e81879c6"),
+  "internal error": copy("copy.user.api.client.5b1606fabf1e"),
+  "csrf token missing": copy("copy.user.api.client.f8194185f36b"),
+  "csrf token mismatch": copy("copy.user.api.client.f8194185f36b"),
+  "rate limit exceeded": copy("copy.user.api.client.e0f555394c57"),
+  "invalid user id": copy("copy.user.api.client.c6dae0b087bc"),
+}
 
 let csrfToken: string | null = null
 let csrfTokenRequest: Promise<string> | null = null
@@ -70,7 +81,11 @@ async function parseResponse<T>(res: Response): Promise<T> {
       // ignore parse error
     }
     throw new HttpError(
-      errorBody?.error ?? `Request failed: ${res.status}`,
+      translateMessage(
+        protocolMessages[errorBody?.error ?? ""] ??
+          errorBody?.error ??
+          copy("copy.user.api.client.7f83dc051d39")
+      ),
       res.status,
       errorBody
     )
@@ -80,7 +95,22 @@ async function parseResponse<T>(res: Response): Promise<T> {
     return undefined as T
   }
 
-  return res.json() as Promise<T>
+  return translatePlaceholders(await res.json()) as T
+}
+
+function translatePlaceholders(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(translatePlaceholders)
+  if (value && typeof value === "object") {
+    const result = value as Record<string, unknown>
+    const teacher = result.main_teacher as
+      | { id?: number; name?: string }
+      | undefined
+    if (teacher?.id === 0)
+      teacher.name = translateMessage(copy("copy.user.api.client.521ea9788171"))
+    for (const key of Object.keys(result))
+      result[key] = translatePlaceholders(result[key])
+  }
+  return value
 }
 
 async function isCsrfFailure(res: Response) {
@@ -111,7 +141,10 @@ async function fetchCsrfToken() {
     })
       .then((res) => {
         const token = res.headers.get(CSRF_HEADER)
-        if (!res.ok || !token) throw new Error("failed to fetch csrf token")
+        if (!res.ok || !token)
+          throw new Error(
+            translateMessage(copy("copy.user.api.client.f8194185f36b"))
+          )
         csrfToken = token
         return token
       })

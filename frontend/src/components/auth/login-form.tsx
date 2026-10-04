@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useEffect } from "react"
 import { getRouteApi } from "@tanstack/react-router"
 import { getOIDCStartURL } from "@/api/auth"
@@ -18,21 +19,23 @@ export function LoginForm() {
 
   const errorMessage =
     search.error === "oidc_denied"
-      ? "你取消了主站登录。"
+      ? copy("copy.user.components.auth.login-form.01c59316ce41")
       : search.error === "oidc_unavailable"
-        ? "主站暂时不可用，请稍后重试。"
+        ? copy("copy.user.components.auth.login-form.35e0a6baf5e8")
         : search.error === "oidc_failed"
-          ? "主站登录未能完成，请重试。"
+          ? copy("copy.user.components.auth.login-form.ed2dc40e25ea")
           : null
 
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <CardTitle>使用主站登录</CardTitle>
+        <CardTitle>
+          {copy("copy.user.components.auth.login-form.7a5c4255247b")}
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm leading-6 text-muted-foreground">
-          本站复用主站的账号、角色、登录状态和积分。登录后会自动返回本站。
+          {copy("copy.user.components.auth.login-form.66c5fcb2ee11")}
         </p>
         {errorMessage ? (
           <p className="text-sm text-destructive" role="alert">
@@ -40,7 +43,9 @@ export function LoginForm() {
           </p>
         ) : null}
         <Button asChild className="w-full">
-          <a href={oidcURL}>前往主站登录</a>
+          <a href={oidcURL}>
+            {copy("copy.user.components.auth.login-form.f44a317e658b")}
+          </a>
         </Button>
       </CardContent>
     </Card>

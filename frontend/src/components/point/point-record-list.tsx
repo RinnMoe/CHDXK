@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import type { PointRecordDTO } from "@/api/point"
 import {
   Table,
@@ -13,7 +14,7 @@ export function PointRecordList({ records }: { records: PointRecordDTO[] }) {
   if (records.length === 0) {
     return (
       <p className="py-6 text-center text-sm text-muted-foreground">
-        暂无积分记录
+        {copy("copy.user.components.point.point-record-list.23069a877b5d")}
       </p>
     )
   }
@@ -22,9 +23,21 @@ export function PointRecordList({ records }: { records: PointRecordDTO[] }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>描述</TableHead>
-            <TableHead className="w-24 text-right">积分</TableHead>
-            <TableHead className="text-right">时间</TableHead>
+            <TableHead>
+              {copy(
+                "copy.user.components.point.point-record-list.dc2ba467fc7a"
+              )}
+            </TableHead>
+            <TableHead className="w-24 text-right">
+              {copy(
+                "copy.user.components.point.point-record-list.10939f548645"
+              )}
+            </TableHead>
+            <TableHead className="text-right">
+              {copy(
+                "copy.user.components.point.point-record-list.8b6ff498515b"
+              )}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

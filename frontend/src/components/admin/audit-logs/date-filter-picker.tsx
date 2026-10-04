@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useState } from "react"
 import dayjs from "dayjs"
 import { zhCN } from "date-fns/locale"
@@ -48,7 +49,10 @@ export function DateFilterPicker({
             className="h-9 w-full justify-between font-normal"
           >
             <span className={value ? undefined : "text-muted-foreground"}>
-              {value || "选择日期"}
+              {value ||
+                copy(
+                  "copy.admin.components.admin.audit-logs.date-filter-picker.680c78ec60f4"
+                )}
             </span>
             <RiCalendarLine className="size-4 text-muted-foreground" />
           </Button>
@@ -78,7 +82,9 @@ export function DateFilterPicker({
                   setOpen(false)
                 }}
               >
-                清除日期
+                {copy(
+                  "copy.admin.components.admin.audit-logs.date-filter-picker.d68c450b1104"
+                )}
               </Button>
             </div>
           ) : null}

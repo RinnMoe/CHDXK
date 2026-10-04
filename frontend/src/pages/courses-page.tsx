@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { CourseSearchBar } from "@/components/course/course-search-bar"
 import { CourseList } from "@/components/course/course-list"
@@ -44,13 +45,15 @@ export function CoursesPage() {
 
   return (
     <>
-      <PageTitle>课程</PageTitle>
+      <PageTitle>{copy("copy.user.pages.courses-page.60db1afb4022")}</PageTitle>
       <PageShell>
         <div className="space-y-6 lg:flex lg:flex-col lg:gap-6 lg:space-y-0">
           <div>
-            <h1 className="text-2xl font-bold">课程</h1>
+            <h1 className="text-2xl font-bold">
+              {copy("copy.user.pages.courses-page.60db1afb4022")}
+            </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              浏览和搜索所有课程
+              {copy("copy.user.pages.courses-page.db1b6264346c")}
             </p>
           </div>
 
@@ -71,7 +74,9 @@ export function CoursesPage() {
             >
               {data && (
                 <div className="text-sm text-muted-foreground">
-                  共 {data.total} 门课程
+                  {copy("copy.user.pages.courses-page.2428420e407f")}
+                  {data.total}
+                  {copy("copy.user.pages.courses-page.88165354d9d3")}
                 </div>
               )}
 

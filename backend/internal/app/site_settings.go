@@ -13,7 +13,7 @@ import (
 )
 
 func newSystemSettingsService(repo setting.SystemRepository, courseRepo course.CourseRepository) *setting.SystemSettingsService {
-	registry := setting.NewRegistry([]setting.Definition{
+	defs := []setting.Definition{
 		{
 			Key:          setting.SystemSettingKeyCurrentSemester,
 			Group:        "course",
@@ -138,7 +138,15 @@ func newSystemSettingsService(repo setting.SystemRepository, courseRepo course.C
 			Type:         setting.ValueTypeStringList,
 			DefaultValue: "",
 		},
-	})
+	}
+	// Account restrictions belong to res-hub; the local frequency rule only rejects submissions.
+	visible := make([]setting.Definition, 0, len(defs))
+	for _, def := range defs {
+		if def.Key != setting.SystemSettingKeyReviewFrequencySuspendDuration {
+			visible = append(visible, def)
+		}
+	}
+	registry := setting.NewRegistry(append(visible, copyDefinitions()...))
 	return setting.NewSystemSettingsService(repo, registry)
 }
 

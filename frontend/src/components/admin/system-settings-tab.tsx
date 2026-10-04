@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useMemo, useState } from "react"
 import type { SystemSettingDTO } from "@/api/system-settings"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -8,15 +9,18 @@ import {
 } from "@/hooks/use-system-settings"
 import { getErrorMessage } from "./admin-utils"
 import { SystemSettingRow } from "./system-settings/system-setting-row"
+import { CopySettingsPanel } from "./copy-settings-panel"
 
 type DraftMap = Record<string, string>
 type ErrorMap = Record<string, string>
 
 const GROUP_LABELS: Record<string, string> = {
-  admin: "管理",
-  course: "课程",
-  review: "点评",
-  review_reward: "点评积分",
+  admin: copy("copy.admin.components.admin.system-settings-tab.bb6d995724f4"),
+  course: copy("copy.admin.components.admin.system-settings-tab.60db1afb4022"),
+  review: copy("copy.admin.components.admin.system-settings-tab.d2469bc43d2c"),
+  review_reward: copy(
+    "copy.admin.components.admin.system-settings-tab.73b01b2c3e72"
+  ),
 }
 
 export function SystemSettingsTab() {
@@ -32,7 +36,9 @@ export function SystemSettingsTab() {
   )
 
   const groups = useMemo(() => {
-    const items = settingsQuery.data ?? []
+    const items = (settingsQuery.data ?? []).filter(
+      (setting) => !setting.key.startsWith("copy.")
+    )
     return items.reduce<Record<string, SystemSettingDTO[]>>((acc, item) => {
       const group = item.group || "other"
       acc[group] = [...(acc[group] ?? []), item]
@@ -85,7 +91,9 @@ export function SystemSettingsTab() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-lg font-medium">系统设置</h2>
+      <h2 className="text-lg font-medium">
+        {copy("copy.admin.components.admin.system-settings-tab.68ea5dd4d7af")}
+      </h2>
 
       <TooltipProvider>
         <div className="space-y-6">
@@ -124,6 +132,7 @@ export function SystemSettingsTab() {
           ))}
         </div>
       </TooltipProvider>
+      <CopySettingsPanel />
     </section>
   )
 }

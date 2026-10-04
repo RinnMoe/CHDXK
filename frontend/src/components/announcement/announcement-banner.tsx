@@ -1,3 +1,5 @@
+import { copy } from "@/lib/copy"
+
 import { useState } from "react"
 import {
   RiCloseLine,
@@ -88,7 +90,9 @@ export function AnnouncementBanner() {
               size="icon"
               className="size-7 shrink-0"
               onClick={() => dismiss(a.id)}
-              aria-label="dismiss"
+              aria-label={copy(
+                "copy.user.components.announcement.announcement-banner.5880072b27d4"
+              )}
             >
               <RiCloseLine className="size-4" />
             </Button>

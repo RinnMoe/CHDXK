@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router"
 import { RiMessage3Line } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
@@ -60,10 +61,10 @@ export function UserCoursesPage() {
     view === "followed" ? followedCourses : ignoredCourses
   const title =
     view === "enrolled"
-      ? "选课记录"
+      ? copy("copy.user.pages.user-courses-page.c461004afbf9")
       : view === "followed"
-        ? "已关注课程"
-        : "已屏蔽课程"
+        ? copy("copy.user.pages.user-courses-page.7be923dbf8a8")
+        : copy("copy.user.pages.user-courses-page.4c435ec140fe")
 
   function handleViewChange(nextView: string) {
     const nextType: View =
@@ -100,7 +101,10 @@ export function UserCoursesPage() {
   function renderNotificationDeleteAction(
     course: NonNullable<typeof activeCourseQuery.data>["items"][number]
   ) {
-    const recordName = view === "followed" ? "关注记录" : "屏蔽记录"
+    const recordName =
+      view === "followed"
+        ? copy("copy.user.pages.user-courses-page.7eccc1d93c64")
+        : copy("copy.user.pages.user-courses-page.af7d90f61e5d")
 
     return (
       <CourseNotificationDeleteAction
@@ -115,29 +119,39 @@ export function UserCoursesPage() {
 
   return (
     <>
-      <PageTitle>我的课程</PageTitle>
+      <PageTitle>
+        {copy("copy.user.pages.user-courses-page.e80149e50579")}
+      </PageTitle>
       <PageShell>
         <div className="space-y-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h1 className="text-2xl font-bold">我的课程</h1>
+              <h1 className="text-2xl font-bold">
+                {copy("copy.user.pages.user-courses-page.e80149e50579")}
+              </h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                查看选课记录、已关注和已屏蔽的课程
+                {copy("copy.user.pages.user-courses-page.ac571e162283")}
               </p>
             </div>
             <Button asChild size="sm" variant="outline">
               <Link to="/review/followed">
                 <RiMessage3Line data-icon="inline-start" />
-                关注动态
+                {copy("copy.user.pages.user-courses-page.497d4c0de4ae")}
               </Link>
             </Button>
           </div>
 
           <Tabs value={view} onValueChange={handleViewChange}>
             <TabsList>
-              <TabsTrigger value="enrolled">选课记录</TabsTrigger>
-              <TabsTrigger value="followed">已关注</TabsTrigger>
-              <TabsTrigger value="ignored">已屏蔽</TabsTrigger>
+              <TabsTrigger value="enrolled">
+                {copy("copy.user.pages.user-courses-page.c461004afbf9")}
+              </TabsTrigger>
+              <TabsTrigger value="followed">
+                {copy("copy.user.pages.user-courses-page.9fe1d0c9cca3")}
+              </TabsTrigger>
+              <TabsTrigger value="ignored">
+                {copy("copy.user.pages.user-courses-page.b66705ba0b8e")}
+              </TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -148,10 +162,16 @@ export function UserCoursesPage() {
                 onValueChange={handleSemesterChange}
               >
                 <SelectTrigger size="sm" className="w-44">
-                  <SelectValue placeholder="按学期筛选" />
+                  <SelectValue
+                    placeholder={copy(
+                      "copy.user.pages.user-courses-page.42647ab29d2b"
+                    )}
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={ALL}>全部学期</SelectItem>
+                  <SelectItem value={ALL}>
+                    {copy("copy.user.pages.user-courses-page.a0670d57e5bf")}
+                  </SelectItem>
                   {enrollmentSemesters.map((s) => (
                     <SelectItem key={s} value={s}>
                       {s}
@@ -164,22 +184,32 @@ export function UserCoursesPage() {
 
           {!authLoading && !user && (
             <div className="py-12 text-center">
-              <p className="text-muted-foreground">登录后可以查看我的课程</p>
+              <p className="text-muted-foreground">
+                {copy("copy.user.pages.user-courses-page.739f42e69719")}
+              </p>
               <Button asChild variant="link" className="mt-2">
-                <Link to="/login">登录</Link>
+                <Link to="/login">
+                  {copy("copy.user.pages.user-courses-page.1e2df9c3075a")}
+                </Link>
               </Button>
             </div>
           )}
 
           {user && view === "enrolled" && enrolledCourses.data && (
             <p className="text-sm text-muted-foreground">
-              {title}共 {filteredEnrollments.length} 条
+              {title}
+              {copy("copy.user.pages.user-courses-page.2428420e407f")}
+              {filteredEnrollments.length}
+              {copy("copy.user.pages.user-courses-page.6fb2840d568a")}
             </p>
           )}
 
           {user && view !== "enrolled" && activeCourseQuery.data && (
             <p className="text-sm text-muted-foreground">
-              {title}共 {activeCourseQuery.data.total} 条
+              {title}
+              {copy("copy.user.pages.user-courses-page.2428420e407f")}
+              {activeCourseQuery.data.total}
+              {copy("copy.user.pages.user-courses-page.6fb2840d568a")}
             </p>
           )}
 

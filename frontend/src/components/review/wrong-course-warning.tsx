@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { Link } from "@tanstack/react-router"
 import { RiArrowRightLine, RiErrorWarningLine } from "@remixicon/react"
 
@@ -75,9 +76,19 @@ export function WrongCourseWarning({
         <div className="flex min-w-0 gap-3">
           <RiErrorWarningLine className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-300" />
           <div className="min-w-0 space-y-1">
-            <p className="font-medium">可能选错了课程</p>
+            <p className="font-medium">
+              {copy(
+                "copy.user.components.review.wrong-course-warning.13bd2ee75a52"
+              )}
+            </p>
             <p className="leading-6">
-              当前课程最近开课于 {course.last_semester}。以下课程最近开课时间更新，可能是你想点评的课程。
+              {copy(
+                "copy.user.components.review.wrong-course-warning.fae705e0a006"
+              )}
+              {course.last_semester}
+              {copy(
+                "copy.user.components.review.wrong-course-warning.fc27f265f0ea"
+              )}
             </p>
           </div>
         </div>
@@ -97,7 +108,13 @@ export function WrongCourseWarning({
                   </span>
                 </div>
                 <div className="text-xs text-amber-900/80 dark:text-amber-100/80">
-                  主讲教师：{candidate.main_teacher.name}，最近开课：
+                  {copy(
+                    "copy.user.components.review.wrong-course-warning.9ae8dcbe2d0d"
+                  )}
+                  {candidate.main_teacher.name}
+                  {copy(
+                    "copy.user.components.review.wrong-course-warning.1bc395f9109b"
+                  )}
                   {candidate.last_semester}
                 </div>
               </div>
@@ -111,7 +128,9 @@ export function WrongCourseWarning({
                   to="/course/$courseID/review/new"
                   params={{ courseID: String(candidate.id) }}
                 >
-                  去写点评
+                  {copy(
+                    "copy.user.components.review.wrong-course-warning.a295de460aba"
+                  )}
                   <RiArrowRightLine data-icon="inline-end" />
                 </Link>
               </Button>

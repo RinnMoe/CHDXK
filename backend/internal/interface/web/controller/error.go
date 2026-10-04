@@ -7,14 +7,15 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"jcourse/pkg/apperr"
+	"jcourse/pkg/sitecopy"
 )
 
 func respondError(c *gin.Context, err error) {
 	if appErr, ok := errors.AsType[*apperr.AppError](err); ok {
-		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Msg})
+		c.JSON(appErr.StatusCode, gin.H{"error": sitecopy.Text(c.Request.Context(), appErr.Msg)})
 		return
 	}
-	c.JSON(http.StatusInternalServerError, gin.H{"error": "服务器内部错误"})
+	c.JSON(http.StatusInternalServerError, gin.H{"error": sitecopy.Text(c.Request.Context(), "服务器内部错误")})
 }
 
 func respondBadRequest(c *gin.Context, msg string) {

@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { Link } from "@tanstack/react-router"
 import { useHotTeachers } from "@/hooks/use-teacher"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -15,21 +16,27 @@ export function HotTeacherList({ period }: { period: "week" | "month" }) {
   if (isError)
     return (
       <p className="py-12 text-center text-muted-foreground">
-        暂时无法加载教师榜，请稍后重试
+        {copy("copy.user.components.teacher.hot-teacher-list.9890ce184f1a")}
       </p>
     )
   if (!data?.items.length)
     return (
       <p className="py-12 text-center text-muted-foreground">
-        本期还没有教师上榜，课程有新的点评互动后会更新
+        {copy("copy.user.components.teacher.hot-teacher-list.c6cdb3ae74ad")}
       </p>
     )
   return (
     <div>
       <div className="flex gap-3 border-b py-2 text-sm text-muted-foreground">
-        <span>排名</span>
-        <span className="flex-1">教师</span>
-        <span>热度</span>
+        <span>
+          {copy("copy.user.components.teacher.hot-teacher-list.6570a98f2850")}
+        </span>
+        <span className="flex-1">
+          {copy("copy.user.components.teacher.hot-teacher-list.a6654120cbec")}
+        </span>
+        <span>
+          {copy("copy.user.components.teacher.hot-teacher-list.095f31ef0d81")}
+        </span>
       </div>
       {data.items.map((item, i) => (
         <Link
@@ -46,7 +53,10 @@ export function HotTeacherList({ period }: { period: "week" | "month" }) {
           <div className="min-w-0 flex-1">
             <p className="font-medium">{item.teacher.name}</p>
             <p className="text-sm text-muted-foreground">
-              {item.teacher.department} · {item.course_count} 门课程有互动
+              {item.teacher.department} · {item.course_count}
+              {copy(
+                "copy.user.components.teacher.hot-teacher-list.aa79ce5c8b7e"
+              )}
             </p>
           </div>
           <span className="text-sm font-medium">{item.score}</span>

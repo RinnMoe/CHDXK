@@ -1,6 +1,8 @@
+import { copy } from "@/lib/copy"
+
 export const brand = {
-  name: import.meta.env.VITE_SITE_NAME?.trim() || "频道课程榜",
-  feedbackEmail: import.meta.env.VITE_SUPPORT_EMAIL?.trim() || undefined,
+  name: copy("copy.user.config.brand.743e9916a4b2"),
+  feedbackEmail: copy("copy.brand.feedback_email").trim() || undefined,
 } as const
 
 export function formatPageTitle(pageTitle?: string) {

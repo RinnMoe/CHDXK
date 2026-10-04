@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { AuditLogsTab } from "@/components/admin/audit-logs-tab"
 import { AnnouncementsTab } from "@/components/admin/announcements-tab"
@@ -45,10 +46,12 @@ export function UserAdminPage() {
   if (!user.is_admin()) {
     return (
       <>
-        <PageTitle>管理</PageTitle>
+        <PageTitle>
+          {copy("copy.admin.pages.admin.user-admin-page.bb6d995724f4")}
+        </PageTitle>
         <PageShell>
           <p className="py-12 text-center text-muted-foreground">
-            需要管理员权限
+            {copy("copy.admin.pages.admin.user-admin-page.9228f9aa4c65")}
           </p>
         </PageShell>
       </>
@@ -57,30 +60,45 @@ export function UserAdminPage() {
 
   return (
     <>
-      <PageTitle>管理</PageTitle>
+      <PageTitle>
+        {copy("copy.admin.pages.admin.user-admin-page.bb6d995724f4")}
+      </PageTitle>
       <PageShell>
         <div className="space-y-6">
-          <h1 className="text-2xl font-semibold">管理</h1>
+          <h1 className="text-2xl font-semibold">
+            {copy("copy.admin.pages.admin.user-admin-page.bb6d995724f4")}
+          </h1>
 
           <Card>
             <CardHeader>
-              <CardTitle>用户和角色由主站管理</CardTitle>
+              <CardTitle>
+                {copy("copy.admin.pages.admin.user-admin-page.5cb81812564c")}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm leading-6 text-muted-foreground">
-                res-hub 是账号、角色、会话和账户状态的唯一来源。本站管理员权限会
-                按当前主站会话生效，用户、角色和会话状态请在主站管理。
+                {copy("copy.admin.pages.admin.user-admin-page.aee480d85347")}
               </p>
             </CardContent>
           </Card>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="w-full justify-start overflow-x-auto sm:w-fit">
-              <TabsTrigger value="course-data">课程管理</TabsTrigger>
-              <TabsTrigger value="system-api-key">系统 API Key</TabsTrigger>
-              <TabsTrigger value="system-settings">系统设置</TabsTrigger>
-              <TabsTrigger value="announcement">公告</TabsTrigger>
-              <TabsTrigger value="audit-log">审计日志</TabsTrigger>
+              <TabsTrigger value="course-data">
+                {copy("copy.admin.pages.admin.user-admin-page.b4d79dbaebef")}
+              </TabsTrigger>
+              <TabsTrigger value="system-api-key">
+                {copy("copy.admin.pages.admin.user-admin-page.705fb8d9afda")}
+              </TabsTrigger>
+              <TabsTrigger value="system-settings">
+                {copy("copy.admin.pages.admin.user-admin-page.68ea5dd4d7af")}
+              </TabsTrigger>
+              <TabsTrigger value="announcement">
+                {copy("copy.admin.pages.admin.user-admin-page.069c0ecbf898")}
+              </TabsTrigger>
+              <TabsTrigger value="audit-log">
+                {copy("copy.admin.pages.admin.user-admin-page.a0f79e91f13f")}
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="system-api-key" className="space-y-4">

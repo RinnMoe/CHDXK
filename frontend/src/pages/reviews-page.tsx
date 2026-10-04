@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useCallback } from "react"
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { DebouncedSearchInput } from "@/components/common/debounced-search-input"
@@ -49,18 +50,20 @@ export function ReviewsPage() {
 
   return (
     <>
-      <PageTitle>点评</PageTitle>
+      <PageTitle>{copy("copy.user.pages.reviews-page.d2469bc43d2c")}</PageTitle>
       <PageShell>
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-bold">点评</h1>
+            <h1 className="text-2xl font-bold">
+              {copy("copy.user.pages.reviews-page.d2469bc43d2c")}
+            </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              浏览和搜索所有课程点评
+              {copy("copy.user.pages.reviews-page.35601fcbbd32")}
             </p>
           </div>
 
           <DebouncedSearchInput
-            placeholder="搜索点评内容..."
+            placeholder={copy("copy.user.pages.reviews-page.f3a3827b0cad")}
             value={q}
             debounceMs={REVIEW_SEARCH_DEBOUNCE_MS}
             onDebouncedChange={handleSearchChange}
@@ -68,7 +71,9 @@ export function ReviewsPage() {
 
           {data && (
             <p className="text-sm text-muted-foreground">
-              共 {data.total} 条点评
+              {copy("copy.user.pages.reviews-page.2428420e407f")}
+              {data.total}
+              {copy("copy.user.pages.reviews-page.1c0a8a53fbb5")}
             </p>
           )}
 

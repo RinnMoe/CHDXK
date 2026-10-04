@@ -250,7 +250,7 @@ func (s *ReviewCommandService) enqueueFrequencyViolationTasks(ctx context.Contex
 			logx.Warn(ctx, "enqueue frequency violation suspension", "user_id", userID, "err", err)
 		}
 	}
-	mails, err := violation.NewSpamSuspensionEmails(adminEmails)
+	mails, err := violation.NewSpamSuspensionEmails(ctx, adminEmails, s.globalSuspensionEnabled)
 	if err != nil {
 		logx.Warn(ctx, "render frequency violation email", "user_id", userID, "err", err)
 		return

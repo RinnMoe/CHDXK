@@ -19,16 +19,17 @@ const (
 )
 
 type Definition struct {
-	Key             string
-	Group           string
-	Label           string
-	Description     string
-	Type            ValueType
-	DefaultValue    string
-	Public          bool
-	Secret          bool
-	RequiresRestart bool
-	Validator       ValueValidator
+	Key                string
+	Group              string
+	Label              string
+	Description        string
+	Type               ValueType
+	DefaultValue       string
+	Public             bool
+	Secret             bool
+	RequiresRestart    bool
+	PreserveWhitespace bool
+	Validator          ValueValidator
 }
 
 func (d Definition) Validate(ctx context.Context, value string) error {
@@ -58,6 +59,9 @@ func (d Definition) Validate(ctx context.Context, value string) error {
 }
 
 func (d Definition) Normalize(value string) string {
+	if d.PreserveWhitespace {
+		return value
+	}
 	value = strings.TrimSpace(value)
 	if d.Type != ValueTypeBool {
 		return value

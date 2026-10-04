@@ -1,6 +1,7 @@
 package review
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"testing"
@@ -8,6 +9,7 @@ import (
 
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/teacher"
+	"jcourse/pkg/sitecopy"
 )
 
 func TestFrequencyViolationNewSpamSuspensionEmails(t *testing.T) {
@@ -19,7 +21,7 @@ func TestFrequencyViolationNewSpamSuspensionEmails(t *testing.T) {
 		BannedUntil:     time.Date(2026, 6, 19, 12, 20, 30, 0, time.Local),
 	}
 
-	mails, err := violation.NewSpamSuspensionEmails([]string{"admin@example.edu", "owner@example.edu"})
+	mails, err := violation.NewSpamSuspensionEmails(context.Background(), []string{"admin@example.edu", "owner@example.edu"}, true)
 	if err != nil {
 		t.Fatalf("NewSpamSuspensionEmails: %v", err)
 	}
@@ -54,6 +56,21 @@ func TestFrequencyViolationNewSpamSuspensionEmails(t *testing.T) {
 	}
 }
 
+func TestFrequencyNotificationUsesConfiguredCopyWithoutClaimingLocalBan(t *testing.T) {
+	violation := &FrequencyViolation{Reason: errors.New("frequency exceeded"), Review: &Review{UserID: 10, Content: "test"}, BannedUntil: time.Now().Add(time.Hour)}
+	ctx := sitecopy.WithValues(context.Background(), map[string]string{"copy.email.subject": "自定义提醒", "copy.email.notice": "请核查这条记录 <script>unsafe</script>"})
+	mails, err := violation.NewSpamSuspensionEmails(ctx, []string{"admin@example.edu"}, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if mails[0].Subject != "自定义提醒" || !strings.Contains(mails[0].Body, "请核查这条记录") {
+		t.Fatal("configured copy ignored")
+	}
+	if strings.Contains(mails[0].Body, "封禁到") || strings.Contains(mails[0].Body, "<script>") {
+		t.Fatal("notification claimed local ban or rendered unsafe markup")
+	}
+}
+
 func TestFrequencyViolationEmailEscapesHTML(t *testing.T) {
 	violation := &FrequencyViolation{
 		Reason:          errors.New(`<script>alert("reason")</script>`),
@@ -61,7 +78,7 @@ func TestFrequencyViolationEmailEscapesHTML(t *testing.T) {
 		SuspendDuration: time.Hour,
 	}
 
-	mails, err := violation.NewSpamSuspensionEmails([]string{"admin@example.edu"})
+	mails, err := violation.NewSpamSuspensionEmails(context.Background(), []string{"admin@example.edu"}, true)
 	if err != nil {
 		t.Fatalf("NewSpamSuspensionEmails: %v", err)
 	}
@@ -80,7 +97,7 @@ func TestFrequencyViolationNewSpamSuspensionEmailsWithoutCourse(t *testing.T) {
 		SuspendDuration: time.Hour,
 	}
 
-	if _, err := violation.NewSpamSuspensionEmails([]string{"admin@example.edu"}); err != nil {
+	if _, err := violation.NewSpamSuspensionEmails(context.Background(), []string{"admin@example.edu"}, true); err != nil {
 		t.Fatalf("NewSpamSuspensionEmails without course: %v", err)
 	}
 }

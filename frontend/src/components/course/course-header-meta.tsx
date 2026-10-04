@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { Link } from "@tanstack/react-router"
 
 import { TitleBadge } from "@/components/ui/title-badge"
@@ -35,7 +36,10 @@ export function CourseHeaderMeta({ course, className }: CourseHeaderMetaProps) {
           </Link>
         ) : (
           <span className="text-lg font-semibold text-muted-foreground">
-            {course.main_teacher.name || "教师信息暂缺"}
+            {course.main_teacher.name ||
+              copy(
+                "copy.user.components.course.course-header-meta.521ea9788171"
+              )}
           </span>
         )}
         {course.main_teacher.title && (

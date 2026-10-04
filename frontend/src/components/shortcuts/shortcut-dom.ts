@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import {
   ACCESS_KEYS,
   SHORTCUT_ROOT_SELECTOR,
@@ -65,10 +66,13 @@ function getElementLabel(element: HTMLElement) {
   if (text) return text.slice(0, 32)
 
   if (element instanceof HTMLInputElement) {
-    return element.name || "输入框"
+    return (
+      element.name ||
+      copy("copy.user.components.shortcuts.shortcut-dom.8a5dcce3a970")
+    )
   }
 
-  return "控件"
+  return copy("copy.user.components.shortcuts.shortcut-dom.0e9879fd8345")
 }
 
 export function collectAccessHints() {

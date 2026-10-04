@@ -1,3 +1,5 @@
+import { copy } from "@/lib/copy"
+
 export const ACCESS_KEYS = [
   "1",
   "2",
@@ -69,70 +71,120 @@ export type AccessHint = {
 }
 
 export const pageShortcuts: PageShortcut[] = [
-  { keys: "G H", title: "首页", description: "回到首页", path: "/" },
+  {
+    keys: "G H",
+    title: copy("copy.user.components.shortcuts.shortcut-data.203c08e0d44a"),
+    description: copy(
+      "copy.user.components.shortcuts.shortcut-data.6774a77de4da"
+    ),
+    path: "/",
+  },
   {
     keys: "G C",
-    title: "课程",
-    description: "浏览和搜索课程",
+    title: copy("copy.user.components.shortcuts.shortcut-data.60db1afb4022"),
+    description: copy(
+      "copy.user.components.shortcuts.shortcut-data.b5148d0abc51"
+    ),
     path: "/course",
   },
   {
     keys: "G T",
-    title: "教师",
-    description: "浏览和搜索教师",
+    title: copy("copy.user.components.shortcuts.shortcut-data.a6654120cbec"),
+    description: copy(
+      "copy.user.components.shortcuts.shortcut-data.3941c317f8fe"
+    ),
     path: "/teacher",
   },
-  { keys: "G R", title: "点评", description: "查看公开点评", path: "/review" },
+  {
+    keys: "G R",
+    title: copy("copy.user.components.shortcuts.shortcut-data.d2469bc43d2c"),
+    description: copy(
+      "copy.user.components.shortcuts.shortcut-data.e5c0ab3568f5"
+    ),
+    path: "/review",
+  },
   {
     keys: "G O",
-    title: "热门课程",
-    description: "查看热门课程",
+    title: copy("copy.user.components.shortcuts.shortcut-data.d6e3b43107c5"),
+    description: copy(
+      "copy.user.components.shortcuts.shortcut-data.8b3929779a11"
+    ),
     path: "/course/hot",
   },
   {
     keys: "G F",
-    title: "关注点评",
-    description: "查看关注课程的点评",
+    title: copy("copy.user.components.shortcuts.shortcut-data.24a426113b37"),
+    description: copy(
+      "copy.user.components.shortcuts.shortcut-data.1c5a05112a07"
+    ),
     path: "/review/followed",
     requiresAuth: true,
   },
   {
     keys: "G M",
-    title: "我的点评",
-    description: "查看我发布的点评",
+    title: copy("copy.user.components.shortcuts.shortcut-data.477d1ac374fc"),
+    description: copy(
+      "copy.user.components.shortcuts.shortcut-data.d76ab02152f3"
+    ),
     path: "/review/mine",
     requiresAuth: true,
   },
   {
     keys: "G U",
-    title: "我的课程",
-    description: "查看我关注的课程",
+    title: copy("copy.user.components.shortcuts.shortcut-data.e80149e50579"),
+    description: copy(
+      "copy.user.components.shortcuts.shortcut-data.b423bd0833b4"
+    ),
     path: "/course/mine",
     requiresAuth: true,
   },
   {
     keys: "G P",
-    title: "积分",
-    description: "查看积分流水",
+    title: copy("copy.user.components.shortcuts.shortcut-data.10939f548645"),
+    description: copy(
+      "copy.user.components.shortcuts.shortcut-data.c590d930ddd9"
+    ),
     path: "/point",
     requiresAuth: true,
   },
   {
     keys: "G A",
-    title: "站点统计",
-    description: "查看管理统计",
+    title: copy("copy.user.components.shortcuts.shortcut-data.c9cd3687fc73"),
+    description: copy(
+      "copy.user.components.shortcuts.shortcut-data.b28428e5fb41"
+    ),
     path: "/admin/site-stat",
     requiresAdmin: true,
   },
 ]
 
 export const actionShortcuts: ActionShortcut[] = [
-  { keys: "/", title: "搜索", description: "打开顶部搜索框" },
+  {
+    keys: "/",
+    title: copy("copy.user.components.shortcuts.shortcut-data.44ce7ae909bb"),
+    description: copy(
+      "copy.user.components.shortcuts.shortcut-data.c062ec7f700d"
+    ),
+  },
   {
     keys: ".",
-    title: "页面控件",
-    description: "给当前可见按钮、链接和输入框显示编号",
+    title: copy("copy.user.components.shortcuts.shortcut-data.f8974e18945a"),
+    description: copy(
+      "copy.user.components.shortcuts.shortcut-data.87006fb91401"
+    ),
   },
-  { keys: "?", title: "快捷键提示", description: "打开或关闭此提示" },
-  { keys: "Esc", title: "退出", description: "关闭提示或退出页面控件模式" },
+  {
+    keys: "?",
+    title: copy("copy.user.components.shortcuts.shortcut-data.dc3b4a31f64f"),
+    description: copy(
+      "copy.user.components.shortcuts.shortcut-data.c6871ff9fd78"
+    ),
+  },
+  {
+    keys: "Esc",
+    title: copy("copy.user.components.shortcuts.shortcut-data.498e1d59b4d7"),
+    description: copy(
+      "copy.user.components.shortcuts.shortcut-data.9f469fdb28d4"
+    ),
+  },
 ]

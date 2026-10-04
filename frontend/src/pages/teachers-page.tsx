@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useCallback } from "react"
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { DebouncedSearchInput } from "@/components/common/debounced-search-input"
@@ -57,18 +58,22 @@ export function TeachersPage() {
 
   return (
     <>
-      <PageTitle>教师</PageTitle>
+      <PageTitle>
+        {copy("copy.user.pages.teachers-page.a6654120cbec")}
+      </PageTitle>
       <PageShell>
         <div className="space-y-6 lg:flex lg:flex-col lg:gap-6 lg:space-y-0">
           <div>
-            <h1 className="text-2xl font-bold">教师</h1>
+            <h1 className="text-2xl font-bold">
+              {copy("copy.user.pages.teachers-page.a6654120cbec")}
+            </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              浏览和搜索所有教师
+              {copy("copy.user.pages.teachers-page.a4b31005ed8c")}
             </p>
           </div>
 
           <DebouncedSearchInput
-            placeholder="搜索教师姓名、拼音或工号..."
+            placeholder={copy("copy.user.pages.teachers-page.ef8188420068")}
             value={q}
             debounceMs={TEACHER_SEARCH_DEBOUNCE_MS}
             onDebouncedChange={handleSearchChange}
@@ -89,7 +94,9 @@ export function TeachersPage() {
             >
               {data && (
                 <p className="text-sm text-muted-foreground">
-                  共 {data.total} 位教师
+                  {copy("copy.user.pages.teachers-page.2428420e407f")}
+                  {data.total}
+                  {copy("copy.user.pages.teachers-page.81180f262b1d")}
                 </p>
               )}
 

@@ -1,0 +1,4313 @@
+{
+  "copy.admin.components.admin.admin-utils.126fbf59cf04": {
+    "text": "请求失败",
+    "audience": "admin",
+    "location": "components/admin/admin-utils.ts"
+  },
+  "copy.admin.components.admin.announcements-tab.05e99264a759": {
+    "text": "外链",
+    "audience": "admin",
+    "location": "components/admin/announcements-tab.tsx"
+  },
+  "copy.admin.components.admin.announcements-tab.069c0ecbf898": {
+    "text": "公告",
+    "audience": "admin",
+    "location": "components/admin/announcements-tab.tsx"
+  },
+  "copy.admin.components.admin.announcements-tab.07ec86e0f1d4": {
+    "text": "创建时间",
+    "audience": "admin",
+    "location": "components/admin/announcements-tab.tsx"
+  },
+  "copy.admin.components.admin.announcements-tab.1ac47221096c": {
+    "text": "展示时间",
+    "audience": "admin",
+    "location": "components/admin/announcements-tab.tsx"
+  },
+  "copy.admin.components.admin.announcements-tab.3843971dcfde": {
+    "text": "ID",
+    "audience": "admin",
+    "location": "components/admin/announcements-tab.tsx"
+  },
+  "copy.admin.components.admin.announcements-tab.565d64601d4d": {
+    "text": "优先级",
+    "audience": "admin",
+    "location": "components/admin/announcements-tab.tsx"
+  },
+  "copy.admin.components.admin.announcements-tab.6d9a7758610a": {
+    "text": "暂无公告",
+    "audience": "admin",
+    "location": "components/admin/announcements-tab.tsx"
+  },
+  "copy.admin.components.admin.announcements-tab.c3405f8c7d9d": {
+    "text": "标题",
+    "audience": "admin",
+    "location": "components/admin/announcements-tab.tsx"
+  },
+  "copy.admin.components.admin.announcements-tab.d04fcbda737f": {
+    "text": "加载中",
+    "audience": "admin",
+    "location": "components/admin/announcements-tab.tsx"
+  },
+  "copy.admin.components.admin.announcements-tab.ed31fbb483ee": {
+    "text": "操作",
+    "audience": "admin",
+    "location": "components/admin/announcements-tab.tsx"
+  },
+  "copy.admin.components.admin.announcements-tab.ee4ea097b207": {
+    "text": "新建公告",
+    "audience": "admin",
+    "location": "components/admin/announcements-tab.tsx"
+  },
+  "copy.admin.components.admin.announcements.announcement-dialog.100680ad546c": {
+    "text": "https://example.com",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-dialog.tsx"
+  },
+  "copy.admin.components.admin.announcements.announcement-dialog.2cd0f3be8738": {
+    "text": "取消",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-dialog.tsx"
+  },
+  "copy.admin.components.admin.announcements.announcement-dialog.34638cbed99a": {
+    "text": "标题（可选）",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-dialog.tsx"
+  },
+  "copy.admin.components.admin.announcements.announcement-dialog.6a9906c79f26": {
+    "text": "开始时间",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-dialog.tsx"
+  },
+  "copy.admin.components.admin.announcements.announcement-dialog.76c467671ab1": {
+    "text": "内容（可选）",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-dialog.tsx"
+  },
+  "copy.admin.components.admin.announcements.announcement-dialog.83163278a659": {
+    "text": "编辑公告",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-dialog.tsx"
+  },
+  "copy.admin.components.admin.announcements.announcement-dialog.a1a1720d3eb5": {
+    "text": "保存中",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-dialog.tsx"
+  },
+  "copy.admin.components.admin.announcements.announcement-dialog.a3030bf8f16d": {
+    "text": "保存",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-dialog.tsx"
+  },
+  "copy.admin.components.admin.announcements.announcement-dialog.a48ce0b1dc35": {
+    "text": "外链地址（可选）",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-dialog.tsx"
+  },
+  "copy.admin.components.admin.announcements.announcement-dialog.bb8e192e1eed": {
+    "text": "优先级（可选）",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-dialog.tsx"
+  },
+  "copy.admin.components.admin.announcements.announcement-dialog.db21da93d322": {
+    "text": "外链标题（可选）",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-dialog.tsx"
+  },
+  "copy.admin.components.admin.announcements.announcement-dialog.ee4ea097b207": {
+    "text": "新建公告",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-dialog.tsx"
+  },
+  "copy.admin.components.admin.announcements.announcement-dialog.f50276449943": {
+    "text": "结束时间",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-dialog.tsx"
+  },
+  "copy.admin.components.admin.announcements.announcement-form.20f02738a747": {
+    "text": "请选择结束时间",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-form.ts"
+  },
+  "copy.admin.components.admin.announcements.announcement-form.3e722daada31": {
+    "text": "标题和内容至少填写一项",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-form.ts"
+  },
+  "copy.admin.components.admin.announcements.announcement-form.46fe57101a00": {
+    "text": "外链只支持 http 或 https",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-form.ts"
+  },
+  "copy.admin.components.admin.announcements.announcement-form.a52d61ec812a": {
+    "text": "请选择开始时间",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-form.ts"
+  },
+  "copy.admin.components.admin.announcements.announcement-form.b138dfd3b014": {
+    "text": "外链地址无效",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-form.ts"
+  },
+  "copy.admin.components.admin.announcements.announcement-form.b913e107ad8b": {
+    "text": "结束时间必须晚于开始时间",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-form.ts"
+  },
+  "copy.admin.components.admin.announcements.announcement-form.ed14081e864b": {
+    "text": "展示时间无效",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-form.ts"
+  },
+  "copy.admin.components.admin.announcements.announcement-row.051836569928": {
+    "text": "编辑",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-row.tsx"
+  },
+  "copy.admin.components.admin.announcements.announcement-row.0e46cdb3442e": {
+    "text": "删除公告",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-row.tsx"
+  },
+  "copy.admin.components.admin.announcements.announcement-row.2cd0f3be8738": {
+    "text": "取消",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-row.tsx"
+  },
+  "copy.admin.components.admin.announcements.announcement-row.2f9daa828907": {
+    "text": "删除",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-row.tsx"
+  },
+  "copy.admin.components.admin.announcements.announcement-row.83163278a659": {
+    "text": "编辑公告",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-row.tsx"
+  },
+  "copy.admin.components.admin.announcements.announcement-row.83532308ecca": {
+    "text": "至 ",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-row.tsx"
+  },
+  "copy.admin.components.admin.announcements.announcement-row.9d6564cc34ef": {
+    "text": "删除后该公告不会再展示，此操作无法撤销。",
+    "audience": "admin",
+    "location": "components/admin/announcements/announcement-row.tsx"
+  },
+  "copy.admin.components.admin.announcements.date-time-control.3b8e6032ab48": {
+    "text": "选择时间",
+    "audience": "admin",
+    "location": "components/admin/announcements/date-time-control.tsx"
+  },
+  "copy.admin.components.admin.announcements.date-time-control.c0b3fbff51cc": {
+    "text": "完成",
+    "audience": "admin",
+    "location": "components/admin/announcements/date-time-control.tsx"
+  },
+  "copy.admin.components.admin.audit-logs-tab.0cdb484341a7": {
+    "text": "修改系统设置",
+    "audience": "technical",
+    "location": "components/admin/audit-logs-tab.tsx"
+  },
+  "copy.admin.components.admin.audit-logs-tab.2428420e407f": {
+    "text": "共 ",
+    "audience": "technical",
+    "location": "components/admin/audit-logs-tab.tsx"
+  },
+  "copy.admin.components.admin.audit-logs-tab.3cd5d9b5704c": {
+    "text": "修改点评",
+    "audience": "technical",
+    "location": "components/admin/audit-logs-tab.tsx"
+  },
+  "copy.admin.components.admin.audit-logs-tab.4a36b70108bf": {
+    "text": "新增系统 API Key",
+    "audience": "technical",
+    "location": "components/admin/audit-logs-tab.tsx"
+  },
+  "copy.admin.components.admin.audit-logs-tab.53f92c063963": {
+    "text": "对象",
+    "audience": "technical",
+    "location": "components/admin/audit-logs-tab.tsx"
+  },
+  "copy.admin.components.admin.audit-logs-tab.6a9906c79f26": {
+    "text": "开始时间",
+    "audience": "technical",
+    "location": "components/admin/audit-logs-tab.tsx"
+  },
+  "copy.admin.components.admin.audit-logs-tab.6fb2840d568a": {
+    "text": " 条",
+    "audience": "technical",
+    "location": "components/admin/audit-logs-tab.tsx"
+  },
+  "copy.admin.components.admin.audit-logs-tab.814362ba214f": {
+    "text": "触发人",
+    "audience": "technical",
+    "location": "components/admin/audit-logs-tab.tsx"
+  },
+  "copy.admin.components.admin.audit-logs-tab.8656460e0d46": {
+    "text": "触发人 ID",
+    "audience": "technical",
+    "location": "components/admin/audit-logs-tab.tsx"
+  },
+  "copy.admin.components.admin.audit-logs-tab.86fbfb0b1127": {
+    "text": "删除系统 API Key",
+    "audience": "technical",
+    "location": "components/admin/audit-logs-tab.tsx"
+  },
+  "copy.admin.components.admin.audit-logs-tab.8b6ff498515b": {
+    "text": "时间",
+    "audience": "technical",
+    "location": "components/admin/audit-logs-tab.tsx"
+  },
+  "copy.admin.components.admin.audit-logs-tab.979a332955c8": {
+    "text": "详情",
+    "audience": "technical",
+    "location": "components/admin/audit-logs-tab.tsx"
+  },
+  "copy.admin.components.admin.audit-logs-tab.a0f79e91f13f": {
+    "text": "审计日志",
+    "audience": "technical",
+    "location": "components/admin/audit-logs-tab.tsx"
+  },
+  "copy.admin.components.admin.audit-logs-tab.ae90ef46a90c": {
+    "text": "全部行为",
+    "audience": "technical",
+    "location": "components/admin/audit-logs-tab.tsx"
+  },
+  "copy.admin.components.admin.audit-logs-tab.bcd6771e08ec": {
+    "text": "查询",
+    "audience": "technical",
+    "location": "components/admin/audit-logs-tab.tsx"
+  },
+  "copy.admin.components.admin.audit-logs-tab.c6b856679bb5": {
+    "text": "修改管理备注",
+    "audience": "technical",
+    "location": "components/admin/audit-logs-tab.tsx"
+  },
+  "copy.admin.components.admin.audit-logs-tab.d92ffbeedfac": {
+    "text": "行为",
+    "audience": "technical",
+    "location": "components/admin/audit-logs-tab.tsx"
+  },
+  "copy.admin.components.admin.audit-logs-tab.e6b1e035bda1": {
+    "text": "删除点评",
+    "audience": "technical",
+    "location": "components/admin/audit-logs-tab.tsx"
+  },
+  "copy.admin.components.admin.audit-logs-tab.ea97b4577750": {
+    "text": "暂无审计日志",
+    "audience": "technical",
+    "location": "components/admin/audit-logs-tab.tsx"
+  },
+  "copy.admin.components.admin.audit-logs-tab.f50276449943": {
+    "text": "结束时间",
+    "audience": "technical",
+    "location": "components/admin/audit-logs-tab.tsx"
+  },
+  "copy.admin.components.admin.audit-logs.date-filter-picker.680c78ec60f4": {
+    "text": "选择日期",
+    "audience": "technical",
+    "location": "components/admin/audit-logs/date-filter-picker.tsx"
+  },
+  "copy.admin.components.admin.audit-logs.date-filter-picker.d68c450b1104": {
+    "text": "清除日期",
+    "audience": "technical",
+    "location": "components/admin/audit-logs/date-filter-picker.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.05e9d77d5fea": {
+    "text": "文案加载失败，请刷新页面重试",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.09c2f90e0412": {
+    "text": "搜索文案",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.12abdae1e423": {
+    "text": "页面文案",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.215bee80e894": {
+    "text": "联系邮箱",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.35748266b6c2": {
+    "text": "普通管理员",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.3cf925810572": {
+    "text": "技术管理员",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.3eb1bd9d8e67": {
+    "text": "文案使用对象",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.6fe1f12e3174": {
+    "text": "搜索页面上的原文即可找到对应设置。文案按使用对象区分，保存后刷新页面生效。课程信息、点评和公告请在各自管理页面维护。",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.8319f71b1df4": {
+    "text": "保存文案",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.8a8542f69648": {
+    "text": "下一页",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.9552fe3bd366": {
+    "text": "第 ",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.9fd8c1e32d70": {
+    "text": "没有找到匹配文案",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.a1a1720d3eb5": {
+    "text": "保存中",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.bf0a989ebe51": {
+    "text": "技术定位信息",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.c9b9ae7a6144": {
+    "text": "上一页",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.ddf1d1f75c40": {
+    "text": "正在加载文案",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.eb8666303664": {
+    "text": "全部使用对象",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.ebbabcf0b4e4": {
+    "text": "搜索原文或当前文案",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.f242c947972c": {
+    "text": "恢复默认值",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.f5080bf79e10": {
+    "text": " 页 · 共 ",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.f6a2faaac200": {
+    "text": "普通用户",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.f9d529eacdf3": {
+    "text": " 项",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.043243bc4b5b": {
+    "text": "课程信息暂缺",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.129336fa8de4": {
+    "text": "该学期暂无课程数据",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.1e3c672a9fba": {
+    "text": "主讲教师",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.1f649aa190d6": {
+    "text": "删除教学班",
+    "audience": "admin",
+    "location": "components/admin/course-offering-dialog.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.2428420e407f": {
+    "text": "共 ",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.250828f6f866": {
+    "text": "学期开课记录已删除，历史评价已保留",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.2baec43adb17": {
+    "text": "按学期管理",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.2cbd78206ec3": {
+    "text": "授课语言",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.2cd0f3be8738": {
+    "text": "取消",
+    "audience": "admin",
+    "location": "components/admin/course-offering-dialog.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.351a38f2a874": {
+    "text": "输入课程代码、名称或课程序号",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.3b956ae57c11": {
+    "text": "编辑课程",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.406c59bfe6b8": {
+    "text": "校区",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.4396291ef58e": {
+    "text": "{v0} 必须是有效数字",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.441b9c56366f": {
+    "text": "上传完整 ZIP 会替换该学期的课程和教学班；已发布的课程评价保留。",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.44c1e84ed465": {
+    "text": "学分不能为空",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.45011c48383a": {
+    "text": "新增学期开课",
+    "audience": "admin",
+    "location": "components/admin/course-offering-dialog.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.4927a53bcc88": {
+    "text": "加载中…",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.4c9c646f81d1": {
+    "text": "教学班",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.505e872bcb8e": {
+    "text": "上传学期 ZIP",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.521ea9788171": {
+    "text": "教师信息暂缺",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.53ba710d5f39": {
+    "text": "所属学期",
+    "audience": "admin",
+    "location": "components/admin/course-offering-dialog.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.54ec48e9d278": {
+    "text": "来源课节 ID",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.5d668f3c9656": {
+    "text": "起止周",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.62559f8067e2": {
+    "text": "教师（按主讲、合讲顺序，用逗号分隔）",
+    "audience": "admin",
+    "location": "components/admin/course-offering-dialog.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.6322fa286117": {
+    "text": "开课单位",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.65ce7c3c7b0d": {
+    "text": "新增课程",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.66e8e3adf36b": {
+    "text": "课程类别",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.69907ec332f4": {
+    "text": "开课院系",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.6b6118d68bfa": {
+    "text": "删除 {v0} 在 {v1} 的开课记录？历史评价会保留。",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.6b7e4d50690c": {
+    "text": "总课时",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.7028305cf45b": {
+    "text": "选择或输入学期，如 2026-2027-1",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.770bd60c8b1a": {
+    "text": "实际人数",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.85ca81cf6abd": {
+    "text": " 页",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.88165354d9d3": {
+    "text": " 门课程",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.8a8542f69648": {
+    "text": "下一页",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.8abe5a36638c": {
+    "text": "搜索课程代码、名称或教学班",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.8e2f12907721": {
+    "text": "课程备注",
+    "audience": "admin",
+    "location": "components/admin/course-offering-dialog.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.92eeff24f15c": {
+    "text": "删除学期开课",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.9552fe3bd366": {
+    "text": "第 ",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.9ab9ff8f4d36": {
+    "text": "起始周",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.9e92320aa542": {
+    "text": "课程周期",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.a25b2c4fe4ab": {
+    "text": "添加教学班",
+    "audience": "admin",
+    "location": "components/admin/course-offering-dialog.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.a3030bf8f16d": {
+    "text": "保存",
+    "audience": "admin",
+    "location": "components/admin/course-offering-dialog.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.a401d8927a48": {
+    "text": "新教学班",
+    "audience": "admin",
+    "location": "components/admin/course-offering-dialog.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.a7a9051c47e9": {
+    "text": "课程序号",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.abacc4e7004d": {
+    "text": "重新上传会完整替换所选学期的课程和教学班；历史课程评价会保留。继续吗？",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.ad07afbbae6d": {
+    "text": "考核方式",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.afc44894f290": {
+    "text": "人数上限",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.b9f0f3dbbcd3": {
+    "text": "编辑学期开课",
+    "audience": "admin",
+    "location": "components/admin/course-offering-dialog.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.bd2d74b297d1": {
+    "text": "课程名称",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.c0a3807ee203": {
+    "text": "课程信息已保存",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.c7117390d6f1": {
+    "text": "教学班 {v0}",
+    "audience": "admin",
+    "location": "components/admin/course-offering-dialog.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.c82cc02ad5ff": {
+    "text": "周课时",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.c9462526d533": {
+    "text": "周数",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.c9b9ae7a6144": {
+    "text": "上一页",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.ce1c9d61565f": {
+    "text": "上传中…",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.d48636ed88e4": {
+    "text": "课程代码",
+    "audience": "admin",
+    "location": "components/admin/course-offering-dialog.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.e761e8b7e752": {
+    "text": "CHD 大纲链接",
+    "audience": "admin",
+    "location": "components/admin/course-offering-dialog.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.ed31fbb483ee": {
+    "text": "操作",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.f2571f734a5d": {
+    "text": "课程与学期数据",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.f58154bb6b6c": {
+    "text": "已导入 {v0}：{v1} 门课程、{v2} 个教学班；替换 {v3} 条旧开课记录。",
+    "audience": "admin",
+    "location": "components/admin/course-management-tab.tsx"
+  },
+  "copy.admin.components.admin.course-management-tab.f9d072c4804c": {
+    "text": "学分",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.fa2920ccd890": {
+    "text": "结束周",
+    "audience": "admin",
+    "location": "components/admin/course-section-draft.ts"
+  },
+  "copy.admin.components.admin.course-management-tab.ff509c9ba052": {
+    "text": "保存中…",
+    "audience": "admin",
+    "location": "components/admin/course-offering-dialog.tsx"
+  },
+  "copy.admin.components.admin.course-offering-dialog.960a47903d29": {
+    "text": "https://bkjw.chd.edu.cn/eams/...",
+    "audience": "admin",
+    "location": "components/admin/course-offering-dialog.tsx"
+  },
+  "copy.admin.components.admin.system-api-keys-tab.0303d805e868": {
+    "text": "注销后使用该 key 的请求会立即失效。",
+    "audience": "technical",
+    "location": "components/admin/system-api-keys-tab.tsx"
+  },
+  "copy.admin.components.admin.system-api-keys-tab.51d906a9ecd8": {
+    "text": "新建系统 Key",
+    "audience": "technical",
+    "location": "components/admin/system-api-keys-tab.tsx"
+  },
+  "copy.admin.components.admin.system-api-keys-tab.5bae98259f10": {
+    "text": "例如：外部积分查询服务",
+    "audience": "technical",
+    "location": "components/admin/system-api-keys-tab.tsx"
+  },
+  "copy.admin.components.admin.system-api-keys-tab.705fb8d9afda": {
+    "text": "系统 API Key",
+    "audience": "technical",
+    "location": "components/admin/system-api-keys-tab.tsx"
+  },
+  "copy.admin.components.admin.system-api-keys-tab.7951c979a42d": {
+    "text": "注销系统 API Key",
+    "audience": "technical",
+    "location": "components/admin/system-api-keys-tab.tsx"
+  },
+  "copy.admin.components.admin.system-api-keys-tab.921f96d4e427": {
+    "text": "新建系统 API Key",
+    "audience": "technical",
+    "location": "components/admin/system-api-keys-tab.tsx"
+  },
+  "copy.admin.components.admin.system-api-keys-tab.98283370da3e": {
+    "text": "创建成功后明文仅显示一次。",
+    "audience": "technical",
+    "location": "components/admin/system-api-keys-tab.tsx"
+  },
+  "copy.admin.components.admin.system-api-keys-tab.a48fa6108b57": {
+    "text": "注销",
+    "audience": "technical",
+    "location": "components/admin/system-api-keys-tab.tsx"
+  },
+  "copy.admin.components.admin.system-api-keys-tab.c6a9fed1e7d8": {
+    "text": "暂无系统 API Key",
+    "audience": "technical",
+    "location": "components/admin/system-api-keys-tab.tsx"
+  },
+  "copy.admin.components.admin.system-settings-tab.60db1afb4022": {
+    "text": "课程",
+    "audience": "admin",
+    "location": "components/admin/system-settings-tab.tsx"
+  },
+  "copy.admin.components.admin.system-settings-tab.68ea5dd4d7af": {
+    "text": "系统设置",
+    "audience": "admin",
+    "location": "components/admin/system-settings-tab.tsx"
+  },
+  "copy.admin.components.admin.system-settings-tab.73b01b2c3e72": {
+    "text": "点评积分",
+    "audience": "admin",
+    "location": "components/admin/system-settings-tab.tsx"
+  },
+  "copy.admin.components.admin.system-settings-tab.bb6d995724f4": {
+    "text": "管理",
+    "audience": "admin",
+    "location": "components/admin/system-settings-tab.tsx"
+  },
+  "copy.admin.components.admin.system-settings-tab.d2469bc43d2c": {
+    "text": "点评",
+    "audience": "admin",
+    "location": "components/admin/system-settings-tab.tsx"
+  },
+  "copy.admin.components.admin.system-settings.setting-control.522bedf98774": {
+    "text": "选择学期",
+    "audience": "admin",
+    "location": "components/admin/system-settings/setting-control.tsx"
+  },
+  "copy.admin.components.admin.system-settings.system-setting-row.7a73baf0ce9a": {
+    "text": "公开",
+    "audience": "admin",
+    "location": "components/admin/system-settings/system-setting-row.tsx"
+  },
+  "copy.admin.components.admin.system-settings.system-setting-row.7c4436078ee9": {
+    "text": "需重启",
+    "audience": "admin",
+    "location": "components/admin/system-settings/system-setting-row.tsx"
+  },
+  "copy.admin.components.admin.system-settings.system-setting-row.a1a1720d3eb5": {
+    "text": "保存中",
+    "audience": "admin",
+    "location": "components/admin/system-settings/system-setting-row.tsx"
+  },
+  "copy.admin.components.admin.system-settings.system-setting-row.a3030bf8f16d": {
+    "text": "保存",
+    "audience": "admin",
+    "location": "components/admin/system-settings/system-setting-row.tsx"
+  },
+  "copy.admin.components.admin.system-settings.system-setting-row.bf0a989ebe51": {
+    "text": "技术定位信息",
+    "audience": "admin",
+    "location": "components/admin/system-settings/system-setting-row.tsx"
+  },
+  "copy.admin.components.admin.system-settings.system-setting-row.f242c947972c": {
+    "text": "恢复默认值",
+    "audience": "admin",
+    "location": "components/admin/system-settings/system-setting-row.tsx"
+  },
+  "copy.admin.pages.admin.site-stats-page.178393de565a": {
+    "text": "最近30天",
+    "audience": "admin",
+    "location": "pages/admin/site-stats-page.tsx"
+  },
+  "copy.admin.pages.admin.site-stats-page.1b8e57ace988": {
+    "text": "暂无统计数据",
+    "audience": "admin",
+    "location": "pages/admin/site-stats-page.tsx"
+  },
+  "copy.admin.pages.admin.site-stats-page.206ea896472e": {
+    "text": "明细",
+    "audience": "admin",
+    "location": "pages/admin/site-stats-page.tsx"
+  },
+  "copy.admin.pages.admin.site-stats-page.760506491eef": {
+    "text": "开始日期",
+    "audience": "admin",
+    "location": "pages/admin/site-stats-page.tsx"
+  },
+  "copy.admin.pages.admin.site-stats-page.80c3d880f104": {
+    "text": "最近一年",
+    "audience": "admin",
+    "location": "pages/admin/site-stats-page.tsx"
+  },
+  "copy.admin.pages.admin.site-stats-page.883ababee8db": {
+    "text": "昨日数据",
+    "audience": "admin",
+    "location": "pages/admin/site-stats-page.tsx"
+  },
+  "copy.admin.pages.admin.site-stats-page.895cd52fbbb6": {
+    "text": "结束日期",
+    "audience": "admin",
+    "location": "pages/admin/site-stats-page.tsx"
+  },
+  "copy.admin.pages.admin.site-stats-page.8cb443ab8379": {
+    "text": "图表",
+    "audience": "admin",
+    "location": "pages/admin/site-stats-page.tsx"
+  },
+  "copy.admin.pages.admin.site-stats-page.9228f9aa4c65": {
+    "text": "需要管理员权限",
+    "audience": "admin",
+    "location": "pages/admin/site-stats-page.tsx"
+  },
+  "copy.admin.pages.admin.site-stats-page.addbad62c46d": {
+    "text": "暂无昨日数据",
+    "audience": "admin",
+    "location": "pages/admin/site-stats-page.tsx"
+  },
+  "copy.admin.pages.admin.site-stats-page.c9cd3687fc73": {
+    "text": "站点统计",
+    "audience": "admin",
+    "location": "pages/admin/site-stats-page.tsx"
+  },
+  "copy.admin.pages.admin.site-stats-page.cb5d682bac3d": {
+    "text": "重置",
+    "audience": "admin",
+    "location": "pages/admin/site-stats-page.tsx"
+  },
+  "copy.admin.pages.admin.user-admin-page.069c0ecbf898": {
+    "text": "公告",
+    "audience": "admin",
+    "location": "pages/admin/user-admin-page.tsx"
+  },
+  "copy.admin.pages.admin.user-admin-page.5cb81812564c": {
+    "text": "用户和角色由主站管理",
+    "audience": "admin",
+    "location": "pages/admin/user-admin-page.tsx"
+  },
+  "copy.admin.pages.admin.user-admin-page.68ea5dd4d7af": {
+    "text": "系统设置",
+    "audience": "admin",
+    "location": "pages/admin/user-admin-page.tsx"
+  },
+  "copy.admin.pages.admin.user-admin-page.705fb8d9afda": {
+    "text": "系统 API Key",
+    "audience": "admin",
+    "location": "pages/admin/user-admin-page.tsx"
+  },
+  "copy.admin.pages.admin.user-admin-page.9228f9aa4c65": {
+    "text": "需要管理员权限",
+    "audience": "admin",
+    "location": "pages/admin/user-admin-page.tsx"
+  },
+  "copy.admin.pages.admin.user-admin-page.a0f79e91f13f": {
+    "text": "审计日志",
+    "audience": "admin",
+    "location": "pages/admin/user-admin-page.tsx"
+  },
+  "copy.admin.pages.admin.user-admin-page.aee480d85347": {
+    "text": "账号和管理权限由频道统一管理。请先在频道切换为管理员权限，再进入这里维护课程、公告和设置。",
+    "audience": "admin",
+    "location": "pages/admin/user-admin-page.tsx"
+  },
+  "copy.admin.pages.admin.user-admin-page.b4d79dbaebef": {
+    "text": "课程管理",
+    "audience": "admin",
+    "location": "pages/admin/user-admin-page.tsx"
+  },
+  "copy.admin.pages.admin.user-admin-page.bb6d995724f4": {
+    "text": "管理",
+    "audience": "admin",
+    "location": "pages/admin/user-admin-page.tsx"
+  },
+  "copy.brand.feedback_email": {
+    "text": "",
+    "audience": "admin",
+    "location": "config/brand.ts",
+    "optional": true
+  },
+  "copy.email.banned_until": {
+    "text": "封禁到",
+    "audience": "admin",
+    "location": "internal/domain/review/templates/review_frequency_suspension.html"
+  },
+  "copy.email.content": {
+    "text": "点评内容",
+    "audience": "admin",
+    "location": "internal/domain/review/templates/review_frequency_suspension.html"
+  },
+  "copy.email.course": {
+    "text": "课程",
+    "audience": "admin",
+    "location": "internal/domain/review/templates/review_frequency_suspension.html"
+  },
+  "copy.email.course_code": {
+    "text": "课程代码：",
+    "audience": "admin",
+    "location": "internal/domain/review/templates/review_frequency_suspension.html"
+  },
+  "copy.email.course_id": {
+    "text": "课程 ID：",
+    "audience": "admin",
+    "location": "internal/domain/review/templates/review_frequency_suspension.html"
+  },
+  "copy.email.course_name": {
+    "text": "课程名称：",
+    "audience": "admin",
+    "location": "internal/domain/review/templates/review_frequency_suspension.html"
+  },
+  "copy.email.footer": {
+    "text": "请在课程榜后台核查点评，并在频道管理账号状态。",
+    "audience": "admin",
+    "location": "internal/domain/review/templates/review_frequency_suspension.html"
+  },
+  "copy.email.greeting": {
+    "text": "管理员您好：",
+    "audience": "admin",
+    "location": "internal/domain/review/templates/review_frequency_suspension.html"
+  },
+  "copy.email.notice": {
+    "text": "系统检测到异常点评频率，本次提交已被阻止。请核查点评记录，需要限制账号时请在频道处理。",
+    "audience": "admin",
+    "location": "internal/domain/review/templates/review_frequency_suspension.html"
+  },
+  "copy.email.reason": {
+    "text": "原因",
+    "audience": "admin",
+    "location": "internal/domain/review/templates/review_frequency_suspension.html"
+  },
+  "copy.email.subject": {
+    "text": "频道课程榜点评频率提醒",
+    "audience": "admin",
+    "location": "internal/domain/review/templates/review_frequency_suspension.html"
+  },
+  "copy.email.teacher": {
+    "text": "主讲教师：",
+    "audience": "admin",
+    "location": "internal/domain/review/templates/review_frequency_suspension.html"
+  },
+  "copy.email.user_id": {
+    "text": "用户 ID",
+    "audience": "admin",
+    "location": "internal/domain/review/templates/review_frequency_suspension.html"
+  },
+  "copy.pwa.course_description": {
+    "text": "检索课程与查看课程详情",
+    "audience": "user",
+    "location": "pwa.config.ts"
+  },
+  "copy.pwa.course_name": {
+    "text": "课程",
+    "audience": "user",
+    "location": "pwa.config.ts"
+  },
+  "copy.pwa.description": {
+    "text": "课程检索、教师检索与课程点评社区",
+    "audience": "user",
+    "location": "pwa.config.ts"
+  },
+  "copy.pwa.mine_description": {
+    "text": "查看和管理我发布的点评",
+    "audience": "user",
+    "location": "pwa.config.ts"
+  },
+  "copy.pwa.mine_name": {
+    "text": "我的点评",
+    "audience": "user",
+    "location": "pwa.config.ts"
+  },
+  "copy.pwa.review_description": {
+    "text": "浏览课程点评",
+    "audience": "user",
+    "location": "pwa.config.ts"
+  },
+  "copy.pwa.review_name": {
+    "text": "点评",
+    "audience": "user",
+    "location": "pwa.config.ts"
+  },
+  "copy.server.02472b45f1cf": {
+    "text": "刷评封禁时长",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.036549074827": {
+    "text": "服务器内部错误",
+    "audience": "user",
+    "location": "internal/interface/web/controller/error.go"
+  },
+  "copy.server.041d26a1a283": {
+    "text": "转账积分必须大于 0",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.043232fb0f94": {
+    "text": "检测短时间内刷评的时间窗口",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.06e522e8e374": {
+    "text": "课程数据来源必须是 CHD 教务系统",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.0efb5e398193": {
+    "text": "点评分数不能超过 10 个字符",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.0fb563975731": {
+    "text": "命中刷评策略后接收通知的管理员邮箱，多个值用逗号或换行分隔，留空则不发送",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.0fb5dd307ec8": {
+    "text": "单点登录状态无效",
+    "audience": "user",
+    "location": "internal/domain/auth/reshub.go"
+  },
+  "copy.server.112d0d34a008": {
+    "text": "评分无效",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.14c6a4b45b6d": {
+    "text": "收款用户不存在",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.19894dcf4452": {
+    "text": "课程数据中没有课节记录",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.1c3d38879c17": {
+    "text": "该学期未开设此课程",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.1c44891e0e3c": {
+    "text": "单个用户每天可投票的最大次数",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.1cdb0b9484eb": {
+    "text": "请先选择学期",
+    "audience": "user",
+    "location": "internal/interface/web/controller/course_admin.go"
+  },
+  "copy.server.22f70fc11fa4": {
+    "text": "点评投票热度分",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.2a0ec9b7708a": {
+    "text": "积分余额不足",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.2c6d5b983b8e": {
+    "text": "无权更新管理员备注",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.2d6d4c3dcea3": {
+    "text": "课程数据 ZIP 不能超过 64 MiB",
+    "audience": "user",
+    "location": "internal/interface/web/controller/course_admin.go"
+  },
+  "copy.server.2dff186d8eef": {
+    "text": "每日投票上限",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.2e3e3704cf61": {
+    "text": "课程数据与采集报告的学期不匹配",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.2f5b1cf7a7ea": {
+    "text": "ZIP 中的课程数据文件读取失败或过大",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.2ff25716733c": {
+    "text": "课程不存在",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.306fd647939d": {
+    "text": "用户 ID 无效",
+    "audience": "user",
+    "location": "internal/interface/web/controller/point.go"
+  },
+  "copy.server.35d71fe959aa": {
+    "text": "热门课程周期无效",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.35ee7c306333": {
+    "text": "点评内容包含敏感信息",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.3b95740295f1": {
+    "text": "课程大纲链接只能指向 CHD 教务系统",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.3bad8adeaef7": {
+    "text": "刷评相似度阈值",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.3dd156610922": {
+    "text": "点评不存在",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.3edfd648efa7": {
+    "text": "通知级别必须是 0、1 或 2",
+    "audience": "user",
+    "location": "internal/interface/web/controller/course.go"
+  },
+  "copy.server.4041e686be40": {
+    "text": "数量应在 1 到 100 之间",
+    "audience": "user",
+    "location": "internal/interface/web/controller/teacher_hot.go"
+  },
+  "copy.server.42d6be3dd039": {
+    "text": "当前学期",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.458c2f1103a5": {
+    "text": "更新点评热度分",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.466c10cff747": {
+    "text": "API Key ID 无效",
+    "audience": "technical",
+    "location": "internal/interface/web/controller/api_key.go"
+  },
+  "copy.server.483679aab45f": {
+    "text": "刷评通知管理员邮箱",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.48c23e7c83d3": {
+    "text": "请求体无效",
+    "audience": "user",
+    "location": "internal/interface/web/controller/review.go"
+  },
+  "copy.server.4ab2662816c4": {
+    "text": "热门课程活动类型无效",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.4e3601363432": {
+    "text": "审计日志时间范围无效",
+    "audience": "technical",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.516f0a16445a": {
+    "text": "公告 ID 无效",
+    "audience": "user",
+    "location": "internal/interface/web/controller/announcement.go"
+  },
+  "copy.server.521ea9788171": {
+    "text": "教师信息暂缺",
+    "audience": "user",
+    "location": "internal/application/course_dto.go"
+  },
+  "copy.server.525043e400d6": {
+    "text": "无权删除点评",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.552257b4da41": {
+    "text": "课程代码、名称、学分和开课院系不能为空",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.553aa78a00a3": {
+    "text": "不能给自己转账",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.55e9b7ae1a1f": {
+    "text": "投票类型必须是 1、-1 或 0",
+    "audience": "user",
+    "location": "internal/interface/web/controller/review.go"
+  },
+  "copy.server.56107592d5d8": {
+    "text": "刷评检测评论数阈值",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.592114a9a2e6": {
+    "text": "课程大纲链接路径无效",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.5edf4f1d062a": {
+    "text": "API Key 无效",
+    "audience": "technical",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.601b63c1f004": {
+    "text": "需要超级管理员权限",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.62b3e23530b6": {
+    "text": "教师 ID 无效",
+    "audience": "user",
+    "location": "internal/interface/web/controller/teacher.go"
+  },
+  "copy.server.63d4954cd00e": {
+    "text": "课节 ID 不能为空",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.65790e9d5ef9": {
+    "text": "用户已被封禁",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.66a5386dcf97": {
+    "text": "API Key 不存在",
+    "audience": "technical",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.67b0e5651ca0": {
+    "text": "启用首评奖励",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.6985c2d3be25": {
+    "text": "课程数据包含重复课节 ID",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.71adc327572d": {
+    "text": "今日投票次数已达上限",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.757bbbda2913": {
+    "text": "页码无效",
+    "audience": "user",
+    "location": "internal/interface/web/controller/course_admin.go"
+  },
+  "copy.server.789ce72effce": {
+    "text": "站点每日统计不存在",
+    "audience": "user",
+    "location": "internal/interface/web/controller/site_stats.go"
+  },
+  "copy.server.7ac5fca17fe0": {
+    "text": "发布点评奖励积分",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.7cb42c86e13f": {
+    "text": "请上传包含 semester.json 和 report.json 的 ZIP 文件",
+    "audience": "user",
+    "location": "internal/interface/web/controller/course_admin.go"
+  },
+  "copy.server.7ce05a44d06b": {
+    "text": "仅支持 CHD 课程数据格式版本 1",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.83dd7ea30e95": {
+    "text": "同一学期内课节 ID 不能重复",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.8478da401107": {
+    "text": "日期范围无效",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.85a3c8a85c98": {
+    "text": "无权创建点评",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.85fe5958f8b6": {
+    "text": "主站服务暂不可用，请稍后重试",
+    "audience": "user",
+    "location": "internal/domain/auth/reshub.go"
+  },
+  "copy.server.88b094f71098": {
+    "text": "公告结束时间无效",
+    "audience": "user",
+    "location": "internal/interface/web/controller/announcement.go"
+  },
+  "copy.server.88b7c4c8c7eb": {
+    "text": "课程记录数量与数据文件不一致",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.8f7f6f047afe": {
+    "text": "课程 ID 无效",
+    "audience": "user",
+    "location": "internal/interface/web/controller/course.go"
+  },
+  "copy.server.91baccd86e58": {
+    "text": "教师不存在",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.928da99465c1": {
+    "text": "前台课程和写评默认使用的当前学期",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.942295cdc0e6": {
+    "text": "点评内容不能超过 9681 个字符",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.95b12e1df84f": {
+    "text": "一个开课记录内的教学班必须使用相同主讲教师",
+    "audience": "technical",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.962680e1f9ca": {
+    "text": "点评获得投票时给课程热度增加的分值",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.974ce6b922f0": {
+    "text": "手续费承担方无效",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.97b88f816bd5": {
+    "text": "课程名称、开课院系不能为空，学分不能小于 0",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.a3d1b587446e": {
+    "text": "请求参数无效",
+    "audience": "user",
+    "location": "internal/interface/web/controller/error.go"
+  },
+  "copy.server.a8d7452412a1": {
+    "text": "数量限制无效",
+    "audience": "user",
+    "location": "internal/interface/web/controller/course.go"
+  },
+  "copy.server.a9cdaf0e9283": {
+    "text": "短时间内同一课程点评过多",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.b0f1bb7e3c30": {
+    "text": "无法读取课程数据 ZIP",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.b4a1fd706249": {
+    "text": "选课记录 ID 无效",
+    "audience": "user",
+    "location": "internal/interface/web/controller/course_enrollment.go"
+  },
+  "copy.server.b4c40cd8269e": {
+    "text": "是否启用每条新点评的积分奖励",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.b68fcbe33679": {
+    "text": "课程代码、学期和至少一个教学班为必填项",
+    "audience": "technical",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.b6b909cb6799": {
+    "text": "进入刷评判定前需要命中的最少评论数",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.b7ee108267f7": {
+    "text": "课程数据文件必须是 ZIP",
+    "audience": "user",
+    "location": "internal/interface/web/controller/course_admin.go"
+  },
+  "copy.server.bb2dbe5881a6": {
+    "text": "ZIP 中的课程数据总量超过 64 MiB",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.bc0e5c3c441f": {
+    "text": "课程首评奖励积分",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.bd1128db3969": {
+    "text": "ZIP 中包含多个 semester.json",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.c1f658373079": {
+    "text": "未登录",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.c3431639187a": {
+    "text": "课节详情中的学期与课程数据不一致",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.c4850434bccd": {
+    "text": "更新点评时给课程热度增加的分值",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.c6b3f4b99917": {
+    "text": "启用发布点评奖励",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.c6b52f727f6b": {
+    "text": "每条新点评奖励的积分数量",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.c8e1aac604cf": {
+    "text": "采集报告未通过完整性检查",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.c92acf63c7c5": {
+    "text": "ZIP 中的课程数据文件过大",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.c98df1843917": {
+    "text": "课程数据包含详情缺失的课节",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.ca09e611c498": {
+    "text": "是否启用课程首评积分奖励",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.cb445ab6acad": {
+    "text": "课程学分不能小于 0",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.cb8f3fe7f172": {
+    "text": "数据 ZIP 为空或超过 64 MiB",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.cda648937fa3": {
+    "text": "短时间内相似点评过多",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.cdca729f8bcc": {
+    "text": "投票类型无效",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.cea95a8549ee": {
+    "text": "本站主体映射不存在",
+    "audience": "user",
+    "location": "internal/domain/auth/reshub.go"
+  },
+  "copy.server.cef18f8ccbb7": {
+    "text": "ZIP 必须同时包含 semester.json 和 report.json",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.d019b4bc455c": {
+    "text": "课程记录数量与采集报告不一致",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.d04d1ee20bbf": {
+    "text": "发布点评热度分",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.d05c0b214935": {
+    "text": "每页数量无效",
+    "audience": "user",
+    "location": "internal/interface/web/controller/course_admin.go"
+  },
+  "copy.server.d53415431211": {
+    "text": "发布点评时给课程热度增加的分值",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.d863acc80692": {
+    "text": "无权更新点评",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.dab1d359e365": {
+    "text": "当前学期无效",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.dbe1cdda73b3": {
+    "text": "课程首次点评奖励的积分数量",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.df9000b4093d": {
+    "text": "评论文本相似度达到该值时视为相似",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.e091525df469": {
+    "text": "开课记录 ID 无效",
+    "audience": "user",
+    "location": "internal/interface/web/controller/course_admin.go"
+  },
+  "copy.server.e3952759a5c2": {
+    "text": "点评 ID 无效",
+    "audience": "user",
+    "location": "internal/interface/web/controller/review.go"
+  },
+  "copy.server.e5ef1979628a": {
+    "text": "扣除手续费后到账积分过少",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.e8b605353396": {
+    "text": "点评内容不能为空",
+    "audience": "user",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.eb0cbe170778": {
+    "text": "semester.json 格式无效",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.eb5f9535fba9": {
+    "text": "命中刷评策略后的封禁时长",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.ee067221f541": {
+    "text": "API Key 角色无效",
+    "audience": "technical",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.ee46852b52eb": {
+    "text": "ZIP 中包含多个 report.json",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.eef1a83da1fc": {
+    "text": "API Key 名称不能为空",
+    "audience": "technical",
+    "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.f539ea1b73ef": {
+    "text": "report.json 格式无效",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.f67ffebe504e": {
+    "text": "课程大纲链接无效",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.fc233922e6aa": {
+    "text": "主站登录状态已失效，请重新登录",
+    "audience": "user",
+    "location": "internal/domain/auth/reshub.go"
+  },
+  "copy.server.fcf755af4387": {
+    "text": "公告开始时间无效",
+    "audience": "user",
+    "location": "internal/interface/web/controller/announcement.go"
+  },
+  "copy.server.fd773d1caf27": {
+    "text": "刷评检测窗口",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.fe3c156ae4bf": {
+    "text": "无法读取 ZIP 中的课程数据文件",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.fe93e4ccf0d3": {
+    "text": "课程列表与详情中的课程代码不一致",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.user.api.client.10f0e81879c6": {
+    "text": "你没有执行此操作的权限",
+    "audience": "user",
+    "location": "api/client.ts"
+  },
+  "copy.user.api.client.521ea9788171": {
+    "text": "教师信息暂缺",
+    "audience": "user",
+    "location": "api/client.ts"
+  },
+  "copy.user.api.client.5b1606fabf1e": {
+    "text": "服务暂时无法完成操作，请稍后重试",
+    "audience": "user",
+    "location": "api/client.ts"
+  },
+  "copy.user.api.client.7f83dc051d39": {
+    "text": "请求暂时无法完成，请稍后重试",
+    "audience": "user",
+    "location": "api/client.ts"
+  },
+  "copy.user.api.client.ab1e950a6480": {
+    "text": "请先登录后再继续",
+    "audience": "user",
+    "location": "api/client.ts"
+  },
+  "copy.user.api.client.c6dae0b087bc": {
+    "text": "无法找到这个用户",
+    "audience": "user",
+    "location": "api/client.ts"
+  },
+  "copy.user.api.client.e0f555394c57": {
+    "text": "操作太频繁，请稍后再试",
+    "audience": "user",
+    "location": "api/client.ts"
+  },
+  "copy.user.api.client.f8194185f36b": {
+    "text": "操作验证失败，请刷新页面后重试",
+    "audience": "user",
+    "location": "api/client.ts"
+  },
+  "copy.user.components.about.about-content.0555414e3117": {
+    "text": " 不展示你的频道账号或登录信息。请勿在点评中填写学号、联系方式或他人的个人信息。",
+    "audience": "user",
+    "location": "components/about/about-content.tsx"
+  },
+  "copy.user.components.about.about-content.0949730fb040": {
+    "text": " 的点评内容，也不评价内容的真实性。如果您上过某一门课程并认为网站上的点评与事实不符，欢迎提交您的意见，我们相信全面的信息会给大家最好的答案。",
+    "audience": "user",
+    "location": "components/about/about-content.tsx"
+  },
+  "copy.user.components.about.about-content.1d76ac77ffe8": {
+    "text": "您可以通过邮件",
+    "audience": "user",
+    "location": "components/about/about-content.tsx"
+  },
+  "copy.user.components.about.about-content.25f8c737e369": {
+    "text": "为非官方网站，旨在让同学们了解课程的更多情况，不想也不能代替教务处的课程评教。",
+    "audience": "user",
+    "location": "components/about/about-content.tsx"
+  },
+  "copy.user.components.about.about-content.29725de3d959": {
+    "text": " 的用户协议、站点说明和隐私说明。",
+    "audience": "user",
+    "location": "components/about/about-content.tsx"
+  },
+  "copy.user.components.about.about-content.323a881ebd47": {
+    "text": "联系方式",
+    "audience": "user",
+    "location": "components/about/about-content.tsx"
+  },
+  "copy.user.components.about.about-content.52959a13f5c8": {
+    "text": "阅读 ",
+    "audience": "user",
+    "location": "components/about/about-content.tsx"
+  },
+  "copy.user.components.about.about-content.53037c66add5": {
+    "text": " 管理员负责维护课程与教师信息，处理重复发帖、不相关内容和违反社区规范的点评。",
+    "audience": "user",
+    "location": "components/about/about-content.tsx"
+  },
+  "copy.user.components.about.about-content.5c3c998c13cc": {
+    "text": " 为长安大学同学提供课程信息与选课经验交流。使用频道账号登录即可参与点评，课程信息来自本科教务系统。",
+    "audience": "user",
+    "location": "components/about/about-content.tsx"
+  },
+  "copy.user.components.about.about-content.84b13d2f7676": {
+    "text": "在符合社区规范的情况下，我们不修改 ",
+    "audience": "user",
+    "location": "components/about/about-content.tsx"
+  },
+  "copy.user.components.about.about-content.86651d17a401": {
+    "text": "隐私",
+    "audience": "user",
+    "location": "components/about/about-content.tsx"
+  },
+  "copy.user.components.about.about-content.86e835668ee2": {
+    "text": "登录时，频道会提供你的昵称与账号身份，用于识别账号和判断管理权限。本站不会保存你的频道密码。",
+    "audience": "user",
+    "location": "components/about/about-content.tsx"
+  },
+  "copy.user.components.about.about-content.98d673965b4e": {
+    "text": " 保存你发布的点评、投票和必要的操作记录，用于提供服务和处理违规内容。",
+    "audience": "user",
+    "location": "components/about/about-content.tsx"
+  },
+  "copy.user.components.about.about-content.b4d4f455a802": {
+    "text": "点评管理",
+    "audience": "user",
+    "location": "components/about/about-content.tsx"
+  },
+  "copy.user.components.about.about-content.bbcc08c43c0e": {
+    "text": "频道账号与积分由频道统一管理。你可以在频道查看账号信息和相关说明。",
+    "audience": "user",
+    "location": "components/about/about-content.tsx"
+  },
+  "copy.user.components.about.about-content.c4622260f7c7": {
+    "text": "联系管理员。",
+    "audience": "user",
+    "location": "components/about/about-content.tsx"
+  },
+  "copy.user.components.about.about-content.d0f3e3298b26": {
+    "text": "机制",
+    "audience": "user",
+    "location": "components/about/about-content.tsx"
+  },
+  "copy.user.components.about.about-content.dc616a9a0de1": {
+    "text": "登录或注册即表示您了解并接受",
+    "audience": "user",
+    "location": "components/about/about-content.tsx"
+  },
+  "copy.user.components.about.about-content.e36e41c3d53b": {
+    "text": "用户协议与站点说明",
+    "audience": "user",
+    "location": "components/about/about-content.tsx"
+  },
+  "copy.user.components.about.about-content.e499019ef2e3": {
+    "text": "关于 ",
+    "audience": "user",
+    "location": "components/about/about-content.tsx"
+  },
+  "copy.user.components.announcement.announcement-banner.5880072b27d4": {
+    "text": "dismiss",
+    "audience": "user",
+    "location": "components/announcement/announcement-banner.tsx"
+  },
+  "copy.user.components.api-key.api-key-create-dialog.2cd0f3be8738": {
+    "text": "取消",
+    "audience": "technical",
+    "location": "components/api-key/api-key-create-dialog.tsx"
+  },
+  "copy.user.components.api-key.api-key-create-dialog.63d90d977348": {
+    "text": "复制",
+    "audience": "technical",
+    "location": "components/api-key/api-key-create-dialog.tsx"
+  },
+  "copy.user.components.api-key.api-key-create-dialog.67531c9da3b4": {
+    "text": "创建中",
+    "audience": "technical",
+    "location": "components/api-key/api-key-create-dialog.tsx"
+  },
+  "copy.user.components.api-key.api-key-create-dialog.753d8bb0da99": {
+    "text": "复制失败",
+    "audience": "technical",
+    "location": "components/api-key/api-key-create-dialog.tsx"
+  },
+  "copy.user.components.api-key.api-key-create-dialog.7e6a71efbf63": {
+    "text": "创建失败",
+    "audience": "technical",
+    "location": "components/api-key/api-key-create-dialog.tsx"
+  },
+  "copy.user.components.api-key.api-key-create-dialog.8f6f8d979c98": {
+    "text": "已复制",
+    "audience": "technical",
+    "location": "components/api-key/api-key-create-dialog.tsx"
+  },
+  "copy.user.components.api-key.api-key-create-dialog.c0b3fbff51cc": {
+    "text": "完成",
+    "audience": "technical",
+    "location": "components/api-key/api-key-create-dialog.tsx"
+  },
+  "copy.user.components.api-key.api-key-create-dialog.cde2cd071d25": {
+    "text": "创建",
+    "audience": "technical",
+    "location": "components/api-key/api-key-create-dialog.tsx"
+  },
+  "copy.user.components.api-key.api-key-create-dialog.d44e9b3d3b31": {
+    "text": "名称",
+    "audience": "technical",
+    "location": "components/api-key/api-key-create-dialog.tsx"
+  },
+  "copy.user.components.api-key.api-key-create-dialog.effa003332b6": {
+    "text": "请输入名称",
+    "audience": "technical",
+    "location": "components/api-key/api-key-create-dialog.tsx"
+  },
+  "copy.user.components.api-key.api-key-table.07ec86e0f1d4": {
+    "text": "创建时间",
+    "audience": "technical",
+    "location": "components/api-key/api-key-table.tsx"
+  },
+  "copy.user.components.api-key.api-key-table.2cd0f3be8738": {
+    "text": "取消",
+    "audience": "technical",
+    "location": "components/api-key/api-key-table.tsx"
+  },
+  "copy.user.components.api-key.api-key-table.458529e06228": {
+    "text": "从未使用",
+    "audience": "technical",
+    "location": "components/api-key/api-key-table.tsx"
+  },
+  "copy.user.components.api-key.api-key-table.99a52df3ff3d": {
+    "text": "Key",
+    "audience": "technical",
+    "location": "components/api-key/api-key-table.tsx"
+  },
+  "copy.user.components.api-key.api-key-table.c228558cf257": {
+    "text": "删除失败",
+    "audience": "technical",
+    "location": "components/api-key/api-key-table.tsx"
+  },
+  "copy.user.components.api-key.api-key-table.d44e9b3d3b31": {
+    "text": "名称",
+    "audience": "technical",
+    "location": "components/api-key/api-key-table.tsx"
+  },
+  "copy.user.components.api-key.api-key-table.ed31fbb483ee": {
+    "text": "操作",
+    "audience": "technical",
+    "location": "components/api-key/api-key-table.tsx"
+  },
+  "copy.user.components.api-key.last-used-table-head.2b80d4e7163d": {
+    "text": "最后使用",
+    "audience": "technical",
+    "location": "components/api-key/last-used-table-head.tsx"
+  },
+  "copy.user.components.api-key.last-used-table-head.b7f216012d49": {
+    "text": "数据延迟约5分钟",
+    "audience": "technical",
+    "location": "components/api-key/last-used-table-head.tsx"
+  },
+  "copy.user.components.auth.login-form.01c59316ce41": {
+    "text": "你取消了主站登录。",
+    "audience": "user",
+    "location": "components/auth/login-form.tsx"
+  },
+  "copy.user.components.auth.login-form.35e0a6baf5e8": {
+    "text": "主站暂时不可用，请稍后重试。",
+    "audience": "user",
+    "location": "components/auth/login-form.tsx"
+  },
+  "copy.user.components.auth.login-form.66c5fcb2ee11": {
+    "text": "使用频道账号即可参与课程点评，你的积分与频道共用。登录后会自动返回本站。",
+    "audience": "user",
+    "location": "components/auth/login-form.tsx"
+  },
+  "copy.user.components.auth.login-form.7a5c4255247b": {
+    "text": "使用主站登录",
+    "audience": "user",
+    "location": "components/auth/login-form.tsx"
+  },
+  "copy.user.components.auth.login-form.ed2dc40e25ea": {
+    "text": "主站登录未能完成，请重试。",
+    "audience": "user",
+    "location": "components/auth/login-form.tsx"
+  },
+  "copy.user.components.auth.login-form.f44a317e658b": {
+    "text": "前往主站登录",
+    "audience": "user",
+    "location": "components/auth/login-form.tsx"
+  },
+  "copy.user.components.auth.user-menu.10939f548645": {
+    "text": "积分",
+    "audience": "user",
+    "location": "components/auth/user-menu.tsx"
+  },
+  "copy.user.components.auth.user-menu.1e2df9c3075a": {
+    "text": "登录",
+    "audience": "user",
+    "location": "components/auth/user-menu.tsx"
+  },
+  "copy.user.components.auth.user-menu.3ab8cc15939f": {
+    "text": "退出登录",
+    "audience": "user",
+    "location": "components/auth/user-menu.tsx"
+  },
+  "copy.user.components.auth.user-menu.477d1ac374fc": {
+    "text": "我的点评",
+    "audience": "user",
+    "location": "components/auth/user-menu.tsx"
+  },
+  "copy.user.components.auth.user-menu.502e21b8a914": {
+    "text": "用户 ID: ",
+    "audience": "user",
+    "location": "components/auth/user-menu.tsx"
+  },
+  "copy.user.components.auth.user-menu.c87328acafb2": {
+    "text": "打开用户菜单",
+    "audience": "user",
+    "location": "components/auth/user-menu.tsx"
+  },
+  "copy.user.components.auth.user-menu.df3d58c7d84b": {
+    "text": "设置",
+    "audience": "user",
+    "location": "components/auth/user-menu.tsx"
+  },
+  "copy.user.components.auth.user-menu.e80149e50579": {
+    "text": "我的课程",
+    "audience": "user",
+    "location": "components/auth/user-menu.tsx"
+  },
+  "copy.user.components.course.course-badges.b023876f7825": {
+    "text": " 学分",
+    "audience": "user",
+    "location": "components/course/course-badges.tsx"
+  },
+  "copy.user.components.course.course-detail-moderator-remark.cb0bef43bb0b": {
+    "text": "修改管理员备注",
+    "audience": "user",
+    "location": "components/course/course-detail-moderator-remark.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.0fd5935a1a32": {
+    "text": "周课时：",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.11f49fad3a76": {
+    "text": "查看课程大纲",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.2254162264c1": {
+    "text": "校区：",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.32090f3541c7": {
+    "text": "开课学期",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.3ca3a8a1fb00": {
+    "text": "面向年级",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.430ea4d0e737": {
+    "text": "（主讲）",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.521ea9788171": {
+    "text": "教师信息暂缺",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.549cbbadcd8c": {
+    "text": "（合讲）",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.5a218b9ac440": {
+    "text": "人数：",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.6322fa286117": {
+    "text": "开课单位",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.653fa47404b1": {
+    "text": "已选学期",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.73226759270d": {
+    "text": "备注：",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.7de8c3e515b1": {
+    "text": "周次：",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.7ff8048129b6": {
+    "text": "同课号历年开课信息",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.808e510c384c": {
+    "text": "开课单位：",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.8784ebab6637": {
+    "text": "类别：",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.879cbad53cbe": {
+    "text": "总课时：",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.8810575d0e7b": {
+    "text": "教师：",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.8818c263d9b4": {
+    "text": "考核：",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.8a76809069a1": {
+    "text": " 个教学班",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.8b2106ca1371": {
+    "text": "反馈",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.a182f1486ada": {
+    "text": "合上教师",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.a540dbede76d": {
+    "text": "语言：",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.c3924adbfb99": {
+    "text": "课程周期：",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.f64cba59f8f6": {
+    "text": "学分：",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-overview.fa2ff3c379a7": {
+    "text": "查看全部",
+    "audience": "user",
+    "location": "components/course/course-detail-overview.tsx"
+  },
+  "copy.user.components.course.course-detail-reviews-section.1c0a8a53fbb5": {
+    "text": " 条点评",
+    "audience": "user",
+    "location": "components/course/course-detail-reviews-section.tsx"
+  },
+  "copy.user.components.course.course-detail-reviews-section.2428420e407f": {
+    "text": "共 ",
+    "audience": "user",
+    "location": "components/course/course-detail-reviews-section.tsx"
+  },
+  "copy.user.components.course.course-detail-reviews-section.477d1ac374fc": {
+    "text": "我的点评",
+    "audience": "user",
+    "location": "components/course/course-detail-reviews-section.tsx"
+  },
+  "copy.user.components.course.course-detail-reviews-section.667c47ebc44b": {
+    "text": "还没有点评，来抢沙发？",
+    "audience": "user",
+    "location": "components/course/course-detail-reviews-section.tsx"
+  },
+  "copy.user.components.course.course-detail-reviews-section.74cdbe78b5b2": {
+    "text": "写点评",
+    "audience": "user",
+    "location": "components/course/course-detail-reviews-section.tsx"
+  },
+  "copy.user.components.course.course-detail-reviews-section.b81bd1d0511d": {
+    "text": "还没有其他点评",
+    "audience": "user",
+    "location": "components/course/course-detail-reviews-section.tsx"
+  },
+  "copy.user.components.course.course-detail-reviews-section.f48b8c7146d4": {
+    "text": "课程点评",
+    "audience": "user",
+    "location": "components/course/course-detail-reviews-section.tsx"
+  },
+  "copy.user.components.course.course-detail-utils.01c108d51b41": {
+    "text": "合上教师：{v0}",
+    "audience": "user",
+    "location": "components/course/course-detail-utils.ts"
+  },
+  "copy.user.components.course.course-detail-utils.040e06692483": {
+    "text": "院系：{v0}",
+    "audience": "user",
+    "location": "components/course/course-detail-utils.ts"
+  },
+  "copy.user.components.course.course-detail-utils.1f3043d9cb99": {
+    "text": "课程分类：{v0}",
+    "audience": "user",
+    "location": "components/course/course-detail-utils.ts"
+  },
+  "copy.user.components.course.course-detail-utils.60d2204afbb8": {
+    "text": "课程链接：{v0}",
+    "audience": "user",
+    "location": "components/course/course-detail-utils.ts"
+  },
+  "copy.user.components.course.course-detail-utils.63296cdae076": {
+    "text": "最近学期：{v0}",
+    "audience": "user",
+    "location": "components/course/course-detail-utils.ts"
+  },
+  "copy.user.components.course.course-detail-utils.6a89b64321c6": {
+    "text": "课程基本信息",
+    "audience": "user",
+    "location": "components/course/course-detail-utils.ts"
+  },
+  "copy.user.components.course.course-detail-utils.756762e293f2": {
+    "text": "未提供",
+    "audience": "user",
+    "location": "components/course/course-detail-utils.ts"
+  },
+  "copy.user.components.course.course-detail-utils.77a97685633a": {
+    "text": "课程ID：{v0}",
+    "audience": "user",
+    "location": "components/course/course-detail-utils.ts"
+  },
+  "copy.user.components.course.course-detail-utils.97fba4ee4556": {
+    "text": "请在这里描述需要反馈的问题：",
+    "audience": "user",
+    "location": "components/course/course-detail-utils.ts"
+  },
+  "copy.user.components.course.course-detail-utils.a437ba1c813f": {
+    "text": "主讲教师：{v0}",
+    "audience": "user",
+    "location": "components/course/course-detail-utils.ts"
+  },
+  "copy.user.components.course.course-detail-utils.a7aee2503dce": {
+    "text": "学分：{v0}",
+    "audience": "user",
+    "location": "components/course/course-detail-utils.ts"
+  },
+  "copy.user.components.course.course-detail-utils.d07d1f8b938d": {
+    "text": "面向对象：{v0}",
+    "audience": "user",
+    "location": "components/course/course-detail-utils.ts"
+  },
+  "copy.user.components.course.course-detail-utils.d52fc7f53e59": {
+    "text": "课程代码：{v0}",
+    "audience": "user",
+    "location": "components/course/course-detail-utils.ts"
+  },
+  "copy.user.components.course.course-detail-utils.d586b094407c": {
+    "text": "[课程信息反馈] {v0} {v1}",
+    "audience": "user",
+    "location": "components/course/course-detail-utils.ts"
+  },
+  "copy.user.components.course.course-detail-utils.da647969ca34": {
+    "text": "课程名称：{v0}",
+    "audience": "user",
+    "location": "components/course/course-detail-utils.ts"
+  },
+  "copy.user.components.course.course-detail-utils.f41b1401daa2": {
+    "text": "授课语言：{v0}",
+    "audience": "user",
+    "location": "components/course/course-detail-utils.ts"
+  },
+  "copy.user.components.course.course-enrollment-list.0cbe09090cfb": {
+    "text": "暂无选课记录",
+    "audience": "user",
+    "location": "components/course/course-enrollment-list.tsx"
+  },
+  "copy.user.components.course.course-enrollment-list.2cd0f3be8738": {
+    "text": "取消",
+    "audience": "user",
+    "location": "components/course/course-enrollment-list.tsx"
+  },
+  "copy.user.components.course.course-enrollment-list.2f9daa828907": {
+    "text": "删除",
+    "audience": "user",
+    "location": "components/course/course-enrollment-list.tsx"
+  },
+  "copy.user.components.course.course-enrollment-list.8d7021060db4": {
+    "text": "删除选课记录",
+    "audience": "user",
+    "location": "components/course/course-enrollment-list.tsx"
+  },
+  "copy.user.components.course.course-enrollment-list.a089fb8b0266": {
+    "text": " 的选课记录。",
+    "audience": "user",
+    "location": "components/course/course-enrollment-list.tsx"
+  },
+  "copy.user.components.course.course-enrollment-list.b5e1bb61b32e": {
+    "text": "删除 ",
+    "audience": "user",
+    "location": "components/course/course-enrollment-list.tsx"
+  },
+  "copy.user.components.course.course-filters.2cbd78206ec3": {
+    "text": "授课语言",
+    "audience": "user",
+    "location": "components/course/course-filters.tsx"
+  },
+  "copy.user.components.course.course-filters.32090f3541c7": {
+    "text": "开课学期",
+    "audience": "user",
+    "location": "components/course/course-filters.tsx"
+  },
+  "copy.user.components.course.course-filters.406c59bfe6b8": {
+    "text": "校区",
+    "audience": "user",
+    "location": "components/course/course-filters.tsx"
+  },
+  "copy.user.components.course.course-filters.5c55a67935af": {
+    "text": "全部",
+    "audience": "user",
+    "location": "components/course/course-filters.tsx"
+  },
+  "copy.user.components.course.course-filters.6322fa286117": {
+    "text": "开课单位",
+    "audience": "user",
+    "location": "components/course/course-filters.tsx"
+  },
+  "copy.user.components.course.course-filters.6408c2c76e3b": {
+    "text": "综合评分",
+    "audience": "user",
+    "location": "components/course/course-filters.tsx"
+  },
+  "copy.user.components.course.course-filters.647f8a821b2b": {
+    "text": "筛选课程",
+    "audience": "user",
+    "location": "components/course/course-filters.tsx"
+  },
+  "copy.user.components.course.course-filters.657d9cbf45ec": {
+    "text": "清除筛选",
+    "audience": "user",
+    "location": "components/course/course-filters.tsx"
+  },
+  "copy.user.components.course.course-filters.66e8e3adf36b": {
+    "text": "课程类别",
+    "audience": "user",
+    "location": "components/course/course-filters.tsx"
+  },
+  "copy.user.components.course.course-filters.a96c9a854190": {
+    "text": "排序",
+    "audience": "user",
+    "location": "components/course/course-filters.tsx"
+  },
+  "copy.user.components.course.course-filters.b5f15473fdc0": {
+    "text": "筛选",
+    "audience": "user",
+    "location": "components/course/course-filters.tsx"
+  },
+  "copy.user.components.course.course-filters.cbd392ead6c6": {
+    "text": "目标年级",
+    "audience": "user",
+    "location": "components/course/course-filters.tsx"
+  },
+  "copy.user.components.course.course-filters.d50f21139128": {
+    "text": "全部{v0}",
+    "audience": "user",
+    "location": "components/course/course-filters.tsx"
+  },
+  "copy.user.components.course.course-filters.ed4a6ed53604": {
+    "text": "点评数量",
+    "audience": "user",
+    "location": "components/course/course-filters.tsx"
+  },
+  "copy.user.components.course.course-filters.f9d072c4804c": {
+    "text": "学分",
+    "audience": "user",
+    "location": "components/course/course-filters.tsx"
+  },
+  "copy.user.components.course.course-header-meta.521ea9788171": {
+    "text": "教师信息暂缺",
+    "audience": "user",
+    "location": "components/course/course-header-meta.tsx"
+  },
+  "copy.user.components.course.course-list.1f5350ec49f1": {
+    "text": "暂无课程",
+    "audience": "user",
+    "location": "components/course/course-list.tsx"
+  },
+  "copy.user.components.course.course-list.af069c0dac63": {
+    "text": "尝试调整筛选条件",
+    "audience": "user",
+    "location": "components/course/course-list.tsx"
+  },
+  "copy.user.components.course.course-moderator-remark-dialog.2cd0f3be8738": {
+    "text": "取消",
+    "audience": "user",
+    "location": "components/course/course-moderator-remark-dialog.tsx"
+  },
+  "copy.user.components.course.course-moderator-remark-dialog.2e87a200b286": {
+    "text": "备注内容",
+    "audience": "user",
+    "location": "components/course/course-moderator-remark-dialog.tsx"
+  },
+  "copy.user.components.course.course-moderator-remark-dialog.4f8b0ab088ec": {
+    "text": "保存备注",
+    "audience": "user",
+    "location": "components/course/course-moderator-remark-dialog.tsx"
+  },
+  "copy.user.components.course.course-moderator-remark-dialog.6309a3bb5ba4": {
+    "text": "保存失败",
+    "audience": "user",
+    "location": "components/course/course-moderator-remark-dialog.tsx"
+  },
+  "copy.user.components.course.course-moderator-remark-dialog.8a9f367b57e3": {
+    "text": "管理员备注",
+    "audience": "user",
+    "location": "components/course/course-moderator-remark-dialog.tsx"
+  },
+  "copy.user.components.course.course-moderator-remark-dialog.917b1c1f18d0": {
+    "text": "保存中...",
+    "audience": "user",
+    "location": "components/course/course-moderator-remark-dialog.tsx"
+  },
+  "copy.user.components.course.course-moderator-remark-dialog.9a67a794544d": {
+    "text": " 的备注会对所有用户可见。",
+    "audience": "user",
+    "location": "components/course/course-moderator-remark-dialog.tsx"
+  },
+  "copy.user.components.course.course-moderator-remark-dialog.d34df2f6b18b": {
+    "text": "填写管理员备注，清空后保存可移除备注",
+    "audience": "user",
+    "location": "components/course/course-moderator-remark-dialog.tsx"
+  },
+  "copy.user.components.course.course-notification-control.1183e332583e": {
+    "text": "通知等级：未登录",
+    "audience": "user",
+    "location": "components/course/course-notification-control.tsx"
+  },
+  "copy.user.components.course.course-notification-control.1e2df9c3075a": {
+    "text": "登录",
+    "audience": "user",
+    "location": "components/course/course-notification-control.tsx"
+  },
+  "copy.user.components.course.course-notification-control.4b5aba5d20da": {
+    "text": "通知等级",
+    "audience": "user",
+    "location": "components/course/course-notification-control.tsx"
+  },
+  "copy.user.components.course.course-notification-control.5e2a947290d1": {
+    "text": "屏蔽",
+    "audience": "user",
+    "location": "components/course/course-notification-control.tsx"
+  },
+  "copy.user.components.course.course-notification-control.a5e06fe853d2": {
+    "text": "在关注课程和关注点评中查看",
+    "audience": "user",
+    "location": "components/course/course-notification-control.tsx"
+  },
+  "copy.user.components.course.course-notification-control.b350488d45f0": {
+    "text": "不关注，也不从点评列表中隐藏",
+    "audience": "user",
+    "location": "components/course/course-notification-control.tsx"
+  },
+  "copy.user.components.course.course-notification-control.de907d10df98": {
+    "text": "普通",
+    "audience": "user",
+    "location": "components/course/course-notification-control.tsx"
+  },
+  "copy.user.components.course.course-notification-control.eb137dee4c0a": {
+    "text": "关注",
+    "audience": "user",
+    "location": "components/course/course-notification-control.tsx"
+  },
+  "copy.user.components.course.course-notification-control.fafd189cc3d0": {
+    "text": "在最新点评和点评搜索中隐藏此课点评",
+    "audience": "user",
+    "location": "components/course/course-notification-control.tsx"
+  },
+  "copy.user.components.course.course-notification-delete-action.2cd0f3be8738": {
+    "text": "取消",
+    "audience": "user",
+    "location": "components/course/course-notification-delete-action.tsx"
+  },
+  "copy.user.components.course.course-notification-delete-action.2f9daa828907": {
+    "text": "删除",
+    "audience": "user",
+    "location": "components/course/course-notification-delete-action.tsx"
+  },
+  "copy.user.components.course.course-notification-delete-action.7b60a692c160": {
+    "text": " 的",
+    "audience": "user",
+    "location": "components/course/course-notification-delete-action.tsx"
+  },
+  "copy.user.components.course.course-notification-delete-action.b5e1bb61b32e": {
+    "text": "删除 ",
+    "audience": "user",
+    "location": "components/course/course-notification-delete-action.tsx"
+  },
+  "copy.user.components.course.course-notification-delete-action.bc5e6bd4be1c": {
+    "text": "删除{v0}",
+    "audience": "user",
+    "location": "components/course/course-notification-delete-action.tsx"
+  },
+  "copy.user.components.course.course-review-filters.180ba6fb8c00": {
+    "text": "{v0} 分",
+    "audience": "user",
+    "location": "components/course/course-review-filters.tsx"
+  },
+  "copy.user.components.course.course-review-filters.4eecf5a9a9da": {
+    "text": "获赞最多",
+    "audience": "user",
+    "location": "components/course/course-review-filters.tsx"
+  },
+  "copy.user.components.course.course-review-filters.569af1a47dbd": {
+    "text": "最新",
+    "audience": "user",
+    "location": "components/course/course-review-filters.tsx"
+  },
+  "copy.user.components.course.course-review-filters.79a4ef019e9c": {
+    "text": "学期",
+    "audience": "user",
+    "location": "components/course/course-review-filters.tsx"
+  },
+  "copy.user.components.course.course-review-filters.96fff2e26c8d": {
+    "text": "评分",
+    "audience": "user",
+    "location": "components/course/course-review-filters.tsx"
+  },
+  "copy.user.components.course.course-review-filters.9f838b6a529b": {
+    "text": " 条点评）",
+    "audience": "user",
+    "location": "components/course/course-review-filters.tsx"
+  },
+  "copy.user.components.course.course-review-filters.a0670d57e5bf": {
+    "text": "全部学期",
+    "audience": "user",
+    "location": "components/course/course-review-filters.tsx"
+  },
+  "copy.user.components.course.course-review-filters.a96c9a854190": {
+    "text": "排序",
+    "audience": "user",
+    "location": "components/course/course-review-filters.tsx"
+  },
+  "copy.user.components.course.course-review-filters.ee9dc66201f7": {
+    "text": "全部评分",
+    "audience": "user",
+    "location": "components/course/course-review-filters.tsx"
+  },
+  "copy.user.components.course.course-review-trend-dialog.15abb90445c9": {
+    "text": "暂无趋势数据",
+    "audience": "user",
+    "location": "components/course/course-review-trend-dialog.tsx"
+  },
+  "copy.user.components.course.course-review-trend-dialog.180ba6fb8c00": {
+    "text": "{v0} 分",
+    "audience": "user",
+    "location": "components/course/course-review-trend-dialog.tsx"
+  },
+  "copy.user.components.course.course-review-trend-dialog.3e88eac78dac": {
+    "text": "{v0} 条",
+    "audience": "user",
+    "location": "components/course/course-review-trend-dialog.tsx"
+  },
+  "copy.user.components.course.course-review-trend-dialog.55c9a9b4a20a": {
+    "text": "点评趋势",
+    "audience": "user",
+    "location": "components/course/course-review-trend-dialog.tsx"
+  },
+  "copy.user.components.course.course-review-trend-dialog.9b59e637c838": {
+    "text": "趋势",
+    "audience": "user",
+    "location": "components/course/course-review-trend-dialog.tsx"
+  },
+  "copy.user.components.course.course-review-trend-dialog.e382e4b1420a": {
+    "text": "点评均分",
+    "audience": "user",
+    "location": "components/course/course-review-trend-dialog.tsx"
+  },
+  "copy.user.components.course.course-review-trend-dialog.ed4a6ed53604": {
+    "text": "点评数量",
+    "audience": "user",
+    "location": "components/course/course-review-trend-dialog.tsx"
+  },
+  "copy.user.components.course.course-search-bar.a994c103e1d9": {
+    "text": "搜索课程名、课程号或教师名...",
+    "audience": "user",
+    "location": "components/course/course-search-bar.tsx"
+  },
+  "copy.user.components.course.followed-course-list.b379a5389e00": {
+    "text": "登录后查看关注课程",
+    "audience": "user",
+    "location": "components/course/followed-course-list.tsx"
+  },
+  "copy.user.components.course.followed-course-list.e0dec5bbbb00": {
+    "text": "暂无关注课程",
+    "audience": "user",
+    "location": "components/course/followed-course-list.tsx"
+  },
+  "copy.user.components.course.hot-course-list.095f31ef0d81": {
+    "text": "热度",
+    "audience": "user",
+    "location": "components/course/hot-course-list.tsx"
+  },
+  "copy.user.components.course.hot-course-list.557d14cc702c": {
+    "text": "暂无热门课程",
+    "audience": "user",
+    "location": "components/course/hot-course-list.tsx"
+  },
+  "copy.user.components.course.hot-course-list.60db1afb4022": {
+    "text": "课程",
+    "audience": "user",
+    "location": "components/course/hot-course-list.tsx"
+  },
+  "copy.user.components.course.hot-course-list.6570a98f2850": {
+    "text": "排名",
+    "audience": "user",
+    "location": "components/course/hot-course-list.tsx"
+  },
+  "copy.user.components.course.rating-display.1c0a8a53fbb5": {
+    "text": " 条点评",
+    "audience": "user",
+    "location": "components/course/rating-display.tsx"
+  },
+  "copy.user.components.course.rating-distribution.1c0a8a53fbb5": {
+    "text": " 条点评",
+    "audience": "user",
+    "location": "components/course/rating-distribution.tsx"
+  },
+  "copy.user.components.course.rating-distribution.d1005c4482ca": {
+    "text": " 星",
+    "audience": "user",
+    "location": "components/course/rating-distribution.tsx"
+  },
+  "copy.user.components.course.related-courses-sidebar.c6b9531261da": {
+    "text": "其他老师的",
+    "audience": "user",
+    "location": "components/course/related-courses-sidebar.tsx"
+  },
+  "copy.user.components.course.related-courses-sidebar.f47857303db6": {
+    "text": "的其他课",
+    "audience": "user",
+    "location": "components/course/related-courses-sidebar.tsx"
+  },
+  "copy.user.components.layout.route-error-page.1a079fc9362f": {
+    "text": "页面异常",
+    "audience": "user",
+    "location": "components/layout/route-error-page.tsx"
+  },
+  "copy.user.components.layout.route-error-page.cda8f4d19de2": {
+    "text": "可能是网络请求、页面数据或前端状态出现了临时问题，请稍后再试。",
+    "audience": "user",
+    "location": "components/layout/route-error-page.tsx"
+  },
+  "copy.user.components.layout.route-error-page.d27b8e6d1494": {
+    "text": "这页暂时没有正常加载",
+    "audience": "user",
+    "location": "components/layout/route-error-page.tsx"
+  },
+  "copy.user.components.layout.route-fallback.9dc0825fba54": {
+    "text": "加载中...",
+    "audience": "user",
+    "location": "components/layout/route-fallback.tsx"
+  },
+  "copy.user.components.layout.site-footer.45a6d115fdfb": {
+    "text": "常见问题",
+    "audience": "user",
+    "location": "components/layout/site-footer.tsx"
+  },
+  "copy.user.components.layout.site-footer.52d25a9e30ba": {
+    "text": "关于",
+    "audience": "user",
+    "location": "components/layout/site-footer.tsx"
+  },
+  "copy.user.components.layout.site-footer.7b45f5b81d1e": {
+    "text": ". 保留所有权利。",
+    "audience": "user",
+    "location": "components/layout/site-footer.tsx"
+  },
+  "copy.user.components.layout.site-footer.a512b3fc5b4b": {
+    "text": "页脚导航",
+    "audience": "user",
+    "location": "components/layout/site-footer.tsx"
+  },
+  "copy.user.components.layout.site-header.203c08e0d44a": {
+    "text": "首页",
+    "audience": "user",
+    "location": "components/layout/site-header.tsx"
+  },
+  "copy.user.components.layout.site-header.44ce7ae909bb": {
+    "text": "搜索",
+    "audience": "user",
+    "location": "components/layout/site-header.tsx"
+  },
+  "copy.user.components.layout.site-header.4ce4cafdd056": {
+    "text": "菜单",
+    "audience": "user",
+    "location": "components/layout/site-header.tsx"
+  },
+  "copy.user.components.layout.site-header.60db1afb4022": {
+    "text": "课程",
+    "audience": "user",
+    "location": "components/layout/site-header.tsx"
+  },
+  "copy.user.components.layout.site-header.859c3f6d9dff": {
+    "text": "搜索 \"",
+    "audience": "user",
+    "location": "components/layout/site-header.tsx"
+  },
+  "copy.user.components.layout.site-header.89abe8c6ac13": {
+    "text": "统计",
+    "audience": "user",
+    "location": "components/layout/site-header.tsx"
+  },
+  "copy.user.components.layout.site-header.a6654120cbec": {
+    "text": "教师",
+    "audience": "user",
+    "location": "components/layout/site-header.tsx"
+  },
+  "copy.user.components.layout.site-header.bb6d995724f4": {
+    "text": "管理",
+    "audience": "user",
+    "location": "components/layout/site-header.tsx"
+  },
+  "copy.user.components.layout.site-header.c00a21fdf784": {
+    "text": "搜索关键词",
+    "audience": "user",
+    "location": "components/layout/site-header.tsx"
+  },
+  "copy.user.components.layout.site-header.c304ad38736d": {
+    "text": "搜索...",
+    "audience": "user",
+    "location": "components/layout/site-header.tsx"
+  },
+  "copy.user.components.layout.site-header.cdc394e2e036": {
+    "text": "热门",
+    "audience": "user",
+    "location": "components/layout/site-header.tsx"
+  },
+  "copy.user.components.layout.site-header.d2469bc43d2c": {
+    "text": "点评",
+    "audience": "user",
+    "location": "components/layout/site-header.tsx"
+  },
+  "copy.user.components.layout.site-header.e72622fe470d": {
+    "text": "导航",
+    "audience": "user",
+    "location": "components/layout/site-header.tsx"
+  },
+  "copy.user.components.point.point-record-list.10939f548645": {
+    "text": "积分",
+    "audience": "user",
+    "location": "components/point/point-record-list.tsx"
+  },
+  "copy.user.components.point.point-record-list.23069a877b5d": {
+    "text": "暂无积分记录",
+    "audience": "user",
+    "location": "components/point/point-record-list.tsx"
+  },
+  "copy.user.components.point.point-record-list.8b6ff498515b": {
+    "text": "时间",
+    "audience": "user",
+    "location": "components/point/point-record-list.tsx"
+  },
+  "copy.user.components.point.point-record-list.dc2ba467fc7a": {
+    "text": "描述",
+    "audience": "user",
+    "location": "components/point/point-record-list.tsx"
+  },
+  "copy.user.components.review.moderator-remark-dialog.2cd0f3be8738": {
+    "text": "取消",
+    "audience": "user",
+    "location": "components/review/moderator-remark-dialog.tsx"
+  },
+  "copy.user.components.review.moderator-remark-dialog.49dd2bd35dd7": {
+    "text": "保存批注",
+    "audience": "user",
+    "location": "components/review/moderator-remark-dialog.tsx"
+  },
+  "copy.user.components.review.moderator-remark-dialog.6309a3bb5ba4": {
+    "text": "保存失败",
+    "audience": "user",
+    "location": "components/review/moderator-remark-dialog.tsx"
+  },
+  "copy.user.components.review.moderator-remark-dialog.6d5aba564779": {
+    "text": "批注内容",
+    "audience": "user",
+    "location": "components/review/moderator-remark-dialog.tsx"
+  },
+  "copy.user.components.review.moderator-remark-dialog.8680c82f8d97": {
+    "text": " 的批注会对所有用户可见。",
+    "audience": "user",
+    "location": "components/review/moderator-remark-dialog.tsx"
+  },
+  "copy.user.components.review.moderator-remark-dialog.917b1c1f18d0": {
+    "text": "保存中...",
+    "audience": "user",
+    "location": "components/review/moderator-remark-dialog.tsx"
+  },
+  "copy.user.components.review.moderator-remark-dialog.b0b89549bc8b": {
+    "text": "点评 #",
+    "audience": "user",
+    "location": "components/review/moderator-remark-dialog.tsx"
+  },
+  "copy.user.components.review.moderator-remark-dialog.bf6780b11d5f": {
+    "text": "填写管理员批注，清空后保存可移除批注",
+    "audience": "user",
+    "location": "components/review/moderator-remark-dialog.tsx"
+  },
+  "copy.user.components.review.moderator-remark-dialog.fe97e431532f": {
+    "text": "管理员批注",
+    "audience": "user",
+    "location": "components/review/moderator-remark-dialog.tsx"
+  },
+  "copy.user.components.review.rating-stars.a3e3904818fc": {
+    "text": "{v0} 星",
+    "audience": "user",
+    "location": "components/review/rating-stars.tsx"
+  },
+  "copy.user.components.review.review-card-time.0c508bc32e44": {
+    "text": "(已修改)",
+    "audience": "user",
+    "location": "components/review/review-card-time.tsx"
+  },
+  "copy.user.components.review.review-card-time.530e38e91fd8": {
+    "text": "创建于 {v0}",
+    "audience": "user",
+    "location": "components/review/review-card-time.tsx"
+  },
+  "copy.user.components.review.review-card.150f47300f4d": {
+    "text": "添加批注",
+    "audience": "user",
+    "location": "components/review/review-card.tsx"
+  },
+  "copy.user.components.review.review-card.2cd0f3be8738": {
+    "text": "取消",
+    "audience": "user",
+    "location": "components/review/review-card.tsx"
+  },
+  "copy.user.components.review.review-card.2f9daa828907": {
+    "text": "删除",
+    "audience": "user",
+    "location": "components/review/review-card.tsx"
+  },
+  "copy.user.components.review.review-card.3cd5d9b5704c": {
+    "text": "修改点评",
+    "audience": "user",
+    "location": "components/review/review-card.tsx"
+  },
+  "copy.user.components.review.review-card.5e19d0f37193": {
+    "text": "复制点评链接",
+    "audience": "user",
+    "location": "components/review/review-card.tsx"
+  },
+  "copy.user.components.review.review-card.5e807b376ee8": {
+    "text": "修改批注",
+    "audience": "user",
+    "location": "components/review/review-card.tsx"
+  },
+  "copy.user.components.review.review-card.8f6f8d979c98": {
+    "text": "已复制",
+    "audience": "user",
+    "location": "components/review/review-card.tsx"
+  },
+  "copy.user.components.review.review-card.a3ea3c17b401": {
+    "text": "确认删除",
+    "audience": "user",
+    "location": "components/review/review-card.tsx"
+  },
+  "copy.user.components.review.review-card.c0945e19fa49": {
+    "text": "删除后无法恢复，确定要删除这条点评吗？",
+    "audience": "user",
+    "location": "components/review/review-card.tsx"
+  },
+  "copy.user.components.review.review-card.e6b1e035bda1": {
+    "text": "删除点评",
+    "audience": "user",
+    "location": "components/review/review-card.tsx"
+  },
+  "copy.user.components.review.review-content.fdcd1bd074c9": {
+    "text": "成绩",
+    "audience": "user",
+    "location": "components/review/review-content.tsx"
+  },
+  "copy.user.components.review.review-form-content-editor.04031807d096": {
+    "text": "相关立场",
+    "audience": "user",
+    "location": "components/review/review-form-content-editor.tsx"
+  },
+  "copy.user.components.review.review-form-content-editor.051836569928": {
+    "text": "编辑",
+    "audience": "user",
+    "location": "components/review/review-form-content-editor.tsx"
+  },
+  "copy.user.components.review.review-form-content-editor.0a932e31074d": {
+    "text": "点评内容",
+    "audience": "user",
+    "location": "components/review/review-form-content-editor.tsx"
+  },
+  "copy.user.components.review.review-form-content-editor.13d61fea9f17": {
+    "text": "预览",
+    "audience": "user",
+    "location": "components/review/review-form-content-editor.tsx"
+  },
+  "copy.user.components.review.review-form-content-editor.457271dfe88b": {
+    "text": " 字",
+    "audience": "user",
+    "location": "components/review/review-form-content-editor.tsx"
+  },
+  "copy.user.components.review.review-form-content-editor.5774b81023ea": {
+    "text": "分享你对这门课程的看法...（支持 Markdown）",
+    "audience": "user",
+    "location": "components/review/review-form-content-editor.tsx"
+  },
+  "copy.user.components.review.review-form-content-editor.6e0358029d6a": {
+    "text": "避免滥用缩写、梗、隐喻等让其他读者难以理解的表达方式和内容。避免使用情绪化用语和冒犯性言论。",
+    "audience": "user",
+    "location": "components/review/review-form-content-editor.tsx"
+  },
+  "copy.user.components.review.review-form-content-editor.8031c071e54c": {
+    "text": "理想的点评应当富有事实且对课程有全面的描述。比如课讲得好但是考核很严格，或者作业奇葩但给分很高。二者都说出来更有利于同学们做出全面的选择和判断。",
+    "audience": "user",
+    "location": "components/review/review-form-content-editor.tsx"
+  },
+  "copy.user.components.review.review-form-content-editor.ab677d30bb6d": {
+    "text": "提交点评表示您同意授权本网站使用点评的内容，并且了解本站的",
+    "audience": "user",
+    "location": "components/review/review-form-content-editor.tsx"
+  },
+  "copy.user.components.review.review-form-content-editor.ac9aab1b8707": {
+    "text": "欢迎畅所欲言。点评模板可以按需修改或删除。编辑框支持 Markdown 语法。",
+    "audience": "user",
+    "location": "components/review/review-form-content-editor.tsx"
+  },
+  "copy.user.components.review.review-form-content-editor.d5ee14c78799": {
+    "text": "预览区域",
+    "audience": "user",
+    "location": "components/review/review-form-content-editor.tsx"
+  },
+  "copy.user.components.review.review-form-content-editor.ec791ea9ba47": {
+    "text": " 字，至少 ",
+    "audience": "user",
+    "location": "components/review/review-form-content-editor.tsx"
+  },
+  "copy.user.components.review.review-form-template.84a5a8034029": {
+    "text": "考核标准：",
+    "audience": "user",
+    "location": "components/review/review-form-template.ts"
+  },
+  "copy.user.components.review.review-form-template.b6e48508c6f8": {
+    "text": "授课质量：",
+    "audience": "user",
+    "location": "components/review/review-form-template.ts"
+  },
+  "copy.user.components.review.review-form-template.daf6823736e9": {
+    "text": "课程内容：",
+    "audience": "user",
+    "location": "components/review/review-form-template.ts"
+  },
+  "copy.user.components.review.review-form-template.dc3d37ce9a14": {
+    "text": "上课自由度：",
+    "audience": "user",
+    "location": "components/review/review-form-template.ts"
+  },
+  "copy.user.components.review.review-form.130cb02ba7b2": {
+    "text": "2026-2027 代表 2026-2027 学年度（2026.9-2027.8）。1代表秋季学期，2代表春季学期，3代表夏季学期/小学期。",
+    "audience": "user",
+    "location": "components/review/review-form.tsx"
+  },
+  "copy.user.components.review.review-form.1440c7e23865": {
+    "text": "提交失败",
+    "audience": "user",
+    "location": "components/review/review-form.tsx"
+  },
+  "copy.user.components.review.review-form.1c8e49eaac67": {
+    "text": "更新点评",
+    "audience": "user",
+    "location": "components/review/review-submit-button.tsx"
+  },
+  "copy.user.components.review.review-form.2cd0f3be8738": {
+    "text": "取消",
+    "audience": "user",
+    "location": "components/review/review-form.tsx"
+  },
+  "copy.user.components.review.review-form.2fb1db2875cb": {
+    "text": "提交中...",
+    "audience": "user",
+    "location": "components/review/review-submit-button.tsx"
+  },
+  "copy.user.components.review.review-form.522bedf98774": {
+    "text": "选择学期",
+    "audience": "user",
+    "location": "components/review/review-form.tsx"
+  },
+  "copy.user.components.review.review-form.55d4ef829a9d": {
+    "text": "点评内容最多 {v0} 个字符",
+    "audience": "user",
+    "location": "components/review/review-form.tsx"
+  },
+  "copy.user.components.review.review-form.79a4ef019e9c": {
+    "text": "学期",
+    "audience": "user",
+    "location": "components/review/review-form.tsx"
+  },
+  "copy.user.components.review.review-form.82efb72bee87": {
+    "text": "点评内容至少需要 {v0} 个字符",
+    "audience": "user",
+    "location": "components/review/review-form.tsx"
+  },
+  "copy.user.components.review.review-form.86d12509c85f": {
+    "text": "分数（可选）",
+    "audience": "user",
+    "location": "components/review/review-form.tsx"
+  },
+  "copy.user.components.review.review-form.96fff2e26c8d": {
+    "text": "评分",
+    "audience": "user",
+    "location": "components/review/review-form.tsx"
+  },
+  "copy.user.components.review.review-form.a25faaaa6b25": {
+    "text": "分数最多 {v0} 个字符",
+    "audience": "user",
+    "location": "components/review/review-form.tsx"
+  },
+  "copy.user.components.review.review-form.ad57c41ed428": {
+    "text": "请填写点评正文后再提交",
+    "audience": "user",
+    "location": "components/review/review-form.tsx"
+  },
+  "copy.user.components.review.review-form.bfacfa460b1c": {
+    "text": "已恢复本地草稿",
+    "audience": "user",
+    "location": "components/review/review-draft-notice.tsx"
+  },
+  "copy.user.components.review.review-form.c42296934f43": {
+    "text": "请选择学期",
+    "audience": "user",
+    "location": "components/review/review-form.tsx"
+  },
+  "copy.user.components.review.review-form.dd6d1ad1590a": {
+    "text": "如 A、92、中期退课（W）",
+    "audience": "user",
+    "location": "components/review/review-form.tsx"
+  },
+  "copy.user.components.review.review-form.df8ab5bdc788": {
+    "text": "清除草稿",
+    "audience": "user",
+    "location": "components/review/review-draft-notice.tsx"
+  },
+  "copy.user.components.review.review-form.e3bb52242abf": {
+    "text": "请选择评分（1-5 星）",
+    "audience": "user",
+    "location": "components/review/review-form.tsx"
+  },
+  "copy.user.components.review.review-form.e9643cc29816": {
+    "text": "本地草稿已保存",
+    "audience": "user",
+    "location": "components/review/review-draft-notice.tsx"
+  },
+  "copy.user.components.review.review-form.ed2f4b0484d7": {
+    "text": "发布点评",
+    "audience": "user",
+    "location": "components/review/review-submit-button.tsx"
+  },
+  "copy.user.components.review.review-list.3249c5028e99": {
+    "text": "暂无点评",
+    "audience": "user",
+    "location": "components/review/review-list.tsx"
+  },
+  "copy.user.components.review.review-revisions-dialog.918eec070450": {
+    "text": "加载 revision 失败",
+    "audience": "user",
+    "location": "components/review/review-revisions-dialog.tsx"
+  },
+  "copy.user.components.review.review-revisions-dialog.97bbce3408a9": {
+    "text": "下一条 revision",
+    "audience": "user",
+    "location": "components/review/review-revisions-dialog.tsx"
+  },
+  "copy.user.components.review.review-revisions-dialog.9dc0825fba54": {
+    "text": "加载中...",
+    "audience": "user",
+    "location": "components/review/review-revisions-dialog.tsx"
+  },
+  "copy.user.components.review.review-revisions-dialog.a9f13188a317": {
+    "text": "暂无 revision 记录",
+    "audience": "user",
+    "location": "components/review/review-revisions-dialog.tsx"
+  },
+  "copy.user.components.review.review-revisions-dialog.b0b89549bc8b": {
+    "text": "点评 #",
+    "audience": "user",
+    "location": "components/review/review-revisions-dialog.tsx"
+  },
+  "copy.user.components.review.review-revisions-dialog.b3fc4e89095e": {
+    "text": "查看这条点评保存过的历史版本内容。",
+    "audience": "user",
+    "location": "components/review/review-revisions-dialog.tsx"
+  },
+  "copy.user.components.review.review-revisions-dialog.f1a0c64eb1e2": {
+    "text": "上一条 revision",
+    "audience": "user",
+    "location": "components/review/review-revisions-dialog.tsx"
+  },
+  "copy.user.components.review.review-revisions-dialog.f79958532e61": {
+    "text": " 的修订历史",
+    "audience": "user",
+    "location": "components/review/review-revisions-dialog.tsx"
+  },
+  "copy.user.components.review.wrong-course-warning.13bd2ee75a52": {
+    "text": "可能选错了课程",
+    "audience": "user",
+    "location": "components/review/wrong-course-warning.tsx"
+  },
+  "copy.user.components.review.wrong-course-warning.1bc395f9109b": {
+    "text": "，最近开课：",
+    "audience": "user",
+    "location": "components/review/wrong-course-warning.tsx"
+  },
+  "copy.user.components.review.wrong-course-warning.9ae8dcbe2d0d": {
+    "text": "主讲教师：",
+    "audience": "user",
+    "location": "components/review/wrong-course-warning.tsx"
+  },
+  "copy.user.components.review.wrong-course-warning.a295de460aba": {
+    "text": "去写点评",
+    "audience": "user",
+    "location": "components/review/wrong-course-warning.tsx"
+  },
+  "copy.user.components.review.wrong-course-warning.fae705e0a006": {
+    "text": "当前课程最近开课于 ",
+    "audience": "user",
+    "location": "components/review/wrong-course-warning.tsx"
+  },
+  "copy.user.components.review.wrong-course-warning.fc27f265f0ea": {
+    "text": "。以下课程最近开课时间更新，可能是你想点评的课程。",
+    "audience": "user",
+    "location": "components/review/wrong-course-warning.tsx"
+  },
+  "copy.user.components.shortcuts.shortcut-data.10939f548645": {
+    "text": "积分",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.1c5a05112a07": {
+    "text": "查看关注课程的点评",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.203c08e0d44a": {
+    "text": "首页",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.24a426113b37": {
+    "text": "关注点评",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.3941c317f8fe": {
+    "text": "浏览和搜索教师",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.44ce7ae909bb": {
+    "text": "搜索",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.477d1ac374fc": {
+    "text": "我的点评",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.498e1d59b4d7": {
+    "text": "退出",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.60db1afb4022": {
+    "text": "课程",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.6774a77de4da": {
+    "text": "回到首页",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.87006fb91401": {
+    "text": "给当前可见按钮、链接和输入框显示编号",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.8b3929779a11": {
+    "text": "查看热门课程",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.9f469fdb28d4": {
+    "text": "关闭提示或退出页面控件模式",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.a6654120cbec": {
+    "text": "教师",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.b28428e5fb41": {
+    "text": "查看管理统计",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.b423bd0833b4": {
+    "text": "查看我关注的课程",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.b5148d0abc51": {
+    "text": "浏览和搜索课程",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.c062ec7f700d": {
+    "text": "打开顶部搜索框",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.c590d930ddd9": {
+    "text": "查看积分流水",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.c6871ff9fd78": {
+    "text": "打开或关闭此提示",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.c9cd3687fc73": {
+    "text": "站点统计",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.d2469bc43d2c": {
+    "text": "点评",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.d6e3b43107c5": {
+    "text": "热门课程",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.d76ab02152f3": {
+    "text": "查看我发布的点评",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.dc3b4a31f64f": {
+    "text": "快捷键提示",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.e5c0ab3568f5": {
+    "text": "查看公开点评",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.e80149e50579": {
+    "text": "我的课程",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-data.f8974e18945a": {
+    "text": "页面控件",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-data.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-dom.0e9879fd8345": {
+    "text": "控件",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-dom.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-dom.8a5dcce3a970": {
+    "text": "输入框",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-dom.ts"
+  },
+  "copy.user.components.shortcuts.shortcut-help-dialog.452c7b10d57a": {
+    "text": "页面",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-help-dialog.tsx"
+  },
+  "copy.user.components.shortcuts.shortcut-help-dialog.6eb1b64e260a": {
+    "text": "需要登录",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-help-dialog.tsx"
+  },
+  "copy.user.components.shortcuts.shortcut-help-dialog.9228f9aa4c65": {
+    "text": "需要管理员权限",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-help-dialog.tsx"
+  },
+  "copy.user.components.shortcuts.shortcut-help-dialog.93c6900d289b": {
+    "text": "页面跳转可先按 G 再按目标键；输入框内不会触发全局快捷键。",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-help-dialog.tsx"
+  },
+  "copy.user.components.shortcuts.shortcut-help-dialog.ed31fbb483ee": {
+    "text": "操作",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-help-dialog.tsx"
+  },
+  "copy.user.components.shortcuts.shortcut-help-dialog.ee2638183d3e": {
+    "text": "快捷键",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-help-dialog.tsx"
+  },
+  "copy.user.components.shortcuts.shortcut-help-dialog.ff5a83daebf9": {
+    "text": "输入标记可点击或聚焦控件，Esc 退出",
+    "audience": "user",
+    "location": "components/shortcuts/shortcut-help-dialog.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-chart.0b50583f022e": {
+    "text": "新增点评",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-chart.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-chart.51f48f6d74a7": {
+    "text": "被点评课程",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-chart.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-chart.545a676083c8": {
+    "text": "用户总数",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-chart.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-chart.77d13c083dba": {
+    "text": "新增点踩",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-chart.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-chart.931f9c9d4123": {
+    "text": "活跃用户",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-chart.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-chart.a7d035e5fecb": {
+    "text": "新增积分",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-chart.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-chart.c1320b7dd4f9": {
+    "text": "点评作者",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-chart.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-chart.c5ddc469e1d4": {
+    "text": "点评总数",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-chart.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-chart.e1a2345cdc47": {
+    "text": "新增点赞",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-chart.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-chart.ebabc83b6830": {
+    "text": "新增用户",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-chart.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-table.0b50583f022e": {
+    "text": "新增点评",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-table.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-table.51f48f6d74a7": {
+    "text": "被点评课程",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-table.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-table.545a676083c8": {
+    "text": "用户总数",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-table.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-table.70d0c1b33626": {
+    "text": "日期",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-table.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-table.77d13c083dba": {
+    "text": "新增点踩",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-table.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-table.931f9c9d4123": {
+    "text": "活跃用户",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-table.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-table.9f34653227fc": {
+    "text": "每日统计",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-table.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-table.a7d035e5fecb": {
+    "text": "新增积分",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-table.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-table.c1320b7dd4f9": {
+    "text": "点评作者",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-table.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-table.c5ddc469e1d4": {
+    "text": "点评总数",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-table.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-table.e1a2345cdc47": {
+    "text": "新增点赞",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-table.tsx"
+  },
+  "copy.user.components.site-stats.daily-stats-table.ebabc83b6830": {
+    "text": "新增用户",
+    "audience": "user",
+    "location": "components/site-stats/daily-stats-table.tsx"
+  },
+  "copy.user.components.site-stats.stats-card.0b50583f022e": {
+    "text": "新增点评",
+    "audience": "user",
+    "location": "components/site-stats/stats-card.tsx"
+  },
+  "copy.user.components.site-stats.stats-card.545a676083c8": {
+    "text": "用户总数",
+    "audience": "user",
+    "location": "components/site-stats/stats-card.tsx"
+  },
+  "copy.user.components.site-stats.stats-card.77d13c083dba": {
+    "text": "新增点踩",
+    "audience": "user",
+    "location": "components/site-stats/stats-card.tsx"
+  },
+  "copy.user.components.site-stats.stats-card.86fa6f9d2237": {
+    "text": "被点评课程总数",
+    "audience": "user",
+    "location": "components/site-stats/stats-card.tsx"
+  },
+  "copy.user.components.site-stats.stats-card.931f9c9d4123": {
+    "text": "活跃用户",
+    "audience": "user",
+    "location": "components/site-stats/stats-card.tsx"
+  },
+  "copy.user.components.site-stats.stats-card.a7d035e5fecb": {
+    "text": "新增积分",
+    "audience": "user",
+    "location": "components/site-stats/stats-card.tsx"
+  },
+  "copy.user.components.site-stats.stats-card.c1320b7dd4f9": {
+    "text": "点评作者",
+    "audience": "user",
+    "location": "components/site-stats/stats-card.tsx"
+  },
+  "copy.user.components.site-stats.stats-card.c5ddc469e1d4": {
+    "text": "点评总数",
+    "audience": "user",
+    "location": "components/site-stats/stats-card.tsx"
+  },
+  "copy.user.components.site-stats.stats-card.e1a2345cdc47": {
+    "text": "新增点赞",
+    "audience": "user",
+    "location": "components/site-stats/stats-card.tsx"
+  },
+  "copy.user.components.site-stats.stats-card.ebabc83b6830": {
+    "text": "新增用户",
+    "audience": "user",
+    "location": "components/site-stats/stats-card.tsx"
+  },
+  "copy.user.components.teacher.hot-teacher-list.095f31ef0d81": {
+    "text": "热度",
+    "audience": "user",
+    "location": "components/teacher/hot-teacher-list.tsx"
+  },
+  "copy.user.components.teacher.hot-teacher-list.6570a98f2850": {
+    "text": "排名",
+    "audience": "user",
+    "location": "components/teacher/hot-teacher-list.tsx"
+  },
+  "copy.user.components.teacher.hot-teacher-list.9890ce184f1a": {
+    "text": "暂时无法加载教师榜，请稍后重试",
+    "audience": "user",
+    "location": "components/teacher/hot-teacher-list.tsx"
+  },
+  "copy.user.components.teacher.hot-teacher-list.a6654120cbec": {
+    "text": "教师",
+    "audience": "user",
+    "location": "components/teacher/hot-teacher-list.tsx"
+  },
+  "copy.user.components.teacher.hot-teacher-list.aa79ce5c8b7e": {
+    "text": " 门课程有互动",
+    "audience": "user",
+    "location": "components/teacher/hot-teacher-list.tsx"
+  },
+  "copy.user.components.teacher.hot-teacher-list.c6cdb3ae74ad": {
+    "text": "本期还没有教师上榜，课程有新的点评互动后会更新",
+    "audience": "user",
+    "location": "components/teacher/hot-teacher-list.tsx"
+  },
+  "copy.user.components.teacher.teacher-filters.26f18f117c01": {
+    "text": "职称",
+    "audience": "user",
+    "location": "components/teacher/teacher-filters.tsx"
+  },
+  "copy.user.components.teacher.teacher-filters.33a172fee29a": {
+    "text": "学院",
+    "audience": "user",
+    "location": "components/teacher/teacher-filters.tsx"
+  },
+  "copy.user.components.teacher.teacher-filters.5c55a67935af": {
+    "text": "全部",
+    "audience": "user",
+    "location": "components/teacher/teacher-filters.tsx"
+  },
+  "copy.user.components.teacher.teacher-filters.657d9cbf45ec": {
+    "text": "清除筛选",
+    "audience": "user",
+    "location": "components/teacher/teacher-filters.tsx"
+  },
+  "copy.user.components.teacher.teacher-filters.b5f15473fdc0": {
+    "text": "筛选",
+    "audience": "user",
+    "location": "components/teacher/teacher-filters.tsx"
+  },
+  "copy.user.components.teacher.teacher-filters.d50f21139128": {
+    "text": "全部{v0}",
+    "audience": "user",
+    "location": "components/teacher/teacher-filters.tsx"
+  },
+  "copy.user.components.teacher.teacher-filters.f9bb3804dd37": {
+    "text": "筛选教师",
+    "audience": "user",
+    "location": "components/teacher/teacher-filters.tsx"
+  },
+  "copy.user.components.teacher.teacher-list.9861b642a797": {
+    "text": "暂无教师",
+    "audience": "user",
+    "location": "components/teacher/teacher-list.tsx"
+  },
+  "copy.user.components.ui.dialog.7d9eb7acb13e": {
+    "text": "Close",
+    "audience": "user",
+    "location": "components/ui/dialog.tsx"
+  },
+  "copy.user.components.ui.pagination.0418cd51e53f": {
+    "text": "More pages",
+    "audience": "user",
+    "location": "components/ui/pagination.tsx"
+  },
+  "copy.user.components.ui.pagination.2865e0f438b4": {
+    "text": "Go to previous page",
+    "audience": "user",
+    "location": "components/ui/pagination.tsx"
+  },
+  "copy.user.components.ui.pagination.7e021afbf6ac": {
+    "text": "Go to next page",
+    "audience": "user",
+    "location": "components/ui/pagination.tsx"
+  },
+  "copy.user.components.ui.pagination.8a8542f69648": {
+    "text": "下一页",
+    "audience": "user",
+    "location": "components/ui/pagination.tsx"
+  },
+  "copy.user.components.ui.pagination.c30ad110383e": {
+    "text": "pagination",
+    "audience": "user",
+    "location": "components/ui/pagination.tsx"
+  },
+  "copy.user.components.ui.pagination.c9b9ae7a6144": {
+    "text": "上一页",
+    "audience": "user",
+    "location": "components/ui/pagination.tsx"
+  },
+  "copy.user.components.ui.sheet.7d9eb7acb13e": {
+    "text": "Close",
+    "audience": "user",
+    "location": "components/ui/sheet.tsx"
+  },
+  "copy.user.config.brand.743e9916a4b2": {
+    "text": "频道课程榜",
+    "audience": "user",
+    "location": "config/brand.ts"
+  },
+  "copy.user.lib.date.0696e14781c8": {
+    "text": "{v0}小时前",
+    "audience": "user",
+    "location": "lib/date.ts"
+  },
+  "copy.user.lib.date.9d6464d5cf6c": {
+    "text": "{v0}天前",
+    "audience": "user",
+    "location": "lib/date.ts"
+  },
+  "copy.user.lib.date.dc0df49811cc": {
+    "text": "{v0}分钟前",
+    "audience": "user",
+    "location": "lib/date.ts"
+  },
+  "copy.user.lib.date.de6785d99e02": {
+    "text": "刚刚",
+    "audience": "user",
+    "location": "lib/date.ts"
+  },
+  "copy.user.pages.about-page.52d25a9e30ba": {
+    "text": "关于",
+    "audience": "user",
+    "location": "pages/about-page.tsx"
+  },
+  "copy.user.pages.api-keys-page.b1b483588b65": {
+    "text": "接口凭证由主站管理",
+    "audience": "technical",
+    "location": "pages/api-keys-page.tsx"
+  },
+  "copy.user.pages.api-keys-page.c08f17eb9e11": {
+    "text": "API Keys",
+    "audience": "technical",
+    "location": "pages/api-keys-page.tsx"
+  },
+  "copy.user.pages.api-keys-page.e07ad956e242": {
+    "text": "本站当前不提供个人 API 访问凭证。res-hub 与本站之间的集成凭证仅由服务端保管。",
+    "audience": "technical",
+    "location": "pages/api-keys-page.tsx"
+  },
+  "copy.user.pages.course-detail-page.2ff25716733c": {
+    "text": "课程不存在",
+    "audience": "user",
+    "location": "pages/course-detail-page.tsx"
+  },
+  "copy.user.pages.course-detail-page.60db1afb4022": {
+    "text": "课程",
+    "audience": "user",
+    "location": "pages/course-detail-page.tsx"
+  },
+  "copy.user.pages.course-detail-page.ebe3d3b98472": {
+    "text": "返回课程列表",
+    "audience": "user",
+    "location": "pages/course-detail-page.tsx"
+  },
+  "copy.user.pages.courses-page.2428420e407f": {
+    "text": "共 ",
+    "audience": "user",
+    "location": "pages/courses-page.tsx"
+  },
+  "copy.user.pages.courses-page.60db1afb4022": {
+    "text": "课程",
+    "audience": "user",
+    "location": "pages/courses-page.tsx"
+  },
+  "copy.user.pages.courses-page.88165354d9d3": {
+    "text": " 门课程",
+    "audience": "user",
+    "location": "pages/courses-page.tsx"
+  },
+  "copy.user.pages.courses-page.db1b6264346c": {
+    "text": "浏览和搜索所有课程",
+    "audience": "user",
+    "location": "pages/courses-page.tsx"
+  },
+  "copy.user.pages.edit-review-page.bacd75e6ddb7": {
+    "text": "编辑点评",
+    "audience": "user",
+    "location": "pages/edit-review-page.tsx"
+  },
+  "copy.user.pages.edit-review-page.dd4dc66c498b": {
+    "text": "返回点评",
+    "audience": "user",
+    "location": "pages/edit-review-page.tsx"
+  },
+  "copy.user.pages.faq-page.03a36cc3b476": {
+    "text": "请不要在点评中主动公开不必要的个人信息；任何匿名或隐私保护说明都不应被理解为对法律或管理员管理流程的承诺。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.2fd2de74bce5": {
+    "text": "任何人（除了原始所有权人）不得在未经社区许可的条件下，转载社区内容（包括全部或部分内容）。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.33b4f5777312": {
+    "text": "课程评价的分数就更加主观了。我们再次着重强调，数据会骗人，内容才是这个网站存在的核心。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.37fb6a4d3021": {
+    "text": "清晰。点评不应滥用缩写、绰号、梗，或者对缺乏背景的读者难以理解的其他用语或者描述方式。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.38d48ffc2c2d": {
+    "text": "我会因为在这里发表点评而被约谈吗？",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.41a131014545": {
+    "text": "我该点评哪些课程？写什么？",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.45a6d115fdfb": {
+    "text": "常见问题",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.4a505e56645e": {
+    "text": "请通过邮件",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.4b28290015ba": {
+    "text": "侵害他人利益。例如暴露没有必要的个人隐私、与课程内容无关的诽谤和人身攻击等。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.560c06ace248": {
+    "text": "这不是社区的主题。我们希望的是提供完全信息，方便同学们了解这门课的风格、考核标准与历史，而不是哪些课容易满绩。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.5b742951eb31": {
+    "text": "我们相信来自广大同学的监督和信息交换可以带来更大的教学质量提升。这就是为什么我们弱化 1-5 星的“推荐”“不推荐”评分，而是主张文字内容。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.65b152b78494": {
+    "text": "网站上的内容是否受管理？",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.695cf7694573": {
+    "text": "这不意味着我们完全不管理社区内容。以下内容本社区不予接受：",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.6e55624ae74c": {
+    "text": "请联系管理员并提供希望回复的点评和您的回复；确认身份后，管理员可以将回复与点评一起呈现。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.6f9186b50a34": {
+    "text": "我认为课程点评中存在虚假内容。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.6f91f72e7012": {
+    "text": "我喜欢看 1-5 星评分的数据，不喜欢看字。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.7539773e17fd": {
+    "text": "全面。课堂、考核、课下，以及特别的体验。这些维度和故事都涉及会很棒。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.7eadada6fad4": {
+    "text": "饱含事实。“某课很无聊”不是个好的点评，“某课的老师只会读PPT”还可以。你应该只点评自己上过的课程，而不是道听途说的评价。我们鼓励列举事实，不鼓励情绪宣泄。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.85ad9c6e3a4e": {
+    "text": "请提供相关点评和澄清内容，管理员会按照当前内容管理规则处理。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.9527d943f76e": {
+    "text": "社区管理员将删除此类内容，并视情况在一段时间内禁止该用户使用 ",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.98d112fc27b8": {
+    "text": " 收集我的多少信息？",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.9a2ca14cf4ca": {
+    "text": " 是用来找到“水课”的吗？这是否会伤害教学质量？",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.9bb6d5508b4a": {
+    "text": "我是课程老师……",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.9c7f7f6eb5d7": {
+    "text": "社区鼓励大家在写点评的时候各显神通，当然一个理想的点评应该：",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.a29dddfbfda2": {
+    "text": "刷点评。在多门课程中发表相似而无帮助的内容，特别在我们认定用户未真实上过这些课的情况下。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.a2f966f89d73": {
+    "text": "我们通常喜欢相信数字。但请注意，社区上的数字是完全人造的。点评中填写的成绩是自由填写的，从而不一定真实、准确或者有任何参考意义。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.a358d5fe7cb1": {
+    "text": " 提交点评时，您同意向社区提供对您提交的点评内容的永久、不可撤回、非独占、全球有效无限制的许可。您依然享有您提交的内容的全部版权。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.a6588981dd07": {
+    "text": "数据本身是个伪命题。每个同学对于一门课是否推荐、工作量是否大的判断标准不一样，用数字衡量看似很客观，实际上主观得很。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.ad82e230f786": {
+    "text": "如何界定社区内容的版权问题？",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.b30299666c80": {
+    "text": "文字可以透露实质的信息，比如某门课大作业是帮着老师实验室做项目，但是给分极好。按 1-5 评分，可能这门课能登水课榜首，但这也会坑很多人。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.b518aa90404f": {
+    "text": "所有的课程。但如果你想帮忙，最好的是那些还没有点评的课程和老师。请不要吝啬你的好评，也不要害怕说坏话。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.b78477b6ab33": {
+    "text": "如何联系管理员？",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.bcdab0ef3de1": {
+    "text": "向 ",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.c4d6c661009b": {
+    "text": "社区管理员可能会对存在不确定真实内容的点评做出标注，以提醒用户注意辨别真实性。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.c6adaffde110": {
+    "text": "提出意见和建议。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.cd9c019e2109": {
+    "text": "非课程点评信息。例如广告、对社区的攻击等。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.d1381c04a200": {
+    "text": " 由管理员和社区维护者共同管理，课程数据、内容审核和服务规则以当前部署的公开说明为准。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.d1f4358acd87": {
+    "text": " 由谁来管理？",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.d4345848334a": {
+    "text": "请参考关于中“隐私”一节。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.d7ae75e37a06": {
+    "text": "登录由管理员配置的频道处理。点评内容、账户映射和操作记录的保存方式以管理员的隐私说明为准。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.d843afcbe6c9": {
+    "text": "关于点评撰写、社区内容、隐私和联系方式的常见说明。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.d95eb8e86a33": {
+    "text": "原则上我们不修改内容，只修正事实性错误和重新排版，如修改错误的课程、学期、成绩格式，删去无内容的占位符等。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.d9830937db7e": {
+    "text": "我们鼓励在保护个人隐私的前提下，基于真实经历发表客观、具体的评价。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.e09adecaa5cf": {
+    "text": "违反用户所在地区法律的其他内容。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.e2cb447efa15": {
+    "text": "秉承着完全信息原则，我们不修改网站上的课程点评，也不评价内容的真实性。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.e42fa20fe8cb": {
+    "text": "请特别注意，“数据”会给人错误的信心",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.f27747c10429": {
+    "text": "我希望回复某一个关于我的点评。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.f45021e16c16": {
+    "text": "您在提交点评时，授权社区以一切法律、技术途径代理保护您所提交的内容的版权，包括但不限于向任何未经许可的转载媒介进行起诉和发送 DMCA 请求。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.fe34867409f9": {
+    "text": "即使是没有什么亮点的课程也值得你来写一条点评，因为“这门课很正常”也是很重要的信息。寥寥几字可以拯救无数人的迷茫。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.faq-page.ff3df1e92aa0": {
+    "text": "当然数据会让信息更好索引和浏览，因此在统计上合理的条件下，我们会提供一些统计数据。我们在努力达到平衡。",
+    "audience": "user",
+    "location": "pages/faq-page.tsx"
+  },
+  "copy.user.pages.followed-reviews-page.1c0a8a53fbb5": {
+    "text": " 条点评",
+    "audience": "user",
+    "location": "pages/followed-reviews-page.tsx"
+  },
+  "copy.user.pages.followed-reviews-page.2428420e407f": {
+    "text": "共 ",
+    "audience": "user",
+    "location": "pages/followed-reviews-page.tsx"
+  },
+  "copy.user.pages.followed-reviews-page.497d4c0de4ae": {
+    "text": "关注动态",
+    "audience": "user",
+    "location": "pages/followed-reviews-page.tsx"
+  },
+  "copy.user.pages.followed-reviews-page.e798d1fe24d6": {
+    "text": "你关注的课程的点评",
+    "audience": "user",
+    "location": "pages/followed-reviews-page.tsx"
+  },
+  "copy.user.pages.home-page.45bdcac3bd65": {
+    "text": "最新点评",
+    "audience": "user",
+    "location": "pages/home-page.tsx"
+  },
+  "copy.user.pages.home-page.7be923dbf8a8": {
+    "text": "已关注课程",
+    "audience": "user",
+    "location": "pages/home-page.tsx"
+  },
+  "copy.user.pages.home-page.92b2b2dec25e": {
+    "text": "查看更多",
+    "audience": "user",
+    "location": "pages/home-page.tsx"
+  },
+  "copy.user.pages.home-page.d6e3b43107c5": {
+    "text": "热门课程",
+    "audience": "user",
+    "location": "pages/home-page.tsx"
+  },
+  "copy.user.pages.hot-courses-page.07588028c5ba": {
+    "text": "热度来自点评与有用投票，反映讨论活跃度，不代表教学质量。教师热度汇总其当前任教课程的热度。",
+    "audience": "user",
+    "location": "pages/hot-courses-page.tsx"
+  },
+  "copy.user.pages.hot-courses-page.0eeecd26f2ba": {
+    "text": "本月",
+    "audience": "user",
+    "location": "pages/hot-courses-page.tsx"
+  },
+  "copy.user.pages.hot-courses-page.0f84a59a7d38": {
+    "text": "课程热度榜",
+    "audience": "user",
+    "location": "pages/hot-courses-page.tsx"
+  },
+  "copy.user.pages.hot-courses-page.7f15ad783d80": {
+    "text": "{v0} 年第 {v1} 周",
+    "audience": "user",
+    "location": "pages/hot-courses-page.tsx"
+  },
+  "copy.user.pages.hot-courses-page.b4c6c3eb0bce": {
+    "text": "本周",
+    "audience": "user",
+    "location": "pages/hot-courses-page.tsx"
+  },
+  "copy.user.pages.hot-courses-page.cdc394e2e036": {
+    "text": "热门",
+    "audience": "user",
+    "location": "pages/hot-courses-page.tsx"
+  },
+  "copy.user.pages.hot-courses-page.dd3caeeb9921": {
+    "text": "{v0} 年第 {v1} 月",
+    "audience": "user",
+    "location": "pages/hot-courses-page.tsx"
+  },
+  "copy.user.pages.hot-courses-page.eb63349bd137": {
+    "text": "发现本周和本月大家正在讨论的课程与教师",
+    "audience": "user",
+    "location": "pages/hot-courses-page.tsx"
+  },
+  "copy.user.pages.hot-courses-page.eb9eeb865a8a": {
+    "text": "教师热度榜",
+    "audience": "user",
+    "location": "pages/hot-courses-page.tsx"
+  },
+  "copy.user.pages.login-page.1e2df9c3075a": {
+    "text": "登录",
+    "audience": "user",
+    "location": "pages/login-page.tsx"
+  },
+  "copy.user.pages.new-review-page.17d4b8e54563": {
+    "text": "返回课程",
+    "audience": "user",
+    "location": "pages/new-review-page.tsx"
+  },
+  "copy.user.pages.new-review-page.74cdbe78b5b2": {
+    "text": "写点评",
+    "audience": "user",
+    "location": "pages/new-review-page.tsx"
+  },
+  "copy.user.pages.not-found-page.541d030f3e43": {
+    "text": "浏览课程",
+    "audience": "user",
+    "location": "pages/not-found-page.tsx"
+  },
+  "copy.user.pages.not-found-page.c84613ca19d6": {
+    "text": "当前链接可能已失效，或者页面地址输入有误。你可以返回首页，或继续浏览课程信息。",
+    "audience": "user",
+    "location": "pages/not-found-page.tsx"
+  },
+  "copy.user.pages.not-found-page.d66f4359dae3": {
+    "text": "返回首页",
+    "audience": "user",
+    "location": "pages/not-found-page.tsx"
+  },
+  "copy.user.pages.not-found-page.e75737c1ab90": {
+    "text": "页面不存在",
+    "audience": "user",
+    "location": "pages/not-found-page.tsx"
+  },
+  "copy.user.pages.review-detail-page.3dd156610922": {
+    "text": "点评不存在",
+    "audience": "user",
+    "location": "pages/review-detail-page.tsx"
+  },
+  "copy.user.pages.review-detail-page.572cf45ba436": {
+    "text": "返回",
+    "audience": "user",
+    "location": "pages/review-detail-page.tsx"
+  },
+  "copy.user.pages.review-detail-page.d2469bc43d2c": {
+    "text": "点评",
+    "audience": "user",
+    "location": "pages/review-detail-page.tsx"
+  },
+  "copy.user.pages.reviews-page.1c0a8a53fbb5": {
+    "text": " 条点评",
+    "audience": "user",
+    "location": "pages/reviews-page.tsx"
+  },
+  "copy.user.pages.reviews-page.2428420e407f": {
+    "text": "共 ",
+    "audience": "user",
+    "location": "pages/reviews-page.tsx"
+  },
+  "copy.user.pages.reviews-page.35601fcbbd32": {
+    "text": "浏览和搜索所有课程点评",
+    "audience": "user",
+    "location": "pages/reviews-page.tsx"
+  },
+  "copy.user.pages.reviews-page.d2469bc43d2c": {
+    "text": "点评",
+    "audience": "user",
+    "location": "pages/reviews-page.tsx"
+  },
+  "copy.user.pages.reviews-page.f3a3827b0cad": {
+    "text": "搜索点评内容...",
+    "audience": "user",
+    "location": "pages/reviews-page.tsx"
+  },
+  "copy.user.pages.teacher-detail-page.0b104a19f59a": {
+    "text": "开设课程",
+    "audience": "user",
+    "location": "pages/teacher-detail-page.tsx"
+  },
+  "copy.user.pages.teacher-detail-page.2428420e407f": {
+    "text": "共 ",
+    "audience": "user",
+    "location": "pages/teacher-detail-page.tsx"
+  },
+  "copy.user.pages.teacher-detail-page.6408c2c76e3b": {
+    "text": "综合评分",
+    "audience": "user",
+    "location": "pages/teacher-detail-page.tsx"
+  },
+  "copy.user.pages.teacher-detail-page.6e2ad17b1ccd": {
+    "text": "暂无开设课程",
+    "audience": "user",
+    "location": "pages/teacher-detail-page.tsx"
+  },
+  "copy.user.pages.teacher-detail-page.867a000ca687": {
+    "text": "返回教师列表",
+    "audience": "user",
+    "location": "pages/teacher-detail-page.tsx"
+  },
+  "copy.user.pages.teacher-detail-page.91baccd86e58": {
+    "text": "教师不存在",
+    "audience": "user",
+    "location": "pages/teacher-detail-page.tsx"
+  },
+  "copy.user.pages.teacher-detail-page.a6654120cbec": {
+    "text": "教师",
+    "audience": "user",
+    "location": "pages/teacher-detail-page.tsx"
+  },
+  "copy.user.pages.teacher-detail-page.c0f31a102088": {
+    "text": " 门",
+    "audience": "user",
+    "location": "pages/teacher-detail-page.tsx"
+  },
+  "copy.user.pages.teacher-detail-page.ed4a6ed53604": {
+    "text": "点评数量",
+    "audience": "user",
+    "location": "pages/teacher-detail-page.tsx"
+  },
+  "copy.user.pages.teachers-page.2428420e407f": {
+    "text": "共 ",
+    "audience": "user",
+    "location": "pages/teachers-page.tsx"
+  },
+  "copy.user.pages.teachers-page.81180f262b1d": {
+    "text": " 位教师",
+    "audience": "user",
+    "location": "pages/teachers-page.tsx"
+  },
+  "copy.user.pages.teachers-page.a4b31005ed8c": {
+    "text": "浏览和搜索所有教师",
+    "audience": "user",
+    "location": "pages/teachers-page.tsx"
+  },
+  "copy.user.pages.teachers-page.a6654120cbec": {
+    "text": "教师",
+    "audience": "user",
+    "location": "pages/teachers-page.tsx"
+  },
+  "copy.user.pages.teachers-page.ef8188420068": {
+    "text": "搜索教师姓名、拼音或工号...",
+    "audience": "user",
+    "location": "pages/teachers-page.tsx"
+  },
+  "copy.user.pages.user-courses-page.1e2df9c3075a": {
+    "text": "登录",
+    "audience": "user",
+    "location": "pages/user-courses-page.tsx"
+  },
+  "copy.user.pages.user-courses-page.2428420e407f": {
+    "text": "共 ",
+    "audience": "user",
+    "location": "pages/user-courses-page.tsx"
+  },
+  "copy.user.pages.user-courses-page.42647ab29d2b": {
+    "text": "按学期筛选",
+    "audience": "user",
+    "location": "pages/user-courses-page.tsx"
+  },
+  "copy.user.pages.user-courses-page.497d4c0de4ae": {
+    "text": "关注动态",
+    "audience": "user",
+    "location": "pages/user-courses-page.tsx"
+  },
+  "copy.user.pages.user-courses-page.4c435ec140fe": {
+    "text": "已屏蔽课程",
+    "audience": "user",
+    "location": "pages/user-courses-page.tsx"
+  },
+  "copy.user.pages.user-courses-page.6fb2840d568a": {
+    "text": " 条",
+    "audience": "user",
+    "location": "pages/user-courses-page.tsx"
+  },
+  "copy.user.pages.user-courses-page.739f42e69719": {
+    "text": "登录后可以查看我的课程",
+    "audience": "user",
+    "location": "pages/user-courses-page.tsx"
+  },
+  "copy.user.pages.user-courses-page.7be923dbf8a8": {
+    "text": "已关注课程",
+    "audience": "user",
+    "location": "pages/user-courses-page.tsx"
+  },
+  "copy.user.pages.user-courses-page.7eccc1d93c64": {
+    "text": "关注记录",
+    "audience": "user",
+    "location": "pages/user-courses-page.tsx"
+  },
+  "copy.user.pages.user-courses-page.9fe1d0c9cca3": {
+    "text": "已关注",
+    "audience": "user",
+    "location": "pages/user-courses-page.tsx"
+  },
+  "copy.user.pages.user-courses-page.a0670d57e5bf": {
+    "text": "全部学期",
+    "audience": "user",
+    "location": "pages/user-courses-page.tsx"
+  },
+  "copy.user.pages.user-courses-page.ac571e162283": {
+    "text": "查看选课记录、已关注和已屏蔽的课程",
+    "audience": "user",
+    "location": "pages/user-courses-page.tsx"
+  },
+  "copy.user.pages.user-courses-page.af7d90f61e5d": {
+    "text": "屏蔽记录",
+    "audience": "user",
+    "location": "pages/user-courses-page.tsx"
+  },
+  "copy.user.pages.user-courses-page.b66705ba0b8e": {
+    "text": "已屏蔽",
+    "audience": "user",
+    "location": "pages/user-courses-page.tsx"
+  },
+  "copy.user.pages.user-courses-page.c461004afbf9": {
+    "text": "选课记录",
+    "audience": "user",
+    "location": "pages/user-courses-page.tsx"
+  },
+  "copy.user.pages.user-courses-page.e80149e50579": {
+    "text": "我的课程",
+    "audience": "user",
+    "location": "pages/user-courses-page.tsx"
+  },
+  "copy.user.pages.user-points-page.0a6a74474ce7": {
+    "text": "余额和流水由 res-hub 主站提供，本站产生的奖励会以集成操作记录。",
+    "audience": "user",
+    "location": "pages/user-points-page.tsx"
+  },
+  "copy.user.pages.user-points-page.48144f96c150": {
+    "text": "请先登录",
+    "audience": "user",
+    "location": "pages/user-points-page.tsx"
+  },
+  "copy.user.pages.user-points-page.e8c4f71b3601": {
+    "text": "我的积分",
+    "audience": "user",
+    "location": "pages/user-points-page.tsx"
+  },
+  "copy.user.pages.user-points-page.ed8745d001b1": {
+    "text": "积分记录",
+    "audience": "user",
+    "location": "pages/user-points-page.tsx"
+  },
+  "copy.user.pages.user-reviews-page.1c0a8a53fbb5": {
+    "text": " 条点评",
+    "audience": "user",
+    "location": "pages/user-reviews-page.tsx"
+  },
+  "copy.user.pages.user-reviews-page.1e2df9c3075a": {
+    "text": "登录",
+    "audience": "user",
+    "location": "pages/user-reviews-page.tsx"
+  },
+  "copy.user.pages.user-reviews-page.2428420e407f": {
+    "text": "共 ",
+    "audience": "user",
+    "location": "pages/user-reviews-page.tsx"
+  },
+  "copy.user.pages.user-reviews-page.477d1ac374fc": {
+    "text": "我的点评",
+    "audience": "user",
+    "location": "pages/user-reviews-page.tsx"
+  },
+  "copy.user.pages.user-reviews-page.70507e72f6b8": {
+    "text": "登录后可以查看我的点评",
+    "audience": "user",
+    "location": "pages/user-reviews-page.tsx"
+  },
+  "copy.user.pages.user-reviews-page.9608ec435fb4": {
+    "text": "管理你发布的所有课程点评",
+    "audience": "user",
+    "location": "pages/user-reviews-page.tsx"
+  },
+  "copy.user.pages.user-settings-page.1e7d7c9e9437": {
+    "text": "仅保存在当前浏览器，不会同步到其他设备。",
+    "audience": "user",
+    "location": "pages/user-settings-page.tsx"
+  },
+  "copy.user.pages.user-settings-page.217cfe7db1e3": {
+    "text": "跟随系统",
+    "audience": "user",
+    "location": "pages/user-settings-page.tsx"
+  },
+  "copy.user.pages.user-settings-page.29edc1452eff": {
+    "text": "暗色",
+    "audience": "user",
+    "location": "pages/user-settings-page.tsx"
+  },
+  "copy.user.pages.user-settings-page.300cb577254e": {
+    "text": "亮色",
+    "audience": "user",
+    "location": "pages/user-settings-page.tsx"
+  },
+  "copy.user.pages.user-settings-page.57907a69fc5a": {
+    "text": "偏好设置",
+    "audience": "user",
+    "location": "pages/user-settings-page.tsx"
+  },
+  "copy.user.pages.user-settings-page.7ce710f646db": {
+    "text": "用户设置",
+    "audience": "user",
+    "location": "pages/user-settings-page.tsx"
+  },
+  "copy.user.pages.user-settings-page.97cefbbbfb55": {
+    "text": "外观模式",
+    "audience": "user",
+    "location": "pages/user-settings-page.tsx"
+  },
+  "copy.user.pages.user-settings-page.bf643e1be362": {
+    "text": "选择外观模式",
+    "audience": "user",
+    "location": "pages/user-settings-page.tsx"
+  }
+}

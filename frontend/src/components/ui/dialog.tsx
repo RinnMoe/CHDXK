@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
@@ -73,7 +74,9 @@ function DialogContent({
               size="icon-sm"
             >
               <RiCloseLine />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">
+                {copy("copy.user.components.ui.dialog.7d9eb7acb13e")}
+              </span>
             </Button>
           </DialogPrimitive.Close>
         )}
@@ -112,7 +115,9 @@ function DialogFooter({
       {children}
       {showCloseButton && (
         <DialogPrimitive.Close asChild>
-          <Button variant="outline">Close</Button>
+          <Button variant="outline">
+            {copy("copy.user.components.ui.dialog.7d9eb7acb13e")}
+          </Button>
         </DialogPrimitive.Close>
       )}
     </div>

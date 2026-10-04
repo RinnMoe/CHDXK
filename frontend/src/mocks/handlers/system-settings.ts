@@ -6,6 +6,7 @@ import {
 } from "@/api/system-settings"
 import { MOCK_COURSE_SEMESTERS } from "@/mocks/fixtures/courses"
 import { randomDelay } from "@/mocks/utils"
+import { copyDirectory } from "@/lib/copy"
 
 let settings: SystemSettingDTO[] = [
   {
@@ -131,11 +132,35 @@ let settings: SystemSettingDTO[] = [
   },
 ]
 
+settings.push(
+  ...Object.entries(copyDirectory).map(([key, entry]) => ({
+    key,
+    value: entry.text,
+    default_value: entry.text,
+    type: "string" as const,
+    group: `copy_${entry.audience}`,
+    label: entry.text,
+    description: "保存后刷新页面生效，请保留内容标记。",
+    public: true,
+    secret: false,
+    requires_restart: false,
+  }))
+)
+
 export function getMockSystemSettingValue(key: string) {
   return settings.find((item) => item.key === key)?.value
 }
 
 export const systemSettingsHandlers = [
+  http.get("/api/site-copy", () =>
+    HttpResponse.json(
+      Object.fromEntries(
+        settings
+          .filter((item) => item.key.startsWith("copy."))
+          .map((item) => [item.key, item.value])
+      )
+    )
+  ),
   http.get("/api/system-settings", async () => {
     await randomDelay()
     return HttpResponse.json(settings)

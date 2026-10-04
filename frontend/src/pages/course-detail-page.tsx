@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router"
 import { RiArrowLeftLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
@@ -83,7 +84,9 @@ export function CourseDetailPage() {
   if (isLoading) {
     return (
       <>
-        <PageTitle>课程</PageTitle>
+        <PageTitle>
+          {copy("copy.user.pages.course-detail-page.60db1afb4022")}
+        </PageTitle>
         <PageShell>
           <div className="space-y-4">
             <Skeleton className="h-4 w-24" />
@@ -98,12 +101,18 @@ export function CourseDetailPage() {
   if (!course) {
     return (
       <>
-        <PageTitle>课程</PageTitle>
+        <PageTitle>
+          {copy("copy.user.pages.course-detail-page.60db1afb4022")}
+        </PageTitle>
         <PageShell>
           <div className="py-16 text-center">
-            <p className="text-muted-foreground">课程不存在</p>
+            <p className="text-muted-foreground">
+              {copy("copy.user.pages.course-detail-page.2ff25716733c")}
+            </p>
             <Button asChild variant="link" className="mt-4">
-              <Link to="/course">返回课程列表</Link>
+              <Link to="/course">
+                {copy("copy.user.pages.course-detail-page.ebe3d3b98472")}
+              </Link>
             </Button>
           </div>
         </PageShell>
@@ -130,7 +139,7 @@ export function CourseDetailPage() {
         <Button asChild variant="ghost" size="sm" className="mb-4">
           <Link to="/course">
             <RiArrowLeftLine data-icon="inline-start" />
-            返回课程列表
+            {copy("copy.user.pages.course-detail-page.ebe3d3b98472")}
           </Link>
         </Button>
 

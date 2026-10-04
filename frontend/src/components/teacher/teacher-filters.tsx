@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useState } from "react"
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { RiFilterLine } from "@remixicon/react"
@@ -18,7 +19,10 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import type { FilterItem, TeacherFilters as TeacherFiltersDTO } from "@/api/teacher"
+import type {
+  FilterItem,
+  TeacherFilters as TeacherFiltersDTO,
+} from "@/api/teacher"
 
 const ALL = "__all__"
 const routeApi = getRouteApi("/app/teacher")
@@ -49,7 +53,9 @@ export function TeacherFilters({ filters }: TeacherFiltersProps) {
     <div className="space-y-6">
       {filters.departments && (
         <FilterSelectGroup
-          label="学院"
+          label={copy(
+            "copy.user.components.teacher.teacher-filters.33a172fee29a"
+          )}
           items={filters.departments}
           paramKey="department"
           selected={search.department ?? null}
@@ -59,7 +65,9 @@ export function TeacherFilters({ filters }: TeacherFiltersProps) {
 
       {filters.titles && (
         <FilterSelectGroup
-          label="职称"
+          label={copy(
+            "copy.user.components.teacher.teacher-filters.26f18f117c01"
+          )}
           items={filters.titles}
           paramKey="title"
           selected={search.title ?? null}
@@ -82,7 +90,7 @@ export function TeacherFilters({ filters }: TeacherFiltersProps) {
           })
         }}
       >
-        清除筛选
+        {copy("copy.user.components.teacher.teacher-filters.657d9cbf45ec")}
       </Button>
     </div>
   )
@@ -95,12 +103,18 @@ export function TeacherFilters({ filters }: TeacherFiltersProps) {
           <SheetTrigger asChild>
             <Button variant="outline" size="sm">
               <RiFilterLine data-icon="inline-start" />
-              筛选
+              {copy(
+                "copy.user.components.teacher.teacher-filters.b5f15473fdc0"
+              )}
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-72">
             <SheetHeader>
-              <SheetTitle>筛选教师</SheetTitle>
+              <SheetTitle>
+                {copy(
+                  "copy.user.components.teacher.teacher-filters.f9bb3804dd37"
+                )}
+              </SheetTitle>
             </SheetHeader>
             <ScrollArea className="mt-4 h-[calc(100vh-6rem)] px-4">
               {content}
@@ -146,13 +160,18 @@ function FilterSelectGroup({
             {selectedItem ? (
               <FilterOptionLabel item={selectedItem} />
             ) : (
-              (selected ?? `全部${label}`)
+              (selected ??
+              copy(
+                "copy.user.components.teacher.teacher-filters.d50f21139128",
+                { v0: label }
+              ))
             )}
           </SelectValue>
         </SelectTrigger>
         <SelectContent className="max-w-80">
           <SelectItem value={ALL} className={itemClassName}>
-            全部{label}
+            {copy("copy.user.components.teacher.teacher-filters.5c55a67935af")}
+            {label}
           </SelectItem>
           {items.map((item) => (
             <SelectItem

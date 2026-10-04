@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import dayjs from "dayjs"
 
 type DateInput = Date | string | number
@@ -29,21 +30,21 @@ export function formatReviewCardTime(value: DateInput): string {
   const now = dayjs()
   const diffMinutes = now.diff(date, "minute")
   if (diffMinutes < 1) {
-    return "刚刚"
+    return copy("copy.user.lib.date.de6785d99e02")
   }
 
   if (diffMinutes >= 1 && diffMinutes < 60) {
-    return `${diffMinutes}分钟前`
+    return copy("copy.user.lib.date.dc0df49811cc", { v0: diffMinutes })
   }
 
   const diffHours = now.diff(date, "hour")
   if (diffHours >= 1 && diffHours < 24) {
-    return `${diffHours}小时前`
+    return copy("copy.user.lib.date.0696e14781c8", { v0: diffHours })
   }
 
   const diffDays = now.diff(date, "day")
   if (diffDays >= 1 && diffDays < 7) {
-    return `${diffDays}天前`
+    return copy("copy.user.lib.date.9d6464d5cf6c", { v0: diffDays })
   }
 
   return formatDateTime(value)

@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { CourseSemesterBadge } from "@/components/course/course-badges"
 import { Badge } from "@/components/ui/badge"
 import { RatingStars } from "./rating-stars"
@@ -23,7 +24,9 @@ export function ReviewContent({
         {semester && <CourseSemesterBadge semester={semester} />}
         {score && (
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <span>成绩</span>
+            <span>
+              {copy("copy.user.components.review.review-content.fdcd1bd074c9")}
+            </span>
             <Badge variant="secondary">{score}</Badge>
           </div>
         )}

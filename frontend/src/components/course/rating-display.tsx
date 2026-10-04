@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { RiStarFill, RiStarLine } from "@remixicon/react"
 import type { RatingInfoDTO } from "@/api/course"
 
@@ -31,7 +32,8 @@ export function RatingDisplay({ rating, size = "md" }: RatingDisplayProps) {
         )}
       </div>
       <span className="text-center text-sm text-muted-foreground">
-        {rating.count} 条点评
+        {rating.count}
+        {copy("copy.user.components.course.rating-display.1c0a8a53fbb5")}
       </span>
     </div>
   )

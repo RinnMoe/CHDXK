@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { TeacherCard } from "./teacher-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { TeacherDTO } from "@/api/teacher"
@@ -34,7 +35,9 @@ export function TeacherList({ teachers, isLoading }: TeacherListProps) {
   if (teachers.length === 0) {
     return (
       <div className="py-12 text-center">
-        <p className="text-sm text-muted-foreground">暂无教师</p>
+        <p className="text-sm text-muted-foreground">
+          {copy("copy.user.components.teacher.teacher-list.9861b642a797")}
+        </p>
       </div>
     )
   }

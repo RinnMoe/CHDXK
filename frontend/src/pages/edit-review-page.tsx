@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import {
   getRouteApi,
   Link,
@@ -41,7 +42,9 @@ export function EditReviewPage() {
   if (isLoading || !review) {
     return (
       <>
-        <PageTitle>编辑点评</PageTitle>
+        <PageTitle>
+          {copy("copy.user.pages.edit-review-page.bacd75e6ddb7")}
+        </PageTitle>
         <PageShell>
           <div className="space-y-4">
             <Skeleton className="h-8 w-1/2" />
@@ -56,18 +59,22 @@ export function EditReviewPage() {
 
   return (
     <>
-      <PageTitle>编辑点评</PageTitle>
+      <PageTitle>
+        {copy("copy.user.pages.edit-review-page.bacd75e6ddb7")}
+      </PageTitle>
       <PageShell>
         <Button asChild variant="ghost" size="sm" className="mb-4">
           <Link to="/review/$reviewID" params={{ reviewID: String(id) }}>
             <RiArrowLeftLine data-icon="inline-start" />
-            返回点评
+            {copy("copy.user.pages.edit-review-page.dd4dc66c498b")}
           </Link>
         </Button>
 
         <section className="space-y-4">
           <div className="space-y-4">
-            <h1 className="text-lg font-medium">编辑点评</h1>
+            <h1 className="text-lg font-medium">
+              {copy("copy.user.pages.edit-review-page.bacd75e6ddb7")}
+            </h1>
             {displayCourse && <CourseHeaderMeta course={displayCourse} />}
           </div>
 

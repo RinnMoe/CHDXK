@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import {
   RiDeleteBinLine,
   RiEditLine,
@@ -53,7 +54,10 @@ export function AnnouncementRow({
         <div className="space-y-1 text-xs">
           <p>{formatDateTime(announcement.show_start)}</p>
           <p className="text-muted-foreground">
-            至 {formatDateTime(announcement.show_end)}
+            {copy(
+              "copy.admin.components.admin.announcements.announcement-row.83532308ecca"
+            )}
+            {formatDateTime(announcement.show_end)}
           </p>
         </div>
       </TableCell>
@@ -83,13 +87,19 @@ export function AnnouncementRow({
                 type="button"
                 size="icon-sm"
                 variant="outline"
-                aria-label="编辑公告"
+                aria-label={copy(
+                  "copy.admin.components.admin.announcements.announcement-row.83163278a659"
+                )}
                 onClick={() => onEdit(announcement)}
               >
                 <RiEditLine />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>编辑</TooltipContent>
+            <TooltipContent>
+              {copy(
+                "copy.admin.components.admin.announcements.announcement-row.051836569928"
+              )}
+            </TooltipContent>
           </Tooltip>
           <AlertDialog>
             <Tooltip>
@@ -99,29 +109,47 @@ export function AnnouncementRow({
                     type="button"
                     size="icon-sm"
                     variant="destructive"
-                    aria-label="删除公告"
+                    aria-label={copy(
+                      "copy.admin.components.admin.announcements.announcement-row.0e46cdb3442e"
+                    )}
                   >
                     <RiDeleteBinLine />
                   </Button>
                 </AlertDialogTrigger>
               </TooltipTrigger>
-              <TooltipContent>删除</TooltipContent>
+              <TooltipContent>
+                {copy(
+                  "copy.admin.components.admin.announcements.announcement-row.2f9daa828907"
+                )}
+              </TooltipContent>
             </Tooltip>
             <AlertDialogContent size="sm">
               <AlertDialogHeader>
-                <AlertDialogTitle>删除公告</AlertDialogTitle>
+                <AlertDialogTitle>
+                  {copy(
+                    "copy.admin.components.admin.announcements.announcement-row.0e46cdb3442e"
+                  )}
+                </AlertDialogTitle>
                 <AlertDialogDescription>
-                  删除后该公告不会再展示，此操作无法撤销。
+                  {copy(
+                    "copy.admin.components.admin.announcements.announcement-row.9d6564cc34ef"
+                  )}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>取消</AlertDialogCancel>
+                <AlertDialogCancel>
+                  {copy(
+                    "copy.admin.components.admin.announcements.announcement-row.2cd0f3be8738"
+                  )}
+                </AlertDialogCancel>
                 <AlertDialogAction
                   variant="destructive"
                   disabled={isDeleting}
                   onClick={() => onDelete(announcement.id)}
                 >
-                  删除
+                  {copy(
+                    "copy.admin.components.admin.announcements.announcement-row.2f9daa828907"
+                  )}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

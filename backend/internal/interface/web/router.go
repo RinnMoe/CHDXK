@@ -66,6 +66,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	}
 	g.Use(middleware.GlobalRateLimit())
 	g.Use(sessions.Sessions("jcourse_session", store))
+	g.Use(middleware.SiteCopy(container.SystemSettingsQuery))
 	g.Use(middleware.ResolveCurrentUser(container.AuthResolution))
 	g.Use(middleware.UserIDRateLimit())
 	g.Use(middleware.CSRF())
@@ -84,6 +85,9 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	auditLogController := controller.NewAuditLogController(container.AuditLogQuery)
 
 	apiGroup := g.Group("/api", middleware.NoStore())
+	apiGroup.GET("/site-copy", systemSettingsController.Copy)
+	apiGroup.GET("/site.webmanifest", systemSettingsController.Manifest)
+	apiGroup.GET("/system-settings", systemSettingsController.List)
 	publicAuthGroup := apiGroup.Group("/auth")
 	{
 		publicAuthGroup.GET("/csrf", func(c *gin.Context) { c.Status(http.StatusNoContent) })
@@ -138,10 +142,6 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	{
 		userGroup.GET("/:userID/point", middleware.RequireSelfOrAdmin("userID"), pointController.GetUserPoints)
 		userGroup.GET("/:userID/review", middleware.RequireSelfOrAdmin("userID"), reviewController.ListUserReviews)
-	}
-	systemSettingsGroup := apiGroup.Group("/system-settings")
-	{
-		systemSettingsGroup.GET("", systemSettingsController.List)
 	}
 	siteStatsGroup := apiGroup.Group("/site-stat", middleware.RequireAdmin())
 	{

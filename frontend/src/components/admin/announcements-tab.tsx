@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useState } from "react"
 import { RiAddLine } from "@remixicon/react"
 import type {
@@ -52,10 +53,12 @@ export function AnnouncementsTab() {
   return (
     <section className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <h2 className="text-lg font-medium">公告</h2>
+        <h2 className="text-lg font-medium">
+          {copy("copy.admin.components.admin.announcements-tab.069c0ecbf898")}
+        </h2>
         <Button onClick={openCreate}>
           <RiAddLine data-icon="inline-start" />
-          新建公告
+          {copy("copy.admin.components.admin.announcements-tab.ee4ea097b207")}
         </Button>
       </div>
 
@@ -73,13 +76,41 @@ export function AnnouncementsTab() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>标题</TableHead>
-              <TableHead>优先级</TableHead>
-              <TableHead>展示时间</TableHead>
-              <TableHead>外链</TableHead>
-              <TableHead>创建时间</TableHead>
-              <TableHead className="text-right">操作</TableHead>
+              <TableHead>
+                {copy(
+                  "copy.admin.components.admin.announcements-tab.3843971dcfde"
+                )}
+              </TableHead>
+              <TableHead>
+                {copy(
+                  "copy.admin.components.admin.announcements-tab.c3405f8c7d9d"
+                )}
+              </TableHead>
+              <TableHead>
+                {copy(
+                  "copy.admin.components.admin.announcements-tab.565d64601d4d"
+                )}
+              </TableHead>
+              <TableHead>
+                {copy(
+                  "copy.admin.components.admin.announcements-tab.1ac47221096c"
+                )}
+              </TableHead>
+              <TableHead>
+                {copy(
+                  "copy.admin.components.admin.announcements-tab.05e99264a759"
+                )}
+              </TableHead>
+              <TableHead>
+                {copy(
+                  "copy.admin.components.admin.announcements-tab.07ec86e0f1d4"
+                )}
+              </TableHead>
+              <TableHead className="text-right">
+                {copy(
+                  "copy.admin.components.admin.announcements-tab.ed31fbb483ee"
+                )}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -89,7 +120,9 @@ export function AnnouncementsTab() {
                   colSpan={7}
                   className="py-8 text-center text-muted-foreground"
                 >
-                  加载中
+                  {copy(
+                    "copy.admin.components.admin.announcements-tab.d04fcbda737f"
+                  )}
                 </TableCell>
               </TableRow>
             ) : (announcementsQuery.data ?? []).length === 0 ? (
@@ -98,7 +131,9 @@ export function AnnouncementsTab() {
                   colSpan={7}
                   className="py-8 text-center text-muted-foreground"
                 >
-                  暂无公告
+                  {copy(
+                    "copy.admin.components.admin.announcements-tab.6d9a7758610a"
+                  )}
                 </TableCell>
               </TableRow>
             ) : (

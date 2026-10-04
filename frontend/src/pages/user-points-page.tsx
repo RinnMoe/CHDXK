@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -20,9 +21,13 @@ export function UserPointsPage() {
   if (!user) {
     return (
       <>
-        <PageTitle>我的积分</PageTitle>
+        <PageTitle>
+          {copy("copy.user.pages.user-points-page.e8c4f71b3601")}
+        </PageTitle>
         <PageShell>
-          <p className="py-12 text-center text-muted-foreground">请先登录</p>
+          <p className="py-12 text-center text-muted-foreground">
+            {copy("copy.user.pages.user-points-page.48144f96c150")}
+          </p>
         </PageShell>
       </>
     )
@@ -30,19 +35,25 @@ export function UserPointsPage() {
 
   return (
     <>
-      <PageTitle>我的积分</PageTitle>
+      <PageTitle>
+        {copy("copy.user.pages.user-points-page.e8c4f71b3601")}
+      </PageTitle>
       <PageShell>
         <div className="space-y-6">
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold">我的积分</h1>
+            <h1 className="text-2xl font-semibold">
+              {copy("copy.user.pages.user-points-page.e8c4f71b3601")}
+            </h1>
             <p className="text-sm text-muted-foreground">
-              余额和流水由 res-hub 主站提供，本站产生的奖励会以集成操作记录。
+              {copy("copy.user.pages.user-points-page.0a6a74474ce7")}
             </p>
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>我的积分</CardTitle>
+              <CardTitle>
+                {copy("copy.user.pages.user-points-page.e8c4f71b3601")}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -54,7 +65,9 @@ export function UserPointsPage() {
           </Card>
 
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold">积分记录</h2>
+            <h2 className="text-lg font-semibold">
+              {copy("copy.user.pages.user-points-page.ed8745d001b1")}
+            </h2>
             {isLoading ? (
               <div className="space-y-3">
                 {[...Array(5)].map((_, i) => (

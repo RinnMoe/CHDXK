@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useMemo, useState } from "react"
 import {
   Dialog,
@@ -52,20 +53,34 @@ export function ReviewRevisionsDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[80vh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>点评 #{review.id} 的修订历史</DialogTitle>
+          <DialogTitle>
+            {copy(
+              "copy.user.components.review.review-revisions-dialog.b0b89549bc8b"
+            )}
+            {review.id}
+            {copy(
+              "copy.user.components.review.review-revisions-dialog.f79958532e61"
+            )}
+          </DialogTitle>
           <DialogDescription>
-            查看这条点评保存过的历史版本内容。
+            {copy(
+              "copy.user.components.review.review-revisions-dialog.b3fc4e89095e"
+            )}
           </DialogDescription>
         </DialogHeader>
 
         <div className="min-h-0 overflow-y-auto pr-1">
           {isLoading ? (
             <div className="py-10 text-center text-sm text-muted-foreground">
-              加载中...
+              {copy(
+                "copy.user.components.review.review-revisions-dialog.9dc0825fba54"
+              )}
             </div>
           ) : isError ? (
             <div className="py-10 text-center text-sm text-destructive">
-              加载 revision 失败
+              {copy(
+                "copy.user.components.review.review-revisions-dialog.918eec070450"
+              )}
             </div>
           ) : revisions?.length ? (
             <div className="space-y-5">
@@ -84,7 +99,9 @@ export function ReviewRevisionsDialog({
             </div>
           ) : (
             <div className="py-10 text-center text-sm text-muted-foreground">
-              暂无 revision 记录
+              {copy(
+                "copy.user.components.review.review-revisions-dialog.a9f13188a317"
+              )}
             </div>
           )}
         </div>
@@ -102,7 +119,9 @@ export function ReviewRevisionsDialog({
                 type="button"
                 variant="ghost"
                 size="icon-sm"
-                aria-label="上一条 revision"
+                aria-label={copy(
+                  "copy.user.components.review.review-revisions-dialog.f1a0c64eb1e2"
+                )}
                 disabled={currentPage <= 1}
                 onClick={() => setPage(currentPage - 1)}
               >
@@ -115,7 +134,9 @@ export function ReviewRevisionsDialog({
                 type="button"
                 variant="ghost"
                 size="icon-sm"
-                aria-label="下一条 revision"
+                aria-label={copy(
+                  "copy.user.components.review.review-revisions-dialog.97bbce3408a9"
+                )}
                 disabled={currentPage >= totalPages}
                 onClick={() => setPage(currentPage + 1)}
               >

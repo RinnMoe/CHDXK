@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useState, type SyntheticEvent } from "react"
 import { useForm } from "@tanstack/react-form"
 import type {
@@ -64,7 +65,15 @@ export function AnnouncementDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{announcement ? "编辑公告" : "新建公告"}</DialogTitle>
+          <DialogTitle>
+            {announcement
+              ? copy(
+                  "copy.admin.components.admin.announcements.announcement-dialog.83163278a659"
+                )
+              : copy(
+                  "copy.admin.components.admin.announcements.announcement-dialog.ee4ea097b207"
+                )}
+          </DialogTitle>
         </DialogHeader>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
@@ -72,7 +81,11 @@ export function AnnouncementDialog({
             <form.Field name="title">
               {(field) => (
                 <div className="space-y-2">
-                  <Label htmlFor="announcement-title">标题（可选）</Label>
+                  <Label htmlFor="announcement-title">
+                    {copy(
+                      "copy.admin.components.admin.announcements.announcement-dialog.34638cbed99a"
+                    )}
+                  </Label>
                   <Input
                     id="announcement-title"
                     value={field.state.value}
@@ -86,7 +99,11 @@ export function AnnouncementDialog({
             <form.Field name="priority">
               {(field) => (
                 <div className="space-y-2">
-                  <Label htmlFor="announcement-priority">优先级（可选）</Label>
+                  <Label htmlFor="announcement-priority">
+                    {copy(
+                      "copy.admin.components.admin.announcements.announcement-dialog.bb8e192e1eed"
+                    )}
+                  </Label>
                   <Input
                     id="announcement-priority"
                     type="number"
@@ -100,7 +117,11 @@ export function AnnouncementDialog({
             <form.Field name="body">
               {(field) => (
                 <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="announcement-body">内容（可选）</Label>
+                  <Label htmlFor="announcement-body">
+                    {copy(
+                      "copy.admin.components.admin.announcements.announcement-dialog.76c467671ab1"
+                    )}
+                  </Label>
                   <Textarea
                     id="announcement-body"
                     value={field.state.value}
@@ -115,7 +136,9 @@ export function AnnouncementDialog({
               {(field) => (
                 <div className="space-y-2">
                   <Label htmlFor="announcement-link-title">
-                    外链标题（可选）
+                    {copy(
+                      "copy.admin.components.admin.announcements.announcement-dialog.db21da93d322"
+                    )}
                   </Label>
                   <Input
                     id="announcement-link-title"
@@ -131,12 +154,16 @@ export function AnnouncementDialog({
               {(field) => (
                 <div className="space-y-2">
                   <Label htmlFor="announcement-link-url">
-                    外链地址（可选）
+                    {copy(
+                      "copy.admin.components.admin.announcements.announcement-dialog.a48ce0b1dc35"
+                    )}
                   </Label>
                   <Input
                     id="announcement-link-url"
                     value={field.state.value}
-                    placeholder="https://example.com"
+                    placeholder={copy(
+                      "copy.admin.components.admin.announcements.announcement-dialog.100680ad546c"
+                    )}
                     onChange={(event) => field.handleChange(event.target.value)}
                     onBlur={field.handleBlur}
                   />
@@ -147,7 +174,9 @@ export function AnnouncementDialog({
               {(field) => (
                 <DateTimeControl
                   id="announcement-show-start"
-                  label="开始时间"
+                  label={copy(
+                    "copy.admin.components.admin.announcements.announcement-dialog.6a9906c79f26"
+                  )}
                   value={field.state.value}
                   onChange={field.handleChange}
                 />
@@ -157,7 +186,9 @@ export function AnnouncementDialog({
               {(field) => (
                 <DateTimeControl
                   id="announcement-show-end"
-                  label="结束时间"
+                  label={copy(
+                    "copy.admin.components.admin.announcements.announcement-dialog.f50276449943"
+                  )}
                   value={field.state.value}
                   onChange={field.handleChange}
                 />
@@ -174,7 +205,9 @@ export function AnnouncementDialog({
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="outline">
-                取消
+                {copy(
+                  "copy.admin.components.admin.announcements.announcement-dialog.2cd0f3be8738"
+                )}
               </Button>
             </DialogClose>
             <form.Subscribe selector={(state) => state.isSubmitting}>
@@ -182,7 +215,13 @@ export function AnnouncementDialog({
                 const submitting = isSaving || formSubmitting
                 return (
                   <Button type="submit" disabled={submitting}>
-                    {submitting ? "保存中" : "保存"}
+                    {submitting
+                      ? copy(
+                          "copy.admin.components.admin.announcements.announcement-dialog.a1a1720d3eb5"
+                        )
+                      : copy(
+                          "copy.admin.components.admin.announcements.announcement-dialog.a3030bf8f16d"
+                        )}
                   </Button>
                 )
               }}

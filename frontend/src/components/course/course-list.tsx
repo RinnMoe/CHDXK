@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import type { ReactNode } from "react"
 import { CourseCard } from "./course-card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -65,9 +66,11 @@ export function CourseList({
             />
           </svg>
         </div>
-        <p className="text-muted-foreground">暂无课程</p>
+        <p className="text-muted-foreground">
+          {copy("copy.user.components.course.course-list.1f5350ec49f1")}
+        </p>
         <p className="mt-1 text-sm text-muted-foreground/70">
-          尝试调整筛选条件
+          {copy("copy.user.components.course.course-list.af069c0dac63")}
         </p>
       </div>
     )

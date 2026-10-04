@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import {
   SYSTEM_SETTING_CURRENT_SEMESTER,
   type SystemSettingDTO,
@@ -32,7 +33,11 @@ export function SettingControl({
     return (
       <Select value={value} onValueChange={onChange} disabled={disabled}>
         <SelectTrigger id={`setting-${setting.key}`} className="w-full">
-          <SelectValue placeholder="选择学期" />
+          <SelectValue
+            placeholder={copy(
+              "copy.admin.components.admin.system-settings.setting-control.522bedf98774"
+            )}
+          />
         </SelectTrigger>
         <SelectContent>
           {semesters.map((semester) => (

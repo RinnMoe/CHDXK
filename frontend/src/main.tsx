@@ -3,10 +3,7 @@ import { createRoot } from "react-dom/client"
 import { registerSW } from "virtual:pwa-register"
 
 import "./index.css"
-import App from "./App.tsx"
-import { brand } from "@/config/brand"
-
-document.title = brand.name
+import { loadSiteCopy } from "@/lib/copy"
 
 function registerPwaServiceWorker() {
   if (!import.meta.env.PROD) return
@@ -35,7 +32,11 @@ async function enableMocking() {
   await worker.start({ onUnhandledRequest: "bypass" })
 }
 
-void enableMocking().then(() => {
+void enableMocking().then(async () => {
+  await loadSiteCopy()
+  const { default: App } = await import("./App.tsx")
+  const { brand } = await import("@/config/brand")
+  document.title = brand.name
   registerPwaServiceWorker()
 
   createRoot(document.getElementById("root")!).render(

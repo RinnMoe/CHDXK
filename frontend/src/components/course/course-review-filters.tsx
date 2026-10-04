@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { RiThumbUpLine, RiTimeLine } from "@remixicon/react"
 import type { FilterItem } from "@/api/types"
 import type { ReviewListFilter } from "@/api/review"
@@ -32,7 +33,8 @@ function OptionLabel({ label, count }: { label: string; count: number }) {
     <span className="flex min-w-0 items-center gap-1">
       <span className="truncate">{label}</span>
       <span className="shrink-0 text-sm text-muted-foreground">
-        （{count} 条点评）
+        （{count}
+        {copy("copy.user.components.course.course-review-filters.9f838b6a529b")}
       </span>
     </span>
   )
@@ -54,10 +56,18 @@ export function CourseReviewFilters({
           }
         >
           <SelectTrigger size="sm" className="w-55">
-            <SelectValue placeholder="学期" />
+            <SelectValue
+              placeholder={copy(
+                "copy.user.components.course.course-review-filters.79a4ef019e9c"
+              )}
+            />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL}>全部学期</SelectItem>
+            <SelectItem value={ALL}>
+              {copy(
+                "copy.user.components.course.course-review-filters.a0670d57e5bf"
+              )}
+            </SelectItem>
             {semesters.map((semester) => (
               <SelectItem key={semester.name} value={semester.name}>
                 <OptionLabel label={semester.name} count={semester.count} />
@@ -75,13 +85,27 @@ export function CourseReviewFilters({
           }
         >
           <SelectTrigger size="sm" className="w-42.5">
-            <SelectValue placeholder="评分" />
+            <SelectValue
+              placeholder={copy(
+                "copy.user.components.course.course-review-filters.96fff2e26c8d"
+              )}
+            />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL}>全部评分</SelectItem>
+            <SelectItem value={ALL}>
+              {copy(
+                "copy.user.components.course.course-review-filters.ee9dc66201f7"
+              )}
+            </SelectItem>
             {ratings.map((rating) => (
               <SelectItem key={rating.name} value={rating.name}>
-                <OptionLabel label={`${rating.name} 分`} count={rating.count} />
+                <OptionLabel
+                  label={copy(
+                    "copy.user.components.course.course-review-filters.180ba6fb8c00",
+                    { v0: rating.name }
+                  )}
+                  count={rating.count}
+                />
               </SelectItem>
             ))}
           </SelectContent>
@@ -89,7 +113,11 @@ export function CourseReviewFilters({
       )}
 
       <div className="flex items-center gap-1">
-        <span className="px-1 text-sm text-muted-foreground">排序</span>
+        <span className="px-1 text-sm text-muted-foreground">
+          {copy(
+            "copy.user.components.course.course-review-filters.a96c9a854190"
+          )}
+        </span>
         <Tabs
           value={value.orderBy}
           onValueChange={(orderBy) =>
@@ -100,11 +128,15 @@ export function CourseReviewFilters({
           <TabsList>
             <TabsTrigger value="updated_at" className="gap-1">
               <RiTimeLine className="size-3" data-icon="inline-start" />
-              最新
+              {copy(
+                "copy.user.components.course.course-review-filters.569af1a47dbd"
+              )}
             </TabsTrigger>
             <TabsTrigger value="like_count" className="gap-1">
               <RiThumbUpLine className="size-3" data-icon="inline-start" />
-              获赞最多
+              {copy(
+                "copy.user.components.course.course-review-filters.4eecf5a9a9da"
+              )}
             </TabsTrigger>
           </TabsList>
         </Tabs>

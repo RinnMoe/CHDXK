@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { ReviewCard } from "./review-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { ReviewDTO } from "@/api/review"
@@ -27,7 +28,7 @@ export function ReviewList({
   reviews,
   isLoading,
   showCourse,
-  emptyText = "暂无点评",
+  emptyText = copy("copy.user.components.review.review-list.3249c5028e99"),
 }: ReviewListProps) {
   if (isLoading) {
     return (

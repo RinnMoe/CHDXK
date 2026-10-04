@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { Link } from "@tanstack/react-router"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -27,7 +28,11 @@ export function ReviewFormContentEditor({
 }: ReviewFormContentEditorProps) {
   return (
     <div className="space-y-2">
-      <Label htmlFor="content">点评内容</Label>
+      <Label htmlFor="content">
+        {copy(
+          "copy.user.components.review.review-form-content-editor.0a932e31074d"
+        )}
+      </Label>
       <div className="flex flex-wrap gap-2">
         {REVIEW_TEMPLATE_LABELS.map((label) => {
           const selected = hasTemplateLine(content, label)
@@ -57,10 +62,16 @@ export function ReviewFormContentEditor({
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">编辑</p>
+          <p className="text-sm text-muted-foreground">
+            {copy(
+              "copy.user.components.review.review-form-content-editor.051836569928"
+            )}
+          </p>
           <Textarea
             id="content"
-            placeholder="分享你对这门课程的看法...（支持 Markdown）"
+            placeholder={copy(
+              "copy.user.components.review.review-form-content-editor.5774b81023ea"
+            )}
             value={content}
             onChange={(e) => onChange(e.target.value)}
             onBlur={onBlur}
@@ -70,18 +81,33 @@ export function ReviewFormContentEditor({
           />
         </div>
         <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">预览</p>
+          <p className="text-sm text-muted-foreground">
+            {copy(
+              "copy.user.components.review.review-form-content-editor.13d61fea9f17"
+            )}
+          </p>
           <div className="review-markdown prose prose-sm min-h-40 max-w-none dark:prose-invert">
             {content.trim() ? (
               <SafeMarkdown content={content} />
             ) : (
-              <span className="text-muted-foreground italic">预览区域</span>
+              <span className="text-muted-foreground italic">
+                {copy(
+                  "copy.user.components.review.review-form-content-editor.d5ee14c78799"
+                )}
+              </span>
             )}
           </div>
         </div>
       </div>
       <p className="text-sm text-muted-foreground">
-        {content.length} / {CONTENT_MAX_LENGTH} 字，至少 {CONTENT_MIN_LENGTH} 字
+        {content.length} / {CONTENT_MAX_LENGTH}
+        {copy(
+          "copy.user.components.review.review-form-content-editor.ec791ea9ba47"
+        )}
+        {CONTENT_MIN_LENGTH}
+        {copy(
+          "copy.user.components.review.review-form-content-editor.457271dfe88b"
+        )}
       </p>
       {error && (
         <p className="text-sm text-destructive" role="alert">
@@ -90,18 +116,28 @@ export function ReviewFormContentEditor({
       )}
       <div className="text-sm leading-6 text-muted-foreground [&_p]:m-0">
         <p>
-          欢迎畅所欲言。点评模板可以按需修改或删除。编辑框支持 Markdown 语法。
+          {copy(
+            "copy.user.components.review.review-form-content-editor.ac9aab1b8707"
+          )}
         </p>
         <p>
-          理想的点评应当富有事实且对课程有全面的描述。比如课讲得好但是考核很严格，或者作业奇葩但给分很高。二者都说出来更有利于同学们做出全面的选择和判断。
+          {copy(
+            "copy.user.components.review.review-form-content-editor.8031c071e54c"
+          )}
         </p>
         <p>
-          避免滥用缩写、梗、隐喻等让其他读者难以理解的表达方式和内容。避免使用情绪化用语和冒犯性言论。
+          {copy(
+            "copy.user.components.review.review-form-content-editor.6e0358029d6a"
+          )}
         </p>
         <p>
-          提交点评表示您同意授权本网站使用点评的内容，并且了解本站的
+          {copy(
+            "copy.user.components.review.review-form-content-editor.ab677d30bb6d"
+          )}
           <Link to="/faq" className="font-medium text-primary hover:underline">
-            相关立场
+            {copy(
+              "copy.user.components.review.review-form-content-editor.04031807d096"
+            )}
           </Link>
           。
         </p>

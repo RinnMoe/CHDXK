@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { ReviewList } from "@/components/review/review-list"
@@ -22,19 +23,25 @@ export function FollowedReviewsPage() {
 
   return (
     <>
-      <PageTitle>关注动态</PageTitle>
+      <PageTitle>
+        {copy("copy.user.pages.followed-reviews-page.497d4c0de4ae")}
+      </PageTitle>
       <PageShell>
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-bold">关注动态</h1>
+            <h1 className="text-2xl font-bold">
+              {copy("copy.user.pages.followed-reviews-page.497d4c0de4ae")}
+            </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              你关注的课程的点评
+              {copy("copy.user.pages.followed-reviews-page.e798d1fe24d6")}
             </p>
           </div>
 
           {data && (
             <p className="text-sm text-muted-foreground">
-              共 {data.total} 条点评
+              {copy("copy.user.pages.followed-reviews-page.2428420e407f")}
+              {data.total}
+              {copy("copy.user.pages.followed-reviews-page.1c0a8a53fbb5")}
             </p>
           )}
 

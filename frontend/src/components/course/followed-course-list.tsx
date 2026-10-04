@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { CourseCompactCard } from "./course-compact-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/contexts/auth-context"
@@ -42,7 +43,11 @@ export function FollowedCourseList({
   if (!user) {
     return (
       <div className="py-12 text-center">
-        <p className="text-sm text-muted-foreground">登录后查看关注课程</p>
+        <p className="text-sm text-muted-foreground">
+          {copy(
+            "copy.user.components.course.followed-course-list.b379a5389e00"
+          )}
+        </p>
       </div>
     )
   }
@@ -51,7 +56,11 @@ export function FollowedCourseList({
   if (courses.length === 0) {
     return (
       <div className="py-12 text-center">
-        <p className="text-sm text-muted-foreground">暂无关注课程</p>
+        <p className="text-sm text-muted-foreground">
+          {copy(
+            "copy.user.components.course.followed-course-list.e0dec5bbbb00"
+          )}
+        </p>
       </div>
     )
   }

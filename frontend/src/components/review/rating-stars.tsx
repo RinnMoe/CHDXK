@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useState } from "react"
 import { RiStarFill, RiStarLine } from "@remixicon/react"
 import { cn } from "@/lib/utils"
@@ -52,7 +53,10 @@ export function RatingStars({
                 "cursor-pointer hover:-translate-y-0.5 hover:scale-110 active:scale-95",
               !interactive && "cursor-default"
             )}
-            aria-label={`${star} 星`}
+            aria-label={copy(
+              "copy.user.components.review.rating-stars.a3e3904818fc",
+              { v0: star }
+            )}
           >
             <Icon
               key={shouldPulse ? `pulse-${pulseKey}` : "idle"}

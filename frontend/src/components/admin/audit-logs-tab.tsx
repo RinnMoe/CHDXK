@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { RiSearchLine } from "@remixicon/react"
 import { PaginationComponent } from "@/components/common/pagination"
@@ -34,12 +35,30 @@ const allActionsValue = "__all__"
 const routeApi = getRouteApi("/app/admin/user")
 
 const actionOptions = [
-  { value: "system_api_key.create", label: "新增系统 API Key" },
-  { value: "system_api_key.delete", label: "删除系统 API Key" },
-  { value: "system_settings.update", label: "修改系统设置" },
-  { value: "review.update", label: "修改点评" },
-  { value: "review.delete", label: "删除点评" },
-  { value: "review.moderator_remark.update", label: "修改管理备注" },
+  {
+    value: "system_api_key.create",
+    label: copy("copy.admin.components.admin.audit-logs-tab.4a36b70108bf"),
+  },
+  {
+    value: "system_api_key.delete",
+    label: copy("copy.admin.components.admin.audit-logs-tab.86fbfb0b1127"),
+  },
+  {
+    value: "system_settings.update",
+    label: copy("copy.admin.components.admin.audit-logs-tab.0cdb484341a7"),
+  },
+  {
+    value: "review.update",
+    label: copy("copy.admin.components.admin.audit-logs-tab.3cd5d9b5704c"),
+  },
+  {
+    value: "review.delete",
+    label: copy("copy.admin.components.admin.audit-logs-tab.e6b1e035bda1"),
+  },
+  {
+    value: "review.moderator_remark.update",
+    label: copy("copy.admin.components.admin.audit-logs-tab.c6b856679bb5"),
+  },
 ]
 
 const actionLabels = Object.fromEntries(
@@ -141,26 +160,34 @@ export function AuditLogsTab() {
   return (
     <section className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <h2 className="text-lg font-medium">审计日志</h2>
+        <h2 className="text-lg font-medium">
+          {copy("copy.admin.components.admin.audit-logs-tab.a0f79e91f13f")}
+        </h2>
       </div>
 
       <form className="flex flex-wrap items-end gap-2" onSubmit={handleSearch}>
         <DateFilterPicker
           id="audit-start-time"
           name="start_time"
-          label="开始时间"
+          label={copy(
+            "copy.admin.components.admin.audit-logs-tab.6a9906c79f26"
+          )}
           value={startTime}
           onChange={setDateFilter("audit_start_time")}
         />
         <DateFilterPicker
           id="audit-end-time"
           name="end_time"
-          label="结束时间"
+          label={copy(
+            "copy.admin.components.admin.audit-logs-tab.f50276449943"
+          )}
           value={endTime}
           onChange={setDateFilter("audit_end_time")}
         />
         <div className="flex w-36 flex-col gap-1">
-          <Label htmlFor="audit-actor-user-id">触发人 ID</Label>
+          <Label htmlFor="audit-actor-user-id">
+            {copy("copy.admin.components.admin.audit-logs-tab.8656460e0d46")}
+          </Label>
           <Input
             id="audit-actor-user-id"
             name="actor_user_id"
@@ -171,7 +198,9 @@ export function AuditLogsTab() {
           />
         </div>
         <div className="flex w-52 flex-col gap-1">
-          <Label htmlFor="audit-action">行为</Label>
+          <Label htmlFor="audit-action">
+            {copy("copy.admin.components.admin.audit-logs-tab.d92ffbeedfac")}
+          </Label>
           <Select value={action || allActionsValue} onValueChange={setAction}>
             <SelectTrigger
               id="audit-action"
@@ -180,7 +209,11 @@ export function AuditLogsTab() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={allActionsValue}>全部行为</SelectItem>
+              <SelectItem value={allActionsValue}>
+                {copy(
+                  "copy.admin.components.admin.audit-logs-tab.ae90ef46a90c"
+                )}
+              </SelectItem>
               {actionOptions.map((item) => (
                 <SelectItem key={item.value} value={item.value}>
                   {item.label}
@@ -191,13 +224,15 @@ export function AuditLogsTab() {
         </div>
         <Button type="submit" className="h-9">
           <RiSearchLine />
-          查询
+          {copy("copy.admin.components.admin.audit-logs-tab.bcd6771e08ec")}
         </Button>
       </form>
 
       {logsQuery.data ? (
         <p className="text-sm text-muted-foreground">
-          共 {logsQuery.data.total} 条
+          {copy("copy.admin.components.admin.audit-logs-tab.2428420e407f")}
+          {logsQuery.data.total}
+          {copy("copy.admin.components.admin.audit-logs-tab.6fb2840d568a")}
         </p>
       ) : null}
 
@@ -214,11 +249,31 @@ export function AuditLogsTab() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>时间</TableHead>
-                <TableHead>行为</TableHead>
-                <TableHead>触发人</TableHead>
-                <TableHead>对象</TableHead>
-                <TableHead>详情</TableHead>
+                <TableHead>
+                  {copy(
+                    "copy.admin.components.admin.audit-logs-tab.8b6ff498515b"
+                  )}
+                </TableHead>
+                <TableHead>
+                  {copy(
+                    "copy.admin.components.admin.audit-logs-tab.d92ffbeedfac"
+                  )}
+                </TableHead>
+                <TableHead>
+                  {copy(
+                    "copy.admin.components.admin.audit-logs-tab.814362ba214f"
+                  )}
+                </TableHead>
+                <TableHead>
+                  {copy(
+                    "copy.admin.components.admin.audit-logs-tab.53f92c063963"
+                  )}
+                </TableHead>
+                <TableHead>
+                  {copy(
+                    "copy.admin.components.admin.audit-logs-tab.979a332955c8"
+                  )}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -248,7 +303,9 @@ export function AuditLogsTab() {
                     colSpan={5}
                     className="py-10 text-center text-muted-foreground"
                   >
-                    暂无审计日志
+                    {copy(
+                      "copy.admin.components.admin.audit-logs-tab.ea97b4577750"
+                    )}
                   </TableCell>
                 </TableRow>
               )}

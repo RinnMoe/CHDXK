@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useState } from "react"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { RiUserLine } from "@remixicon/react"
@@ -31,7 +32,9 @@ export function UserMenu() {
     return (
       <div>
         <Button variant="ghost" size="sm" asChild>
-          <Link to="/login">登录</Link>
+          <Link to="/login">
+            {copy("copy.user.components.auth.user-menu.1e2df9c3075a")}
+          </Link>
         </Button>
       </div>
     )
@@ -45,7 +48,9 @@ export function UserMenu() {
             variant="ghost"
             size="icon-sm"
             className="text-foreground"
-            aria-label="打开用户菜单"
+            aria-label={copy(
+              "copy.user.components.auth.user-menu.c87328acafb2"
+            )}
           >
             <span className="flex items-center justify-center">
               <RiUserLine aria-hidden="true" />
@@ -54,24 +59,33 @@ export function UserMenu() {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-            用户 ID: {user.id}
+            {copy("copy.user.components.auth.user-menu.502e21b8a914")}
+            {user.id}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link to="/review/mine">我的点评</Link>
+            <Link to="/review/mine">
+              {copy("copy.user.components.auth.user-menu.477d1ac374fc")}
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to="/course/mine">我的课程</Link>
+            <Link to="/course/mine">
+              {copy("copy.user.components.auth.user-menu.e80149e50579")}
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to="/point">积分</Link>
+            <Link to="/point">
+              {copy("copy.user.components.auth.user-menu.10939f548645")}
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to="/settings">设置</Link>
+            <Link to="/settings">
+              {copy("copy.user.components.auth.user-menu.df3d58c7d84b")}
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut}>
-            退出登录
+            {copy("copy.user.components.auth.user-menu.3ab8cc15939f")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

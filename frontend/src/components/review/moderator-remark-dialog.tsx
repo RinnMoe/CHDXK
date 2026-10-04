@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useState, type SyntheticEvent } from "react"
 import {
   Dialog,
@@ -55,28 +56,50 @@ function ModeratorRemarkForm({
       })
       onOpenChange(false)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "保存失败")
+      setError(
+        err instanceof Error
+          ? err.message
+          : copy(
+              "copy.user.components.review.moderator-remark-dialog.6309a3bb5ba4"
+            )
+      )
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <DialogHeader>
-        <DialogTitle>管理员批注</DialogTitle>
+        <DialogTitle>
+          {copy(
+            "copy.user.components.review.moderator-remark-dialog.fe97e431532f"
+          )}
+        </DialogTitle>
         <DialogDescription>
-          点评 #{review.id} 的批注会对所有用户可见。
+          {copy(
+            "copy.user.components.review.moderator-remark-dialog.b0b89549bc8b"
+          )}
+          {review.id}
+          {copy(
+            "copy.user.components.review.moderator-remark-dialog.8680c82f8d97"
+          )}
         </DialogDescription>
       </DialogHeader>
 
       <div className="space-y-2">
-        <Label htmlFor={`moderator-remark-${review.id}`}>批注内容</Label>
+        <Label htmlFor={`moderator-remark-${review.id}`}>
+          {copy(
+            "copy.user.components.review.moderator-remark-dialog.6d5aba564779"
+          )}
+        </Label>
         <Textarea
           id={`moderator-remark-${review.id}`}
           value={remark}
           onChange={(e) => setRemark(e.target.value)}
           rows={5}
           className="resize-y text-sm"
-          placeholder="填写管理员批注，清空后保存可移除批注"
+          placeholder={copy(
+            "copy.user.components.review.moderator-remark-dialog.bf6780b11d5f"
+          )}
         />
       </div>
 
@@ -92,10 +115,18 @@ function ModeratorRemarkForm({
           variant="ghost"
           onClick={() => onOpenChange(false)}
         >
-          取消
+          {copy(
+            "copy.user.components.review.moderator-remark-dialog.2cd0f3be8738"
+          )}
         </Button>
         <Button type="submit" disabled={isPending}>
-          {isPending ? "保存中..." : "保存批注"}
+          {isPending
+            ? copy(
+                "copy.user.components.review.moderator-remark-dialog.917b1c1f18d0"
+              )
+            : copy(
+                "copy.user.components.review.moderator-remark-dialog.49dd2bd35dd7"
+              )}
         </Button>
       </DialogFooter>
     </form>

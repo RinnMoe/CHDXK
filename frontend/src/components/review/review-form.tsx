@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import {
   useCallback,
   useMemo,
@@ -22,6 +23,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  fieldError,
+  reviewValuesEqual,
+  type ReviewFormValues,
+} from "./review-form-values"
+import { ReviewSubmitButton } from "./review-submit-button"
+import { ReviewDraftNotice } from "./review-draft-notice"
 import { RatingStars } from "./rating-stars"
 import { ReviewFormContentEditor } from "./review-form-content-editor"
 import {
@@ -48,26 +56,6 @@ interface ReviewFormProps {
   onCancel?: () => void
   isSubmitting?: boolean
   draftUserID?: number
-}
-
-type ReviewFormValues = {
-  rating: number
-  semester: string
-  score: string
-  content: string
-}
-
-function fieldError(errors: unknown[]) {
-  return errors.length > 0 ? String(errors[0]) : null
-}
-
-function reviewValuesEqual(a: ReviewFormValues, b: ReviewFormValues) {
-  return (
-    a.rating === b.rating &&
-    a.semester === b.semester &&
-    a.score === b.score &&
-    a.content === b.content
-  )
 }
 
 export function ReviewForm({
@@ -194,7 +182,11 @@ export function ReviewForm({
     e.stopPropagation()
     setSubmitError(null)
     void form.handleSubmit().catch((err: unknown) => {
-      setSubmitError(err instanceof Error ? err.message : "提交失败")
+      setSubmitError(
+        err instanceof Error
+          ? err.message
+          : copy("copy.user.components.review.review-form.1440c7e23865")
+      )
     })
   }
 
@@ -204,14 +196,18 @@ export function ReviewForm({
         name="rating"
         validators={{
           onSubmit: ({ value }) =>
-            value < 1 || value > 5 ? "请选择评分（1-5 星）" : undefined,
+            value < 1 || value > 5
+              ? copy("copy.user.components.review.review-form.e3bb52242abf")
+              : undefined,
         }}
       >
         {(field) => {
           const error = fieldError(field.state.meta.errors)
           return (
             <div className="space-y-2">
-              <Label>评分</Label>
+              <Label>
+                {copy("copy.user.components.review.review-form.96fff2e26c8d")}
+              </Label>
               <div>
                 <RatingStars
                   value={field.state.value}
@@ -237,7 +233,9 @@ export function ReviewForm({
           name="semester"
           validators={{
             onSubmit: ({ value }) =>
-              getSelectedSemester(value) ? undefined : "请选择学期",
+              getSelectedSemester(value)
+                ? undefined
+                : copy("copy.user.components.review.review-form.c42296934f43"),
           }}
         >
           {(field) => {
@@ -245,7 +243,9 @@ export function ReviewForm({
             const error = fieldError(field.state.meta.errors)
             return (
               <div className="space-y-2">
-                <Label>学期</Label>
+                <Label>
+                  {copy("copy.user.components.review.review-form.79a4ef019e9c")}
+                </Label>
                 <Select
                   value={selectedSemester}
                   onValueChange={(value) => {
@@ -254,7 +254,11 @@ export function ReviewForm({
                   }}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="选择学期" />
+                    <SelectValue
+                      placeholder={copy(
+                        "copy.user.components.review.review-form.522bedf98774"
+                      )}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {availableSemesters.map((s) => (
@@ -270,8 +274,7 @@ export function ReviewForm({
                   </p>
                 )}
                 <p className="text-sm leading-6 text-muted-foreground">
-                  2026-2027 代表 2026-2027
-                  学年度（2026.9-2027.8）。1代表秋季学期，2代表春季学期，3代表夏季学期/小学期。
+                  {copy("copy.user.components.review.review-form.130cb02ba7b2")}
                 </p>
               </div>
             )
@@ -282,7 +285,9 @@ export function ReviewForm({
           validators={{
             onSubmit: ({ value }) =>
               value.length > SCORE_MAX_LENGTH
-                ? `分数最多 ${SCORE_MAX_LENGTH} 个字符`
+                ? copy("copy.user.components.review.review-form.a25faaaa6b25", {
+                    v0: SCORE_MAX_LENGTH,
+                  })
                 : undefined,
           }}
         >
@@ -290,10 +295,14 @@ export function ReviewForm({
             const error = fieldError(field.state.meta.errors)
             return (
               <div className="space-y-2">
-                <Label htmlFor="score">分数（可选）</Label>
+                <Label htmlFor="score">
+                  {copy("copy.user.components.review.review-form.86d12509c85f")}
+                </Label>
                 <Input
                   id="score"
-                  placeholder="如 A、92、中期退课（W）"
+                  placeholder={copy(
+                    "copy.user.components.review.review-form.dd6d1ad1590a"
+                  )}
                   value={field.state.value}
                   onChange={(e) => {
                     field.handleChange(e.target.value)
@@ -318,13 +327,21 @@ export function ReviewForm({
         validators={{
           onSubmit: ({ value }) => {
             if (!hasActualReviewContent(value)) {
-              return "请填写点评正文后再提交"
+              return copy(
+                "copy.user.components.review.review-form.ad57c41ed428"
+              )
             }
             if (value.trim().length < CONTENT_MIN_LENGTH) {
-              return `点评内容至少需要 ${CONTENT_MIN_LENGTH} 个字符`
+              return copy(
+                "copy.user.components.review.review-form.82efb72bee87",
+                { v0: CONTENT_MIN_LENGTH }
+              )
             }
             if (value.length > CONTENT_MAX_LENGTH) {
-              return `点评内容最多 ${CONTENT_MAX_LENGTH} 个字符`
+              return copy(
+                "copy.user.components.review.review-form.55d4ef829a9d",
+                { v0: CONTENT_MAX_LENGTH }
+              )
             }
             return undefined
           },
@@ -355,35 +372,25 @@ export function ReviewForm({
         </p>
       )}
 
-      {draftKey && (draftRestored || draftSavedAt) && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
-          <span>{draftRestored ? "已恢复本地草稿" : "本地草稿已保存"}</span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={handleClearDraft}
-          >
-            清除草稿
-          </Button>
-        </div>
-      )}
+      <ReviewDraftNotice
+        visible={!!draftKey && !!(draftRestored || draftSavedAt)}
+        draftRestored={draftRestored}
+        onClear={handleClearDraft}
+      />
 
       <div className="flex justify-end gap-2">
         {onCancel && (
           <Button type="button" variant="ghost" onClick={onCancel}>
-            取消
+            {copy("copy.user.components.review.review-form.2cd0f3be8738")}
           </Button>
         )}
         <form.Subscribe selector={(state) => state.isSubmitting}>
-          {(formSubmitting) => {
-            const submitting = isSubmitting || formSubmitting
-            return (
-              <Button type="submit" disabled={submitting}>
-                {submitting ? "提交中..." : isEdit ? "更新点评" : "发布点评"}
-              </Button>
-            )
-          }}
+          {(formSubmitting) => (
+            <ReviewSubmitButton
+              submitting={!!isSubmitting || formSubmitting}
+              isEdit={isEdit}
+            />
+          )}
         </form.Subscribe>
       </div>
     </form>

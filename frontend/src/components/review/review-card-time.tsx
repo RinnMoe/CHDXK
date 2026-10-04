@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import {
@@ -29,7 +30,10 @@ export function ReviewCardTime({ review }: { review: ReviewDTO }) {
       ? formatReviewCardTime(displayTime)
       : formatDateTime(displayTime)
   const displayTimeTitle = formatDateTime(displayTime)
-  const createdTimeTitle = `创建于 ${formatDateTime(review.created_at)}`
+  const createdTimeTitle = copy(
+    "copy.user.components.review.review-card-time.530e38e91fd8",
+    { v0: formatDateTime(review.created_at) }
+  )
   const canViewRevisions = edited && (user?.is_admin() ?? false)
 
   const timeNode = hasRelativeTime ? (
@@ -55,11 +59,11 @@ export function ReviewCardTime({ review }: { review: ReviewDTO }) {
         title={createdTimeTitle}
         onClick={() => setRevisionsOpen(true)}
       >
-        (已修改)
+        {copy("copy.user.components.review.review-card-time.0c508bc32e44")}
       </button>
     ) : (
       <span className="ml-1 text-muted-foreground/70" title={createdTimeTitle}>
-        (已修改)
+        {copy("copy.user.components.review.review-card-time.0c508bc32e44")}
       </span>
     )
   ) : null

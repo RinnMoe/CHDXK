@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import {
   getRouteApi,
   Link,
@@ -52,18 +53,22 @@ export function NewReviewPage() {
 
   return (
     <>
-      <PageTitle>写点评</PageTitle>
+      <PageTitle>
+        {copy("copy.user.pages.new-review-page.74cdbe78b5b2")}
+      </PageTitle>
       <PageShell>
         <Button asChild variant="ghost" size="sm" className="mb-4">
           <Link to="/course/$courseID" params={{ courseID: String(id) }}>
             <RiArrowLeftLine data-icon="inline-start" />
-            返回课程
+            {copy("copy.user.pages.new-review-page.17d4b8e54563")}
           </Link>
         </Button>
 
         <section className="space-y-4">
           <div className="space-y-4">
-            <h1 className="text-lg font-medium">写点评</h1>
+            <h1 className="text-lg font-medium">
+              {copy("copy.user.pages.new-review-page.74cdbe78b5b2")}
+            </h1>
             {course && <CourseHeaderMeta course={course} />}
           </div>
 

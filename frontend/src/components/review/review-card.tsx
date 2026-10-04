@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useEffect, useRef, useState } from "react"
 import { Link } from "@tanstack/react-router"
 import { RiEditLine, RiShareLine, RiWrenchLine } from "@remixicon/react"
@@ -159,11 +160,19 @@ export function ReviewCard({
               size="sm"
               onClick={handleShare}
               className="gap-1 hover:text-inherit"
-              aria-label="复制点评链接"
-              title="复制点评链接"
+              aria-label={copy(
+                "copy.user.components.review.review-card.5e19d0f37193"
+              )}
+              title={copy(
+                "copy.user.components.review.review-card.5e19d0f37193"
+              )}
             >
               <RiShareLine data-icon="inline-start" />
-              {copied && <span className="text-sm">已复制</span>}
+              {copied && (
+                <span className="text-sm">
+                  {copy("copy.user.components.review.review-card.8f6f8d979c98")}
+                </span>
+              )}
             </Button>
             {canEdit && (
               <Button
@@ -171,8 +180,12 @@ export function ReviewCard({
                 variant="ghost"
                 size="sm"
                 className="size-8 hover:text-inherit"
-                aria-label="修改点评"
-                title="修改点评"
+                aria-label={copy(
+                  "copy.user.components.review.review-card.3cd5d9b5704c"
+                )}
+                title={copy(
+                  "copy.user.components.review.review-card.3cd5d9b5704c"
+                )}
               >
                 <Link
                   to="/review/$reviewID/edit"
@@ -200,7 +213,13 @@ export function ReviewCard({
                 <DropdownMenuContent align="end" side={manageMenuSide}>
                   {isAdmin && (
                     <DropdownMenuItem onClick={() => setRemarkDialogOpen(true)}>
-                      {review.moderator_remark ? "修改批注" : "添加批注"}
+                      {review.moderator_remark
+                        ? copy(
+                            "copy.user.components.review.review-card.5e807b376ee8"
+                          )
+                        : copy(
+                            "copy.user.components.review.review-card.150f47300f4d"
+                          )}
                     </DropdownMenuItem>
                   )}
                   <AlertDialog>
@@ -209,23 +228,37 @@ export function ReviewCard({
                         className="text-destructive focus:text-destructive"
                         onSelect={(e) => e.preventDefault()}
                       >
-                        删除点评
+                        {copy(
+                          "copy.user.components.review.review-card.e6b1e035bda1"
+                        )}
                       </DropdownMenuItem>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>确认删除</AlertDialogTitle>
+                        <AlertDialogTitle>
+                          {copy(
+                            "copy.user.components.review.review-card.a3ea3c17b401"
+                          )}
+                        </AlertDialogTitle>
                         <AlertDialogDescription>
-                          删除后无法恢复，确定要删除这条点评吗？
+                          {copy(
+                            "copy.user.components.review.review-card.c0945e19fa49"
+                          )}
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>取消</AlertDialogCancel>
+                        <AlertDialogCancel>
+                          {copy(
+                            "copy.user.components.review.review-card.2cd0f3be8738"
+                          )}
+                        </AlertDialogCancel>
                         <AlertDialogAction
                           className="bg-destructive hover:bg-destructive/90"
                           onClick={handleDelete}
                         >
-                          删除
+                          {copy(
+                            "copy.user.components.review.review-card.2f9daa828907"
+                          )}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>

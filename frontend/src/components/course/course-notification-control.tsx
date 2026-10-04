@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { Link } from "@tanstack/react-router"
 import {
   RiEyeCloseLine,
@@ -17,15 +18,27 @@ import { useAuth } from "@/contexts/auth-context"
 import { useSetNotificationLevel } from "@/hooks/use-course"
 
 const notificationLabels: Record<CourseNotificationLevel, string> = {
-  0: "普通",
-  1: "关注",
-  2: "屏蔽",
+  0: copy(
+    "copy.user.components.course.course-notification-control.de907d10df98"
+  ),
+  1: copy(
+    "copy.user.components.course.course-notification-control.eb137dee4c0a"
+  ),
+  2: copy(
+    "copy.user.components.course.course-notification-control.5e2a947290d1"
+  ),
 }
 
 const notificationDescriptions: Record<CourseNotificationLevel, string> = {
-  0: "不关注，也不从点评列表中隐藏",
-  1: "在关注课程和关注点评中查看",
-  2: "在最新点评和点评搜索中隐藏此课点评",
+  0: copy(
+    "copy.user.components.course.course-notification-control.b350488d45f0"
+  ),
+  1: copy(
+    "copy.user.components.course.course-notification-control.a5e06fe853d2"
+  ),
+  2: copy(
+    "copy.user.components.course.course-notification-control.fafd189cc3d0"
+  ),
 }
 
 const notificationOptions = [
@@ -57,9 +70,17 @@ export function CourseNotificationControl({
   if (!user) {
     return (
       <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-        <span className="font-normal">通知等级：未登录</span>
+        <span className="font-normal">
+          {copy(
+            "copy.user.components.course.course-notification-control.1183e332583e"
+          )}
+        </span>
         <Button asChild size="sm" variant="ghost" className="h-7 px-2">
-          <Link to="/login">登录</Link>
+          <Link to="/login">
+            {copy(
+              "copy.user.components.course.course-notification-control.1e2df9c3075a"
+            )}
+          </Link>
         </Button>
       </div>
     )
@@ -67,7 +88,11 @@ export function CourseNotificationControl({
 
   return (
     <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-      <span className="font-normal">通知等级</span>
+      <span className="font-normal">
+        {copy(
+          "copy.user.components.course.course-notification-control.4b5aba5d20da"
+        )}
+      </span>
       <Select
         value={String(level)}
         onValueChange={handleChange}

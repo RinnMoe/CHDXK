@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { brand } from "@/config/brand"
@@ -5,198 +6,170 @@ import { brand } from "@/config/brand"
 export function FaqPage() {
   return (
     <>
-      <PageTitle>常见问题</PageTitle>
+      <PageTitle>{copy("copy.user.pages.faq-page.45a6d115fdfb")}</PageTitle>
       <PageShell>
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-bold">常见问题</h1>
+            <h1 className="text-2xl font-bold">
+              {copy("copy.user.pages.faq-page.45a6d115fdfb")}
+            </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              关于点评撰写、社区内容、隐私和联系方式的常见说明。
+              {copy("copy.user.pages.faq-page.d843afcbe6c9")}
             </p>
           </div>
 
           <div className="divide-y rounded-lg border bg-card">
             <section className="space-y-3 p-4">
-              <h2 className="font-medium">我该点评哪些课程？写什么？</h2>
+              <h2 className="font-medium">
+                {copy("copy.user.pages.faq-page.41a131014545")}
+              </h2>
               <div className="space-y-2 text-sm leading-7 text-muted-foreground">
-                <p>
-                  所有的课程。但如果你想帮忙，最好的是那些还没有点评的课程和老师。请不要吝啬你的好评，也不要害怕说坏话。
-                </p>
-                <p>
-                  即使是没有什么亮点的课程也值得你来写一条点评，因为“这门课很正常”也是很重要的信息。寥寥几字可以拯救无数人的迷茫。
-                </p>
-                <p>
-                  社区鼓励大家在写点评的时候各显神通，当然一个理想的点评应该：
-                </p>
+                <p>{copy("copy.user.pages.faq-page.b518aa90404f")}</p>
+                <p>{copy("copy.user.pages.faq-page.fe34867409f9")}</p>
+                <p>{copy("copy.user.pages.faq-page.9c7f7f6eb5d7")}</p>
                 <ul className="list-disc space-y-1 pl-5">
-                  <li>
-                    饱含事实。“某课很无聊”不是个好的点评，“某课的老师只会读PPT”还可以。你应该只点评自己上过的课程，而不是道听途说的评价。我们鼓励列举事实，不鼓励情绪宣泄。
-                  </li>
-                  <li>
-                    全面。课堂、考核、课下，以及特别的体验。这些维度和故事都涉及会很棒。
-                  </li>
-                  <li>
-                    清晰。点评不应滥用缩写、绰号、梗，或者对缺乏背景的读者难以理解的其他用语或者描述方式。
-                  </li>
+                  <li>{copy("copy.user.pages.faq-page.7eadada6fad4")}</li>
+                  <li>{copy("copy.user.pages.faq-page.7539773e17fd")}</li>
+                  <li>{copy("copy.user.pages.faq-page.37fb6a4d3021")}</li>
                 </ul>
               </div>
             </section>
 
             <section className="space-y-3 p-4">
               <h2 className="font-medium">
-                {brand.name} 是用来找到“水课”的吗？这是否会伤害教学质量？
+                {brand.name}
+                {copy("copy.user.pages.faq-page.9a2ca14cf4ca")}
               </h2>
               <div className="space-y-2 text-sm leading-7 text-muted-foreground">
-                <p>
-                  这不是社区的主题。我们希望的是提供完全信息，方便同学们了解这门课的风格、考核标准与历史，而不是哪些课容易满绩。
-                </p>
-                <p>
-                  我们相信来自广大同学的监督和信息交换可以带来更大的教学质量提升。这就是为什么我们弱化
-                  1-5 星的“推荐”“不推荐”评分，而是主张文字内容。
-                </p>
+                <p>{copy("copy.user.pages.faq-page.560c06ace248")}</p>
+                <p>{copy("copy.user.pages.faq-page.5b742951eb31")}</p>
               </div>
             </section>
 
             <section className="space-y-3 p-4">
               <h2 className="font-medium">
-                我喜欢看 1-5 星评分的数据，不喜欢看字。
+                {copy("copy.user.pages.faq-page.6f91f72e7012")}
               </h2>
               <div className="space-y-2 text-sm leading-7 text-muted-foreground">
-                <p>
-                  数据本身是个伪命题。每个同学对于一门课是否推荐、工作量是否大的判断标准不一样，用数字衡量看似很客观，实际上主观得很。
-                </p>
-                <p>
-                  文字可以透露实质的信息，比如某门课大作业是帮着老师实验室做项目，但是给分极好。按
-                  1-5 评分，可能这门课能登水课榜首，但这也会坑很多人。
-                </p>
-                <p>
-                  当然数据会让信息更好索引和浏览，因此在统计上合理的条件下，我们会提供一些统计数据。我们在努力达到平衡。
-                </p>
+                <p>{copy("copy.user.pages.faq-page.a6588981dd07")}</p>
+                <p>{copy("copy.user.pages.faq-page.b30299666c80")}</p>
+                <p>{copy("copy.user.pages.faq-page.ff3df1e92aa0")}</p>
               </div>
             </section>
 
             <section className="space-y-3 p-4">
               <h2 className="font-medium">
-                请特别注意，“数据”会给人错误的信心
+                {copy("copy.user.pages.faq-page.e42fa20fe8cb")}
               </h2>
               <div className="space-y-2 text-sm leading-7 text-muted-foreground">
-                <p>
-                  我们通常喜欢相信数字。但请注意，社区上的数字是完全人造的。点评中填写的成绩是自由填写的，从而不一定真实、准确或者有任何参考意义。
-                </p>
-                <p>
-                  课程评价的分数就更加主观了。我们再次着重强调，数据会骗人，内容才是这个网站存在的核心。
-                </p>
+                <p>{copy("copy.user.pages.faq-page.a2f966f89d73")}</p>
+                <p>{copy("copy.user.pages.faq-page.33b4f5777312")}</p>
               </div>
             </section>
 
             <section className="space-y-3 p-4">
-              <h2 className="font-medium">{brand.name} 由谁来管理？</h2>
+              <h2 className="font-medium">
+                {brand.name}
+                {copy("copy.user.pages.faq-page.d1f4358acd87")}
+              </h2>
               <p className="text-sm leading-7 text-muted-foreground">
-                {brand.name} 由部署方和社区维护者共同管理，课程数据、内容审核和服务规则以当前部署的公开说明为准。
+                {brand.name}
+                {copy("copy.user.pages.faq-page.d1381c04a200")}
               </p>
             </section>
 
             <section className="space-y-3 p-4">
               <h2 className="font-medium">
-                我会因为在这里发表点评而被约谈吗？
+                {copy("copy.user.pages.faq-page.38d48ffc2c2d")}
+              </h2>
+              <div className="space-y-2 text-sm leading-7 text-muted-foreground">
+                <p>{copy("copy.user.pages.faq-page.d7ae75e37a06")}</p>
+                <p>{copy("copy.user.pages.faq-page.03a36cc3b476")}</p>
+                <p>{copy("copy.user.pages.faq-page.d9830937db7e")}</p>
+              </div>
+            </section>
+
+            <section className="space-y-3 p-4">
+              <h2 className="font-medium">
+                {copy("copy.user.pages.faq-page.65b152b78494")}
+              </h2>
+              <div className="space-y-2 text-sm leading-7 text-muted-foreground">
+                <p>{copy("copy.user.pages.faq-page.e2cb447efa15")}</p>
+                <p>{copy("copy.user.pages.faq-page.695cf7694573")}</p>
+                <ul className="list-disc space-y-1 pl-5">
+                  <li>{copy("copy.user.pages.faq-page.cd9c019e2109")}</li>
+                  <li>{copy("copy.user.pages.faq-page.a29dddfbfda2")}</li>
+                  <li>{copy("copy.user.pages.faq-page.4b28290015ba")}</li>
+                  <li>{copy("copy.user.pages.faq-page.e09adecaa5cf")}</li>
+                </ul>
+                <p>
+                  {copy("copy.user.pages.faq-page.9527d943f76e")}
+                  {brand.name}。
+                </p>
+                <p>{copy("copy.user.pages.faq-page.d95eb8e86a33")}</p>
+                <p>{copy("copy.user.pages.faq-page.c4d6c661009b")}</p>
+              </div>
+            </section>
+
+            <section className="space-y-3 p-4">
+              <h2 className="font-medium">
+                {copy("copy.user.pages.faq-page.ad82e230f786")}
               </h2>
               <div className="space-y-2 text-sm leading-7 text-muted-foreground">
                 <p>
-                  登录由部署方配置的统一身份服务处理。点评内容、账户映射和操作记录的保存方式以部署方的隐私说明为准。
+                  {copy("copy.user.pages.faq-page.bcdab0ef3de1")}
+                  {brand.name}
+                  {copy("copy.user.pages.faq-page.a358d5fe7cb1")}
                 </p>
-                <p>
-                  请不要在点评中主动公开不必要的个人信息；任何匿名或隐私保护说明都不应被理解为对法律或部署方管理流程的承诺。
-                </p>
-                <p>
-                  我们鼓励在保护个人隐私的前提下，基于真实经历发表客观、具体的评价。
-                </p>
+                <p>{copy("copy.user.pages.faq-page.2fd2de74bce5")}</p>
+                <p>{copy("copy.user.pages.faq-page.f45021e16c16")}</p>
               </div>
             </section>
 
             <section className="space-y-3 p-4">
-              <h2 className="font-medium">网站上的内容是否受管理？</h2>
-              <div className="space-y-2 text-sm leading-7 text-muted-foreground">
-                <p>
-                  秉承着完全信息原则，我们不修改网站上的课程点评，也不评价内容的真实性。
-                </p>
-                <p>
-                  这不意味着我们完全不管理社区内容。以下内容本社区不予接受：
-                </p>
-                <ul className="list-disc space-y-1 pl-5">
-                  <li>非课程点评信息。例如广告、对社区的攻击等。</li>
-                  <li>
-                    刷点评。在多门课程中发表相似而无帮助的内容，特别在我们认定用户未真实上过这些课的情况下。
-                  </li>
-                  <li>
-                    侵害他人利益。例如暴露没有必要的个人隐私、与课程内容无关的诽谤和人身攻击等。
-                  </li>
-                  <li>违反用户所在地区法律的其他内容。</li>
-                </ul>
-                <p>
-                  社区管理员将删除此类内容，并视情况在一段时间内禁止该用户使用 {brand.name}。
-                </p>
-                <p>
-                  原则上我们不修改内容，只修正事实性错误和重新排版，如修改错误的课程、学期、成绩格式，删去无内容的占位符等。
-                </p>
-                <p>
-                  社区管理员可能会对存在不确定真实内容的点评做出标注，以提醒用户注意辨别真实性。
-                </p>
-              </div>
-            </section>
-
-            <section className="space-y-3 p-4">
-              <h2 className="font-medium">如何界定社区内容的版权问题？</h2>
-              <div className="space-y-2 text-sm leading-7 text-muted-foreground">
-                <p>
-                  向 {brand.name} 提交点评时，您同意向社区提供对您提交的点评内容的永久、不可撤回、非独占、全球有效无限制的许可。您依然享有您提交的内容的全部版权。
-                </p>
-                <p>
-                  任何人（除了原始所有权人）不得在未经社区许可的条件下，转载社区内容（包括全部或部分内容）。
-                </p>
-                <p>
-                  您在提交点评时，授权社区以一切法律、技术途径代理保护您所提交的内容的版权，包括但不限于向任何未经许可的转载媒介进行起诉和发送
-                  DMCA 请求。
-                </p>
-              </div>
-            </section>
-
-            <section className="space-y-3 p-4">
-              <h2 className="font-medium">{brand.name} 收集我的多少信息？</h2>
+              <h2 className="font-medium">
+                {brand.name}
+                {copy("copy.user.pages.faq-page.98d112fc27b8")}
+              </h2>
               <p className="text-sm leading-7 text-muted-foreground">
-                请参考关于中“隐私”一节。
+                {copy("copy.user.pages.faq-page.d4345848334a")}
               </p>
             </section>
 
             {brand.feedbackEmail && (
               <>
                 <section className="space-y-3 p-4">
-                  <h2 className="font-medium">如何联系部署方？</h2>
+                  <h2 className="font-medium">
+                    {copy("copy.user.pages.faq-page.b78477b6ab33")}
+                  </h2>
                   <p className="text-sm leading-7 text-muted-foreground">
-                    请通过邮件{" "}
+                    {copy("copy.user.pages.faq-page.4a505e56645e")}{" "}
                     <a
                       href={`mailto:${brand.feedbackEmail}`}
                       className="font-medium text-primary hover:underline"
                     >
                       {brand.feedbackEmail}
                     </a>{" "}
-                    提出意见和建议。
+                    {copy("copy.user.pages.faq-page.c6adaffde110")}
                   </p>
                 </section>
 
                 <section className="space-y-3 p-4">
-                  <h2 className="font-medium">我是课程老师……</h2>
+                  <h2 className="font-medium">
+                    {copy("copy.user.pages.faq-page.9bb6d5508b4a")}
+                  </h2>
                   <div className="space-y-2 text-sm leading-7 text-muted-foreground">
                     <p>
                       <span className="font-medium text-foreground">
-                        我希望回复某一个关于我的点评。
+                        {copy("copy.user.pages.faq-page.f27747c10429")}
                       </span>
-                      请联系部署方并提供希望回复的点评和您的回复；确认身份后，部署方可以将回复与点评一起呈现。
+                      {copy("copy.user.pages.faq-page.6e55624ae74c")}
                     </p>
                     <p>
                       <span className="font-medium text-foreground">
-                        我认为课程点评中存在虚假内容。
+                        {copy("copy.user.pages.faq-page.6f9186b50a34")}
                       </span>
-                      请提供相关点评和澄清内容，部署方会按照当前内容管理规则处理。
+                      {copy("copy.user.pages.faq-page.85ad9c6e3a4e")}
                     </p>
                   </div>
                 </section>

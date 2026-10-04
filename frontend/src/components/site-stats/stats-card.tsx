@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import type { SiteDailyStatDTO } from "@/api/site-stats"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatDateInputValue } from "@/lib/date"
@@ -9,16 +10,46 @@ interface StatItem {
 
 function items(s: SiteDailyStatDTO): StatItem[] {
   return [
-    { label: "活跃用户", value: s.active_user_count },
-    { label: "新增用户", value: s.new_user_count },
-    { label: "新增点评", value: s.new_review_count },
-    { label: "新增积分", value: s.new_point_amount },
-    { label: "点评作者", value: s.review_author_count },
-    { label: "新增点赞", value: s.new_like_count },
-    { label: "新增点踩", value: s.new_dislike_count },
-    { label: "用户总数", value: s.total_user_count },
-    { label: "点评总数", value: s.total_review_count },
-    { label: "被点评课程总数", value: s.reviewed_course_total },
+    {
+      label: copy("copy.user.components.site-stats.stats-card.931f9c9d4123"),
+      value: s.active_user_count,
+    },
+    {
+      label: copy("copy.user.components.site-stats.stats-card.ebabc83b6830"),
+      value: s.new_user_count,
+    },
+    {
+      label: copy("copy.user.components.site-stats.stats-card.0b50583f022e"),
+      value: s.new_review_count,
+    },
+    {
+      label: copy("copy.user.components.site-stats.stats-card.a7d035e5fecb"),
+      value: s.new_point_amount,
+    },
+    {
+      label: copy("copy.user.components.site-stats.stats-card.c1320b7dd4f9"),
+      value: s.review_author_count,
+    },
+    {
+      label: copy("copy.user.components.site-stats.stats-card.e1a2345cdc47"),
+      value: s.new_like_count,
+    },
+    {
+      label: copy("copy.user.components.site-stats.stats-card.77d13c083dba"),
+      value: s.new_dislike_count,
+    },
+    {
+      label: copy("copy.user.components.site-stats.stats-card.545a676083c8"),
+      value: s.total_user_count,
+    },
+    {
+      label: copy("copy.user.components.site-stats.stats-card.c5ddc469e1d4"),
+      value: s.total_review_count,
+    },
+    {
+      label: copy("copy.user.components.site-stats.stats-card.86fa6f9d2237"),
+      value: s.reviewed_course_total,
+    },
   ]
 }
 

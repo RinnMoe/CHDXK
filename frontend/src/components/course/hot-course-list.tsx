@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { CourseCompactCard } from "./course-compact-card"
 import type { HotCourseListDTO } from "@/api/course"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -15,9 +16,15 @@ interface HotCourseListProps {
 function HotCourseHeader() {
   return (
     <div className="flex items-center gap-1 border-b px-0 py-2 text-sm font-medium text-muted-foreground">
-      <span className="shrink-0 text-center whitespace-nowrap">排名</span>
-      <span className="min-w-0 flex-1 pl-2">课程</span>
-      <span className="w-10 shrink-0 text-right">热度</span>
+      <span className="shrink-0 text-center whitespace-nowrap">
+        {copy("copy.user.components.course.hot-course-list.6570a98f2850")}
+      </span>
+      <span className="min-w-0 flex-1 pl-2">
+        {copy("copy.user.components.course.hot-course-list.60db1afb4022")}
+      </span>
+      <span className="w-10 shrink-0 text-right">
+        {copy("copy.user.components.course.hot-course-list.095f31ef0d81")}
+      </span>
     </div>
   )
 }
@@ -60,7 +67,9 @@ export function HotCourseList({
   if (items.length === 0) {
     return (
       <div className="py-12 text-center">
-        <p className="text-sm text-muted-foreground">暂无热门课程</p>
+        <p className="text-sm text-muted-foreground">
+          {copy("copy.user.components.course.hot-course-list.557d14cc702c")}
+        </p>
       </div>
     )
   }

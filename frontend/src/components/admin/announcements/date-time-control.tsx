@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useState } from "react"
 import dayjs from "dayjs"
 import { zhCN } from "date-fns/locale"
@@ -70,7 +71,11 @@ export function DateTimeControl({
             className="h-9 w-full justify-between font-normal"
           >
             <span className={selected ? undefined : "text-muted-foreground"}>
-              {selected ? formatDateTime(selected) : "选择时间"}
+              {selected
+                ? formatDateTime(selected)
+                : copy(
+                    "copy.admin.components.admin.announcements.date-time-control.3b8e6032ab48"
+                  )}
             </span>
             <RiCalendarLine className="size-4 text-muted-foreground" />
           </Button>
@@ -124,7 +129,9 @@ export function DateTimeControl({
               size="sm"
               onClick={() => setOpen(false)}
             >
-              完成
+              {copy(
+                "copy.admin.components.admin.announcements.date-time-control.c0b3fbff51cc"
+              )}
             </Button>
           </div>
         </PopoverContent>

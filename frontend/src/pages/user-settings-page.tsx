@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { PageTitle } from "@/components/common/page-title"
 import { PageShell } from "@/components/layout/page-shell"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,9 +13,18 @@ import {
 import { useTheme } from "@/components/theme-provider"
 
 const themeOptions = [
-  { value: "system", label: "跟随系统" },
-  { value: "light", label: "亮色" },
-  { value: "dark", label: "暗色" },
+  {
+    value: "system",
+    label: copy("copy.user.pages.user-settings-page.217cfe7db1e3"),
+  },
+  {
+    value: "light",
+    label: copy("copy.user.pages.user-settings-page.300cb577254e"),
+  },
+  {
+    value: "dark",
+    label: copy("copy.user.pages.user-settings-page.29edc1452eff"),
+  },
 ] as const
 
 function ThemeSettings() {
@@ -28,10 +38,16 @@ function ThemeSettings() {
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="theme-mode">外观模式</Label>
+      <Label htmlFor="theme-mode">
+        {copy("copy.user.pages.user-settings-page.97cefbbbfb55")}
+      </Label>
       <Select value={theme} onValueChange={handleThemeChange}>
         <SelectTrigger id="theme-mode" className="w-full">
-          <SelectValue placeholder="选择外观模式" />
+          <SelectValue
+            placeholder={copy(
+              "copy.user.pages.user-settings-page.bf643e1be362"
+            )}
+          />
         </SelectTrigger>
         <SelectContent>
           {themeOptions.map((option) => (
@@ -42,7 +58,7 @@ function ThemeSettings() {
         </SelectContent>
       </Select>
       <p className="text-sm leading-6 text-muted-foreground">
-        仅保存在当前浏览器，不会同步到其他设备。
+        {copy("copy.user.pages.user-settings-page.1e7d7c9e9437")}
       </p>
     </div>
   )
@@ -51,14 +67,20 @@ function ThemeSettings() {
 export function UserSettingsPage() {
   return (
     <>
-      <PageTitle>用户设置</PageTitle>
+      <PageTitle>
+        {copy("copy.user.pages.user-settings-page.7ce710f646db")}
+      </PageTitle>
       <PageShell>
         <div className="mx-auto max-w-2xl space-y-6">
-          <h1 className="text-2xl font-semibold">用户设置</h1>
+          <h1 className="text-2xl font-semibold">
+            {copy("copy.user.pages.user-settings-page.7ce710f646db")}
+          </h1>
 
           <Card>
             <CardHeader>
-              <CardTitle>偏好设置</CardTitle>
+              <CardTitle>
+                {copy("copy.user.pages.user-settings-page.57907a69fc5a")}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <section>

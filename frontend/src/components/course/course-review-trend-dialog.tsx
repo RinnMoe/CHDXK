@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useMemo, useState } from "react"
 import { RiLineChartLine } from "@remixicon/react"
 import {
@@ -49,12 +50,18 @@ export function CourseReviewTrendDialog({
       <DialogTrigger asChild>
         <Button type="button" size="sm" variant="outline">
           <RiLineChartLine data-icon="inline-start" />
-          趋势
+          {copy(
+            "copy.user.components.course.course-review-trend-dialog.9b59e637c838"
+          )}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>点评趋势</DialogTitle>
+          <DialogTitle>
+            {copy(
+              "copy.user.components.course.course-review-trend-dialog.55c9a9b4a20a"
+            )}
+          </DialogTitle>
           <DialogDescription>{courseName}</DialogDescription>
         </DialogHeader>
 
@@ -104,14 +111,36 @@ export function CourseReviewTrendDialog({
                   }}
                   formatter={(value, name) => {
                     if (name === "avg") {
-                      return [`${Number(value).toFixed(2)} 分`, "点评均分"]
+                      return [
+                        copy(
+                          "copy.user.components.course.course-review-trend-dialog.180ba6fb8c00",
+                          { v0: Number(value).toFixed(2) }
+                        ),
+                        copy(
+                          "copy.user.components.course.course-review-trend-dialog.e382e4b1420a"
+                        ),
+                      ]
                     }
-                    return [`${Number(value)} 条`, "点评数量"]
+                    return [
+                      copy(
+                        "copy.user.components.course.course-review-trend-dialog.3e88eac78dac",
+                        { v0: Number(value) }
+                      ),
+                      copy(
+                        "copy.user.components.course.course-review-trend-dialog.ed4a6ed53604"
+                      ),
+                    ]
                   }}
                 />
                 <Legend
                   formatter={(value) =>
-                    value === "avg" ? "点评均分" : "点评数量"
+                    value === "avg"
+                      ? copy(
+                          "copy.user.components.course.course-review-trend-dialog.e382e4b1420a"
+                        )
+                      : copy(
+                          "copy.user.components.course.course-review-trend-dialog.ed4a6ed53604"
+                        )
                   }
                 />
                 <Line
@@ -134,7 +163,9 @@ export function CourseReviewTrendDialog({
           </div>
         ) : (
           <div className="py-12 text-center text-sm text-muted-foreground">
-            暂无趋势数据
+            {copy(
+              "copy.user.components.course.course-review-trend-dialog.15abb90445c9"
+            )}
           </div>
         )}
       </DialogContent>

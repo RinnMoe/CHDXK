@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { RiCloseLine, RiSaveLine } from "@remixicon/react"
 import type { SystemSettingDTO } from "@/api/system-settings"
 import { Badge } from "@/components/ui/badge"
@@ -42,15 +43,32 @@ export function SystemSettingRow({
           <Label htmlFor={`setting-${setting.key}`}>
             {setting.label || setting.key}
           </Label>
-          {setting.public && <Badge variant="outline">公开</Badge>}
+          {setting.public && (
+            <Badge variant="outline">
+              {copy(
+                "copy.admin.components.admin.system-settings.system-setting-row.7a73baf0ce9a"
+              )}
+            </Badge>
+          )}
           {setting.requires_restart && (
-            <Badge variant="secondary">需重启</Badge>
+            <Badge variant="secondary">
+              {copy(
+                "copy.admin.components.admin.system-settings.system-setting-row.7c4436078ee9"
+              )}
+            </Badge>
           )}
         </div>
         {setting.description && (
           <p className="text-sm text-muted-foreground">{setting.description}</p>
         )}
-        <p className="truncate text-xs text-muted-foreground">{setting.key}</p>
+        <details className="text-xs text-muted-foreground">
+          <summary>
+            {copy(
+              "copy.admin.components.admin.system-settings.system-setting-row.bf0a989ebe51"
+            )}
+          </summary>
+          <p className="mt-1 break-all">{setting.key}</p>
+        </details>
       </div>
 
       <div className="min-w-0 space-y-1">
@@ -76,14 +94,30 @@ export function SystemSettingRow({
                 <Button
                   type="button"
                   size="icon-sm"
-                  aria-label={submitting ? "保存中" : "保存"}
+                  aria-label={
+                    submitting
+                      ? copy(
+                          "copy.admin.components.admin.system-settings.system-setting-row.a1a1720d3eb5"
+                        )
+                      : copy(
+                          "copy.admin.components.admin.system-settings.system-setting-row.a3030bf8f16d"
+                        )
+                  }
                   disabled={isLoading || submitting}
                   onClick={onSave}
                 >
                   <RiSaveLine />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{submitting ? "保存中" : "保存"}</TooltipContent>
+              <TooltipContent>
+                {submitting
+                  ? copy(
+                      "copy.admin.components.admin.system-settings.system-setting-row.a1a1720d3eb5"
+                    )
+                  : copy(
+                      "copy.admin.components.admin.system-settings.system-setting-row.a3030bf8f16d"
+                    )}
+              </TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -91,7 +125,9 @@ export function SystemSettingRow({
                   type="button"
                   size="icon-sm"
                   variant="outline"
-                  aria-label="恢复默认值"
+                  aria-label={copy(
+                    "copy.admin.components.admin.system-settings.system-setting-row.f242c947972c"
+                  )}
                   disabled={
                     isLoading || submitting || value === setting.default_value
                   }
@@ -100,7 +136,11 @@ export function SystemSettingRow({
                   <RiCloseLine />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>恢复默认值</TooltipContent>
+              <TooltipContent>
+                {copy(
+                  "copy.admin.components.admin.system-settings.system-setting-row.f242c947972c"
+                )}
+              </TooltipContent>
             </Tooltip>
           </>
         )}

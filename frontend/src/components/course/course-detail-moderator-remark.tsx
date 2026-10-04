@@ -1,3 +1,4 @@
+import { copy } from "@/lib/copy"
 import { useState } from "react"
 import { RiEditLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
@@ -30,8 +31,12 @@ export function CourseModeratorRemarkButton({
         size="sm"
         className="h-8 px-2 text-muted-foreground hover:text-foreground"
         onClick={() => setOpen(true)}
-        aria-label="修改管理员备注"
-        title="修改管理员备注"
+        aria-label={copy(
+          "copy.user.components.course.course-detail-moderator-remark.cb0bef43bb0b"
+        )}
+        title={copy(
+          "copy.user.components.course.course-detail-moderator-remark.cb0bef43bb0b"
+        )}
       >
         <RiEditLine data-icon="inline-start" />
       </Button>
