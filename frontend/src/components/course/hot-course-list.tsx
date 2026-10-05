@@ -81,7 +81,7 @@ export function HotCourseList({
         <div key={item.course.id} className="flex items-center gap-1 border-b">
           <span
             className={`w-7 shrink-0 text-center text-sm font-bold ${
-              i < 3 ? "text-amber-500" : "text-muted-foreground"
+              i < 3 ? "text-warning" : "text-muted-foreground"
             }`}
           >
             {i + 1}

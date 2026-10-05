@@ -7,9 +7,13 @@ import { CourseManagementTab } from "@/components/admin/course-management-tab"
 import { SystemApiKeysTab } from "@/components/admin/system-api-keys-tab"
 import { SystemSettingsTab } from "@/components/admin/system-settings-tab"
 import { CopySettingsPanel } from "@/components/admin/copy-settings-panel"
+import { ThemeSettingsPanel } from "@/components/admin/theme-settings-panel"
 import { ContentPagesPanel } from "@/components/admin/content-pages-panel"
 import { AdminNavigation } from "@/components/admin/admin-navigation"
-import { getAdminTab, type AdminTab } from "@/components/admin/admin-navigation-model"
+import {
+  getAdminTab,
+  type AdminTab,
+} from "@/components/admin/admin-navigation-model"
 import { PageTitle } from "@/components/common/page-title"
 import { PageShell } from "@/components/layout/page-shell"
 import { useAuth } from "@/contexts/auth-context"
@@ -51,6 +55,7 @@ export function UserAdminPage() {
               {active === "course-data" && <CourseManagementTab />}
               {active === "announcement" && <AnnouncementsTab />}
               {active === "system-settings" && <SystemSettingsTab />}
+              {active === "appearance" && <ThemeSettingsPanel />}
               {active === "site-copy" && <CopySettingsPanel />}
               {active === "content-pages" && <ContentPagesPanel />}
               {active === "system-api-key" && <SystemApiKeysTab />}

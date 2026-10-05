@@ -11,10 +11,18 @@ import (
 	"jcourse/internal/domain/review/policy"
 	"jcourse/internal/domain/setting"
 	"jcourse/pkg/sitepages"
+	"jcourse/pkg/sitetheme"
 )
 
 func newSystemSettingsService(repo setting.SystemRepository, courseRepo course.CourseRepository) *setting.SystemSettingsService {
 	defs := []setting.Definition{
+		{Key: sitetheme.Key, Group: "theme", Label: "主题外观", Type: setting.ValueTypeString, DefaultValue: sitetheme.Defaults,
+			Validator: setting.ValueValidatorFunc(func(_ context.Context, value string) error {
+				if _, err := sitetheme.Parse(value); err != nil {
+					return setting.ErrInvalidSystemSettingValue
+				}
+				return nil
+			})},
 		{Key: sitepages.Key, Group: "content", Label: "内容页面", Type: setting.ValueTypeString, DefaultValue: sitepages.Defaults, PreserveWhitespace: true,
 			Validator: setting.ValueValidatorFunc(func(_ context.Context, value string) error {
 				_, err := sitepages.Parse(value)

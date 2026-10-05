@@ -18,7 +18,7 @@ export function RatingDisplay({ rating, size = "md" }: RatingDisplayProps) {
         <div className="flex">
           {stars.map((on, i) =>
             on ? (
-              <RiStarFill key={i} className={`${sizeClass} text-yellow-400`} />
+              <RiStarFill key={i} className={`${sizeClass} text-rating`} />
             ) : (
               <RiStarLine
                 key={i}

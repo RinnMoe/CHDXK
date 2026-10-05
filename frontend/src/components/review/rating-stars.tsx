@@ -64,7 +64,7 @@ export function RatingStars({
                 sizeClass,
                 "transition-[color,filter,transform] duration-150 ease-out",
                 filled
-                  ? "text-yellow-400 drop-shadow-sm"
+                  ? "text-rating drop-shadow-sm"
                   : "text-muted-foreground/40",
                 shouldPulse && "animate-rating-pop"
               )}

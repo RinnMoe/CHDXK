@@ -87,6 +87,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	apiGroup := g.Group("/api", middleware.NoStore())
 	apiGroup.GET("/site-copy", systemSettingsController.Copy)
 	apiGroup.GET("/site-pages", systemSettingsController.Pages)
+	apiGroup.GET("/site-theme", systemSettingsController.Theme)
 	apiGroup.GET("/site.webmanifest", systemSettingsController.Manifest)
 	apiGroup.GET("/system-settings", systemSettingsController.List)
 	publicAuthGroup := apiGroup.Group("/auth")

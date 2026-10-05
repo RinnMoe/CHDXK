@@ -51,6 +51,11 @@ func (ctrl *SystemSettingsController) Manifest(c *gin.Context) {
 		respondError(c, err)
 		return
 	}
+	palette, err := ctrl.query.Theme(c.Request.Context())
+	if err != nil {
+		respondError(c, err)
+		return
+	}
 	name := values["copy.user.config.brand.743e9916a4b2"]
 	icons := []gin.H{{"src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png"}, {"src": "/pwa-512x512.png", "sizes": "512x512", "type": "image/png"}, {"src": "/pwa-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}}
 	shortcuts := make([]gin.H, 0, 3)
@@ -58,7 +63,7 @@ func (ctrl *SystemSettingsController) Manifest(c *gin.Context) {
 		shortcuts = append(shortcuts, gin.H{"name": values["copy.pwa."+item.key+"_name"], "description": values["copy.pwa."+item.key+"_description"], "url": item.path, "icons": icons[:1]})
 	}
 	c.Header("Content-Type", "application/manifest+json")
-	c.JSON(http.StatusOK, gin.H{"id": "/", "name": name, "short_name": name, "description": values["copy.pwa.description"], "start_url": "/", "scope": "/", "display": "standalone", "theme_color": "#0f766e", "background_color": "#f8fafc", "lang": "zh-CN", "categories": []string{"education", "productivity"}, "icons": icons, "shortcuts": shortcuts})
+	c.JSON(http.StatusOK, gin.H{"id": "/", "name": name, "short_name": name, "description": values["copy.pwa.description"], "start_url": "/", "scope": "/", "display": "standalone", "theme_color": palette["light"]["primary"], "background_color": palette["light"]["background"], "lang": "zh-CN", "categories": []string{"education", "productivity"}, "icons": icons, "shortcuts": shortcuts})
 }
 
 func (ctrl *SystemSettingsController) ListAdmin(c *gin.Context) {
@@ -89,4 +94,13 @@ func (ctrl *SystemSettingsController) Update(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, setting)
+}
+
+func (ctrl *SystemSettingsController) Theme(c *gin.Context) {
+	palette, err := ctrl.query.Theme(c.Request.Context())
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, palette)
 }

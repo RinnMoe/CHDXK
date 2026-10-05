@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client"
 import { registerSW } from "virtual:pwa-register"
 
 import "./index.css"
+import { loadSiteTheme } from "@/lib/site-theme"
 import { loadSiteCopy } from "@/lib/copy"
 
 function registerPwaServiceWorker() {
@@ -33,7 +34,7 @@ async function enableMocking() {
 }
 
 void enableMocking().then(async () => {
-  await loadSiteCopy()
+  await Promise.all([loadSiteCopy(), loadSiteTheme()])
   const { default: App } = await import("./App.tsx")
   const { brand } = await import("@/config/brand")
   document.title = brand.name

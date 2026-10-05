@@ -108,3 +108,15 @@ if (check) {
 }
 console.log(`${Object.values(catalog).filter((entry) => entry.editable).length} editable entries; ${Object.keys(catalog).length} catalog entries; ${missing} uncatalogued items`)
 if (missing) process.exitCode = 1
+
+const themeSource = fs.readFileSync(path.resolve(root, "src/config/theme-defaults.json"), "utf8")
+const themeTarget = path.resolve(root, "../backend/pkg/sitetheme/defaults.json")
+if (check) {
+ if (fs.readFileSync(themeTarget, "utf8") !== themeSource) { console.error("Theme defaults are out of sync"); process.exitCode = 1 }
+} else fs.writeFileSync(themeTarget, themeSource, "utf8")
+
+const pagesSource = fs.readFileSync(path.resolve(root, "../backend/pkg/sitepages/defaults.json"), "utf8")
+const pagesTarget = path.resolve(root, "src/config/site-pages-defaults.json")
+if (check) {
+ if (fs.readFileSync(pagesTarget, "utf8") !== pagesSource) { console.error("Page defaults are out of sync"); process.exitCode = 1 }
+} else fs.writeFileSync(pagesTarget, pagesSource, "utf8")

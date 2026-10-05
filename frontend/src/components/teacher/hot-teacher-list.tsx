@@ -46,7 +46,7 @@ export function HotTeacherList({ period }: { period: "week" | "month" }) {
           className="flex items-center gap-3 border-b py-4 hover:bg-muted/50"
         >
           <span
-            className={`w-7 text-center font-bold ${i < 3 ? "text-amber-500" : "text-muted-foreground"}`}
+            className={`w-7 text-center font-bold ${i < 3 ? "text-warning" : "text-muted-foreground"}`}
           >
             {i + 1}
           </span>

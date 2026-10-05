@@ -39,6 +39,12 @@ export const adminSections = [
         ),
       },
       {
+        key: "appearance",
+        label: copy(
+          "copy.admin.components.admin.admin-navigation-model.6b6b25f98162"
+        ),
+      },
+      {
         key: "site-copy",
         label: copy(
           "copy.admin.components.admin.admin-navigation.12abdae1e423"
@@ -73,4 +79,3 @@ export function getAdminTab(value?: string | null): AdminTab {
     ? (value as AdminTab)
     : "course-data"
 }
-

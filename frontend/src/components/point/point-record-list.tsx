@@ -47,7 +47,7 @@ export function PointRecordList({ records }: { records: PointRecordDTO[] }) {
               <TableCell
                 className={
                   r.amount >= 0
-                    ? "text-right font-medium text-green-600"
+                    ? "text-right font-medium text-success"
                     : "text-right font-medium text-destructive"
                 }
               >

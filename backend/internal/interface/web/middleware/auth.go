@@ -61,7 +61,7 @@ func ResolveCurrentUser(authResolution *application.AuthResolutionService) gin.H
 }
 
 func isPublicOIDCRoute(path string) bool {
-	return path == "/api/auth/oidc/start" || path == "/api/auth/oidc/callback" || path == "/api/site-copy" || path == "/api/site-pages" || path == "/api/site.webmanifest" || path == "/api/system-settings"
+	return path == "/api/auth/oidc/start" || path == "/api/auth/oidc/callback" || path == "/api/site-copy" || path == "/api/site-theme" || path == "/api/site-pages" || path == "/api/site.webmanifest" || path == "/api/system-settings"
 }
 
 func RequireAuth() gin.HandlerFunc {

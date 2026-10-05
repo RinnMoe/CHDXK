@@ -22,7 +22,7 @@ export function RatingDistribution({ rating }: RatingDistributionProps) {
           <div className="flex">
             {stars.map((on, index) =>
               on ? (
-                <RiStarFill key={index} className="size-3.5 text-yellow-400" />
+                <RiStarFill key={index} className="size-3.5 text-rating" />
               ) : (
                 <RiStarLine
                   key={index}
@@ -54,7 +54,7 @@ export function RatingDistribution({ rating }: RatingDistributionProps) {
               </span>
               <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full bg-yellow-400"
+                  className="h-full bg-rating"
                   style={{ width: `${pct}%` }}
                 />
               </div>

@@ -71,10 +71,10 @@ export function WrongCourseWarning({
   if (candidates.length === 0) return null
 
   return (
-    <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
+    <div className="rounded-md border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-foreground">
       <div className="space-y-3">
         <div className="flex min-w-0 gap-3">
-          <RiErrorWarningLine className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-300" />
+          <RiErrorWarningLine className="mt-0.5 size-4 shrink-0 text-warning" />
           <div className="min-w-0 space-y-1">
             <p className="font-medium">
               {copy(
@@ -92,7 +92,7 @@ export function WrongCourseWarning({
             </p>
           </div>
         </div>
-        <div className="divide-y divide-amber-200/80 border-t border-amber-200/80 pl-7 dark:divide-amber-900/60 dark:border-amber-900/60">
+        <div className="divide-y divide-warning/30 border-t border-warning/30 pl-7">
           {candidates.map((candidate) => (
             <div
               key={candidate.id}
@@ -100,14 +100,14 @@ export function WrongCourseWarning({
             >
               <div className="min-w-0 space-y-1">
                 <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
-                  <span className="font-mono text-xs text-amber-800 dark:text-amber-200">
+                  <span className="font-mono text-xs text-warning">
                     {candidate.code}
                   </span>
                   <span className="font-medium wrap-break-word">
                     {candidate.name}
                   </span>
                 </div>
-                <div className="text-xs text-amber-900/80 dark:text-amber-100/80">
+                <div className="text-xs text-muted-foreground">
                   {copy(
                     "copy.user.components.review.wrong-course-warning.9ae8dcbe2d0d"
                   )}

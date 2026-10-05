@@ -1,4 +1,9 @@
 {
+  "copy.admin.components.admin.admin-navigation-model.6b6b25f98162": {
+    "text": "主题外观",
+    "audience": "admin",
+    "location": "components/admin/admin-navigation-model.ts"
+  },
   "copy.admin.components.admin.admin-navigation.014df7b8215a": {
     "text": "开课记录",
     "audience": "admin",
@@ -1064,6 +1069,281 @@
     "audience": "admin",
     "location": "components/admin/system-settings/system-setting-row.tsx"
   },
+  "copy.admin.components.admin.theme-settings-panel.005378329829": {
+    "text": "边框",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.09d5cf867e95": {
+    "text": "主要文字",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.0adba3e0ab07": {
+    "text": "焦点边框",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.0f132a452ea8": {
+    "text": "主题色",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.15a1c1c3a840": {
+    "text": "侧栏边框",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.17371f0212de": {
+    "text": "图表颜色一",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.17b8e8e70b07": {
+    "text": "用预览检查文字、背景和按钮是否清晰。",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.1ac73eddc8e4": {
+    "text": "次要文字",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.1f160e7c4533": {
+    "text": "卡片文字",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.24d11ea465b9": {
+    "text": "浮层文字",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.2c2ba43db7a7": {
+    "text": "侧栏文字",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.37a0b2e05e41": {
+    "text": "输入框边框",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.4429849041fe": {
+    "text": "浮层背景",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.4f8e587e4095": {
+    "text": "侧栏背景",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.5549e2f7fc67": {
+    "text": "侧栏悬停文字",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.578dbff684af": {
+    "text": "设置全站颜色，可分别调整浅色和深色模式。",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.594226193acc": {
+    "text": "悬停文字",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.67757fa12472": {
+    "text": "侧栏焦点边框",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.688fe7c1b333": {
+    "text": "主题设置加载失败，请刷新重试。",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.6997a520f014": {
+    "text": "保存主题",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.6a0ae6668795": {
+    "text": "恢复默认颜色",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.6b6b25f98162": {
+    "text": "主题外观",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.73769529b75c": {
+    "text": "次要区域背景",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.76e1cfb2b121": {
+    "text": "提醒与热门标记",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.790b73aa716b": {
+    "text": "图表颜色五",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.7a284abb5757": {
+    "text": "卡片背景",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.7c8eb931dcf2": {
+    "text": "信息提示",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.94d2bd014dfd": {
+    "text": "深色模式",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.994707c28948": {
+    "text": "{v0}色值",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.a152b7f559f6": {
+    "text": "填写十六进制色值，可用最后两位设置透明度。保存后全站生效，其他已打开的页面刷新后更新。",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.a1a1720d3eb5": {
+    "text": "保存中",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.a5c827d1259d": {
+    "text": "示例课程",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.a657a95bbb1f": {
+    "text": "图表颜色四",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.b1a5bddaccdc": {
+    "text": "外观预览",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.bd14e29d1bfe": {
+    "text": "成功与积分增加",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.c38a08ef511c": {
+    "text": "主要按钮",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.c3c6107cf5f5": {
+    "text": "页面背景",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.c4ae7ae199e3": {
+    "text": "次要按钮背景",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.c5f6b422fa54": {
+    "text": "侧栏悬停背景",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.c71ecb658ee6": {
+    "text": "更多颜色",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.c91c656aae2b": {
+    "text": "请检查填写内容",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.cda079bcd55d": {
+    "text": "发布成功",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.d04fcbda737f": {
+    "text": "加载中",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.d31a4d6bad47": {
+    "text": "浅色模式",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.d486e988b131": {
+    "text": "图表颜色二",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.d66ba27b63ad": {
+    "text": "图表颜色三",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.d6e3b43107c5": {
+    "text": "热门课程",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.da6de668e59d": {
+    "text": "颜色设置无法保存，请检查色值后重试。",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.e30a1690a501": {
+    "text": "错误与删除",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.e3bd6d2293ab": {
+    "text": "主题色上的文字",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.f20a2f20a68e": {
+    "text": "评分星星",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.f6ed56c72add": {
+    "text": "次要按钮文字",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.f8a406d08281": {
+    "text": "侧栏强调色",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.f8e71ab4e3d1": {
+    "text": "悬停背景",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.theme-settings-panel.fe1279e4828b": {
+    "text": "侧栏强调文字",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
   "copy.admin.pages.admin.site-stats-page.178393de565a": {
     "text": "最近30天",
     "audience": "admin",
@@ -1552,6 +1832,11 @@
     "text": "课程数据包含重复课节 ID",
     "audience": "user",
     "location": "internal/application/course_admin.go"
+  },
+  "copy.server.6b6b25f98162": {
+    "text": "主题外观",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
   },
   "copy.server.71adc327572d": {
     "text": "今日投票次数已达上限",

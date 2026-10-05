@@ -6,6 +6,9 @@ import {
 } from "@/api/system-settings"
 import { MOCK_COURSE_SEMESTERS } from "@/mocks/fixtures/courses"
 import { randomDelay } from "@/mocks/utils"
+import defaultPages from "@/config/site-pages-defaults.json"
+import { defaultTheme, parseTheme, themeSettingKey } from "@/lib/site-theme"
+import type { SitePage } from "@/api/site-pages"
 import { copyDirectory } from "@/lib/copy"
 
 let settings: SystemSettingDTO[] = [
@@ -133,6 +136,28 @@ let settings: SystemSettingDTO[] = [
 ]
 
 settings.push(
+  ...[
+    {
+      key: "content.pages",
+      label: "内容页面",
+      value: JSON.stringify(defaultPages),
+      group: "content",
+    },
+    {
+      key: themeSettingKey,
+      label: "主题外观",
+      value: JSON.stringify(defaultTheme),
+      group: "theme",
+    },
+  ].map((item) => ({
+    ...item,
+    default_value: item.value,
+    type: "string" as const,
+    description: "",
+    public: false,
+    secret: false,
+    requires_restart: false,
+  })),
   ...Object.entries(copyDirectory)
     .filter(([, entry]) => entry.editable)
     .map(([key, entry]) => ({
@@ -154,6 +179,19 @@ export function getMockSystemSettingValue(key: string) {
 }
 
 export const systemSettingsHandlers = [
+  http.get("/api/site-pages", () =>
+    HttpResponse.json(
+      (
+        JSON.parse(getMockSystemSettingValue("content.pages")!) as SitePage[]
+      ).filter((item) => item.published)
+    )
+  ),
+  http.get("/api/site-theme", () =>
+    HttpResponse.json(
+      parseTheme(JSON.parse(getMockSystemSettingValue(themeSettingKey)!))
+    )
+  ),
+
   http.get("/api/site-copy", () =>
     HttpResponse.json(
       Object.fromEntries(

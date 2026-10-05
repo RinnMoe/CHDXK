@@ -7,6 +7,7 @@ import (
 	"jcourse/internal/domain/setting"
 	"jcourse/pkg/sitecopy"
 	"jcourse/pkg/sitepages"
+	"jcourse/pkg/sitetheme"
 )
 
 type SystemSettingsQueryService struct {
@@ -82,4 +83,12 @@ func (s *SystemSettingsQueryService) PublicCopy(ctx context.Context) (map[string
 		}
 	}
 	return values, nil
+}
+
+func (s *SystemSettingsQueryService) Theme(ctx context.Context) (sitetheme.Palette, error) {
+	snapshot, err := s.settings.Snapshot(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return sitetheme.Parse(snapshot.String(sitetheme.Key))
 }

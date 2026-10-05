@@ -55,6 +55,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-rating: var(--rating);
+  --color-info: var(--info);
   --font-heading: var(--font-sans);
   --font-sans: "Noto Sans Variable", "Noto Sans SC", sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
