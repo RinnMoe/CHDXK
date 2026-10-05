@@ -62,7 +62,10 @@ userinfo 使用 res-hub 当前直接 claims：`sub`、`name`、
 
 除 OIDC 开始与回调外，受保护请求都从 HttpOnly Redis 会话取出 OIDC access
 token，并以 `Authorization: Bearer` 请求 userinfo。userinfo 失败或令牌失效时，
-CHDXK 清理本站会话并要求重新登录；身份投影每次以 res-hub 返回的当前角色更新。
+CHDXK 清理本站会话并要求重新登录；身份投影每次以 res-hub 返回的账号角色
+`res_hub_role` 更新。主站管理员选择普通用户模式仍是本站管理员；
+`res_hub_effective_role` 和 `res_hub_permission_mode` 不参与本站授权。
+账号真正被撤销管理员身份后，本站下一次请求会同步为普通用户。
 
 退出时，CHDXK 使用 Discovery 的 `end_session_endpoint`，携带
 `id_token_hint`、`client_id` 和已登记的 `post_logout_redirect_uri`，然后清理

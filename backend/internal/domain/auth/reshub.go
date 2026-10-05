@@ -8,8 +8,9 @@ import (
 )
 
 // ResHubIdentity is the current identity snapshot returned by res-hub.
-// Role and account state are intentionally request-scoped and must not be
-// treated as a local authorization cache.
+// Account role and account state are request-scoped, not a local authorization
+// cache. CHDXK authorizes by IdentityRole; res-hub's selected permission mode
+// and EffectiveRole do not downgrade an administrator account here.
 type ResHubIdentity struct {
 	Issuer           string
 	Subject          string

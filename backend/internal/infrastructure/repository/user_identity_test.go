@@ -8,15 +8,25 @@ import (
 	"jcourse/internal/infrastructure/repository"
 )
 
-func TestIdentityProjectionFollowsCurrentResHubPermissions(t *testing.T) {
+func TestIdentityProjectionFollowsAccountRoleRegardlessOfPermissionMode(t *testing.T) {
 	db := newTestDB(t)
 	repo := repository.NewUserIdentityRepository(db, "https://hub.example")
 	snapshot := &auth.ResHubIdentity{Issuer: "https://hub.example", Subject: "user:99001", Username: "管理员", IdentityRole: "admin"}
 	var id int
-	for _, tc := range []struct{ remote, local string }{
-		{"admin", auth.RoleAdmin}, {"member", auth.RoleUser}, {"superadmin", auth.RoleSuperAdmin}, {"unknown", auth.RoleUser},
+	for _, tc := range []struct{ identity, effective, mode, local string }{
+		{"admin", "member", "member", auth.RoleAdmin},
+		{"admin", "admin", "admin", auth.RoleAdmin},
+		{"superadmin", "member", "member", auth.RoleSuperAdmin},
+		{"superadmin", "admin", "admin", auth.RoleSuperAdmin},
+		{"superadmin", "superadmin", "superadmin", auth.RoleSuperAdmin},
+		{"member", "admin", "admin", auth.RoleUser},
+		{"member", "member", "member", auth.RoleUser},
+		{"unknown", "superadmin", "superadmin", auth.RoleUser},
+		{"", "superadmin", "superadmin", auth.RoleUser},
 	} {
-		snapshot.EffectiveRole = tc.remote
+		snapshot.IdentityRole = tc.identity
+		snapshot.EffectiveRole = tc.effective
+		snapshot.PermissionMode = tc.mode
 		user, err := repo.Upsert(context.Background(), snapshot)
 		if err != nil {
 			t.Fatal(err)

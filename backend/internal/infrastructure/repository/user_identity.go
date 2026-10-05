@@ -68,7 +68,7 @@ func (r *UserIdentityRepository) upsertOnce(ctx context.Context, snapshot *auth.
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			user := UserEntity{
 				Username:     internalUsername(r.issuer, snapshot.Subject),
-				Role:         normalizeRole(snapshot.EffectiveRole),
+				Role:         normalizeRole(snapshot.IdentityRole),
 				PasswordHash: "",
 				CreatedAt:    now,
 				LastSeenAt:   now,
@@ -101,7 +101,7 @@ func (r *UserIdentityRepository) upsertOnce(ctx context.Context, snapshot *auth.
 			}
 			if err := tx.Model(&UserEntity{}).Where("id = ?", identity.UserID).Updates(map[string]any{
 				"last_seen_at": now,
-				"role":         normalizeRole(snapshot.EffectiveRole),
+				"role":         normalizeRole(snapshot.IdentityRole),
 			}).Error; err != nil {
 				return err
 			}
@@ -133,7 +133,7 @@ func (r *UserIdentityRepository) SubjectByUserID(ctx context.Context, userID int
 func userFromSnapshot(userID int, snapshot *auth.ResHubIdentity) *auth.User {
 	return &auth.User{
 		ID:               userID,
-		Role:             normalizeRole(snapshot.EffectiveRole),
+		Role:             normalizeRole(snapshot.IdentityRole),
 		Subject:          snapshot.Subject,
 		Username:         snapshot.Username,
 		Email:            snapshot.Email,
