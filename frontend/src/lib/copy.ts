@@ -4,6 +4,8 @@ export interface CopyEntry {
   text: string
   audience: string
   location: string
+  editable?: boolean
+  label?: string
 }
 export const copyDirectory: Record<string, CopyEntry> = directory
 let overrides: Record<string, string> = {}
@@ -13,7 +15,9 @@ export function setCopyOverrides(values: Record<string, string>) {
 }
 
 export function copy(key: string, values: Record<string, unknown> = {}) {
-  const template = overrides[key] ?? copyDirectory[key]?.text ?? key
+  const entry = copyDirectory[key]
+  const template =
+    (entry?.editable ? overrides[key] : undefined) ?? entry?.text ?? key
   return template.replace(/\{(v\d+)\}/g, (_, name: string) => {
     const value = values[name]
     return typeof value === "string" ||

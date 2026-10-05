@@ -133,18 +133,20 @@ let settings: SystemSettingDTO[] = [
 ]
 
 settings.push(
-  ...Object.entries(copyDirectory).map(([key, entry]) => ({
-    key,
-    value: entry.text,
-    default_value: entry.text,
-    type: "string" as const,
-    group: `copy_${entry.audience}`,
-    label: entry.text,
-    description: "保存后刷新页面生效，请保留内容标记。",
-    public: true,
-    secret: false,
-    requires_restart: false,
-  }))
+  ...Object.entries(copyDirectory)
+    .filter(([, entry]) => entry.editable)
+    .map(([key, entry]) => ({
+      key,
+      value: entry.text,
+      default_value: entry.text,
+      type: "string" as const,
+      group: `copy_${entry.audience}`,
+      label: entry.label ?? entry.text,
+      description: "保存后刷新页面生效，请保留内容标记。",
+      public: true,
+      secret: false,
+      requires_restart: false,
+    }))
 )
 
 export function getMockSystemSettingValue(key: string) {

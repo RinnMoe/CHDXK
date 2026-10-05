@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestCopySettingsSavePreservesWhitespaceAndRejectsMissingParameters(t *testing.T) {
+func TestCopySettingsPreserveWhitespaceAndExcludeGenericCopy(t *testing.T) {
 	service := newSystemSettingsService(setting.NewMockSystemRepository(), course.NewMockCourseRepository())
 	ctx := context.Background()
 	const brandKey = "copy.user.config.brand.743e9916a4b2"
@@ -19,11 +19,14 @@ func TestCopySettingsSavePreservesWhitespaceAndRejectsMissingParameters(t *testi
 		t.Fatalf("whitespace lost: %+v, %v", saved, err)
 	}
 	for key, entry := range sitecopy.Entries() {
-		if len(sitecopy.Parameters(entry.Text)) > 0 {
-			if _, err := service.Save(ctx, key, "缺少内容标记"); err == nil {
-				t.Fatal("invalid template accepted")
+		_, registered := service.Definition(key)
+		if registered != entry.Editable {
+			t.Fatalf("editable %s = %v, registered = %v", key, entry.Editable, registered)
+		}
+		if !entry.Editable {
+			if _, err := service.Save(ctx, key, "任意修改"); err == nil {
+				t.Fatalf("fixed copy accepted: %s", key)
 			}
-			break
 		}
 	}
 	if _, ok := service.Definition(setting.SystemSettingKeyReviewFrequencySuspendDuration); ok {

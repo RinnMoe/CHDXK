@@ -11,15 +11,6 @@ import { Label } from "@/components/ui/label"
 import { getErrorMessage } from "./admin-utils"
 import type { SystemSettingDTO } from "@/api/system-settings"
 
-const audienceLabels: Record<string, string> = {
-  user: copy("copy.admin.components.admin.copy-settings-panel.f6a2faaac200"),
-  admin: copy("copy.admin.components.admin.copy-settings-panel.35748266b6c2"),
-  technical: copy(
-    "copy.admin.components.admin.copy-settings-panel.3cf925810572"
-  ),
-}
-const pageSize = 20
-
 function CopyEditor({ setting }: { setting: SystemSettingDTO }) {
   const [draft, setDraft] = useState<string | null>(null)
   const [error, setError] = useState("")
@@ -86,18 +77,13 @@ function CopyEditor({ setting }: { setting: SystemSettingDTO }) {
 export function CopySettingsPanel() {
   const { data, isLoading, isError } = useAdminSystemSettings()
   const [search, setSearch] = useState("")
-  const [audience, setAudience] = useState("")
-  const [page, setPage] = useState(0)
   const settings = (data ?? []).filter(
     (setting) =>
       setting.key.startsWith("copy.") &&
-      (!audience || setting.group === `copy_${audience}`) &&
       `${setting.label} ${setting.value} ${setting.default_value}`
         .toLocaleLowerCase()
         .includes(search.toLocaleLowerCase())
   )
-  const pages = Math.max(1, Math.ceil(settings.length / pageSize))
-  const current = Math.min(page, pages - 1)
   return (
     <section className="space-y-4">
       <h3 className="text-lg font-medium">
@@ -117,32 +103,9 @@ export function CopySettingsPanel() {
           value={search}
           onChange={(event) => {
             setSearch(event.target.value)
-            setPage(0)
           }}
           className="max-w-sm"
         />
-        <select
-          aria-label={copy(
-            "copy.admin.components.admin.copy-settings-panel.3eb1bd9d8e67"
-          )}
-          value={audience}
-          onChange={(event) => {
-            setAudience(event.target.value)
-            setPage(0)
-          }}
-          className="h-9 rounded-md border bg-background px-3 text-sm"
-        >
-          <option value="">
-            {copy(
-              "copy.admin.components.admin.copy-settings-panel.eb8666303664"
-            )}
-          </option>
-          {Object.entries(audienceLabels).map(([key, label]) => (
-            <option key={key} value={key}>
-              {label}
-            </option>
-          ))}
-        </select>
       </div>
       {isLoading ? (
         <p>
@@ -158,38 +121,11 @@ export function CopySettingsPanel() {
         </p>
       ) : (
         <div className="space-y-3">
-          {settings
-            .slice(current * pageSize, (current + 1) * pageSize)
-            .map((setting) => (
-              <CopyEditor key={setting.key} setting={setting} />
-            ))}
+          {settings.map((setting) => (
+            <CopyEditor key={setting.key} setting={setting} />
+          ))}
         </div>
       )}
-      <div className="flex items-center gap-3">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={current === 0}
-          onClick={() => setPage(current - 1)}
-        >
-          {copy("copy.admin.components.admin.copy-settings-panel.c9b9ae7a6144")}
-        </Button>
-        <span className="text-sm text-muted-foreground">
-          {copy("copy.admin.components.admin.copy-settings-panel.9552fe3bd366")}
-          {current + 1} / {pages}
-          {copy("copy.admin.components.admin.copy-settings-panel.f5080bf79e10")}
-          {settings.length}
-          {copy("copy.admin.components.admin.copy-settings-panel.f9d529eacdf3")}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={current >= pages - 1}
-          onClick={() => setPage(current + 1)}
-        >
-          {copy("copy.admin.components.admin.copy-settings-panel.8a8542f69648")}
-        </Button>
-      </div>
     </section>
   )
 }

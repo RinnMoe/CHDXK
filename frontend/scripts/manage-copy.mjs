@@ -106,5 +106,5 @@ if (check) {
   fs.writeFileSync(catalogPath, serialized, "utf8")
   fs.writeFileSync(backendPath, serialized, "utf8")
 }
-console.log(`${Object.keys(catalog).length} catalog entries; ${missing} uncatalogued items`)
+console.log(`${Object.values(catalog).filter((entry) => entry.editable).length} editable entries; ${Object.keys(catalog).length} catalog entries; ${missing} uncatalogued items`)
 if (missing) process.exitCode = 1

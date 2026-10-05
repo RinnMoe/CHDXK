@@ -350,7 +350,7 @@
     "location": "components/admin/copy-settings-panel.tsx"
   },
   "copy.admin.components.admin.copy-settings-panel.6fe1f12e3174": {
-    "text": "搜索页面上的原文即可找到对应设置。文案按使用对象区分，保存后刷新页面生效。课程信息、点评和公告请在各自管理页面维护。",
+    "text": "修改站点介绍、登录说明、联系方式等常用文案，保存后刷新页面生效。按钮、状态提示和字段名称使用固定文案。",
     "audience": "admin",
     "location": "components/admin/copy-settings-panel.tsx"
   },
@@ -953,7 +953,9 @@
     "text": "",
     "audience": "admin",
     "location": "config/brand.ts",
-    "optional": true
+    "optional": true,
+    "editable": true,
+    "label": "联系邮箱"
   },
   "copy.email.banned_until": {
     "text": "封禁到",
@@ -998,7 +1000,9 @@
   "copy.email.notice": {
     "text": "系统检测到异常点评频率，本次提交已被阻止。请核查点评记录，需要限制账号时请在频道处理。",
     "audience": "admin",
-    "location": "internal/domain/review/templates/review_frequency_suspension.html"
+    "location": "internal/domain/review/templates/review_frequency_suspension.html",
+    "editable": true,
+    "label": "异常点评提醒邮件说明"
   },
   "copy.email.reason": {
     "text": "原因",
@@ -1008,7 +1012,9 @@
   "copy.email.subject": {
     "text": "频道课程榜点评频率提醒",
     "audience": "admin",
-    "location": "internal/domain/review/templates/review_frequency_suspension.html"
+    "location": "internal/domain/review/templates/review_frequency_suspension.html",
+    "editable": true,
+    "label": "异常点评提醒邮件标题"
   },
   "copy.email.teacher": {
     "text": "主讲教师：",
@@ -1033,7 +1039,9 @@
   "copy.pwa.description": {
     "text": "课程检索、教师检索与课程点评社区",
     "audience": "user",
-    "location": "pwa.config.ts"
+    "location": "pwa.config.ts",
+    "editable": true,
+    "label": "应用简介"
   },
   "copy.pwa.mine_description": {
     "text": "查看和管理我发布的点评",
@@ -1718,7 +1726,9 @@
   "copy.user.components.about.about-content.0555414e3117": {
     "text": " 不展示你的频道账号或登录信息。请勿在点评中填写学号、联系方式或他人的个人信息。",
     "audience": "user",
-    "location": "components/about/about-content.tsx"
+    "location": "components/about/about-content.tsx",
+    "editable": true,
+    "label": "个人信息保护提示"
   },
   "copy.user.components.about.about-content.0949730fb040": {
     "text": " 的点评内容，也不评价内容的真实性。如果您上过某一门课程并认为网站上的点评与事实不符，欢迎提交您的意见，我们相信全面的信息会给大家最好的答案。",
@@ -1733,7 +1743,9 @@
   "copy.user.components.about.about-content.25f8c737e369": {
     "text": "为非官方网站，旨在让同学们了解课程的更多情况，不想也不能代替教务处的课程评教。",
     "audience": "user",
-    "location": "components/about/about-content.tsx"
+    "location": "components/about/about-content.tsx",
+    "editable": true,
+    "label": "非官方说明"
   },
   "copy.user.components.about.about-content.29725de3d959": {
     "text": " 的用户协议、站点说明和隐私说明。",
@@ -1753,12 +1765,16 @@
   "copy.user.components.about.about-content.53037c66add5": {
     "text": " 管理员负责维护课程与教师信息，处理重复发帖、不相关内容和违反社区规范的点评。",
     "audience": "user",
-    "location": "components/about/about-content.tsx"
+    "location": "components/about/about-content.tsx",
+    "editable": true,
+    "label": "点评管理说明"
   },
   "copy.user.components.about.about-content.5c3c998c13cc": {
     "text": " 为长安大学同学提供课程信息与选课经验交流。使用频道账号登录即可参与点评，课程信息来自本科教务系统。",
     "audience": "user",
-    "location": "components/about/about-content.tsx"
+    "location": "components/about/about-content.tsx",
+    "editable": true,
+    "label": "站点介绍"
   },
   "copy.user.components.about.about-content.84b13d2f7676": {
     "text": "在符合社区规范的情况下，我们不修改 ",
@@ -1773,12 +1789,16 @@
   "copy.user.components.about.about-content.86e835668ee2": {
     "text": "登录时，频道会提供你的昵称与账号身份，用于识别账号和判断管理权限。本站不会保存你的频道密码。",
     "audience": "user",
-    "location": "components/about/about-content.tsx"
+    "location": "components/about/about-content.tsx",
+    "editable": true,
+    "label": "登录隐私说明"
   },
   "copy.user.components.about.about-content.98d673965b4e": {
     "text": " 保存你发布的点评、投票和必要的操作记录，用于提供服务和处理违规内容。",
     "audience": "user",
-    "location": "components/about/about-content.tsx"
+    "location": "components/about/about-content.tsx",
+    "editable": true,
+    "label": "内容保存说明"
   },
   "copy.user.components.about.about-content.b4d4f455a802": {
     "text": "点评管理",
@@ -1928,7 +1948,9 @@
   "copy.user.components.auth.login-form.66c5fcb2ee11": {
     "text": "使用频道账号即可参与课程点评，你的积分与频道共用。登录后会自动返回本站。",
     "audience": "user",
-    "location": "components/auth/login-form.tsx"
+    "location": "components/auth/login-form.tsx",
+    "editable": true,
+    "label": "登录说明"
   },
   "copy.user.components.auth.login-form.7a5c4255247b": {
     "text": "使用主站登录",
@@ -3563,7 +3585,9 @@
   "copy.user.config.brand.743e9916a4b2": {
     "text": "频道课程榜",
     "audience": "user",
-    "location": "config/brand.ts"
+    "location": "config/brand.ts",
+    "editable": true,
+    "label": "站点名称"
   },
   "copy.user.lib.date.0696e14781c8": {
     "text": "{v0}小时前",
@@ -3943,7 +3967,9 @@
   "copy.user.pages.hot-courses-page.07588028c5ba": {
     "text": "热度来自点评与有用投票，反映讨论活跃度，不代表教学质量。教师热度汇总其当前任教课程的热度。",
     "audience": "user",
-    "location": "pages/hot-courses-page.tsx"
+    "location": "pages/hot-courses-page.tsx",
+    "editable": true,
+    "label": "热度榜规则说明"
   },
   "copy.user.pages.hot-courses-page.0eeecd26f2ba": {
     "text": "本月",
@@ -3978,7 +4004,9 @@
   "copy.user.pages.hot-courses-page.eb63349bd137": {
     "text": "发现本周和本月大家正在讨论的课程与教师",
     "audience": "user",
-    "location": "pages/hot-courses-page.tsx"
+    "location": "pages/hot-courses-page.tsx",
+    "editable": true,
+    "label": "热度榜介绍"
   },
   "copy.user.pages.hot-courses-page.eb9eeb865a8a": {
     "text": "教师热度榜",

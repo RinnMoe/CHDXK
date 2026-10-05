@@ -12,6 +12,9 @@ func copyDefinitions() []setting.Definition {
 	entries := sitecopy.Entries()
 	defs := make([]setting.Definition, 0, len(entries))
 	for key, entry := range entries {
+		if !entry.Editable {
+			continue
+		}
 		audience := "普通用户"
 		if entry.Audience == "admin" {
 			audience = "普通管理员"
@@ -25,6 +28,9 @@ func copyDefinitions() []setting.Definition {
 			description += " 请保留这些内容标记：" + strings.Join(parameters, "、") + "；它们会自动显示实际内容。"
 		}
 		label := []rune(strings.TrimSpace(entry.Text))
+		if entry.Label != "" {
+			label = []rune(entry.Label)
+		}
 		if key == "copy.brand.feedback_email" {
 			label = []rune("联系邮箱")
 		}

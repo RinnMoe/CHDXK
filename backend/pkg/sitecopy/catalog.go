@@ -18,6 +18,8 @@ type Entry struct {
 	Audience string `json:"audience"`
 	Location string `json:"location"`
 	Optional bool   `json:"optional,omitempty"`
+	Editable bool   `json:"editable,omitempty"`
+	Label    string `json:"label,omitempty"`
 }
 
 var entries = func() map[string]Entry {
@@ -53,12 +55,12 @@ func Parameters(text string) []string {
 }
 func ValidValue(key, value string) bool {
 	entry, ok := entries[key]
-	return ok && (entry.Optional || strings.TrimSpace(value) != "") && utf8.RuneCountInString(value) <= 8000 && strings.Join(Parameters(value), ",") == strings.Join(Parameters(entry.Text), ",")
+	return ok && entry.Editable && (entry.Optional || strings.TrimSpace(value) != "") && utf8.RuneCountInString(value) <= 8000 && strings.Join(Parameters(value), ",") == strings.Join(Parameters(entry.Text), ",")
 }
 func WithValues(ctx context.Context, values map[string]string) context.Context {
 	translated := map[string]string{}
 	for key, item := range entries {
-		if strings.HasPrefix(key, "copy.server.") {
+		if item.Editable && strings.HasPrefix(key, "copy.server.") {
 			if value, ok := values[key]; ok {
 				translated[item.Text] = value
 			}
@@ -69,7 +71,7 @@ func WithValues(ctx context.Context, values map[string]string) context.Context {
 }
 
 func Value(ctx context.Context, key string) string {
-	if values, ok := ctx.Value(valuesKey{}).(map[string]string); ok {
+	if values, ok := ctx.Value(valuesKey{}).(map[string]string); ok && entries[key].Editable {
 		if value, exists := values[key]; exists {
 			return value
 		}
@@ -79,6 +81,7 @@ func Value(ctx context.Context, key string) string {
 	}
 	return key
 }
+
 func Text(ctx context.Context, text string) string {
 	if values, ok := ctx.Value(contextKey{}).(map[string]string); ok {
 		if value, exists := values[text]; exists {

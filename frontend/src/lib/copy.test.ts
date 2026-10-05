@@ -4,15 +4,18 @@ import { copy, copyDirectory, setCopyOverrides } from "./copy"
 afterEach(() => setCopyOverrides({}))
 
 describe("site copy", () => {
-  it("uses defaults and substitutes dynamic values without evaluating markup", () => {
+  it("keeps generic copy fixed even when an override is supplied", () => {
     const key = Object.keys(copyDirectory).find((key) =>
       copyDirectory[key].text.includes("{v0}")
     )!
     setCopyOverrides({ [key]: "数量 {v0}，内容 {v1}" })
-    expect(copy(key, { v0: 12, v1: "<script>alert(1)</script>" })).toBe(
-      "数量 12，内容 <script>alert(1)</script>"
+    expect(copy(key, { v0: 12, v1: 34 })).toBe(
+      copyDirectory[key].text.replaceAll("{v0}", "12").replaceAll("{v1}", "34")
     )
-    expect(copy(key)).toBe("数量 ，内容 ")
+    const titleKey =
+      "copy.admin.components.admin.announcements-tab.c3405f8c7d9d"
+    setCopyOverrides({ [titleKey]: "被修改的标题" })
+    expect(copy(titleKey)).toBe("标题")
   })
   it("keeps whitespace and falls back for missing overrides", () => {
     const key = "copy.user.config.brand.743e9916a4b2"

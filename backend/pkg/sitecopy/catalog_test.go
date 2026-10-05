@@ -17,8 +17,8 @@ func TestCopyParametersAndContext(t *testing.T) {
 		t.Fatal("missing parameterized entries")
 	}
 	original := Entries()[key].Text
-	if !ValidValue(key, original) {
-		t.Fatal("default rejected")
+	if ValidValue(key, original) {
+		t.Fatal("fixed template accepted as editable")
 	}
 	if ValidValue(key, "没有内容标记") || ValidValue(key, original+"{v999}") {
 		t.Fatal("missing or extra parameter accepted")
@@ -38,10 +38,14 @@ func TestCopyParametersAndContext(t *testing.T) {
 		}
 	}
 	ctx := WithValues(context.Background(), map[string]string{serverKey: "自定义错误说明"})
-	if Text(ctx, serverText) != "自定义错误说明" || Text(ctx, "unknown") != "unknown" {
-		t.Fatal("context translation failed")
+	if Text(ctx, serverText) != serverText || Text(ctx, "unknown") != "unknown" {
+		t.Fatal("fixed server message was overridden")
 	}
 	if Text(context.Background(), serverText) != serverText {
 		t.Fatal("override leaked to another request")
+	}
+	ctx = WithValues(context.Background(), map[string]string{"copy.email.subject": "运营提醒", "copy.email.greeting": "不应覆盖"})
+	if Value(ctx, "copy.email.subject") != "运营提醒" || Value(ctx, "copy.email.greeting") != Entries()["copy.email.greeting"].Text {
+		t.Fatal("editable scope was not respected")
 	}
 }
