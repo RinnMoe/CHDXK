@@ -379,11 +379,6 @@
     "audience": "admin",
     "location": "components/admin/copy-settings-panel.tsx"
   },
-  "copy.admin.components.admin.copy-settings-panel.bf0a989ebe51": {
-    "text": "技术定位信息",
-    "audience": "admin",
-    "location": "components/admin/copy-settings-panel.tsx"
-  },
   "copy.admin.components.admin.copy-settings-panel.c9b9ae7a6144": {
     "text": "上一页",
     "audience": "admin",
@@ -844,11 +839,6 @@
     "audience": "admin",
     "location": "components/admin/system-settings/system-setting-row.tsx"
   },
-  "copy.admin.components.admin.system-settings.system-setting-row.bf0a989ebe51": {
-    "text": "技术定位信息",
-    "audience": "admin",
-    "location": "components/admin/system-settings/system-setting-row.tsx"
-  },
   "copy.admin.components.admin.system-settings.system-setting-row.f242c947972c": {
     "text": "恢复默认值",
     "audience": "admin",
@@ -945,7 +935,7 @@
     "location": "pages/admin/user-admin-page.tsx"
   },
   "copy.admin.pages.admin.user-admin-page.aee480d85347": {
-    "text": "账号和管理权限由频道统一管理。请先在频道切换为管理员权限，再进入这里维护课程、公告和设置。",
+    "text": "账号和管理员身份由频道统一管理。管理员账号可在这里维护课程、公告和设置，不受频道当前使用模式影响。",
     "audience": "admin",
     "location": "pages/admin/user-admin-page.tsx"
   },

@@ -76,12 +76,8 @@ function CopyEditor({ setting }: { setting: SystemSettingDTO }) {
         </p>
       )}
       <details className="text-xs text-muted-foreground">
-        <summary>
-          {copy("copy.admin.components.admin.copy-settings-panel.bf0a989ebe51")}
-        </summary>
-        <p className="mt-2 break-all">
-          {setting.key} · {copyDirectory[setting.key]?.location}
-        </p>
+        <summary className="cursor-pointer break-all">{setting.key}</summary>
+        <p className="mt-2 break-all">{copyDirectory[setting.key]?.location}</p>
       </details>
     </article>
   )
