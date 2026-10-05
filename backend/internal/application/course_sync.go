@@ -16,15 +16,17 @@ import (
 )
 
 type CourseSyncStatus struct {
-	ID        string               `json:"id"`
-	State     string               `json:"state"`
-	QR        string               `json:"qr,omitempty"`
-	Semesters []string             `json:"semesters"`
-	Selected  []string             `json:"selected"`
-	Current   string               `json:"current,omitempty"`
-	Message   string               `json:"message,omitempty"`
-	Results   []CourseImportResult `json:"results"`
-	ExpiresAt time.Time            `json:"expires_at"`
+	ID        string                 `json:"id"`
+	State     string                 `json:"state"`
+	QR        string                 `json:"qr,omitempty"`
+	Semesters []string               `json:"semesters"`
+	Selected  []string               `json:"selected"`
+	Current   string                 `json:"current,omitempty"`
+	Message   string                 `json:"message,omitempty"`
+	Results   []CourseImportResult   `json:"results"`
+	ExpiresAt time.Time              `json:"expires_at"`
+	StartedAt *time.Time             `json:"started_at,omitempty"`
+	Progress  *course.SourceProgress `json:"progress,omitempty"`
 }
 type courseSyncSession struct {
 	mu         sync.Mutex
@@ -82,6 +84,18 @@ func (session *courseSyncSession) snapshot() *CourseSyncStatus {
 	status.Semesters = append([]string{}, status.Semesters...)
 	status.Selected = append([]string{}, status.Selected...)
 	status.Results = append([]CourseImportResult{}, status.Results...)
+	if status.Progress != nil {
+		progress := *status.Progress
+		if progress.Total != nil {
+			total := *progress.Total
+			progress.Total = &total
+		}
+		status.Progress = &progress
+	}
+	if status.StartedAt != nil {
+		started := *status.StartedAt
+		status.StartedAt = &started
+	}
 	return &status
 }
 func (s *CourseSyncService) owned(owner int, id string) (*courseSyncSession, error) {
@@ -124,6 +138,8 @@ func (s *CourseSyncService) Sync(owner int, id string, selected []string) (*Cour
 	}
 	session.status.Selected = append([]string{}, selected...)
 	session.status.State = "running"
+	now := time.Now()
+	session.status.StartedAt = &now
 	session.status.QR = ""
 	err = session.connection.Sync(selected)
 	session.mu.Unlock()
@@ -200,10 +216,18 @@ func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSess
 				session.status.State = "ready"
 				session.status.Semesters = append([]string{}, event.Semesters...)
 			case "collecting", "progress":
-				if session.status.State == "running" {
+				if session.status.State == "running" && containsSemester(session.status.Selected, event.Semester) {
 					session.status.Current = event.Semester
+					if event.Type == "collecting" {
+						session.status.Progress = &course.SourceProgress{Stage: "listing", UpdatedAt: time.Now()}
+					} else if validSourceProgress(event.Progress) {
+						progress := *event.Progress
+						progress.UpdatedAt = time.Now()
+						session.status.Progress = &progress
+					}
 				}
 			case "archive":
+				session.status.Progress = &course.SourceProgress{Stage: "validating", UpdatedAt: time.Now()}
 				status := session.status
 				session.mu.Unlock()
 				duplicate := false
@@ -221,6 +245,9 @@ func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSess
 					s.fail(session, "本学期采集结果不完整，未导入，请重新同步")
 					return
 				}
+				session.mu.Lock()
+				session.status.Progress = &course.SourceProgress{Stage: "importing", UpdatedAt: time.Now()}
+				session.mu.Unlock()
 				result, err := s.importArchive(ctx, archive)
 				if err != nil {
 					s.fail(session, "本学期未通过导入校验或保存失败，已停止同步")
@@ -228,6 +255,7 @@ func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSess
 				}
 				session.mu.Lock()
 				session.status.Results = append(session.status.Results, *result)
+				session.status.Progress = &course.SourceProgress{Stage: "completed", UpdatedAt: time.Now()}
 			case "done":
 				if len(session.status.Results) != len(session.status.Selected) || session.status.State != "running" {
 					session.mu.Unlock()
@@ -274,6 +302,19 @@ func containsSemester(items []string, value string) bool {
 		}
 	}
 	return false
+}
+
+func validSourceProgress(p *course.SourceProgress) bool {
+	if p == nil || p.Completed < 0 || p.Failed < 0 || p.Retries < 0 || p.Page < 0 || p.Pages < 0 {
+		return false
+	}
+	if p.Stage != "listing" && p.Stage != "details" && p.Stage != "validating" {
+		return false
+	}
+	if p.Total != nil && (*p.Total < 0 || p.Completed > *p.Total || p.Failed > *p.Total-p.Completed) {
+		return false
+	}
+	return p.Page <= p.Pages
 }
 func sourceArchive(event course.SourceEvent) ([]byte, error) {
 	var document struct {

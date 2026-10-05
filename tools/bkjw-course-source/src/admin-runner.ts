@@ -51,7 +51,7 @@ try {
     if (!option) throw new Error("INVALID_SEMESTER")
     emit({type: "collecting", semester})
     const report = await fetchSemester(client, option, {outputRoot: output, pageSize: 100, detailConcurrency: 2, resume: false, signal: abort.signal,
-      log: () => emit({type: "progress", semester})})
+      onProgress: (progress) => emit({type: "progress", semester, progress})})
     const directory = semesterDirectory(output, semester)
     // The server's existing import validator is the final authority on completeness.
     emit({type: "archive", semester, document: JSON.parse(await readFile(join(directory, "semester.json"), "utf8")), report: JSON.parse(await readFile(join(directory, "report.json"), "utf8")), complete: report.completed})

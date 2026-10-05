@@ -8,6 +8,7 @@ import {
   type LessonDetail,
   type LessonRecord,
   type SemesterOption,
+  type CollectionProgress,
 } from "./types.js"
 
 export const BJW_ORIGIN = "http://bkjw.chd.edu.cn"
@@ -167,7 +168,7 @@ export class BkjwClient {
     return parseSemesterOptions(await page.content())
   }
 
-  async collectListings(page: Page, semesterId: string, requestedPageSize: number): Promise<ListingCollection> {
+  async collectListings(page: Page, semesterId: string, requestedPageSize: number, onProgress?: (progress: CollectionProgress) => void): Promise<ListingCollection> {
     await this.openSearch(page, semesterId)
     let current = parseListingPage(await page.content())
     const desiredPageSize = choosePageSize(requestedPageSize, current.availablePageSizes)
@@ -198,6 +199,7 @@ export class BkjwClient {
       }
       pageCount += 1
       lessons.push(...observed.lessons)
+      onProgress?.({stage: "listing", completed: lessons.length, total: expectedCount, failed: 0, retries: 0, page: pageCount, pages: observed.maxPageNo})
       signatures.add(observed.gridSignature)
       if (observed.pageNo >= observed.maxPageNo) break
 

@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from "vitest"
 
 import { fetchSemester } from "./orchestrator.js"
 import { readJsonIfExists } from "./storage.js"
-import { BkjwError, type LessonDetail, type LessonRecord, type SemesterOption } from "./types.js"
+import { BkjwError, type CollectionProgress, type LessonDetail, type LessonRecord, type SemesterOption } from "./types.js"
 import type { BkjwClient, ListingCollection } from "./client.js"
 
 const roots: string[] = []
@@ -88,14 +88,18 @@ describe("semester checkpoint orchestration", () => {
       collectListings: async () => listing,
       fetchDetail: async () => detail,
     } as unknown as BkjwClient
+    const progress: CollectionProgress[] = []
     const first = await fetchSemester(fake, semester, {
       outputRoot: root,
       pageSize: 1000,
       detailConcurrency: 2,
       resume: false,
+      onProgress: (value) => progress.push(value),
     })
     expect(first.completed).toBe(true)
     expect(first.detailSuccessCount).toBe(2)
+    expect(progress.filter(p => p.stage === "details").map(p => p.completed)).toEqual([0, 1, 2])
+    expect(progress.at(-1)).toMatchObject({stage: "validating", completed: 2, total: 2, failed: 0})
     const saved = JSON.parse(await readFile(join(root, semester.normalized, "semester.json"), "utf8"))
     expect(saved).toMatchObject({ schema_version: 1, expected_count: 2 })
     expect(saved.lessons).toHaveLength(2)
@@ -134,14 +138,17 @@ describe("semester checkpoint orchestration", () => {
         throw new BkjwError("详情暂时不可用", "HTTP_ERROR")
       },
     } as unknown as BkjwClient
+    const progress: CollectionProgress[] = []
     await expect(
       fetchSemester(failing, semester, {
         outputRoot: root,
         pageSize: 1000,
         detailConcurrency: 1,
         resume: false,
+        onProgress: (value) => progress.push(value),
       }),
     ).rejects.toThrow("采集未完成")
+    expect(progress.filter(p => p.stage === "details").at(-1)).toMatchObject({completed: 0, total: 1, failed: 1, retries: 2})
     expect(await readJsonIfExists(join(root, semester.normalized, "checkpoint.json"))).toMatchObject({
       list_complete: true,
       failed: [{ lesson_id: "101", attempts: 3 }],

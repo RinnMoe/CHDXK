@@ -6,6 +6,8 @@ import { apiClient } from "@/api/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { getErrorMessage } from "./admin-utils"
+import { CourseSyncProgress } from "./course-sync-progress"
+import type { SyncProgress } from "./course-sync-progress-utils"
 
 interface SyncStatus {
   id: string
@@ -23,6 +25,8 @@ interface SyncStatus {
   selected: string[]
   current?: string
   message?: string
+  started_at?: string
+  progress?: SyncProgress
   results: { semester: string; course_count: number; section_count: number }[]
 }
 const storageKey = "chdxk.course-sync-job"
@@ -184,27 +188,22 @@ export function CourseSyncPanel() {
             </>
           )}
           {status.state === "running" && (
-            <p>
-              {copy(
-                "copy.admin.components.admin.course-sync-panel.99eb9f3f3d91"
-              )}
-              {status.current ||
-                copy(
-                  "copy.admin.components.admin.course-sync-panel.a813d8bb77d4"
-                )}
-              {copy(
-                "copy.admin.components.admin.course-sync-panel.c8d676c4a71a"
-              )}
-              {status.results.length} / {status.selected.length}
-              {copy(
-                "copy.admin.components.admin.course-sync-panel.017236f8e655"
-              )}
+            <p className="text-sm">
+              当前学期 {status.current || "准备中"} · 已保存{" "}
+              {status.results.length} / {status.selected.length} 个学期
             </p>
           )}
           {status.message && (
             <p role="alert" className="text-sm text-destructive">
               {status.message}
             </p>
+          )}
+          {(status.state === "running" || status.progress) && (
+            <CourseSyncProgress
+              progress={status.progress}
+              startedAt={status.started_at}
+              active={status.state === "running"}
+            />
           )}
           {status.results.length > 0 && (
             <div className="overflow-x-auto">

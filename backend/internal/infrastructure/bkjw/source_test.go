@@ -18,7 +18,7 @@ func TestCollectorProtocolAndCancellation(t *testing.T) {
 	file := filepath.Join(t.TempDir(), "runner.js")
 	if err := os.WriteFile(file, []byte(`const input = require('node:readline').createInterface({input: process.stdin});
 console.log(JSON.stringify({type:'ready',semesters:['2026-2027-1']}));
-input.on('line', line => {const cmd = JSON.parse(line); if(cmd.type === 'sync') console.log(JSON.stringify({type:'collecting',semester:cmd.semesters[0]})); else if(cmd.type === 'cancel') input.close();});
+input.on('line', line => {const cmd = JSON.parse(line); if(cmd.type === 'sync') { console.log(JSON.stringify({type:'collecting',semester:cmd.semesters[0]})); console.log(JSON.stringify({type:'progress',semester:cmd.semesters[0],progress:{stage:'details',completed:3,total:10,failed:1,retries:2}})); } else if(cmd.type === 'cancel') input.close();});
 input.on('close', () => process.exit(0));`), 0600); err != nil {
 		t.Fatal(err)
 	}
@@ -47,6 +47,14 @@ input.on('close', () => process.exit(0));`), 0600); err != nil {
 		}
 	case <-time.After(3 * time.Second):
 		t.Fatal("no collecting event")
+	}
+	select {
+	case event := <-conn.Events():
+		if event.Progress == nil || event.Progress.Stage != "details" || event.Progress.Completed != 3 || event.Progress.Total == nil || *event.Progress.Total != 10 || event.Progress.Failed != 1 || event.Progress.Retries != 2 {
+			t.Fatalf("lost collector progress: %+v", event)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("no detailed progress event")
 	}
 	conn.Close()
 	select {

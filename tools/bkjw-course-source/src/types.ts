@@ -1,5 +1,15 @@
 export const SCHEMA_VERSION = 1 as const
 
+export interface CollectionProgress {
+  stage: "listing" | "details" | "validating"
+  completed: number
+  total?: number
+  failed: number
+  retries: number
+  page?: number
+  pages?: number
+}
+
 export interface SemesterOption {
   id: string
   academicYear: string

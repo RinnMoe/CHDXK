@@ -18,6 +18,7 @@ import {
   type Report,
   type SemesterDocument,
   type SemesterOption,
+  type CollectionProgress,
 } from "./types.js"
 
 const MAX_ATTEMPTS_PER_RUN = 3
@@ -30,6 +31,7 @@ export interface FetchSemesterOptions {
   resume: boolean
   signal?: AbortSignal
   log?: (message: string) => void
+  onProgress?: (progress: CollectionProgress) => void
 }
 
 export async function fetchSemester(
@@ -112,10 +114,11 @@ export async function fetchSemester(
 
     throwIfAborted(options.signal)
     if (!checkpoint.listComplete) {
+      options.onProgress?.({stage: "listing", completed: 0, failed: 0, retries: 0})
       log(`读取 ${option.normalized} 的全校开课列表`)
       const page = await client.newPage()
       try {
-        const listing = await client.collectListings(page, option.id, options.pageSize)
+        const listing = await client.collectListings(page, option.id, options.pageSize, options.onProgress)
         const nextLessons = new Map<string, LessonRecord>()
         const nextDuplicateIds = new Set<string>()
         for (const lesson of listing.lessons) {
@@ -151,12 +154,15 @@ export async function fetchSemester(
 
     throwIfAborted(options.signal)
     const pending = Array.from(lessonMap.values()).filter((lesson) => lesson.detail === null)
+    const detailTotal = lessonMap.size
+    options.onProgress?.({stage: "details", completed: checkpoint.completedLessonIds.length, total: detailTotal, failed: 0, retries: 0})
     if (pending.length > 0) {
       log(`读取 ${pending.length} 条课程详情，并发数 ${options.detailConcurrency}`)
-      await fetchDetails(client, pending, failed, checkpoint, persist, options)
+      await fetchDetails(client, pending, failed, checkpoint, persist, options, detailTotal)
     }
 
     checkpoint.failed = Array.from(failed.values())
+    options.onProgress?.({stage: "validating", completed: checkpoint.completedLessonIds.length, total: detailTotal, failed: failed.size, retries: 0})
     report.completed = isComplete(checkpoint, report, document)
     if (!report.completed) {
       report.warnings = unique([...report.warnings, "仍有课程详情未成功读取，未标记为完成"])
@@ -182,10 +188,14 @@ async function fetchDetails(
   checkpoint: Checkpoint,
   persist: () => Promise<void>,
   options: FetchSemesterOptions,
+  total: number,
 ): Promise<void> {
   let nextIndex = 0
   let completedSinceSave = 0
   let fatalError: Error | null = null
+  let failureCount = 0
+  let retries = 0
+  const progress = () => options.onProgress?.({stage: "details", completed: checkpoint.completedLessonIds.length, total, failed: failureCount, retries})
   const worker = async (): Promise<void> => {
     while (true) {
       if (fatalError) return
@@ -198,6 +208,7 @@ async function fetchDetails(
       let lastError = "未知详情错误"
       for (let attempt = 0; attempt < MAX_ATTEMPTS_PER_RUN; attempt += 1) {
         throwIfAborted(options.signal)
+        if (attempt > 0) { retries += 1; progress() }
         const totalAttempts = (checkpoint.retries[lesson.id] ?? 0) + 1
         checkpoint.retries[lesson.id] = totalAttempts
         try {
@@ -225,6 +236,7 @@ async function fetchDetails(
         }
       }
       if (!success) {
+        failureCount += 1
         lesson.warnings = unique([...lesson.warnings, `详情页读取失败：${lastError}`])
         failed.set(lesson.id, {
           lessonId: lesson.id,
@@ -233,6 +245,7 @@ async function fetchDetails(
           updatedAt: new Date().toISOString(),
         })
       }
+      progress()
       if (completedSinceSave >= SAVE_EVERY_DETAILS || index === pending.length - 1) {
         completedSinceSave = 0
         await persist()

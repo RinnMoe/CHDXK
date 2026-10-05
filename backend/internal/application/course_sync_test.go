@@ -51,6 +51,64 @@ func syncFixture() (*CourseSyncService, *testSourceConnection) {
 	return s, c
 }
 
+func TestCourseSyncDetailedProgressAndImportStage(t *testing.T) {
+	s, c := syncFixture()
+	importStarted := make(chan struct{})
+	release := make(chan struct{})
+	s.importArchive = func(context.Context, []byte) (*CourseImportResult, error) {
+		close(importStarted)
+		<-release
+		return &CourseImportResult{Semester: testSemester, CourseCount: 1}, nil
+	}
+	job, err := s.Start(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Cancel(1, job.ID)
+	c.events <- course.SourceEvent{Type: "ready", Semesters: []string{testSemester}}
+	waitSync(t, s, job.ID, "ready")
+	if _, err := s.Sync(1, job.ID, []string{testSemester}); err != nil {
+		t.Fatal(err)
+	}
+	total := 100
+	c.events <- course.SourceEvent{Type: "progress", Semester: testSemester, Progress: &course.SourceProgress{Stage: "details", Completed: 21, Total: &total, Failed: 2, Retries: 3}}
+	deadline := time.Now().Add(time.Second)
+	for {
+		status, _ := s.Status(1, job.ID)
+		if status.Progress != nil {
+			if status.Progress.Completed != 21 || status.Progress.Failed != 2 || status.Progress.Retries != 3 || status.Progress.UpdatedAt.IsZero() || status.StartedAt == nil {
+				t.Fatalf("missing progress: %+v", status)
+			}
+			*status.Progress.Total = 999
+			fresh, _ := s.Status(1, job.ID)
+			if *fresh.Progress.Total != 100 {
+				t.Fatal("snapshot modified live progress")
+			}
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("progress not consumed")
+		}
+		time.Sleep(time.Millisecond)
+	}
+	c.events <- course.SourceEvent{Type: "archive", Semester: testSemester, Document: json.RawMessage(`{"semester":"2026-2027-1"}`), Report: json.RawMessage(`{}`)}
+	select {
+	case <-importStarted:
+	case <-time.After(time.Second):
+		t.Fatal("import not started")
+	}
+	status, _ := s.Status(1, job.ID)
+	if status.Progress.Stage != "importing" || len(status.Results) != 0 {
+		t.Fatal("save reported complete before import finished")
+	}
+	close(release)
+	c.events <- course.SourceEvent{Type: "done"}
+	finished := waitSync(t, s, job.ID, "done")
+	if finished.Progress.Stage != "completed" || len(finished.Results) != 1 {
+		t.Fatal("missing saved semester progress")
+	}
+}
+
 func TestCourseSyncLoginErrorsClearQRAndAllowReconnect(t *testing.T) {
 	for _, code := range []string{"QR_LOGIN_FAILED", "AUTH_REQUIRED", "PAGE_STRUCTURE", "SEMESTER_DISCOVERY_FAILED", "PERMISSION_DENIED", "https://example.test/?code=secret"} {
 		t.Run(code, func(t *testing.T) {
