@@ -43,32 +43,31 @@
 
 ### 技术管理员配置
 
-安装和构建均限定在项目目录，不修改操作系统设置。后端 API 与采集器需部署在同一实例；当前进度保存在 API 进程内，多个 API 副本需要将该入口统一路由到一个实例。上传 ZIP 的已有导入方式仍可使用。
+API 镜像内置开课计划采集器、CAS 微信扫码登录实现、Node 和 Chromium，无需在宿主机安装 SDK、浏览器或指定个人目录。浏览器版本随采集器锁文件安装，构建时通过 Playwright 的 `install --with-deps chromium` 安装对应浏览器及容器系统依赖（[官方说明](https://playwright.dev/docs/browsers)）。当前进度保存在 API 进程内，多个 API 副本需要将该入口统一路由到一个实例。上传 ZIP 的已有导入方式仍可使用。
 
 ```powershell
-cd tools/bkjw-course-source
-pnpm install --frozen-lockfile
-$env:PLAYWRIGHT_BROWSERS_PATH = [IO.Path]::GetFullPath('../../.local/bkjw-browsers')
-pnpm exec playwright install chromium
-pnpm build
+# 在项目根目录构建；之后按部署环境配置数据库、Redis 和频道 SSO
+docker compose -f backend/docker-compose.yml build api
+docker compose -f backend/docker-compose.yml up -d api
 ```
 
-后端配置：
+镜像自动启用教务同步，下列环境变量默认值由镜像提供，不需要额外配置或挂载采集器目录：
 
-```yaml
-course_source:
-  enabled: true
-  node: node
-  runner: ../tools/bkjw-course-source/dist/admin-runner.js
-  browser_path: ../.local/bkjw-browsers
+```text
+JCOURSE_COURSE_SOURCE_ENABLED=true
+JCOURSE_COURSE_SOURCE_NODE=/usr/local/bin/node
+JCOURSE_COURSE_SOURCE_RUNNER=/app/tools/bkjw-course-source/dist/admin-runner.js
+JCOURSE_COURSE_SOURCE_BROWSER_PATH=/opt/playwright
 ```
 
-路径相对于后端启动目录，生产环境可改为绝对路径；Node 20 及以上。也可使用 `JCOURSE_COURSE_SOURCE_ENABLED`、`JCOURSE_COURSE_SOURCE_NODE`、`JCOURSE_COURSE_SOURCE_RUNNER`、`JCOURSE_COURSE_SOURCE_BROWSER_PATH` 环境变量。更改启动配置需重启 API。采集器通过标准输入输出与 API 通信，不开启额外端口。临时采集文件位于项目 `.local/course-sync`，任务结束时删除，Cookie 只在进程内保存。
+这些路径均为镜像内部路径，与宿主机项目位置无关。Compose 为 API 开启进程回收并提供 256 MB 共享内存。更改启动环境变量后需重新创建容器；如需关闭教务同步，设置 `JCOURSE_COURSE_SOURCE_ENABLED=false`。采集器通过标准输入输出与 API 通信，不开启额外端口。临时采集文件位于容器 `/app/.local/course-sync`，任务结束时删除，Cookie 只在进程内保存。非 Docker 开发仍可在本地安装采集器，并通过上述环境变量指定开发环境路径。
 
 CAS 扫码过程参考 CHUAuthSDK 的登录入口、微信轮询与回调流程；开课计划学期发现、分页、详情、数量检查继续复用 `tools/bkjw-course-source`，后台导入继续复用 `CourseManagementService.ImportArchive`。
 
 ### 验证范围
 
 已通过真实学校 CAS 二维码获取、后台接口权限、重复任务拒绝、未登录禁止同步、取消关闭采集进程；解析、断点采集、跨进程协议、学期选择和导入校验有自动测试。真实微信扫码后的学期发现及全量同步需本人手机确认后验证，本轮未使用已打开的学校浏览器 Cookie，也未执行真实学校课程批量导入。
+
+已实际构建 API 镜像，并在不挂载宿主机目录的非 root 容器中验证 Chromium 启动、采集器文件及临时目录可用、真实 CAS 二维码获取和取消退出。采集器类型检查与 17 项测试、Compose 配置校验通过。
 
 如果部署主机缺少所需运行环境、网络不可达，且修复需要修改操作系统或网络配置，按本任务范围记录为阻塞，不修改系统配置。

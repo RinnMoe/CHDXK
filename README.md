@@ -13,6 +13,8 @@
 
 更多细节见 [backend/README.md](backend/README.md) 和 [frontend/README.md](frontend/README.md)。
 
+API Docker 镜像包含教务扫码登录与开课计划采集所需的运行依赖，无需宿主机 SDK 目录。在项目根目录执行 `docker compose -f backend/docker-compose.yml build api` 构建；数据库、Redis、SSO 仍按部署环境配置。教务同步操作与容器配置见 [后台管理指南](docs/admin-workflows.md#教务同步)。
+
 ## 技术栈
 
 - 后端：Go、Gin、Gorm、PostgreSQL、Redis、Asynq
