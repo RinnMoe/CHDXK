@@ -190,7 +190,7 @@ func TestClientUsesStandardOIDCAndBearerPointAPI(t *testing.T) {
 	if err != nil {
 		t.Fatalf("UserInfo: %v", err)
 	}
-	if identity.Issuer != server.URL || identity.Subject != "user:42" || identity.Username != "Ada" || identity.IdentityRole != "member" {
+	if identity.Issuer != server.URL || identity.Subject != "user:42" || identity.Username != "Ada" || identity.IdentityRole != "member" || !identity.HasPointsAccount {
 		t.Fatalf("identity = %#v", identity)
 	}
 	if err := client.Logout(context.Background(), session.IDToken, "https://xk.example.test/"); err != nil {
@@ -344,4 +344,39 @@ func mustNewClient(t testing.TB, conf config.ResHubConfig) *Client {
 		t.Fatal(err)
 	}
 	return client
+}
+
+func TestUserInfoPointsCapability(t *testing.T) {
+	for _, tc := range []struct {
+		subject    string
+		capability any
+		want       bool
+	}{{"user:42", nil, true}, {"admin:root", nil, false}, {"user:42", false, false}, {"admin:root", true, true}} {
+		t.Run(tc.subject, func(t *testing.T) {
+			var server *httptest.Server
+			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/.well-known/openid-configuration" {
+					writeJSON(t, w, map[string]any{"issuer": server.URL, "authorization_endpoint": server.URL + "/authorize", "token_endpoint": server.URL + "/token", "userinfo_endpoint": server.URL + "/userinfo", "jwks_uri": server.URL + "/jwks", "end_session_endpoint": server.URL + "/logout", "token_endpoint_auth_methods_supported": []string{"client_secret_basic"}, "code_challenge_methods_supported": []string{"S256"}})
+					return
+				}
+				body := map[string]any{"sub": tc.subject, "name": "积分用户"}
+				if tc.capability != nil {
+					body["res_hub_has_points_account"] = tc.capability
+				}
+				writeJSON(t, w, body)
+			}))
+			defer server.Close()
+			client, err := NewClient(config.ResHubConfig{Issuer: server.URL, ClientID: "xk", ClientSecret: "test-secret"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			user, err := client.UserInfo(context.Background(), "test-token")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if user.HasPointsAccount != tc.want {
+				t.Fatalf("capability = %v", user.HasPointsAccount)
+			}
+		})
+	}
 }

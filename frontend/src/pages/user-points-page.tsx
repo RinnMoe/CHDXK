@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
+import { PaginationComponent } from "@/components/common/pagination"
 import { PointRecordList } from "@/components/point/point-record-list"
 import { useUserPoints } from "@/hooks/use-point"
 import { useAuth } from "@/contexts/auth-context"
@@ -11,12 +12,16 @@ import { getErrorMessage } from "@/components/admin/admin-utils"
 
 export function UserPointsPage() {
   const { user } = useAuth()
-  const [page] = useState(1)
+  const [page, setPage] = useState(1)
   const [pageSize] = useState(20)
-  const { data, isLoading, isError, error } = useUserPoints(user?.id ?? 0, {
-    page,
-    page_size: pageSize,
-  })
+  const { data, isLoading, isError, error } = useUserPoints(
+    user?.id ?? 0,
+    {
+      page,
+      page_size: pageSize,
+    },
+    user?.has_points_account !== false
+  )
 
   if (!user) {
     return (
@@ -32,6 +37,23 @@ export function UserPointsPage() {
       </>
     )
   }
+
+  if (user.has_points_account === false)
+    return (
+      <>
+        <PageTitle>
+          {copy("copy.user.pages.user-points-page.10939f548645")}
+        </PageTitle>
+        <PageShell>
+          <h1 className="mb-4 text-2xl font-semibold">
+            {copy("copy.user.pages.user-points-page.10939f548645")}
+          </h1>
+          <p className="text-muted-foreground">
+            {copy("copy.user.pages.user-points-page.2638b77fee74")}
+          </p>
+        </PageShell>
+      </>
+    )
 
   return (
     <>
@@ -59,7 +81,9 @@ export function UserPointsPage() {
               {isLoading ? (
                 <Skeleton className="h-8 w-24" />
               ) : (
-                <span className="text-3xl font-bold">{data?.total ?? 0}</span>
+                <span className="text-3xl font-bold">
+                  {isError ? "—" : (data?.total ?? 0)}
+                </span>
               )}
             </CardContent>
           </Card>
@@ -79,7 +103,15 @@ export function UserPointsPage() {
                 {getErrorMessage(error)}
               </p>
             ) : (
-              <PointRecordList records={data?.records.items ?? []} />
+              <>
+                <PointRecordList records={data?.records.items ?? []} />
+                <PaginationComponent
+                  page={page}
+                  pageSize={pageSize}
+                  total={data?.records.total ?? 0}
+                  onPageChange={setPage}
+                />
+              </>
             )}
           </section>
         </div>

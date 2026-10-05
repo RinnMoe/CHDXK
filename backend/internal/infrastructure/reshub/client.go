@@ -83,6 +83,7 @@ type tokenResponse struct {
 
 type userInfoResponse struct {
 	Subject           string `json:"sub"`
+	HasPointsAccount  *bool  `json:"res_hub_has_points_account"`
 	Name              string `json:"name"`
 	PreferredUsername string `json:"preferred_username"`
 	IdentityType      string `json:"res_hub_identity_type"`
@@ -240,15 +241,20 @@ func (c *Client) UserInfo(ctx context.Context, accessToken string) (*auth.ResHub
 	if username == "" {
 		username = strings.TrimSpace(response.PreferredUsername)
 	}
+	hasPoints := strings.HasPrefix(response.Subject, "user:")
+	if response.HasPointsAccount != nil {
+		hasPoints = *response.HasPointsAccount
+	}
 	return &auth.ResHubIdentity{
-		Issuer:         c.issuer,
-		Subject:        response.Subject,
-		Username:       username,
-		IdentityType:   response.IdentityType,
-		IdentityRole:   response.Role,
-		EffectiveRole:  response.EffectiveRole,
-		PermissionMode: response.PermissionMode,
-		ImpersonatedBy: response.OperatorSubject,
+		HasPointsAccount: hasPoints,
+		Issuer:           c.issuer,
+		Subject:          response.Subject,
+		Username:         username,
+		IdentityType:     response.IdentityType,
+		IdentityRole:     response.Role,
+		EffectiveRole:    response.EffectiveRole,
+		PermissionMode:   response.PermissionMode,
+		ImpersonatedBy:   response.OperatorSubject,
 	}, nil
 }
 

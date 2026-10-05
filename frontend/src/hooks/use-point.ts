@@ -3,12 +3,13 @@ import { getUserPoints, type PointRecordListFilter } from "@/api/point"
 
 export function useUserPoints(
   userID: number,
-  filter: PointRecordListFilter = {}
+  filter: PointRecordListFilter = {},
+  available = true
 ) {
   return useQuery({
     queryKey: ["points", userID, filter],
     queryFn: () => getUserPoints(userID, filter),
-    enabled: !!userID,
+    enabled: !!userID && available,
     placeholderData: keepPreviousData,
   })
 }

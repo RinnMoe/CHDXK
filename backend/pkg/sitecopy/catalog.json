@@ -5021,6 +5021,16 @@
     "audience": "user",
     "location": "pages/user-points-page.tsx"
   },
+  "copy.user.pages.user-points-page.10939f548645": {
+    "text": "积分",
+    "audience": "user",
+    "location": "pages/user-points-page.tsx"
+  },
+  "copy.user.pages.user-points-page.2638b77fee74": {
+    "text": "此账号未关联主站积分账户，积分功能暂不可用。主站配置管理员账号本身不设积分账户；使用具有积分账户的主站用户登录后即可查看余额和记录。",
+    "audience": "user",
+    "location": "pages/user-points-page.tsx"
+  },
   "copy.user.pages.user-points-page.48144f96c150": {
     "text": "请先登录",
     "audience": "user",
