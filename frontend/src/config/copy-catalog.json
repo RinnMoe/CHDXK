@@ -5027,7 +5027,7 @@
     "location": "pages/teachers-page.tsx"
   },
   "copy.user.pages.teachers-page.ef8188420068": {
-    "text": "搜索教师姓名、拼音或工号...",
+    "text": "搜索教师姓名或拼音...",
     "audience": "user",
     "location": "pages/teachers-page.tsx"
   },

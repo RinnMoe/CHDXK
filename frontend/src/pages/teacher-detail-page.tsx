@@ -78,11 +78,10 @@ export function TeacherDetailPage() {
               </>
             ) : teacher ? (
               <>
-                <div className="flex flex-wrap items-center gap-1.5 font-mono text-sm text-muted-foreground">
-                  <span>{teacher.code}</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-3xl font-bold">{teacher.name}</h1>
                   {teacherTitle && <TitleBadge>{teacherTitle}</TitleBadge>}
                 </div>
-                <h1 className="text-3xl font-bold">{teacher.name}</h1>
                 {teacher.department && (
                   <div className="text-sm text-muted-foreground">
                     {teacher.department}

@@ -57,14 +57,11 @@ export function SameCodeCourseCard({ course }: SameCodeCourseCardProps) {
     >
       <div className="flex min-w-0 items-center gap-3">
         <div className="min-w-0 flex-1 space-y-1">
-          <div className="flex items-center gap-1.5">
-            <span className="shrink-0 font-mono text-sm text-muted-foreground">
-              {course.main_teacher.code}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="leading-tight font-semibold">
+              {course.main_teacher.name}
             </span>
             {teacherTitle && <TitleBadge>{teacherTitle}</TitleBadge>}
-          </div>
-          <div className="leading-tight font-semibold">
-            {course.main_teacher.name}
           </div>
           <div className="text-sm text-muted-foreground">
             {course.department}
