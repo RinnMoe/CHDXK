@@ -13,6 +13,7 @@ import (
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/stat"
+	"jcourse/internal/infrastructure/bkjw"
 	"jcourse/internal/infrastructure/moderation"
 	"jcourse/internal/infrastructure/persistence"
 	"jcourse/internal/infrastructure/smtp"
@@ -21,19 +22,20 @@ import (
 )
 
 type AppConfig struct {
-	Server   ServerConfig               `mapstructure:"server"`
-	Postgres persistence.PostgresConfig `mapstructure:"postgres"`
-	Redis    persistence.RedisConfig    `mapstructure:"redis"`
-	Session  middleware.SessionConfig   `mapstructure:"session"`
-	Auth     AuthConfig                 `mapstructure:"auth"`
-	Course   CourseConfig               `mapstructure:"course"`
-	Review   ReviewConfig               `mapstructure:"review"`
-	APIKey   auth.ApiKeyConfig          `mapstructure:"api_key"`
-	Point    point.TransferFeeConfig    `mapstructure:"point"`
-	Asynq    task.Config                `mapstructure:"asynq"`
-	Stats    stat.Config                `mapstructure:"stats"`
-	SMTP     smtp.SMTPConfig            `mapstructure:"smtp"`
-	ResHub   ResHubConfig               `mapstructure:"reshub"`
+	CourseSource bkjw.Config                `mapstructure:"course_source"`
+	Server       ServerConfig               `mapstructure:"server"`
+	Postgres     persistence.PostgresConfig `mapstructure:"postgres"`
+	Redis        persistence.RedisConfig    `mapstructure:"redis"`
+	Session      middleware.SessionConfig   `mapstructure:"session"`
+	Auth         AuthConfig                 `mapstructure:"auth"`
+	Course       CourseConfig               `mapstructure:"course"`
+	Review       ReviewConfig               `mapstructure:"review"`
+	APIKey       auth.ApiKeyConfig          `mapstructure:"api_key"`
+	Point        point.TransferFeeConfig    `mapstructure:"point"`
+	Asynq        task.Config                `mapstructure:"asynq"`
+	Stats        stat.Config                `mapstructure:"stats"`
+	SMTP         smtp.SMTPConfig            `mapstructure:"smtp"`
+	ResHub       ResHubConfig               `mapstructure:"reshub"`
 }
 
 type AuthConfig struct {
@@ -136,6 +138,7 @@ func Load(configPath string) (AppConfig, error) {
 }
 
 func setDefaults(v *viper.Viper) {
+	setSectionDefaults(v, "course_source", map[string]any{"enabled": false, "node": "node", "runner": "", "browser_path": ""})
 	setSectionDefaults(v, "server", map[string]any{
 		"addr":  ":8080",
 		"debug": false,

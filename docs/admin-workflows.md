@@ -32,3 +32,43 @@
 「恢复默认颜色」先填回内置颜色，点击「保存主题」才会生效。十六进制色值支持六位颜色和八位含透明度颜色。安装应用的主题色、背景色同步使用浅色主题配置。
 
 技术管理员：主题存入现有设置 `theme.palette`，公开接口 `/api/site-theme` 只返回经过验证的颜色。默认主题以 `frontend/src/config/theme-defaults.json` 为来源，由文案维护脚本同步 Go 内嵌副本。所有颜色字段必须完整，不能输入任意 CSS。
+
+## 教务同步
+
+进入「课程数据 → 教务同步」，点击「扫码连接教务」，使用已绑定学校统一登录的微信扫码并在手机上确认。登录成功后会列出教务系统提供的学期，默认全选；可取消不需要的学期，再点击「自动同步」。同步逐学期执行，界面显示当前学期和已经保存的课程、教学班数量。
+
+同步替换对应学期的开课记录，保留课程点评。采集结果必须完整并通过原有课程导入校验才会写入；失败后停止后续学期，已保存学期保留。取消不会撤回已经完成的学期。二维码过期、微信未绑定或登录失效时，按页面提示重新连接。
+
+同一服务一次只运行一个连接/同步任务，由发起管理员查看和取消；刷新当前浏览器页面仍可查看任务。关闭页面不取消任务，重新部署或重启服务会结束连接，届时重新扫码。连接最长二十四小时，二维码等待最长三分钟，不长期保存登录会话或学工号密码。
+
+### 技术管理员配置
+
+安装和构建均限定在项目目录，不修改操作系统设置。后端 API 与采集器需部署在同一实例；当前进度保存在 API 进程内，多个 API 副本需要将该入口统一路由到一个实例。上传 ZIP 的已有导入方式仍可使用。
+
+```powershell
+cd tools/bkjw-course-source
+pnpm install --frozen-lockfile
+$env:PLAYWRIGHT_BROWSERS_PATH = [IO.Path]::GetFullPath('../../.local/bkjw-browsers')
+pnpm exec playwright install chromium
+pnpm build
+```
+
+后端配置：
+
+```yaml
+course_source:
+  enabled: true
+  node: node
+  runner: ../tools/bkjw-course-source/dist/admin-runner.js
+  browser_path: ../.local/bkjw-browsers
+```
+
+路径相对于后端启动目录，生产环境可改为绝对路径；Node 20 及以上。也可使用 `JCOURSE_COURSE_SOURCE_ENABLED`、`JCOURSE_COURSE_SOURCE_NODE`、`JCOURSE_COURSE_SOURCE_RUNNER`、`JCOURSE_COURSE_SOURCE_BROWSER_PATH` 环境变量。更改启动配置需重启 API。采集器通过标准输入输出与 API 通信，不开启额外端口。临时采集文件位于项目 `.local/course-sync`，任务结束时删除，Cookie 只在进程内保存。
+
+CAS 扫码过程参考 CHUAuthSDK 的登录入口、微信轮询与回调流程；开课计划学期发现、分页、详情、数量检查继续复用 `tools/bkjw-course-source`，后台导入继续复用 `CourseManagementService.ImportArchive`。
+
+### 验证范围
+
+已通过真实学校 CAS 二维码获取、后台接口权限、重复任务拒绝、未登录禁止同步、取消关闭采集进程；解析、断点采集、跨进程协议、学期选择和导入校验有自动测试。真实微信扫码后的学期发现及全量同步需本人手机确认后验证，本轮未使用已打开的学校浏览器 Cookie，也未执行真实学校课程批量导入。
+
+如果部署主机缺少所需运行环境、网络不可达，且修复需要修改操作系统或网络配置，按本任务范围记录为阻塞，不修改系统配置。

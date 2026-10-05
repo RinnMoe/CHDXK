@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { brand } from "@/config/brand"
 import { SafeMarkdown } from "@/components/review/safe-markdown"
 import { getErrorMessage } from "./admin-utils"
 
@@ -100,7 +101,9 @@ function PageEditor({
       </div>
       {preview ? (
         <article className="prose max-w-none dark:prose-invert">
-          <SafeMarkdown content={draft.content} />
+          <SafeMarkdown
+            content={draft.content.replaceAll("{site_name}", brand.name)}
+          />
         </article>
       ) : (
         <Textarea

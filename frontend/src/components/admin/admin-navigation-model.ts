@@ -5,6 +5,12 @@ export const adminSections = [
     label: copy("copy.admin.components.admin.admin-navigation.fea448341e76"),
     items: [
       {
+        key: "course-sync",
+        label: copy(
+          "copy.admin.components.admin.admin-navigation-model.14181a46a0c6"
+        ),
+      },
+      {
         key: "course-data",
         label: copy(
           "copy.admin.components.admin.admin-navigation.014df7b8215a"

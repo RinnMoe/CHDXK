@@ -89,3 +89,10 @@ reshub:
   client_key_file: ""
   # Optional private CA bundle; public HTTPS issuers normally leave this empty.
   ca_file: ""
+
+# Embedded course collector: install/build tools/bkjw-course-source and its Chromium runtime first.
+course_source:
+  enabled: false
+  node: node
+  runner: ../tools/bkjw-course-source/dist/admin-runner.js
+  browser_path: ../.local/bkjw-browsers

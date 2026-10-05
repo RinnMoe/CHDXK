@@ -178,7 +178,53 @@ export function getMockSystemSettingValue(key: string) {
   return settings.find((item) => item.key === key)?.value
 }
 
+let syncJob: {
+  id: string
+  state: string
+  semesters: string[]
+  selected: string[]
+  results: { semester: string; course_count: number; section_count: number }[]
+} | null = null
+
 export const systemSettingsHandlers = [
+  http.post("/api/admin/course-sync", () => {
+    syncJob = {
+      id: crypto.randomUUID(),
+      state: "ready",
+      semesters: [...MOCK_COURSE_SEMESTERS],
+      selected: [],
+      results: [],
+    }
+    return HttpResponse.json(syncJob, { status: 201 })
+  }),
+  http.get("/api/admin/course-sync/:id", ({ params }) =>
+    syncJob?.id === params.id
+      ? HttpResponse.json(syncJob)
+      : HttpResponse.json({ error: "任务不存在" }, { status: 404 })
+  ),
+  http.post("/api/admin/course-sync/:id/run", async ({ params, request }) => {
+    if (!syncJob || syncJob.id !== params.id)
+      return HttpResponse.json({ error: "任务不存在" }, { status: 404 })
+    const body = (await request.json()) as { semesters: string[] }
+    syncJob = {
+      ...syncJob,
+      state: "done",
+      selected: body.semesters,
+      results: body.semesters.map((semester) => ({
+        semester,
+        course_count: 10,
+        section_count: 20,
+      })),
+    }
+    return HttpResponse.json(syncJob)
+  }),
+  http.post("/api/admin/course-sync/:id/cancel", ({ params }) => {
+    if (!syncJob || syncJob.id !== params.id)
+      return HttpResponse.json({ error: "任务不存在" }, { status: 404 })
+    syncJob = { ...syncJob, state: "cancelled" }
+    return HttpResponse.json(syncJob)
+  }),
+
   http.get("/api/site-pages", () =>
     HttpResponse.json(
       (

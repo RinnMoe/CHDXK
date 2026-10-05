@@ -1,4 +1,9 @@
 {
+  "copy.admin.components.admin.admin-navigation-model.14181a46a0c6": {
+    "text": "教务同步",
+    "audience": "admin",
+    "location": "components/admin/admin-navigation-model.ts"
+  },
   "copy.admin.components.admin.admin-navigation-model.6b6b25f98162": {
     "text": "主题外观",
     "audience": "admin",
@@ -545,7 +550,7 @@
     "location": "components/admin/copy-settings-panel.tsx"
   },
   "copy.admin.components.admin.copy-settings-panel.6fe1f12e3174": {
-    "text": "修改站点介绍、登录说明、联系方式等常用文案，保存后刷新页面生效。按钮、状态提示和字段名称使用固定文案。",
+    "text": "按使用位置维护站点名称、登录说明、联系方式等常用文案。关于、常见问题等整页内容请在「内容页面」维护。按钮和状态提示使用固定文案。",
     "audience": "admin",
     "location": "components/admin/copy-settings-panel.tsx"
   },
@@ -964,6 +969,146 @@
     "audience": "admin",
     "location": "components/admin/course-offering-dialog.tsx"
   },
+  "copy.admin.components.admin.course-sync-panel.017236f8e655": {
+    "text": " 个学期。完整学期逐个保存，请保持服务运行。",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.12dc5b9fe571": {
+    "text": "正在连接教务系统",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.14181a46a0c6": {
+    "text": "教务同步",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.2cda2b1766b5": {
+    "text": "扫码登录本科教务系统，选择学期后自动获取开课计划并逐学期导入。默认选择全部可用学期；同步会替换对应学期的开课记录，已有点评保留。",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.462fae248797": {
+    "text": "任务无法读取，请刷新页面或重新连接。",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.46a9b00fe9a9": {
+    "text": "教学班数",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.472fd78a1ff5": {
+    "text": "请使用微信扫码登录",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.49364f276b5d": {
+    "text": "扫码连接教务",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.537d17f1c531": {
+    "text": "取消任务",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.6247b1d462a9": {
+    "text": "已扫码，请在手机上确认登录",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.678b02618ee7": {
+    "text": "同步完成",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.6dddbe2fc74d": {
+    "text": "教务登录二维码",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.6f96c2add214": {
+    "text": "任务已取消",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.762ac5ed92a2": {
+    "text": "同步已停止",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.99eb9f3f3d91": {
+    "text": "正在获取 ",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.9b3c6793d920": {
+    "text": "已导入学期",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.a0e3b90a2506": {
+    "text": " 个学期）",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.a3c974892464": {
+    "text": "清空选择",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.a813d8bb77d4": {
+    "text": "所选学期",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.a898478be181": {
+    "text": "连接中",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.bfe85df36865": {
+    "text": "自动同步（",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.c4d02889fa04": {
+    "text": "课程数",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.c8d676c4a71a": {
+    "text": "，已完成 ",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.dcac5f13ba0c": {
+    "text": "全选学期",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.e106a82ff9da": {
+    "text": "连接和采集失败时不会保存未完成的学期，已经完成的学期保留。取消后可重新扫码同步。",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.e62f52e25742": {
+    "text": "二维码过期后可重新连接。请使用已绑定学校统一登录的微信。",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.e652a73dc7e2": {
+    "text": "登录成功，请选择学期",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
+  "copy.admin.components.admin.course-sync-panel.e9ed02e8e728": {
+    "text": "正在同步课程",
+    "audience": "admin",
+    "location": "components/admin/course-sync-panel.tsx"
+  },
   "copy.admin.components.admin.system-api-keys-tab.0303d805e868": {
     "text": "注销后使用该 key 的请求会立即失效。",
     "audience": "technical",
@@ -1319,6 +1464,11 @@
     "audience": "admin",
     "location": "components/admin/theme-settings-panel.tsx"
   },
+  "copy.admin.components.admin.theme-settings-panel.ec2d9b307796": {
+    "text": "请使用有效的颜色格式，例如 #218d86。",
+    "audience": "admin",
+    "location": "components/admin/theme-settings-panel.tsx"
+  },
   "copy.admin.components.admin.theme-settings-panel.f20a2f20a68e": {
     "text": "评分星星",
     "audience": "admin",
@@ -1568,15 +1718,30 @@
     "audience": "user",
     "location": "pwa.config.ts"
   },
+  "copy.server.020cd7697720": {
+    "text": "教务连接或采集失败，请检查教务系统是否可访问后重新连接",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
   "copy.server.02472b45f1cf": {
     "text": "刷评封禁时长",
     "audience": "user",
     "location": "internal/app/site_settings.go"
   },
+  "copy.server.0261601060cd": {
+    "text": "未找到可同步的学期",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
   "copy.server.036549074827": {
     "text": "服务器内部错误",
     "audience": "user",
     "location": "internal/interface/web/controller/error.go"
+  },
+  "copy.server.0411c57ee9a8": {
+    "text": "教务学期列表读取失败",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
   },
   "copy.server.041d26a1a283": {
     "text": "转账积分必须大于 0",
@@ -1642,6 +1807,11 @@
     "text": "点评投票热度分",
     "audience": "user",
     "location": "internal/app/site_settings.go"
+  },
+  "copy.server.2616d115e909": {
+    "text": "本学期未通过导入校验或保存失败，已停止同步",
+    "audience": "technical",
+    "location": "internal/application/course_sync.go"
   },
   "copy.server.2a0ec9b7708a": {
     "text": "积分余额不足",
@@ -1748,15 +1918,30 @@
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
   },
+  "copy.server.4d95568231e8": {
+    "text": "采集学期不一致",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
   "copy.server.4e3601363432": {
     "text": "审计日志时间范围无效",
     "audience": "technical",
     "location": "pkg/apperr/apperr.go"
   },
+  "copy.server.4fe17b07d060": {
+    "text": "请完成扫码登录并选择学期",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
   "copy.server.516f0a16445a": {
     "text": "公告 ID 无效",
     "audience": "user",
     "location": "internal/interface/web/controller/announcement.go"
+  },
+  "copy.server.51d84a61ce98": {
+    "text": "二维码已过期，请重新连接",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
   },
   "copy.server.521ea9788171": {
     "text": "教师信息暂缺",
@@ -1813,6 +1998,11 @@
     "audience": "user",
     "location": "internal/application/course_admin.go"
   },
+  "copy.server.65240f42cf2d": {
+    "text": "同步学期与所选学期不一致",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
   "copy.server.65790e9d5ef9": {
     "text": "用户已被封禁",
     "audience": "user",
@@ -1827,6 +2017,11 @@
     "text": "启用首评奖励",
     "audience": "user",
     "location": "internal/app/site_settings.go"
+  },
+  "copy.server.6810d7b6baef": {
+    "text": "请先在学校统一登录页面绑定微信，再重新连接",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
   },
   "copy.server.6985c2d3be25": {
     "text": "课程数据包含重复课节 ID",
@@ -1908,6 +2103,11 @@
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
   },
+  "copy.server.91fec82e09e3": {
+    "text": "请选择有效且不重复的学期",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
   "copy.server.928da99465c1": {
     "text": "前台课程和写评默认使用的当前学期",
     "audience": "user",
@@ -1938,6 +2138,11 @@
     "audience": "user",
     "location": "internal/application/course_admin.go"
   },
+  "copy.server.a311879dc92c": {
+    "text": "同步未完成，请检查学期结果后重新连接",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
   "copy.server.a3d1b587446e": {
     "text": "请求参数无效",
     "audience": "user",
@@ -1952,6 +2157,11 @@
     "text": "短时间内同一课程点评过多",
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.acbd8bc9317a": {
+    "text": "教务同步暂不可用，请联系技术管理员检查采集器配置",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
   },
   "copy.server.b0f1bb7e3c30": {
     "text": "无法读取课程数据 ZIP",
@@ -1998,10 +2208,25 @@
     "audience": "user",
     "location": "internal/application/course_admin.go"
   },
+  "copy.server.bdabd8d3675d": {
+    "text": "采集结果过大",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
+  "copy.server.bf40ac112729": {
+    "text": "本学期采集结果不完整，未导入，请重新同步",
+    "audience": "technical",
+    "location": "internal/application/course_sync.go"
+  },
   "copy.server.c1f658373079": {
     "text": "未登录",
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.c2591b0bb4b7": {
+    "text": "连接已中断，请重新扫码登录",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
   },
   "copy.server.c3431639187a": {
     "text": "课节详情中的学期与课程数据不一致",
@@ -2012,6 +2237,11 @@
     "text": "更新点评时给课程热度增加的分值",
     "audience": "user",
     "location": "internal/app/site_settings.go"
+  },
+  "copy.server.c69ba42c51f3": {
+    "text": "教务同步任务不存在，请重新连接",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
   },
   "copy.server.c6b3f4b99917": {
     "text": "启用发布点评奖励",
@@ -2143,6 +2373,11 @@
     "audience": "user",
     "location": "internal/app/site_settings.go"
   },
+  "copy.server.ecaa38099c95": {
+    "text": "连接已到期，请重新扫码登录",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
   "copy.server.ee067221f541": {
     "text": "API Key 角色无效",
     "audience": "technical",
@@ -2157,6 +2392,11 @@
     "text": "API Key 名称不能为空",
     "audience": "technical",
     "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.f4999e037ea3": {
+    "text": "已有教务连接或同步任务，请完成或取消后重试",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
   },
   "copy.server.f52222e9c24c": {
     "text": "内容页面",

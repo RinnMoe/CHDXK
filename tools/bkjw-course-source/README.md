@@ -1,6 +1,6 @@
 # 长大教务全校开课数据源
 
-这个独立工具从 `http://bkjw.chd.edu.cn/eams/stdSyllabus` 读取全校开课查询结果，按学期保存为本地 JSON。它不依赖当前学期的固定 ID，也不直接连接 jcourse 数据库；采集结果由管理员通过站点后台上传。
+这个独立工具从 `http://bkjw.chd.edu.cn/eams/stdSyllabus` 读取全校开课查询结果，按学期保存为本地 JSON。它不依赖当前学期的固定 ID，也不直接连接 jcourse 数据库；采集结果可由管理员通过站点后台上传，也可通过后台「教务同步」扫码后自动逐学期导入，配置见 [后台工作指南](../../docs/admin-workflows.md#教务同步)。
 
 ## 安装
 

@@ -8,6 +8,7 @@ import (
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/email"
 	"jcourse/internal/domain/point"
+	"jcourse/internal/infrastructure/bkjw"
 	"jcourse/internal/infrastructure/persistence"
 	"jcourse/internal/infrastructure/repository"
 	"jcourse/internal/infrastructure/reshub"
@@ -15,6 +16,7 @@ import (
 )
 
 type ServiceContainer struct {
+	CourseSync            *application.CourseSyncService
 	TeacherHotQuery       *application.TeacherHotQueryService
 	ReviewQuery           *application.ReviewQueryService
 	ReviewCommand         *application.ReviewCommandService
@@ -126,6 +128,7 @@ func NewServiceContainer(conf config.AppConfig) (*ServiceContainer, error) {
 		CourseQuery:           courseQuery,
 		CourseCommand:         courseCommand,
 		CourseManagement:      courseManagement,
+		CourseSync:            application.NewCourseSyncService(&bkjw.Source{Config: conf.CourseSource}, courseManagement),
 		CourseEnrollmentQuery: courseEnrollmentQuery,
 		TeacherQuery:          teacherQuery,
 		TeacherHotQuery:       application.NewTeacherHotQueryService(courseHotRepo),

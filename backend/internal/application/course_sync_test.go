@@ -1,0 +1,102 @@
+//go:build test
+
+package application
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"jcourse/internal/domain/course"
+	"sync"
+	"testing"
+	"time"
+)
+
+type testSourceConnection struct {
+	events   chan course.SourceEvent
+	selected []string
+	mu       sync.Mutex
+}
+
+func (c *testSourceConnection) Events() <-chan course.SourceEvent { return c.events }
+func (c *testSourceConnection) Sync(items []string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.selected = append([]string{}, items...)
+	return nil
+}
+func (c *testSourceConnection) Close() {}
+func waitSync(t *testing.T, s *CourseSyncService, id, state string) *CourseSyncStatus {
+	t.Helper()
+	deadline := time.Now().Add(time.Second)
+	for time.Now().Before(deadline) {
+		status, err := s.Status(1, id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if status.State == state {
+			return status
+		}
+		time.Sleep(time.Millisecond)
+	}
+	t.Fatalf("did not reach %s", state)
+	return nil
+}
+func syncFixture() (*CourseSyncService, *testSourceConnection) {
+	c := &testSourceConnection{events: make(chan course.SourceEvent, 10)}
+	s := &CourseSyncService{source: &course.MockCourseSource{ConnectFn: func(context.Context) (course.SourceConnection, error) { return c, nil }}, importArchive: func(context.Context, []byte) (*CourseImportResult, error) {
+		return &CourseImportResult{Semester: testSemester, CourseCount: 1}, nil
+	}}
+	return s, c
+}
+func TestCourseSyncOwnershipAndSelection(t *testing.T) {
+	s, c := syncFixture()
+	status, err := s.Start(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Cancel(1, status.ID)
+	if _, err := s.Status(2, status.ID); err == nil {
+		t.Fatal("other administrator saw job")
+	}
+	if _, err := s.Start(2); err == nil {
+		t.Fatal("parallel source session accepted")
+	}
+	c.events <- course.SourceEvent{Type: "ready", Semesters: []string{testSemester}}
+	waitSync(t, s, status.ID, "ready")
+	if _, err := s.Sync(1, status.ID, []string{"2000-2001-1"}); err == nil {
+		t.Fatal("unknown semester accepted")
+	}
+	if _, err := s.Sync(1, status.ID, []string{testSemester, testSemester}); err == nil {
+		t.Fatal("duplicate semester accepted")
+	}
+	if _, err := s.Sync(1, status.ID, []string{testSemester}); err != nil {
+		t.Fatal(err)
+	}
+	c.events <- course.SourceEvent{Type: "archive", Semester: testSemester, Document: json.RawMessage(`{"semester":"2026-2027-1"}`), Report: json.RawMessage(`{}`)}
+	c.events <- course.SourceEvent{Type: "done"}
+	if result := waitSync(t, s, status.ID, "done"); len(result.Results) != 1 {
+		t.Fatal("missing import result")
+	}
+}
+func TestCourseSyncStopsOnImportFailure(t *testing.T) {
+	s, c := syncFixture()
+	s.importArchive = func(context.Context, []byte) (*CourseImportResult, error) { return nil, errors.New("invalid archive") }
+	status, _ := s.Start(1)
+	c.events <- course.SourceEvent{Type: "ready", Semesters: []string{testSemester}}
+	waitSync(t, s, status.ID, "ready")
+	_, _ = s.Sync(1, status.ID, []string{testSemester})
+	c.events <- course.SourceEvent{Type: "archive", Semester: testSemester, Document: json.RawMessage(`{"semester":"2026-2027-1"}`)}
+	if result := waitSync(t, s, status.ID, "failed"); len(result.Results) != 0 {
+		t.Fatal("failed import was reported successful")
+	}
+}
+func TestSourceArchiveUsesExistingCompletenessValidator(t *testing.T) {
+	archive, err := sourceArchive(course.SourceEvent{Semester: testSemester, Document: json.RawMessage(`{"semester":"2026-2027-1"}`), Report: json.RawMessage(`{"completed":false}`)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := parseCourseArchive(archive); err == nil {
+		t.Fatal("incomplete collector result accepted")
+	}
+}

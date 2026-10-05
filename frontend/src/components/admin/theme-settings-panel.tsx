@@ -227,7 +227,13 @@ function ThemeEditor({ saved }: { saved: string }) {
       })
       applyTheme(valid)
     } catch (err) {
-      setError(getErrorMessage(err))
+      setError(
+        err instanceof Error && err.message === "Invalid theme"
+          ? copy(
+              "copy.admin.components.admin.theme-settings-panel.ec2d9b307796"
+            )
+          : getErrorMessage(err)
+      )
     }
   }
   return (

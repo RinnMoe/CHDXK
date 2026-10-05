@@ -73,6 +73,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 
 	reviewController := controller.NewReviewController(container.ReviewQuery, container.ReviewCommand)
 	courseController := controller.NewCourseController(container.CourseQuery, container.CourseCommand)
+	courseSyncController := controller.NewCourseSyncController(container.CourseSync)
 	courseAdminController := controller.NewCourseAdminController(container.CourseManagement)
 	courseEnrollmentController := controller.NewCourseEnrollmentController(container.CourseEnrollmentQuery, container.CourseCommand)
 	teacherController := controller.NewTeacherController(container.TeacherQuery, container.CourseQuery)
@@ -172,6 +173,11 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		adminAnnouncementGroup.PUT("/:announcementID", announcementController.UpdateAnnouncement)
 		adminAnnouncementGroup.DELETE("/:announcementID", announcementController.DeleteAnnouncement)
 	}
+	syncGroup := apiGroup.Group("/admin/course-sync", middleware.RequireAdmin())
+	syncGroup.POST("", courseSyncController.Start)
+	syncGroup.GET("/:jobID", courseSyncController.Status)
+	syncGroup.POST("/:jobID/run", courseSyncController.Sync)
+	syncGroup.POST("/:jobID/cancel", courseSyncController.Cancel)
 	adminCourseGroup := apiGroup.Group("/admin/course", middleware.RequireAdmin())
 	{
 		adminCourseGroup.GET("/semester", courseAdminController.ListSemesters)
