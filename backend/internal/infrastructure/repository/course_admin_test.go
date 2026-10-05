@@ -120,3 +120,55 @@ func TestCourseDataRepositorySemesterReplaceAndMaintenance(t *testing.T) {
 		t.Fatalf("deleting current semester changed older offering: total=%d offerings=%#v err=%v", oldTotal, oldItems, err)
 	}
 }
+
+func TestManagedOfferingColumnFiltersAndPagination(t *testing.T) {
+	db := newTestDBNamed(t, fmt.Sprintf("jcourse_filters_%d", time.Now().UnixNano()))
+	repo := repository.NewCourseRepository(db)
+	ctx := context.Background()
+	semester := "2026-2027-1"
+	section := func(name, no, department, teacher string) course.CourseSection {
+		return course.CourseSection{CourseName: name, LessonNo: no, Department: department, Teachers: []string{teacher}, Credit: 2}
+	}
+	err := repo.ReplaceSemester(ctx, semester, []course.ManagedOffering{
+		{Code: "A_01", Semester: semester, Sections: []course.CourseSection{
+			section("Alpha 100%", "A.01", "First", "Alice"), section("Alpha 100%", "A.02", "Second", "Bob"),
+		}},
+		{Code: "AB01", Semester: semester, Sections: []course.CourseSection{section("Beta", "B.01", "First", "Alice")}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	one, two, zero := 1, 2, 0
+	for _, tc := range []struct {
+		name   string
+		filter course.ManagedOfferingFilter
+		want   int64
+	}{
+		{"literal underscore", course.ManagedOfferingFilter{Code: "_"}, 1},
+		{"literal percent", course.ManagedOfferingFilter{Name: "%"}, 1},
+		{"case insensitive", course.ManagedOfferingFilter{Code: "ab"}, 1},
+		{"second section primary teacher", course.ManagedOfferingFilter{Teacher: "Bob"}, 1},
+		{"combined columns", course.ManagedOfferingFilter{Code: "A_", Name: "Alpha", Teacher: "Bob", Department: "Second", LessonNo: "A.02"}, 1},
+		{"same section required", course.ManagedOfferingFilter{Teacher: "Bob", Department: "First"}, 0},
+		{"exact count", course.ManagedOfferingFilter{MinSections: &two, MaxSections: &two}, 1},
+		{"upper bound", course.ManagedOfferingFilter{MaxSections: &one}, 1},
+		{"zero upper bound", course.ManagedOfferingFilter{MaxSections: &zero}, 0},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.filter.Semester = semester
+			items, total, err := repo.ListManagedOfferings(ctx, tc.filter)
+			if err != nil || total != tc.want || int64(len(items)) != tc.want {
+				t.Fatalf("total=%d items=%d err=%v", total, len(items), err)
+			}
+		})
+	}
+	for _, sort := range []string{"code", "name", "teacher", "department", "sections"} {
+		items, total, err := repo.ListManagedOfferings(ctx, course.ManagedOfferingFilter{Semester: semester, Sort: sort, Desc: true, Page: 2, PageSize: 1})
+		if err != nil || total != 2 || len(items) != 1 {
+			t.Fatalf("sort %s pagination: total=%d items=%d err=%v", sort, total, len(items), err)
+		}
+		if sort == "sections" && len(items[0].Sections) != 1 {
+			t.Fatal("section count sorting was ignored")
+		}
+	}
+}

@@ -689,11 +689,6 @@
     "audience": "admin",
     "location": "components/admin/course-offering-dialog.tsx"
   },
-  "copy.admin.components.admin.course-management-tab.351a38f2a874": {
-    "text": "输入课程代码、名称或课程序号",
-    "audience": "admin",
-    "location": "components/admin/course-management-tab.tsx"
-  },
   "copy.admin.components.admin.course-management-tab.3b956ae57c11": {
     "text": "编辑课程",
     "audience": "admin",
@@ -710,7 +705,7 @@
     "location": "components/admin/course-section-draft.ts"
   },
   "copy.admin.components.admin.course-management-tab.441b9c56366f": {
-    "text": "上传完整 ZIP 会替换该学期的课程和教学班；已发布的课程评价保留。",
+    "text": "按学期维护课程和教学班，支持按列组合筛选；从教务同步获取最新开课数据。",
     "audience": "admin",
     "location": "components/admin/course-management-tab.tsx"
   },
@@ -733,11 +728,6 @@
     "text": "教学班",
     "audience": "admin",
     "location": "components/admin/course-section-draft.ts"
-  },
-  "copy.admin.components.admin.course-management-tab.505e872bcb8e": {
-    "text": "上传学期 ZIP",
-    "audience": "admin",
-    "location": "components/admin/course-management-tab.tsx"
   },
   "copy.admin.components.admin.course-management-tab.521ea9788171": {
     "text": "教师信息暂缺",
@@ -819,11 +809,6 @@
     "audience": "admin",
     "location": "components/admin/course-management-tab.tsx"
   },
-  "copy.admin.components.admin.course-management-tab.8abe5a36638c": {
-    "text": "搜索课程代码、名称或教学班",
-    "audience": "admin",
-    "location": "components/admin/course-management-tab.tsx"
-  },
   "copy.admin.components.admin.course-management-tab.8e2f12907721": {
     "text": "课程备注",
     "audience": "admin",
@@ -868,11 +853,6 @@
     "text": "课程序号",
     "audience": "admin",
     "location": "components/admin/course-section-draft.ts"
-  },
-  "copy.admin.components.admin.course-management-tab.abacc4e7004d": {
-    "text": "重新上传会完整替换所选学期的课程和教学班；历史课程评价会保留。继续吗？",
-    "audience": "admin",
-    "location": "components/admin/course-management-tab.tsx"
   },
   "copy.admin.components.admin.course-management-tab.ad07afbbae6d": {
     "text": "考核方式",
@@ -919,11 +899,6 @@
     "audience": "admin",
     "location": "components/admin/course-management-tab.tsx"
   },
-  "copy.admin.components.admin.course-management-tab.ce1c9d61565f": {
-    "text": "上传中…",
-    "audience": "admin",
-    "location": "components/admin/course-management-tab.tsx"
-  },
   "copy.admin.components.admin.course-management-tab.d48636ed88e4": {
     "text": "课程代码",
     "audience": "admin",
@@ -941,11 +916,6 @@
   },
   "copy.admin.components.admin.course-management-tab.f2571f734a5d": {
     "text": "课程与学期数据",
-    "audience": "admin",
-    "location": "components/admin/course-management-tab.tsx"
-  },
-  "copy.admin.components.admin.course-management-tab.f58154bb6b6c": {
-    "text": "已导入 {v0}：{v1} 门课程、{v2} 个教学班；替换 {v3} 条旧开课记录。",
     "audience": "admin",
     "location": "components/admin/course-management-tab.tsx"
   },

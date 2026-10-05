@@ -186,7 +186,6 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	{
 		adminCourseGroup.GET("/semester", courseAdminController.ListSemesters)
 		adminCourseGroup.GET("", courseAdminController.List)
-		adminCourseGroup.POST("/import", courseAdminController.ImportArchive)
 		adminCourseGroup.POST("", courseAdminController.Create)
 		adminCourseGroup.PUT("/:offeringID", courseAdminController.Update)
 		adminCourseGroup.DELETE("/:offeringID", courseAdminController.Delete)

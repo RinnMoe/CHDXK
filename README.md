@@ -100,7 +100,7 @@ JCOURSE_SERVER_ADDR=:9090 go run cmd/api/main.go --config config/config.yaml
 
 ## 数据导入
 
-管理员可在站点后台的“课程与学期数据”页面上传长大教务采集器生成的学期 ZIP，并按学期查询、增改或删除课程开课记录和教学班。ZIP 需包含同一目录的 `semester.json` 与 `report.json`，且采集报告必须完整；上传会替换对应学期的开课数据，已有课程评价保留。教师信息缺失的课节也可导入。
+管理员可在后台“教务同步”扫码连接本科教务并同步学期数据，在“开课记录”按课程代码、名称、主讲教师、开课单位、课程序号和教学班数量组合筛选，按列排序、分页维护课程与教学班。已移除手动 ZIP 上传；教务同步仍校验采集完整性并替换对应学期开课数据，已有课程评价保留。教师信息缺失的教学班也可导入。
 
 ```powershell
 Compress-Archive -Path "tools/bkjw-course-source/data/bkjw/2026-2027-1/semester.json", "tools/bkjw-course-source/data/bkjw/2026-2027-1/report.json" -DestinationPath "$env:TEMP/2026-2027-1.zip"

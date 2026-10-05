@@ -1,34 +1,25 @@
 import { copy } from "@/lib/copy"
-import { useEffect, useMemo, useState } from "react"
-import {
-  RiAddLine,
-  RiDeleteBinLine,
-  RiEditLine,
-  RiUpload2Line,
-} from "@remixicon/react"
+import { useMemo, useState } from "react"
+import { RiAddLine, RiDeleteBinLine, RiEditLine } from "@remixicon/react"
 import type {
   ManagedCourseOfferingDTO,
   SaveManagedCourseOffering,
 } from "@/api/admin-course"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import {
   useDeleteManagedCourse,
-  useImportManagedCourses,
   useManagedCourses,
   useManagedCourseSemesters,
   useSaveManagedCourse,
 } from "@/hooks/use-admin-course"
 import { getErrorMessage } from "./admin-utils"
 
+import {
+  ManagedCourseTableHeader,
+  ManagedCoursePagination,
+} from "./course-management-table-header"
 import { Field, OfferingDialog } from "./course-offering-dialog"
 
 export function CourseManagementTab() {
@@ -37,26 +28,63 @@ export function CourseManagementTab() {
     () => semestersQuery.data ?? [],
     [semestersQuery.data]
   )
-  const [semester, setSemester] = useState("")
-  const [query, setQuery] = useState("")
+  const [selectedSemester, setSemester] = useState("")
+  const semester = selectedSemester || semesters[0] || ""
+  const [filters, setFilters] = useState({
+    code: "",
+    name: "",
+    teacher: "",
+    department: "",
+    lesson_no: "",
+    min_sections: "",
+    max_sections: "",
+  })
+  const [sort, setSort] = useState<
+    "code" | "name" | "teacher" | "department" | "sections"
+  >("code")
+  const [direction, setDirection] = useState<"asc" | "desc">("asc")
+  const [pageSize, setPageSize] = useState(50)
+  const rangeInvalid =
+    (filters.min_sections !== "" &&
+      (!Number.isInteger(Number(filters.min_sections)) ||
+        Number(filters.min_sections) < 0)) ||
+    (filters.max_sections !== "" &&
+      (!Number.isInteger(Number(filters.max_sections)) ||
+        Number(filters.max_sections) < 0)) ||
+    (filters.min_sections !== "" &&
+      filters.max_sections !== "" &&
+      Number(filters.min_sections) > Number(filters.max_sections))
+  function updateFilter(key: keyof typeof filters, value: string) {
+    setFilters((prev) => ({ ...prev, [key]: value }))
+    setPage(1)
+  }
+  function changeSort(key: typeof sort) {
+    setSort(key)
+    setDirection(sort === key && direction === "asc" ? "desc" : "asc")
+    setPage(1)
+  }
   const [page, setPage] = useState(1)
   const [editing, setEditing] = useState<ManagedCourseOfferingDTO | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [status, setStatus] = useState("")
   const [error, setError] = useState("")
-  const courseQuery = useManagedCourses({
-    semester,
-    q: query,
-    page,
-    page_size: 50,
-  })
-  const importMutation = useImportManagedCourses()
+  const courseQuery = useManagedCourses(
+    {
+      semester,
+      ...filters,
+      min_sections:
+        filters.min_sections === "" ? undefined : Number(filters.min_sections),
+      max_sections:
+        filters.max_sections === "" ? undefined : Number(filters.max_sections),
+      sort,
+      direction,
+      page,
+      page_size: pageSize,
+    },
+    !rangeInvalid
+  )
   const saveMutation = useSaveManagedCourse()
   const deleteMutation = useDeleteManagedCourse()
-
-  useEffect(() => {
-    if (!semester && semesters.length > 0) setSemester(semesters[0])
-  }, [semester, semesters])
 
   function openCreate() {
     setEditing(null)
@@ -68,33 +96,6 @@ export function CourseManagementTab() {
     setStatus(
       copy("copy.admin.components.admin.course-management-tab.c0a3807ee203")
     )
-  }
-
-  async function upload(file?: File) {
-    if (!file) return
-    if (
-      !window.confirm(
-        copy("copy.admin.components.admin.course-management-tab.abacc4e7004d")
-      )
-    )
-      return
-    setError("")
-    setStatus("")
-    try {
-      const result = await importMutation.mutateAsync(file)
-      setSemester(result.semester)
-      setPage(1)
-      setStatus(
-        copy("copy.admin.components.admin.course-management-tab.f58154bb6b6c", {
-          v0: result.semester,
-          v1: result.course_count,
-          v2: result.section_count,
-          v3: result.replaced_count,
-        })
-      )
-    } catch (uploadError) {
-      setError(getErrorMessage(uploadError))
-    }
   }
 
   async function remove(offering: ManagedCourseOfferingDTO) {
@@ -121,7 +122,7 @@ export function CourseManagementTab() {
   const pageCount = Math.max(
     1,
     Math.ceil(
-      (courseQuery.data?.total ?? 0) / (courseQuery.data?.page_size ?? 50)
+      (courseQuery.data?.total ?? 0) / (courseQuery.data?.page_size ?? pageSize)
     )
   )
 
@@ -147,31 +148,10 @@ export function CourseManagementTab() {
               "copy.admin.components.admin.course-management-tab.65ce7c3c7b0d"
             )}
           </Button>
-          <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm hover:bg-muted/40">
-            <RiUpload2Line />
-            {importMutation.isPending
-              ? copy(
-                  "copy.admin.components.admin.course-management-tab.ce1c9d61565f"
-                )
-              : copy(
-                  "copy.admin.components.admin.course-management-tab.505e872bcb8e"
-                )}
-            <input
-              className="sr-only"
-              type="file"
-              accept=".zip,application/zip"
-              disabled={importMutation.isPending}
-              onChange={(event) => {
-                const file = event.target.files?.[0]
-                event.target.value = ""
-                void upload(file)
-              }}
-            />
-          </label>
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-[minmax(12rem,18rem)_minmax(16rem,1fr)]">
+      <div className="flex flex-wrap items-end gap-3">
         <Field
           label={copy(
             "copy.admin.components.admin.course-management-tab.2baec43adb17"
@@ -194,27 +174,65 @@ export function CourseManagementTab() {
             ))}
           </datalist>
         </Field>
-        <Field
-          label={copy(
-            "copy.admin.components.admin.course-management-tab.8abe5a36638c"
-          )}
-        >
+        <Field label="课程序号">
           <Input
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value)
-              setPage(1)
-            }}
-            placeholder={copy(
-              "copy.admin.components.admin.course-management-tab.351a38f2a874"
-            )}
+            aria-label="筛选课程序号"
+            value={filters.lesson_no}
+            onChange={(event) => updateFilter("lesson_no", event.target.value)}
+            placeholder="输入课程序号"
           />
         </Field>
+        <Field label="每页数量">
+          <select
+            aria-label="每页数量"
+            className="h-9 rounded-md border bg-background px-3 text-sm"
+            value={pageSize}
+            onChange={(event) => {
+              setPageSize(Number(event.target.value))
+              setPage(1)
+            }}
+          >
+            {[20, 50, 100].map((size) => (
+              <option key={size} value={size}>
+                {size} 条
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Button
+          variant="outline"
+          onClick={() => {
+            setFilters({
+              code: "",
+              name: "",
+              teacher: "",
+              department: "",
+              lesson_no: "",
+              min_sections: "",
+              max_sections: "",
+            })
+            setSort("code")
+            setDirection("asc")
+            setPage(1)
+          }}
+        >
+          清除筛选
+        </Button>
       </div>
 
       {status && (
         <p role="status" className="text-sm text-muted-foreground">
           {status}
+        </p>
+      )}
+      {rangeInvalid && (
+        <p role="alert" className="text-sm text-destructive">
+          教学班数量须为非负整数，最少数量不能大于最多数量。
+        </p>
+      )}
+      {courseQuery.isError && (
+        <p role="alert" className="text-sm text-destructive">
+          {getErrorMessage(courseQuery.error)}
         </p>
       )}
       {error && (
@@ -236,40 +254,13 @@ export function CourseManagementTab() {
 
       <div className="overflow-x-auto rounded-lg border">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>
-                {copy(
-                  "copy.admin.components.admin.course-management-tab.d48636ed88e4"
-                )}
-              </TableHead>
-              <TableHead>
-                {copy(
-                  "copy.admin.components.admin.course-management-tab.bd2d74b297d1"
-                )}
-              </TableHead>
-              <TableHead>
-                {copy(
-                  "copy.admin.components.admin.course-management-tab.1e3c672a9fba"
-                )}
-              </TableHead>
-              <TableHead>
-                {copy(
-                  "copy.admin.components.admin.course-management-tab.6322fa286117"
-                )}
-              </TableHead>
-              <TableHead>
-                {copy(
-                  "copy.admin.components.admin.course-management-tab.4c9c646f81d1"
-                )}
-              </TableHead>
-              <TableHead className="text-right">
-                {copy(
-                  "copy.admin.components.admin.course-management-tab.ed31fbb483ee"
-                )}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
+          <ManagedCourseTableHeader
+            filters={filters}
+            sort={sort}
+            direction={direction}
+            onFilterChange={updateFilter}
+            onSortChange={changeSort}
+          />
           <TableBody>
             {courseQuery.isLoading ? (
               <TableRow>
@@ -295,23 +286,43 @@ export function CourseManagementTab() {
               </TableRow>
             ) : (
               courseQuery.data?.items.map((offering) => {
-                const section = offering.sections[0]
+                const courseNames = [
+                  ...new Set(
+                    offering.sections
+                      .map((item) => item.course_name)
+                      .filter(Boolean)
+                  ),
+                ]
+                const primaryTeachers = [
+                  ...new Set(
+                    offering.sections
+                      .map((item) => item.teachers[0])
+                      .filter(Boolean)
+                  ),
+                ]
+                const departments = [
+                  ...new Set(
+                    offering.sections
+                      .map((item) => item.department)
+                      .filter(Boolean)
+                  ),
+                ]
                 return (
                   <TableRow key={offering.id}>
                     <TableCell className="font-mono">{offering.code}</TableCell>
                     <TableCell>
-                      {section?.course_name ??
+                      {(courseNames.join("、") || undefined) ??
                         copy(
                           "copy.admin.components.admin.course-management-tab.043243bc4b5b"
                         )}
                     </TableCell>
                     <TableCell>
-                      {section?.teachers[0] ??
+                      {(primaryTeachers.join("、") || undefined) ??
                         copy(
                           "copy.admin.components.admin.course-management-tab.521ea9788171"
                         )}
                     </TableCell>
-                    <TableCell>{section?.department ?? "—"}</TableCell>
+                    <TableCell>{departments.join("、") || "—"}</TableCell>
                     <TableCell>{offering.sections.length}</TableCell>
                     <TableCell className="text-right">
                       <Button
@@ -346,48 +357,12 @@ export function CourseManagementTab() {
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>
-          {copy(
-            "copy.admin.components.admin.course-management-tab.2428420e407f"
-          )}
-          {courseQuery.data?.total ?? 0}
-          {copy(
-            "copy.admin.components.admin.course-management-tab.88165354d9d3"
-          )}
-        </span>
-        <div className="flex items-center gap-2">
-          <span>
-            {copy(
-              "copy.admin.components.admin.course-management-tab.9552fe3bd366"
-            )}
-            {page} / {pageCount}
-            {copy(
-              "copy.admin.components.admin.course-management-tab.85ca81cf6abd"
-            )}
-          </span>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={page <= 1}
-            onClick={() => setPage((value) => Math.max(1, value - 1))}
-          >
-            {copy(
-              "copy.admin.components.admin.course-management-tab.c9b9ae7a6144"
-            )}
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={page >= pageCount}
-            onClick={() => setPage((value) => Math.min(pageCount, value + 1))}
-          >
-            {copy(
-              "copy.admin.components.admin.course-management-tab.8a8542f69648"
-            )}
-          </Button>
-        </div>
-      </div>
+      <ManagedCoursePagination
+        total={courseQuery.data?.total ?? 0}
+        page={page}
+        pageCount={pageCount}
+        onPageChange={setPage}
+      />
     </section>
   )
 }

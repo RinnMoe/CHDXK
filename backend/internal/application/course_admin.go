@@ -40,6 +40,15 @@ func (s *CourseManagementService) ListSemesters(ctx context.Context) ([]string, 
 }
 
 func (s *CourseManagementService) List(ctx context.Context, filter course.ManagedOfferingFilter) (*PaginatedResult[course.ManagedOffering], error) {
+	if (filter.MinSections != nil && *filter.MinSections < 0) || (filter.MaxSections != nil && *filter.MaxSections < 0) ||
+		(filter.MinSections != nil && filter.MaxSections != nil && *filter.MinSections > *filter.MaxSections) {
+		return nil, apperr.BadRequest("教学班数量范围无效")
+	}
+	switch filter.Sort {
+	case "", "code", "name", "teacher", "department", "sections":
+	default:
+		return nil, apperr.BadRequest("排序字段无效")
+	}
 	if filter.Page < 1 {
 		filter.Page = 1
 	}

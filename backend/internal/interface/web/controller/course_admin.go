@@ -1,9 +1,7 @@
 package controller
 
 import (
-	"io"
 	"net/http"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -11,12 +9,6 @@ import (
 
 	"jcourse/internal/application"
 	"jcourse/internal/domain/course"
-	"jcourse/pkg/apperr"
-)
-
-const (
-	maxCourseArchiveUpload  = 64 << 20
-	maxCourseArchiveRequest = maxCourseArchiveUpload + (1 << 20)
 )
 
 type CourseAdminController struct {
@@ -48,41 +40,41 @@ func (ctrl *CourseAdminController) List(c *gin.Context) {
 		return
 	}
 	filter := course.ManagedOfferingFilter{
-		Semester: strings.TrimSpace(c.Query("semester")),
-		Query:    strings.TrimSpace(c.Query("q")),
-		Page:     page,
-		PageSize: pageSize,
+		Semester:   strings.TrimSpace(c.Query("semester")),
+		Code:       strings.TrimSpace(c.Query("code")),
+		Name:       strings.TrimSpace(c.Query("name")),
+		Teacher:    strings.TrimSpace(c.Query("teacher")),
+		Department: strings.TrimSpace(c.Query("department")),
+		LessonNo:   strings.TrimSpace(c.Query("lesson_no")),
+		Sort:       c.DefaultQuery("sort", "code"),
+		Desc:       c.Query("direction") == "desc",
+		Page:       page,
+		PageSize:   pageSize,
+	}
+	for _, bound := range []struct {
+		key    string
+		target **int
+	}{
+		{"min_sections", &filter.MinSections}, {"max_sections", &filter.MaxSections},
+	} {
+		if raw := c.Query(bound.key); raw != "" {
+			value, parseErr := strconv.Atoi(raw)
+			if parseErr != nil {
+				respondBadRequest(c, "教学班数量必须是整数")
+				return
+			}
+			*bound.target = &value
+		}
+	}
+	if direction := c.Query("direction"); direction != "" && direction != "asc" && direction != "desc" {
+		respondBadRequest(c, "排序方向无效")
+		return
 	}
 	if filter.Semester == "" {
 		respondBadRequest(c, "请先选择学期")
 		return
 	}
 	result, err := ctrl.service.List(c.Request.Context(), filter)
-	if err != nil {
-		respondError(c, err)
-		return
-	}
-	c.JSON(http.StatusOK, result)
-}
-
-func (ctrl *CourseAdminController) ImportArchive(c *gin.Context) {
-	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxCourseArchiveRequest)
-	file, header, err := c.Request.FormFile("file")
-	if err != nil {
-		respondBadRequest(c, "请上传包含 semester.json 和 report.json 的 ZIP 文件")
-		return
-	}
-	defer file.Close()
-	if !strings.EqualFold(filepath.Ext(header.Filename), ".zip") {
-		respondBadRequest(c, "课程数据文件必须是 ZIP")
-		return
-	}
-	archive, err := io.ReadAll(io.LimitReader(file, maxCourseArchiveUpload+1))
-	if err != nil || len(archive) > maxCourseArchiveUpload {
-		respondError(c, apperr.BadRequest("课程数据 ZIP 不能超过 64 MiB"))
-		return
-	}
-	result, err := ctrl.service.ImportArchive(c.Request.Context(), archive)
 	if err != nil {
 		respondError(c, err)
 		return

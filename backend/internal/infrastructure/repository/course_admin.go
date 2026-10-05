@@ -38,13 +38,50 @@ func (r *CourseRepository) ListManagedOfferings(ctx context.Context, filter cour
 	db := r.db.WithContext(ctx).Table("offered_courses AS oc").
 		Joins("JOIN courses AS c ON c.id = oc.course_id").
 		Where("oc.semester = ?", filter.Semester)
-	if query := strings.TrimSpace(filter.Query); query != "" {
-		like := "%" + query + "%"
-		db = db.Where(`(c.code ILIKE ? OR EXISTS (
-			SELECT 1 FROM course_sections cs
-			WHERE cs.offered_course_id = oc.id
-			  AND (cs.course_name ILIKE ? OR cs.lesson_no ILIKE ? OR cs.teach_class ILIKE ?)
-		))`, like, like, like, like)
+	// Treat wildcard characters as literal text; column filters combine with AND.
+	like := func(value string) string {
+		return "%" + strings.NewReplacer(`\`, `\\`, "%", `\%`, "_", `\_`).Replace(strings.TrimSpace(value)) + "%"
+	}
+	if strings.TrimSpace(filter.Code) != "" {
+		db = db.Where("c.code ILIKE ?", like(filter.Code))
+	}
+	sections := r.db.Table("course_sections AS cs").Select("1").Where("cs.offered_course_id = oc.id")
+	filtered := false
+	for _, field := range []struct{ column, value string }{
+		{"cs.course_name", filter.Name}, {"cs.department", filter.Department}, {"cs.lesson_no", filter.LessonNo},
+	} {
+		if strings.TrimSpace(field.value) != "" {
+			sections = sections.Where(field.column+" ILIKE ?", like(field.value))
+			filtered = true
+		}
+	}
+	if strings.TrimSpace(filter.Teacher) != "" {
+		sections = sections.Where("EXISTS (SELECT 1 FROM teachers t WHERE t.id = cs.teacher_ids[1] AND t.name ILIKE ?)", like(filter.Teacher))
+		filtered = true
+	}
+	if filtered {
+		db = db.Where("EXISTS (?)", sections)
+	}
+	sectionCount := "(SELECT COUNT(*) FROM course_sections cs WHERE cs.offered_course_id = oc.id)"
+	if filter.MinSections != nil {
+		db = db.Where(sectionCount+" >= ?", *filter.MinSections)
+	}
+	if filter.MaxSections != nil {
+		db = db.Where(sectionCount+" <= ?", *filter.MaxSections)
+	}
+	sortColumn := map[string]string{
+		"code":       "c.code",
+		"name":       "(SELECT cs.course_name FROM course_sections cs WHERE cs.offered_course_id = oc.id ORDER BY cs.id LIMIT 1)",
+		"department": "(SELECT cs.department FROM course_sections cs WHERE cs.offered_course_id = oc.id ORDER BY cs.id LIMIT 1)",
+		"teacher":    "(SELECT t.name FROM course_sections cs JOIN teachers t ON t.id = cs.teacher_ids[1] WHERE cs.offered_course_id = oc.id ORDER BY cs.id LIMIT 1)",
+		"sections":   sectionCount,
+	}[filter.Sort]
+	if sortColumn == "" {
+		sortColumn = "c.code"
+	}
+	direction := " ASC"
+	if filter.Desc {
+		direction = " DESC"
 	}
 	var total int64
 	if err := db.Count(&total).Error; err != nil {
@@ -58,7 +95,7 @@ func (r *CourseRepository) ListManagedOfferings(ctx context.Context, filter cour
 	}
 	var rows []managedOfferingRow
 	err := db.Select("oc.id, oc.course_id, oc.semester, oc.language, oc.target_years, oc.categories, c.code").
-		Order("c.code ASC, oc.id ASC").
+		Order(sortColumn + direction + " NULLS LAST, oc.id ASC").
 		Offset((filter.Page - 1) * filter.PageSize).Limit(filter.PageSize).Scan(&rows).Error
 	if err != nil {
 		return nil, 0, err

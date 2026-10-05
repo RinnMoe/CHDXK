@@ -54,10 +54,18 @@ type ManagedOffering struct {
 }
 
 type ManagedOfferingFilter struct {
-	Semester string
-	Query    string
-	Page     int
-	PageSize int
+	Semester    string
+	Code        string
+	Name        string
+	Teacher     string
+	Department  string
+	LessonNo    string
+	MinSections *int
+	MaxSections *int
+	Sort        string
+	Desc        bool
+	Page        int
+	PageSize    int
 }
 
 type CourseDataRepository interface {
