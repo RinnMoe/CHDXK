@@ -2710,6 +2710,11 @@
     "audience": "user",
     "location": "components/auth/login-form.tsx"
   },
+  "copy.user.components.auth.user-menu.0d0e1a86b3aa": {
+    "text": "用户",
+    "audience": "user",
+    "location": "components/auth/user-menu.tsx"
+  },
   "copy.user.components.auth.user-menu.10939f548645": {
     "text": "积分",
     "audience": "user",
@@ -2745,8 +2750,18 @@
     "audience": "user",
     "location": "components/auth/user-menu.tsx"
   },
+  "copy.user.components.auth.user-menu.e19796712f1c": {
+    "text": "管理员",
+    "audience": "user",
+    "location": "components/auth/user-menu.tsx"
+  },
   "copy.user.components.auth.user-menu.e80149e50579": {
     "text": "我的课程",
+    "audience": "user",
+    "location": "components/auth/user-menu.tsx"
+  },
+  "copy.user.components.auth.user-menu.f6a2faaac200": {
+    "text": "普通用户",
     "audience": "user",
     "location": "components/auth/user-menu.tsx"
   },

@@ -3,6 +3,7 @@ import { useState } from "react"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { RiUserLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,10 +58,26 @@ export function UserMenu() {
             </span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-            {copy("copy.user.components.auth.user-menu.502e21b8a914")}
-            {user.id}
+        <DropdownMenuContent
+          align="end"
+          className="w-56 max-w-[calc(100vw-2rem)]"
+        >
+          <DropdownMenuLabel className="space-y-1.5 font-normal">
+            <div className="flex items-start justify-between gap-3">
+              <p className="min-w-0 flex-1 text-sm font-medium wrap-anywhere text-foreground">
+                {user.username.trim() ||
+                  copy("copy.user.components.auth.user-menu.0d0e1a86b3aa")}
+              </p>
+              <Badge variant="secondary" className="shrink-0 text-xs">
+                {user.is_admin()
+                  ? copy("copy.user.components.auth.user-menu.e19796712f1c")
+                  : copy("copy.user.components.auth.user-menu.f6a2faaac200")}
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {copy("copy.user.components.auth.user-menu.502e21b8a914")}
+              {user.id}
+            </p>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
