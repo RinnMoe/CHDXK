@@ -1,7 +1,8 @@
 import { copy } from "@/lib/copy"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { invalidateCourseDataQueries } from "@/hooks/use-admin-course"
 import { apiClient } from "@/api/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -60,6 +61,16 @@ export function CourseSyncPanel() {
     retry: false,
   })
   const status = query.data
+  const refreshed = useRef("")
+  const savedCount = status?.results.length ?? 0
+  const statusID = status?.id
+  useEffect(() => {
+    if (!statusID || savedCount === 0) return
+    const marker = `${statusID}:${savedCount}`
+    if (refreshed.current === marker) return
+    refreshed.current = marker
+    void invalidateCourseDataQueries(client)
+  }, [client, statusID, savedCount])
   const selected =
     status?.semesters.filter((semester) => !excluded.includes(semester)) ?? []
   async function action(kind: "start" | "run" | "cancel") {
@@ -90,9 +101,6 @@ export function CourseSyncPanel() {
   }
   return (
     <section className="space-y-4">
-      <h3 className="text-lg font-medium">
-        {copy("copy.admin.components.admin.course-sync-panel.14181a46a0c6")}
-      </h3>
       <p className="text-sm text-muted-foreground">
         {copy("copy.admin.components.admin.course-sync-panel.2cda2b1766b5")}
       </p>

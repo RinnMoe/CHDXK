@@ -9,7 +9,7 @@ import {
   type SaveManagedCourseOffering,
 } from "@/api/admin-course"
 
-async function invalidateCourseDataQueries(
+export async function invalidateCourseDataQueries(
   queryClient: ReturnType<typeof useQueryClient>
 ) {
   const queryKeys = [

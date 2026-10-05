@@ -20,6 +20,7 @@ import {
   ManagedCourseTableHeader,
   ManagedCoursePagination,
 } from "./course-management-table-header"
+import { CourseSyncPanel } from "./course-sync-panel"
 import { Field, OfferingDialog } from "./course-offering-dialog"
 
 export function CourseManagementTab() {
@@ -150,6 +151,13 @@ export function CourseManagementTab() {
           </Button>
         </div>
       </div>
+
+      <details className="rounded-lg border p-4" data-section="course-sync">
+        <summary className="cursor-pointer font-medium">从教务同步课程</summary>
+        <div className="mt-4">
+          <CourseSyncPanel />
+        </div>
+      </details>
 
       <div className="flex flex-wrap items-end gap-3">
         <Field

@@ -52,7 +52,6 @@ export type UserAdminSearch = {
     | "site-copy"
     | "content-pages"
     | "appearance"
-    | "course-sync"
     | "announcement"
     | "audit-log"
     | "course-data"
@@ -161,7 +160,6 @@ export function validateUserAdminSearch(search: SearchRecord): UserAdminSearch {
       "site-copy",
       "content-pages",
       "appearance",
-      "course-sync",
       "announcement",
       "audit-log",
       "course-data",
