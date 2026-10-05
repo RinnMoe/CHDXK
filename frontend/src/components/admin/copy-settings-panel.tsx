@@ -1,4 +1,4 @@
-import { copy, copyDirectory } from "@/lib/copy"
+import { copy } from "@/lib/copy"
 import { useState } from "react"
 import {
   useAdminSystemSettings,
@@ -21,6 +21,8 @@ function CopyEditor({ setting }: { setting: SystemSettingDTO }) {
     try {
       await mutation.mutateAsync({ key: setting.key, cmd: { value } })
       setDraft(null)
+      if (setting.key === "copy.user.config.brand.743e9916a4b2")
+        window.location.reload()
     } catch (err) {
       setError(getErrorMessage(err))
     }
@@ -31,7 +33,6 @@ function CopyEditor({ setting }: { setting: SystemSettingDTO }) {
         {setting.label ||
           copy("copy.admin.components.admin.copy-settings-panel.215bee80e894")}
       </Label>
-      <p className="text-sm text-muted-foreground">{setting.description}</p>
       <Textarea
         id={`copy-${setting.key}`}
         value={value}
@@ -66,10 +67,6 @@ function CopyEditor({ setting }: { setting: SystemSettingDTO }) {
           {error}
         </p>
       )}
-      <details className="text-xs text-muted-foreground">
-        <summary className="cursor-pointer break-all">{setting.key}</summary>
-        <p className="mt-2 break-all">{copyDirectory[setting.key]?.location}</p>
-      </details>
     </article>
   )
 }
@@ -121,11 +118,62 @@ export function CopySettingsPanel() {
         </p>
       ) : (
         <div className="space-y-3">
-          {settings.map((setting) => (
-            <CopyEditor key={setting.key} setting={setting} />
-          ))}
+          {copyGroups.map((group) => {
+            const items = settings
+              .filter(group.matches)
+              .sort((a, b) =>
+                a.key.includes("config.brand")
+                  ? -1
+                  : b.key.includes("config.brand")
+                    ? 1
+                    : a.label.localeCompare(b.label)
+              )
+            return items.length ? (
+              <section key={group.title} className="space-y-3">
+                <h3 className="font-medium">{group.title}</h3>
+                <p className="text-sm text-muted-foreground">{group.impact}</p>
+                {items.map((setting) => (
+                  <CopyEditor key={setting.key} setting={setting} />
+                ))}
+              </section>
+            ) : null
+          })}
         </div>
       )}
     </section>
   )
 }
+
+const copyGroups = [
+  {
+    title: copy("copy.admin.components.admin.copy-settings-panel.92ad14acbea2"),
+    impact: copy(
+      "copy.admin.components.admin.copy-settings-panel.4203beaa87a6"
+    ),
+    matches: (item: SystemSettingDTO) =>
+      item.key.includes("config.brand") ||
+      item.key.startsWith("copy.brand.") ||
+      item.key.startsWith("copy.pwa."),
+  },
+  {
+    title: copy("copy.admin.components.admin.copy-settings-panel.94ffe9687e66"),
+    impact: copy(
+      "copy.admin.components.admin.copy-settings-panel.44b1d8d102b1"
+    ),
+    matches: (item: SystemSettingDTO) => item.key.includes("auth.login-form"),
+  },
+  {
+    title: copy("copy.admin.components.admin.copy-settings-panel.ce7ce316bb6a"),
+    impact: copy(
+      "copy.admin.components.admin.copy-settings-panel.d59765ed6626"
+    ),
+    matches: (item: SystemSettingDTO) => item.key.includes("hot-courses-page"),
+  },
+  {
+    title: copy("copy.admin.components.admin.copy-settings-panel.6b0fa56f4d76"),
+    impact: copy(
+      "copy.admin.components.admin.copy-settings-panel.f444cbeba761"
+    ),
+    matches: (item: SystemSettingDTO) => item.key.startsWith("copy.email."),
+  },
+]

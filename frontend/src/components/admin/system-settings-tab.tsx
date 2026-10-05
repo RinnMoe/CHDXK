@@ -9,7 +9,6 @@ import {
 } from "@/hooks/use-system-settings"
 import { getErrorMessage } from "./admin-utils"
 import { SystemSettingRow } from "./system-settings/system-setting-row"
-import { CopySettingsPanel } from "./copy-settings-panel"
 
 type DraftMap = Record<string, string>
 type ErrorMap = Record<string, string>
@@ -37,7 +36,10 @@ export function SystemSettingsTab() {
 
   const groups = useMemo(() => {
     const items = (settingsQuery.data ?? []).filter(
-      (setting) => !setting.key.startsWith("copy.")
+      (setting) =>
+        !setting.key.startsWith("copy.") &&
+        !setting.key.startsWith("theme.") &&
+        !setting.key.startsWith("content.")
     )
     return items.reduce<Record<string, SystemSettingDTO[]>>((acc, item) => {
       const group = item.group || "other"
@@ -92,7 +94,7 @@ export function SystemSettingsTab() {
   return (
     <section className="space-y-4">
       <h2 className="text-lg font-medium">
-        {copy("copy.admin.components.admin.system-settings-tab.68ea5dd4d7af")}
+        {copy("copy.admin.components.admin.system-settings-tab.d9671a0813d2")}
       </h2>
 
       <TooltipProvider>
@@ -132,7 +134,6 @@ export function SystemSettingsTab() {
           ))}
         </div>
       </TooltipProvider>
-      <CopySettingsPanel />
     </section>
   )
 }

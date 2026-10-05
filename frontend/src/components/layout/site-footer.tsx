@@ -1,19 +1,13 @@
 import { copy } from "@/lib/copy"
 import { Link } from "@tanstack/react-router"
 import { brand } from "@/config/brand"
-
-const footerLinks = [
-  {
-    to: "/about",
-    label: copy("copy.user.components.layout.site-footer.52d25a9e30ba"),
-  },
-  {
-    to: "/faq",
-    label: copy("copy.user.components.layout.site-footer.45a6d115fdfb"),
-  },
-]
+import { useSitePages } from "@/api/site-pages"
 
 export function SiteFooter() {
+  const pages = useSitePages()
+  const footerLinks = (pages.data ?? [])
+    .filter((page) => page.footer)
+    .map((page) => ({ to: `/p/${page.slug}`, label: page.title }))
   const year = new Date().getFullYear()
 
   return (

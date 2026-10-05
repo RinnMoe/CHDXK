@@ -61,7 +61,6 @@ export function SystemSettingRow({
         {setting.description && (
           <p className="text-sm text-muted-foreground">{setting.description}</p>
         )}
-        <p className="text-xs break-all text-muted-foreground">{setting.key}</p>
       </div>
 
       <div className="min-w-0 space-y-1">

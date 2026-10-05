@@ -49,6 +49,10 @@ export type UserAdminSearch = {
   tab?:
     | "system-api-key"
     | "system-settings"
+    | "site-copy"
+    | "content-pages"
+    | "appearance"
+    | "course-sync"
     | "announcement"
     | "audit-log"
     | "course-data"
@@ -154,6 +158,10 @@ export function validateUserAdminSearch(search: SearchRecord): UserAdminSearch {
     tab: enumParam(search.tab, [
       "system-api-key",
       "system-settings",
+      "site-copy",
+      "content-pages",
+      "appearance",
+      "course-sync",
       "announcement",
       "audit-log",
       "course-data",

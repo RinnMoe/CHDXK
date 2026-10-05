@@ -10,10 +10,19 @@ import (
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/review/policy"
 	"jcourse/internal/domain/setting"
+	"jcourse/pkg/sitepages"
 )
 
 func newSystemSettingsService(repo setting.SystemRepository, courseRepo course.CourseRepository) *setting.SystemSettingsService {
 	defs := []setting.Definition{
+		{Key: sitepages.Key, Group: "content", Label: "内容页面", Type: setting.ValueTypeString, DefaultValue: sitepages.Defaults, PreserveWhitespace: true,
+			Validator: setting.ValueValidatorFunc(func(_ context.Context, value string) error {
+				_, err := sitepages.Parse(value)
+				if err != nil {
+					return setting.ErrInvalidSystemSettingValue
+				}
+				return nil
+			})},
 		{
 			Key:          setting.SystemSettingKeyCurrentSemester,
 			Group:        "course",

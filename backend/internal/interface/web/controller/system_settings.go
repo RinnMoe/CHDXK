@@ -36,6 +36,15 @@ func (ctrl *SystemSettingsController) Copy(c *gin.Context) {
 	c.JSON(http.StatusOK, values)
 }
 
+func (ctrl *SystemSettingsController) Pages(c *gin.Context) {
+	pages, err := ctrl.query.Pages(c.Request.Context())
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, pages)
+}
+
 func (ctrl *SystemSettingsController) Manifest(c *gin.Context) {
 	values, err := ctrl.query.PublicCopy(c.Request.Context())
 	if err != nil {

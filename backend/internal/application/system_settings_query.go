@@ -6,10 +6,29 @@ import (
 
 	"jcourse/internal/domain/setting"
 	"jcourse/pkg/sitecopy"
+	"jcourse/pkg/sitepages"
 )
 
 type SystemSettingsQueryService struct {
 	settings *setting.SystemSettingsService
+}
+
+func (s *SystemSettingsQueryService) Pages(ctx context.Context) ([]sitepages.Page, error) {
+	snapshot, err := s.settings.Snapshot(ctx)
+	if err != nil {
+		return nil, err
+	}
+	pages, err := sitepages.Parse(snapshot.String(sitepages.Key))
+	if err != nil {
+		return nil, err
+	}
+	result := make([]sitepages.Page, 0, len(pages))
+	for _, page := range pages {
+		if page.Published {
+			result = append(result, page)
+		}
+	}
+	return result, nil
 }
 
 func NewSystemSettingsQueryService(settings *setting.SystemSettingsService) *SystemSettingsQueryService {

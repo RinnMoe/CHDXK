@@ -119,20 +119,29 @@ export const loginRoute = createRoute({
   path: "/login",
   validateSearch: validateLoginSearch,
   beforeLoad: redirectAuthedUser,
-  component: lazyRouteComponent(() => import("@/pages/login-page"), "LoginPage"),
+  component: lazyRouteComponent(
+    () => import("@/pages/login-page"),
+    "LoginPage"
+  ),
 })
 
 export const coursesRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/course",
   validateSearch: validateCourseListSearch,
-  component: lazyRouteComponent(() => import("@/pages/courses-page"), "CoursesPage"),
+  component: lazyRouteComponent(
+    () => import("@/pages/courses-page"),
+    "CoursesPage"
+  ),
 })
 
 export const hotCoursesRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/course/hot",
-  component: lazyRouteComponent(() => import("@/pages/hot-courses-page"), "HotCoursesPage"),
+  component: lazyRouteComponent(
+    () => import("@/pages/hot-courses-page"),
+    "HotCoursesPage"
+  ),
 })
 
 export const courseDetailRoute = createRoute({
@@ -280,7 +289,7 @@ export const siteStatsRoute = createRoute({
 })
 
 export const aboutRoute = createRoute({
-  getParentRoute: () => appRoute,
+  getParentRoute: () => publicRoute,
   path: "/about",
   component: lazyRouteComponent(
     () => import("@/pages/about-page"),
@@ -289,7 +298,7 @@ export const aboutRoute = createRoute({
 })
 
 export const faqRoute = createRoute({
-  getParentRoute: () => appRoute,
+  getParentRoute: () => publicRoute,
   path: "/faq",
   component: lazyRouteComponent(() => import("@/pages/faq-page"), "FaqPage"),
 })
@@ -302,6 +311,12 @@ const latestRedirectRoute = createRoute({
   },
 })
 
+export const sitePageRoute = createRoute({
+  getParentRoute: () => publicRoute,
+  path: "/p/$slug",
+  component: lazyRouteComponent(() => import("@/pages/site-page"), "SitePage"),
+})
+
 const notFoundRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "$",
@@ -312,9 +327,7 @@ const notFoundRoute = createRoute({
 })
 
 const routeTree = rootRoute.addChildren([
-  publicRoute.addChildren([
-    loginRoute,
-  ]),
+  publicRoute.addChildren([loginRoute, aboutRoute, faqRoute, sitePageRoute]),
   appRoute.addChildren([
     homeRoute,
     coursesRoute,
@@ -334,8 +347,6 @@ const routeTree = rootRoute.addChildren([
     userSettingsRoute,
     userAdminRoute,
     siteStatsRoute,
-    aboutRoute,
-    faqRoute,
     latestRedirectRoute,
     notFoundRoute,
   ]),

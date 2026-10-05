@@ -1,4 +1,64 @@
 {
+  "copy.admin.components.admin.admin-navigation.014df7b8215a": {
+    "text": "开课记录",
+    "audience": "admin",
+    "location": "components/admin/admin-navigation-model.ts"
+  },
+  "copy.admin.components.admin.admin-navigation.11258110296f": {
+    "text": "站点配置",
+    "audience": "admin",
+    "location": "components/admin/admin-navigation-model.ts"
+  },
+  "copy.admin.components.admin.admin-navigation.12abdae1e423": {
+    "text": "页面文案",
+    "audience": "admin",
+    "location": "components/admin/admin-navigation-model.ts"
+  },
+  "copy.admin.components.admin.admin-navigation.41119ecad8a4": {
+    "text": "后台管理",
+    "audience": "admin",
+    "location": "components/admin/admin-navigation.tsx"
+  },
+  "copy.admin.components.admin.admin-navigation.491c5e8e43a5": {
+    "text": "接口密钥",
+    "audience": "admin",
+    "location": "components/admin/admin-navigation-model.ts"
+  },
+  "copy.admin.components.admin.admin-navigation.70a3c398dfd4": {
+    "text": "内容运营",
+    "audience": "admin",
+    "location": "components/admin/admin-navigation-model.ts"
+  },
+  "copy.admin.components.admin.admin-navigation.838aeb39d693": {
+    "text": "公告管理",
+    "audience": "admin",
+    "location": "components/admin/admin-navigation-model.ts"
+  },
+  "copy.admin.components.admin.admin-navigation.b2db0d03bb7d": {
+    "text": "操作记录",
+    "audience": "admin",
+    "location": "components/admin/admin-navigation-model.ts"
+  },
+  "copy.admin.components.admin.admin-navigation.d9671a0813d2": {
+    "text": "运营规则",
+    "audience": "admin",
+    "location": "components/admin/admin-navigation-model.ts"
+  },
+  "copy.admin.components.admin.admin-navigation.f52222e9c24c": {
+    "text": "内容页面",
+    "audience": "admin",
+    "location": "components/admin/admin-navigation-model.ts"
+  },
+  "copy.admin.components.admin.admin-navigation.f586ac06afb9": {
+    "text": "开发维护",
+    "audience": "admin",
+    "location": "components/admin/admin-navigation-model.ts"
+  },
+  "copy.admin.components.admin.admin-navigation.fea448341e76": {
+    "text": "课程数据",
+    "audience": "admin",
+    "location": "components/admin/admin-navigation-model.ts"
+  },
   "copy.admin.components.admin.admin-utils.126fbf59cf04": {
     "text": "请求失败",
     "audience": "admin",
@@ -314,6 +374,121 @@
     "audience": "technical",
     "location": "components/admin/audit-logs/date-filter-picker.tsx"
   },
+  "copy.admin.components.admin.content-pages-panel.0e8198de6be9": {
+    "text": "使用小写英文字母、数字和短横线，例如 links。访问地址为 /p/links。",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.110bf1de7a90": {
+    "text": " · 页脚入口",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.13d61fea9f17": {
+    "text": "预览",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.15ee890b39e9": {
+    "text": "整页维护关于、常见问题和友链等内容。未发布的页面仅在后台可见。",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.1d779d74e0b5": {
+    "text": "编辑整页",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.2a2fd29bd27a": {
+    "text": "草稿",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.2cd0f3be8738": {
+    "text": "取消",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.37b5c7a9b366": {
+    "text": "页面内容",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.4307781b7e6e": {
+    "text": "支持 Markdown 标题、列表和链接。可以用 ",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.4927a53bcc88": {
+    "text": "加载中…",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.51a821f2d9eb": {
+    "text": "新增页面",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.5c5a53a77586": {
+    "text": "发布页面",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.5ce2d4cc8539": {
+    "text": "页面标题",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.7439a91a2665": {
+    "text": "页面列表加载失败，请刷新重试。",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.87817c6cfc6d": {
+    "text": "保存页面",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.b21cf74664d4": {
+    "text": " 显示站点名称。",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.b899364faf74": {
+    "text": "/p/",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.cc38b219f83b": {
+    "text": "在页脚显示入口",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.d334724d6b2f": {
+    "text": "已发布",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.f52222e9c24c": {
+    "text": "内容页面",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.fd4b9e3b6c68": {
+    "text": "继续编辑",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.ff509c9ba052": {
+    "text": "保存中…",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
+  "copy.admin.components.admin.content-pages-panel.fff67cc3d883": {
+    "text": "页面地址",
+    "audience": "admin",
+    "location": "components/admin/content-pages-panel.tsx"
+  },
   "copy.admin.components.admin.copy-settings-panel.05e9d77d5fea": {
     "text": "文案加载失败，请刷新页面重试",
     "audience": "admin",
@@ -349,6 +524,21 @@
     "audience": "admin",
     "location": "components/admin/copy-settings-panel.tsx"
   },
+  "copy.admin.components.admin.copy-settings-panel.4203beaa87a6": {
+    "text": "站点名称用于导航、页脚、页面标题和应用安装名称；联系邮箱用于联系管理员；应用简介用于安装应用。",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.44b1d8d102b1": {
+    "text": "显示在登录页面的账号与积分说明。",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.6b0fa56f4d76": {
+    "text": "通知邮件",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
   "copy.admin.components.admin.copy-settings-panel.6fe1f12e3174": {
     "text": "修改站点介绍、登录说明、联系方式等常用文案，保存后刷新页面生效。按钮、状态提示和字段名称使用固定文案。",
     "audience": "admin",
@@ -361,6 +551,16 @@
   },
   "copy.admin.components.admin.copy-settings-panel.8a8542f69648": {
     "text": "下一页",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.92ad14acbea2": {
+    "text": "全站",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.94ffe9687e66": {
+    "text": "登录页",
     "audience": "admin",
     "location": "components/admin/copy-settings-panel.tsx"
   },
@@ -384,6 +584,16 @@
     "audience": "admin",
     "location": "components/admin/copy-settings-panel.tsx"
   },
+  "copy.admin.components.admin.copy-settings-panel.ce7ce316bb6a": {
+    "text": "热度榜",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.d59765ed6626": {
+    "text": "显示在课程热度榜与教师热度榜页面。",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
   "copy.admin.components.admin.copy-settings-panel.ddf1d1f75c40": {
     "text": "正在加载文案",
     "audience": "admin",
@@ -401,6 +611,11 @@
   },
   "copy.admin.components.admin.copy-settings-panel.f242c947972c": {
     "text": "恢复默认值",
+    "audience": "admin",
+    "location": "components/admin/copy-settings-panel.tsx"
+  },
+  "copy.admin.components.admin.copy-settings-panel.f444cbeba761": {
+    "text": "用于发送给管理员的异常点评提醒邮件。",
     "audience": "admin",
     "location": "components/admin/copy-settings-panel.tsx"
   },
@@ -814,6 +1029,11 @@
     "audience": "admin",
     "location": "components/admin/system-settings-tab.tsx"
   },
+  "copy.admin.components.admin.system-settings-tab.d9671a0813d2": {
+    "text": "运营规则",
+    "audience": "admin",
+    "location": "components/admin/system-settings-tab.tsx"
+  },
   "copy.admin.components.admin.system-settings.setting-control.522bedf98774": {
     "text": "选择学期",
     "audience": "admin",
@@ -946,6 +1166,11 @@
   },
   "copy.admin.pages.admin.user-admin-page.bb6d995724f4": {
     "text": "管理",
+    "audience": "admin",
+    "location": "pages/admin/user-admin-page.tsx"
+  },
+  "copy.admin.pages.admin.user-admin-page.de06f8bc069d": {
+    "text": "需要管理员身份才能进入后台。",
     "audience": "admin",
     "location": "pages/admin/user-admin-page.tsx"
   },
@@ -1648,6 +1873,11 @@
     "audience": "technical",
     "location": "pkg/apperr/apperr.go"
   },
+  "copy.server.f52222e9c24c": {
+    "text": "内容页面",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
   "copy.server.f539ea1b73ef": {
     "text": "report.json 格式无效",
     "audience": "user",
@@ -1726,9 +1956,7 @@
   "copy.user.components.about.about-content.0555414e3117": {
     "text": " 不展示你的频道账号或登录信息。请勿在点评中填写学号、联系方式或他人的个人信息。",
     "audience": "user",
-    "location": "components/about/about-content.tsx",
-    "editable": true,
-    "label": "个人信息保护提示"
+    "location": "components/about/about-content.tsx"
   },
   "copy.user.components.about.about-content.0949730fb040": {
     "text": " 的点评内容，也不评价内容的真实性。如果您上过某一门课程并认为网站上的点评与事实不符，欢迎提交您的意见，我们相信全面的信息会给大家最好的答案。",
@@ -1743,9 +1971,7 @@
   "copy.user.components.about.about-content.25f8c737e369": {
     "text": "为非官方网站，旨在让同学们了解课程的更多情况，不想也不能代替教务处的课程评教。",
     "audience": "user",
-    "location": "components/about/about-content.tsx",
-    "editable": true,
-    "label": "非官方说明"
+    "location": "components/about/about-content.tsx"
   },
   "copy.user.components.about.about-content.29725de3d959": {
     "text": " 的用户协议、站点说明和隐私说明。",
@@ -1765,16 +1991,12 @@
   "copy.user.components.about.about-content.53037c66add5": {
     "text": " 管理员负责维护课程与教师信息，处理重复发帖、不相关内容和违反社区规范的点评。",
     "audience": "user",
-    "location": "components/about/about-content.tsx",
-    "editable": true,
-    "label": "点评管理说明"
+    "location": "components/about/about-content.tsx"
   },
   "copy.user.components.about.about-content.5c3c998c13cc": {
     "text": " 为长安大学同学提供课程信息与选课经验交流。使用频道账号登录即可参与点评，课程信息来自本科教务系统。",
     "audience": "user",
-    "location": "components/about/about-content.tsx",
-    "editable": true,
-    "label": "站点介绍"
+    "location": "components/about/about-content.tsx"
   },
   "copy.user.components.about.about-content.84b13d2f7676": {
     "text": "在符合社区规范的情况下，我们不修改 ",
@@ -1789,16 +2011,12 @@
   "copy.user.components.about.about-content.86e835668ee2": {
     "text": "登录时，频道会提供你的昵称与账号身份，用于识别账号和判断管理权限。本站不会保存你的频道密码。",
     "audience": "user",
-    "location": "components/about/about-content.tsx",
-    "editable": true,
-    "label": "登录隐私说明"
+    "location": "components/about/about-content.tsx"
   },
   "copy.user.components.about.about-content.98d673965b4e": {
     "text": " 保存你发布的点评、投票和必要的操作记录，用于提供服务和处理违规内容。",
     "audience": "user",
-    "location": "components/about/about-content.tsx",
-    "editable": true,
-    "label": "内容保存说明"
+    "location": "components/about/about-content.tsx"
   },
   "copy.user.components.about.about-content.b4d4f455a802": {
     "text": "点评管理",
@@ -2006,6 +2224,21 @@
     "text": "我的课程",
     "audience": "user",
     "location": "components/auth/user-menu.tsx"
+  },
+  "copy.user.components.common.site-page-content.13300419ebf5": {
+    "text": "页面暂时无法加载，请稍后重试。",
+    "audience": "user",
+    "location": "components/common/site-page-content.tsx"
+  },
+  "copy.user.components.common.site-page-content.2edeec8c0777": {
+    "text": "页面未发布或不存在。",
+    "audience": "user",
+    "location": "components/common/site-page-content.tsx"
+  },
+  "copy.user.components.common.site-page-content.4927a53bcc88": {
+    "text": "加载中…",
+    "audience": "user",
+    "location": "components/common/site-page-content.tsx"
   },
   "copy.user.components.course.course-badges.b023876f7825": {
     "text": " 学分",
@@ -4087,6 +4320,11 @@
     "text": "搜索点评内容...",
     "audience": "user",
     "location": "pages/reviews-page.tsx"
+  },
+  "copy.user.pages.site-page.452c7b10d57a": {
+    "text": "页面",
+    "audience": "user",
+    "location": "pages/site-page.tsx"
   },
   "copy.user.pages.teacher-detail-page.0b104a19f59a": {
     "text": "开设课程",
