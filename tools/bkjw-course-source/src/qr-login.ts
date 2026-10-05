@@ -1,8 +1,22 @@
 import { randomBytes } from "node:crypto"
 import { parseHTML } from "linkedom"
-import type { APIRequestContext } from "playwright"
+import type { BrowserContext, Page } from "playwright"
 
 const CAS = "https://ids.chd.edu.cn"
+const SERVICE = "http://bkjw.chd.edu.cn/eams/login.action"
+const loginUrl = `${CAS}/authserver/login?service=${encodeURIComponent(SERVICE)}`
+
+export async function completeQrLogin(page: Page, callbackUrl: URL) {
+  // Run the callback as a browser navigation: CAS may return a form/script,
+  // and successful CAS authentication alone does not establish an EAMS session.
+  const callback = await page.goto(callbackUrl.href, {waitUntil: "load", timeout: 30000})
+  if (!callback?.ok()) throw new Error("QR_LOGIN_FAILED")
+  if ((await page.content()).includes("首次使用微信联合登录")) throw new Error("WECHAT_UNBOUND")
+  if (new URL(page.url()).hostname !== "bkjw.chd.edu.cn") {
+    await page.goto(loginUrl, {waitUntil: "load", timeout: 30000})
+  }
+  if (new URL(page.url()).hostname !== "bkjw.chd.edu.cn") throw new Error("AUTH_REQUIRED")
+}
 function htmlDecode(value: string) {
   return value.replace(/&(?:[a-z]+|#\d+|#x[a-f\d]+);/gi, (entity) => parseHTML(`<html><body>${entity}</body></html>`).document.body.textContent ?? entity)
 }
@@ -21,8 +35,9 @@ export function parseWechatPage(html: string, url: string) {
   return {uuid, state, callbackUrl, imageUrl}
 }
 
-export async function qrLogin(request: APIRequestContext, emit: (event: object) => void, signal: AbortSignal) {
-  const login = await request.get(`${CAS}/authserver/login?service=${encodeURIComponent("http://bkjw.chd.edu.cn/eams/login.action")}`)
+export async function qrLogin(context: BrowserContext, emit: (event: object) => void, signal: AbortSignal) {
+  const request = context.request
+  const login = await request.get(loginUrl)
   const iframe = parseHTML(await login.text()).document.querySelector("iframe#iframe, section.auth-qroce iframe, iframe")?.getAttribute("src")
   if (!iframe) throw new Error("QR_ENTRY_CHANGED")
   const iframeUrl = new URL(iframe, CAS)
@@ -56,8 +71,9 @@ export async function qrLogin(request: APIRequestContext, emit: (event: object) 
     last = /window\.wx_errcode\s*=\s*(\d+)/.exec(text)?.[1] ?? last
     if (code) {
       qr.callbackUrl.searchParams.set("code", code)
-      const result = await request.get(qr.callbackUrl.href)
-      if ((await result.text()).includes("首次使用微信联合登录")) throw new Error("WECHAT_UNBOUND")
+      const page = await context.newPage()
+      try { await completeQrLogin(page, qr.callbackUrl) }
+      finally { await page.close() }
       return
     }
     if (last === "404") emit({type: "scanned"})

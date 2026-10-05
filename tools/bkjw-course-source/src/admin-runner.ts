@@ -2,11 +2,12 @@ import { createInterface } from "node:readline"
 import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 import { join, resolve } from "node:path"
-import { chromium, request } from "playwright"
+import { chromium } from "playwright"
 import { BkjwClient } from "./client.js"
 import { fetchSemester } from "./orchestrator.js"
 import { semesterDirectory } from "./storage.js"
 import { qrLogin } from "./qr-login.js"
+import { BkjwError } from "./types.js"
 
 const emit = (event: object) => process.stdout.write(`${JSON.stringify(event)}\n`)
 const abort = new AbortController()
@@ -23,22 +24,25 @@ input.on("line", (line) => {
 input.on("close", () => { abort.abort(); choose?.([]) })
 process.on("SIGTERM", () => { abort.abort(); choose?.([]) })
 
-const api = await request.newContext({timeout: 20000})
 let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined
 let output: string | undefined
+let stage = "BROWSER_START_FAILED"
 try {
   browser = await chromium.launch({headless: true})
-  await qrLogin(api, emit, abort.signal)
+  const context = await browser.newContext({locale: "zh-CN"})
+  stage = "QR_LOGIN_FAILED"
+  await qrLogin(context, emit, abort.signal)
   if (abort.signal.aborted) throw new Error("CANCELLED")
-  const context = await browser.newContext({storageState: await api.storageState(), locale: "zh-CN"})
   const client = new BkjwClient(context)
   const page = await client.newPage()
+  stage = "SEMESTER_DISCOVERY_FAILED"
   const semesters = await client.discoverSemesters(page)
   await client.closePage(page)
   emit({type: "ready", semesters: semesters.map((item) => item.normalized)})
   const selected = await selection
   if (abort.signal.aborted) throw new Error("CANCELLED")
   const runtimeRoot = resolve(fileURLToPath(new URL("../../../.local/course-sync/", import.meta.url)))
+  stage = "COURSE_COLLECTION_FAILED"
   await mkdir(runtimeRoot, {recursive: true})
   output = await mkdtemp(join(runtimeRoot, "run-"))
   for (const semester of selected) {
@@ -54,13 +58,13 @@ try {
   }
   emit({type: "done"})
 } catch (error) {
-  const code = error instanceof Error ? error.message : "UNKNOWN"
+  const code = error instanceof BkjwError ? error.code : error instanceof Error ? error.message : "UNKNOWN"
   const known = ["QR_PAGE_CHANGED", "QR_ENTRY_CHANGED", "QR_CALLBACK_INVALID", "QR_IMAGE_INVALID", "QR_ENTRY_INVALID", "QR_IMAGE_UNAVAILABLE", "QR_EXPIRED", "WECHAT_UNBOUND", "CANCELLED"]
   // Never expose redirected URLs, codes, cookies, or collector internals in events.
-  emit({type: "error", error: known.includes(code) ? code : "SOURCE_UNAVAILABLE"})
+  const policyCodes = ["QR_LOGIN_FAILED", "AUTH_REQUIRED", "PAGE_STRUCTURE", "PERMISSION_DENIED"]
+  emit({type: "error", error: [...known, ...policyCodes].includes(code) ? code : stage})
 } finally {
   await browser?.close()
-  await api.dispose()
   if (output) await rm(output, {recursive: true, force: true})
   input.close()
 }

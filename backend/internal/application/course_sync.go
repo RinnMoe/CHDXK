@@ -244,6 +244,18 @@ func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSess
 				if event.Error == "WECHAT_UNBOUND" {
 					message = "请先在学校统一登录页面绑定微信，再重新连接"
 				}
+				if event.Error == "QR_LOGIN_FAILED" {
+					message = "扫码登录未完成，请重新连接并在手机上确认登录"
+				}
+				if event.Error == "AUTH_REQUIRED" {
+					message = "学校登录已确认，但未能进入本科教务系统，请重新连接"
+				}
+				if event.Error == "SEMESTER_DISCOVERY_FAILED" || event.Error == "PAGE_STRUCTURE" {
+					message = "未能读取教务学期列表，请稍后重新连接；如持续失败，请联系技术管理员"
+				}
+				if event.Error == "PERMISSION_DENIED" {
+					message = "当前学校账号无权访问全校开课查询，请使用有访问权限的账号重新连接"
+				}
 				s.fail(session, message)
 				return
 			}

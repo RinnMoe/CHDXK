@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"jcourse/internal/domain/course"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -48,6 +49,29 @@ func syncFixture() (*CourseSyncService, *testSourceConnection) {
 		return &CourseImportResult{Semester: testSemester, CourseCount: 1}, nil
 	}}
 	return s, c
+}
+
+func TestCourseSyncLoginErrorsClearQRAndAllowReconnect(t *testing.T) {
+	for _, code := range []string{"QR_LOGIN_FAILED", "AUTH_REQUIRED", "PAGE_STRUCTURE", "SEMESTER_DISCOVERY_FAILED", "PERMISSION_DENIED", "https://example.test/?code=secret"} {
+		t.Run(code, func(t *testing.T) {
+			s, c := syncFixture()
+			status, err := s.Start(1)
+			if err != nil {
+				t.Fatal(err)
+			}
+			c.events <- course.SourceEvent{Type: "qr", QR: "data:image/png;base64,test"}
+			c.events <- course.SourceEvent{Type: "error", Error: code}
+			failed := waitSync(t, s, status.ID, "failed")
+			if failed.QR != "" || failed.Message == "" || strings.Contains(failed.Message, "secret") {
+				t.Fatalf("unsafe failure status: %+v", failed)
+			}
+			retry, err := s.Start(1)
+			if err != nil {
+				t.Fatalf("cannot reconnect after login failure: %v", err)
+			}
+			defer s.Cancel(1, retry.ID)
+		})
+	}
 }
 func TestCourseSyncOwnershipAndSelection(t *testing.T) {
 	s, c := syncFixture()
