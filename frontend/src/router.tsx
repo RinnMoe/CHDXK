@@ -125,6 +125,23 @@ export const loginRoute = createRoute({
   ),
 })
 
+const bootstrapLoginRoute = createRoute({
+  getParentRoute: () => publicRoute,
+  path: "/bootstrap-login",
+  component: lazyRouteComponent(
+    () => import("@/pages/account-login-page"),
+    "BootstrapLoginPage"
+  ),
+})
+const loginAccountsRoute = createRoute({
+  getParentRoute: () => publicRoute,
+  path: "/login/accounts",
+  component: lazyRouteComponent(
+    () => import("@/pages/account-login-page"),
+    "LoginAccountsPage"
+  ),
+})
+
 export const coursesRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/course",
@@ -327,7 +344,14 @@ const notFoundRoute = createRoute({
 })
 
 const routeTree = rootRoute.addChildren([
-  publicRoute.addChildren([loginRoute, aboutRoute, faqRoute, sitePageRoute]),
+  publicRoute.addChildren([
+    bootstrapLoginRoute,
+    loginAccountsRoute,
+    loginRoute,
+    aboutRoute,
+    faqRoute,
+    sitePageRoute,
+  ]),
   appRoute.addChildren([
     homeRoute,
     coursesRoute,

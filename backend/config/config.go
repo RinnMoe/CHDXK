@@ -22,6 +22,9 @@ import (
 )
 
 type AppConfig struct {
+	Bootstrap struct {
+		PublicURL string `mapstructure:"public_url"`
+	} `mapstructure:"bootstrap"`
 	CourseSource bkjw.Config                `mapstructure:"course_source"`
 	Server       ServerConfig               `mapstructure:"server"`
 	Postgres     persistence.PostgresConfig `mapstructure:"postgres"`
@@ -138,6 +141,7 @@ func Load(configPath string) (AppConfig, error) {
 }
 
 func setDefaults(v *viper.Viper) {
+	v.SetDefault("bootstrap.public_url", "http://localhost:8080")
 	setSectionDefaults(v, "course_source", map[string]any{"enabled": false, "node": "node", "runner": "", "browser_path": ""})
 	setSectionDefaults(v, "server", map[string]any{
 		"addr":  ":8080",

@@ -12,6 +12,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"jcourse/internal/domain/auth"
+	"jcourse/internal/domain/point"
 )
 
 type UserIdentityRepository struct {
@@ -120,6 +121,23 @@ func (r *UserIdentityRepository) SubjectByUserID(ctx context.Context, userID int
 	if userID <= 0 {
 		return "", auth.ErrIdentityNotFound
 	}
+	if userID == 1 {
+		var binding BootstrapAccountEntity
+		result := r.db.WithContext(ctx).Where("user_id=1").Find(&binding)
+		if result.Error != nil {
+			return "", result.Error
+		}
+		if result.RowsAffected > 0 {
+			if binding.Subject == "" || !binding.HasPointsAccount {
+				return "", point.ErrNoPointAccount
+			}
+			if binding.Issuer != r.issuer {
+				return "", auth.ErrIdentityNotFound
+			}
+			return binding.Subject, nil
+		}
+	}
+
 	var identity UserIdentityEntity
 	if err := r.db.WithContext(ctx).Where("issuer = ? AND user_id = ?", r.issuer, userID).Take(&identity).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

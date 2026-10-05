@@ -211,6 +211,7 @@ func (UserPointRecordEntity) TableName() string {
 }
 
 type PointRewardEntity struct {
+	ExternalSubject     string
 	ID                  int        `gorm:"column:id"`
 	UserID              int        `gorm:"column:user_id;index"`
 	Reason              string     `gorm:"column:reason;uniqueIndex:uniq_point_rewards_reason_source"`

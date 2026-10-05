@@ -26,7 +26,7 @@ func ResolveCurrentUser(authResolution *application.AuthResolutionService) gin.H
 			return
 		}
 
-		resolved, err := authResolution.Resolve(c.Request.Context(), bearerToken(c), OIDCAccessToken(c))
+		resolved, err := authResolution.ResolveAccount(c.Request.Context(), bearerToken(c), OIDCAccessToken(c), BootstrapSession(c))
 		if err != nil {
 			if errors.Is(err, auth.ErrResHubSession) {
 				_ = ClearSession(c)
@@ -61,7 +61,7 @@ func ResolveCurrentUser(authResolution *application.AuthResolutionService) gin.H
 }
 
 func isPublicOIDCRoute(path string) bool {
-	return path == "/api/auth/oidc/start" || path == "/api/auth/oidc/callback" || path == "/api/site-copy" || path == "/api/site-theme" || path == "/api/site-pages" || path == "/api/site.webmanifest" || path == "/api/system-settings"
+	return path == "/api/auth/bootstrap/login" || path == "/api/auth/csrf" || path == "/api/auth/oidc/start" || path == "/api/auth/oidc/callback" || path == "/api/site-copy" || path == "/api/site-theme" || path == "/api/site-pages" || path == "/api/site.webmanifest" || path == "/api/system-settings"
 }
 
 func RequireAuth() gin.HandlerFunc {

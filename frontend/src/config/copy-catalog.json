@@ -1853,6 +1853,11 @@
     "audience": "user",
     "location": "internal/interface/web/controller/point.go"
   },
+  "copy.server.339312721109": {
+    "text": "撤回发布点评奖励",
+    "audience": "user",
+    "location": "internal/application/point_dto.go"
+  },
   "copy.server.35d71fe959aa": {
     "text": "热门课程周期无效",
     "audience": "user",
@@ -1862,6 +1867,11 @@
     "text": "点评内容包含敏感信息",
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.36ead66c1105": {
+    "text": "课程首评奖励",
+    "audience": "user",
+    "location": "internal/application/point_dto.go"
   },
   "copy.server.3b95740295f1": {
     "text": "课程大纲链接只能指向 CHD 教务系统",
@@ -1952,6 +1962,11 @@
     "text": "无权删除点评",
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.52cf758274b7": {
+    "text": "撤回课程首评奖励",
+    "audience": "user",
+    "location": "internal/application/point_dto.go"
   },
   "copy.server.552257b4da41": {
     "text": "课程代码、名称、学分和开课院系不能为空",
@@ -2063,6 +2078,11 @@
     "audience": "user",
     "location": "internal/application/course_admin.go"
   },
+  "copy.server.803f35d6d887": {
+    "text": "冲正：review_create",
+    "audience": "user",
+    "location": "internal/application/point_dto.go"
+  },
   "copy.server.83dd7ea30e95": {
     "text": "同一学期内课节 ID 不能重复",
     "audience": "user",
@@ -2163,6 +2183,11 @@
     "audience": "user",
     "location": "internal/application/course_sync.go"
   },
+  "copy.server.afd94165c08a": {
+    "text": "冲正：course_first_review",
+    "audience": "user",
+    "location": "internal/application/point_dto.go"
+  },
   "copy.server.b0f1bb7e3c30": {
     "text": "无法读取课程数据 ZIP",
     "audience": "user",
@@ -2217,6 +2242,11 @@
     "text": "本学期采集结果不完整，未导入，请重新同步",
     "audience": "technical",
     "location": "internal/application/course_sync.go"
+  },
+  "copy.server.c1cbef3b639a": {
+    "text": "发布点评奖励",
+    "audience": "user",
+    "location": "internal/application/point_dto.go"
   },
   "copy.server.c1f658373079": {
     "text": "未登录",
@@ -4387,6 +4417,71 @@
     "audience": "user",
     "location": "pages/about-page.tsx"
   },
+  "copy.user.pages.account-login-page.1e2df9c3075a": {
+    "text": "登录",
+    "audience": "user",
+    "location": "pages/account-login-page.tsx"
+  },
+  "copy.user.pages.account-login-page.1e57edd9c951": {
+    "text": "登录失败，请重新从频道登录。",
+    "audience": "user",
+    "location": "pages/account-login-page.tsx"
+  },
+  "copy.user.pages.account-login-page.305a5aacb267": {
+    "text": "登录链接无效或已被更换，请联系技术管理员。",
+    "audience": "user",
+    "location": "pages/account-login-page.tsx"
+  },
+  "copy.user.pages.account-login-page.360826368393": {
+    "text": "登录链接无效，请使用初始化时保存的完整链接。",
+    "audience": "user",
+    "location": "pages/account-login-page.tsx"
+  },
+  "copy.user.pages.account-login-page.4927a53bcc88": {
+    "text": "加载中…",
+    "audience": "user",
+    "location": "pages/account-login-page.tsx"
+  },
+  "copy.user.pages.account-login-page.803789846bba": {
+    "text": "选择登录账号",
+    "audience": "user",
+    "location": "pages/account-login-page.tsx"
+  },
+  "copy.user.pages.account-login-page.bb9e59ffebc4": {
+    "text": "· ID ",
+    "audience": "user",
+    "location": "pages/account-login-page.tsx"
+  },
+  "copy.user.pages.account-login-page.bd0bb959fbb4": {
+    "text": "登录状态已失效，请重新登录。",
+    "audience": "user",
+    "location": "pages/account-login-page.tsx"
+  },
+  "copy.user.pages.account-login-page.cbe255d58fc5": {
+    "text": "初始超级管理员",
+    "audience": "user",
+    "location": "pages/account-login-page.tsx"
+  },
+  "copy.user.pages.account-login-page.df2d3333e46e": {
+    "text": "该频道账号绑定了多个账号，请选择一个登录。",
+    "audience": "user",
+    "location": "pages/account-login-page.tsx"
+  },
+  "copy.user.pages.account-login-page.e19796712f1c": {
+    "text": "管理员",
+    "audience": "user",
+    "location": "pages/account-login-page.tsx"
+  },
+  "copy.user.pages.account-login-page.f5aa497627d9": {
+    "text": "正在登录初始超级管理员…",
+    "audience": "user",
+    "location": "pages/account-login-page.tsx"
+  },
+  "copy.user.pages.account-login-page.f6a2faaac200": {
+    "text": "普通用户",
+    "audience": "user",
+    "location": "pages/account-login-page.tsx"
+  },
   "copy.user.pages.api-keys-page.b1b483588b65": {
     "text": "接口凭证由主站管理",
     "audience": "technical",
@@ -5017,7 +5112,7 @@
     "location": "pages/user-courses-page.tsx"
   },
   "copy.user.pages.user-points-page.0a6a74474ce7": {
-    "text": "余额和流水由 res-hub 主站提供，本站产生的奖励会以集成操作记录。",
+    "text": "积分与频道账户共用。这里可查看课程榜相关的积分奖励和扣回记录。",
     "audience": "user",
     "location": "pages/user-points-page.tsx"
   },
@@ -5031,8 +5126,18 @@
     "audience": "user",
     "location": "pages/user-points-page.tsx"
   },
+  "copy.user.pages.user-points-page.26f452c42a35": {
+    "text": "初始管理员尚未绑定频道账号，积分功能暂不可用。请在设置中完成账号绑定。",
+    "audience": "user",
+    "location": "pages/user-points-page.tsx"
+  },
   "copy.user.pages.user-points-page.48144f96c150": {
     "text": "请先登录",
+    "audience": "user",
+    "location": "pages/user-points-page.tsx"
+  },
+  "copy.user.pages.user-points-page.4dffd11b2323": {
+    "text": "前往账号绑定",
     "audience": "user",
     "location": "pages/user-points-page.tsx"
   },
@@ -5043,6 +5148,11 @@
   },
   "copy.user.pages.user-points-page.ed8745d001b1": {
     "text": "积分记录",
+    "audience": "user",
+    "location": "pages/user-points-page.tsx"
+  },
+  "copy.user.pages.user-points-page.eebaa630f4b6": {
+    "text": "此频道账号没有积分账户，积分功能暂不可用。频道的配置管理员账号不设积分账户，请使用具有积分账户的用户账号。",
     "audience": "user",
     "location": "pages/user-points-page.tsx"
   },
@@ -5086,6 +5196,11 @@
     "audience": "user",
     "location": "pages/user-settings-page.tsx"
   },
+  "copy.user.pages.user-settings-page.273af86c2ffa": {
+    "text": "频道账号绑定",
+    "audience": "user",
+    "location": "pages/user-settings-page.tsx"
+  },
   "copy.user.pages.user-settings-page.29edc1452eff": {
     "text": "暗色",
     "audience": "user",
@@ -5101,6 +5216,16 @@
     "audience": "user",
     "location": "pages/user-settings-page.tsx"
   },
+  "copy.user.pages.user-settings-page.60971d3b32b5": {
+    "text": "绑定频道账号后，可以通过频道快捷登录，并使用该账号的积分账户。",
+    "audience": "user",
+    "location": "pages/user-settings-page.tsx"
+  },
+  "copy.user.pages.user-settings-page.7bb8c99f8a2e": {
+    "text": "绑定不会更改初始管理员权限，原来的魔法登录链接仍然有效。请妥善保存该链接。",
+    "audience": "user",
+    "location": "pages/user-settings-page.tsx"
+  },
   "copy.user.pages.user-settings-page.7ce710f646db": {
     "text": "用户设置",
     "audience": "user",
@@ -5111,8 +5236,23 @@
     "audience": "user",
     "location": "pages/user-settings-page.tsx"
   },
+  "copy.user.pages.user-settings-page.9a5ba76dcae9": {
+    "text": "更换绑定账号",
+    "audience": "user",
+    "location": "pages/user-settings-page.tsx"
+  },
+  "copy.user.pages.user-settings-page.a89a3f0314b6": {
+    "text": "绑定频道账号",
+    "audience": "user",
+    "location": "pages/user-settings-page.tsx"
+  },
   "copy.user.pages.user-settings-page.bf643e1be362": {
     "text": "选择外观模式",
+    "audience": "user",
+    "location": "pages/user-settings-page.tsx"
+  },
+  "copy.user.pages.user-settings-page.c7444419a769": {
+    "text": "已绑定：{v0}。下次从频道登录时，可以选择初始超级管理员或原有账号。",
     "audience": "user",
     "location": "pages/user-settings-page.tsx"
   }

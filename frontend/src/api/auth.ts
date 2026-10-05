@@ -2,6 +2,8 @@ import { apiClient } from "./client"
 import { BASE_URL } from "./constants"
 
 export interface AuthUserDTO {
+  is_bootstrap?: boolean
+  bound_nickname?: string
   id: number
   username: string
   email: string
@@ -58,4 +60,23 @@ export function logout(): Promise<{ message: string }> {
   return apiClient(`${BASE_URL}/auth/logout`, {
     method: "POST",
   })
+}
+
+export function bootstrapLogin(token: string) {
+  return apiClient(`${BASE_URL}/auth/bootstrap/login`, {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  })
+}
+export function getLoginAccounts() {
+  return apiClient<AuthUserResponse[]>(`${BASE_URL}/auth/accounts`)
+}
+export function selectLoginAccount(id: number) {
+  return apiClient(`${BASE_URL}/auth/accounts/select`, {
+    method: "POST",
+    body: JSON.stringify({ id }),
+  })
+}
+export function getAccountBindingURL() {
+  return `${BASE_URL}/auth/oidc/start?purpose=bind&return_to=/settings`
 }

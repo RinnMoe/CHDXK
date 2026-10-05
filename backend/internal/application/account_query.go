@@ -16,15 +16,18 @@ func (s *AccountQueryService) CurrentUser(_ context.Context, u *auth.User) (*Acc
 	if u == nil {
 		return nil, auth.ErrResHubSession
 	}
-	if u.Subject == "" {
+	if u.Subject == "" && !(u.IsBootstrap && u.ID == 1) {
 		return nil, auth.ErrResHubSession
 	}
 	return newExternalAccountDTO(u), nil
 }
 
+func NewAccountDTO(u *auth.User) *AccountDTO { return newExternalAccountDTO(u) }
 func newExternalAccountDTO(u *auth.User) *AccountDTO {
 	return &AccountDTO{
 		ID:               u.ID,
+		IsBootstrap:      u.IsBootstrap,
+		BoundNickname:    u.BoundNickname,
 		Username:         u.Username,
 		Email:            u.Email,
 		Role:             u.Role,

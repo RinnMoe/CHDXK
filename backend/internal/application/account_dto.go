@@ -3,6 +3,8 @@ package application
 import "time"
 
 type AccountDTO struct {
+	IsBootstrap      bool      `json:"is_bootstrap"`
+	BoundNickname    string    `json:"bound_nickname,omitempty"`
 	ID               int       `json:"id"`
 	Username         string    `json:"username"`
 	Email            string    `json:"email"`

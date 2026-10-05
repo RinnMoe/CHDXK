@@ -5,6 +5,10 @@
 #   JCOURSE_POSTGRES_DSN="host=localhost ..."
 #   JCOURSE_REDIS_ADDR=localhost:6379
 
+# The public frontend URL used in the initial administrator magic link.
+bootstrap:
+  public_url: "http://localhost:5173"
+
 server:
   addr: ":8080"
   debug: false

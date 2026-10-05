@@ -45,7 +45,7 @@ func (r *RewardRepository) GrantReward(ctx context.Context, rewardID int, now ti
 		return nil
 	}
 
-	subject, err := r.identities.SubjectByUserID(ctx, entity.UserID)
+	subject, err := r.rewardSubject(ctx, entity)
 	if err != nil {
 		return r.recordFailure(ctx, rewardID, err)
 	}
@@ -139,7 +139,7 @@ func (r *RewardRepository) RevokeRewardsBySources(ctx context.Context, sources [
 }
 
 func (r *RewardRepository) revokeGranted(ctx context.Context, entity repository.PointRewardEntity) error {
-	subject, err := r.identities.SubjectByUserID(ctx, entity.UserID)
+	subject, err := r.rewardSubject(ctx, entity)
 	if err != nil {
 		return r.recordFailure(ctx, entity.ID, err)
 	}
@@ -171,7 +171,7 @@ func (r *RewardRepository) persistOperationKey(ctx context.Context, rewardID int
 }
 
 func (r *RewardRepository) reconcileCanceled(ctx context.Context, entity repository.PointRewardEntity) error {
-	subject, err := r.identities.SubjectByUserID(ctx, entity.UserID)
+	subject, err := r.rewardSubject(ctx, entity)
 	if err != nil {
 		return r.recordFailure(ctx, entity.ID, err)
 	}
@@ -259,3 +259,22 @@ func (r *RewardRepository) recordFailure(ctx context.Context, rewardID int, err 
 }
 
 var _ point.RewardRepository = (*RewardRepository)(nil)
+
+func (r *RewardRepository) rewardSubject(ctx context.Context, e repository.PointRewardEntity) (string, error) {
+	if e.ExternalSubject != "" {
+		return e.ExternalSubject, nil
+	}
+	subject, err := r.identities.SubjectByUserID(ctx, e.UserID)
+	if err != nil {
+		return "", err
+	}
+	err = r.db.WithContext(ctx).Model(&repository.PointRewardEntity{}).Where("id=? AND external_subject=''", e.ID).Update("external_subject", subject).Error
+	if err != nil {
+		return "", err
+	}
+	var saved repository.PointRewardEntity
+	if err = r.db.WithContext(ctx).Where("id=?", e.ID).Take(&saved).Error; err != nil {
+		return "", err
+	}
+	return saved.ExternalSubject, nil
+}

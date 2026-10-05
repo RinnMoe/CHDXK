@@ -13,6 +13,8 @@ const (
 )
 
 type User struct {
+	IsBootstrap      bool
+	BoundNickname    string
 	ID               int
 	Role             string
 	Subject          string

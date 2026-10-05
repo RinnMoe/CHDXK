@@ -13,6 +13,7 @@ type ResolvedAuth struct {
 }
 
 type AuthResolutionService struct {
+	bootstrap     auth.BootstrapAccountRepository
 	apiKeySvc     *auth.ApiKeyService
 	accessTracker auth.AccessTracker
 	reshub        auth.ResHubOIDCClient
@@ -85,4 +86,39 @@ func (s *AuthResolutionService) recordAccess(ctx context.Context, resolved *Reso
 		}
 		_ = s.accessTracker.RecordUserAccess(ctx, resolved.User.ID, now)
 	}
+}
+
+func (s *AuthResolutionService) SetBootstrap(repo auth.BootstrapAccountRepository) {
+	s.bootstrap = repo
+}
+func (s *AuthResolutionService) ResolveAccount(ctx context.Context, bearer, token string, bootstrap bool) (*ResolvedAuth, error) {
+	if !bootstrap || bearer != "" {
+		return s.Resolve(ctx, bearer, token)
+	}
+	if s.bootstrap == nil {
+		return nil, auth.ErrResHubSession
+	}
+	if token != "" {
+		if s.reshub == nil {
+			return nil, auth.ErrResHubUnavailable
+		}
+		snapshot, err := s.reshub.UserInfo(ctx, token)
+		if err != nil {
+			return nil, err
+		}
+		ok, err := s.bootstrap.Matches(ctx, snapshot.Issuer, snapshot.Subject)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			return nil, auth.ErrResHubSession
+		}
+	}
+	user, err := s.bootstrap.Current(ctx)
+	if err != nil {
+		return nil, err
+	}
+	resolved := &ResolvedAuth{User: user}
+	s.recordAccess(ctx, resolved)
+	return resolved, nil
 }

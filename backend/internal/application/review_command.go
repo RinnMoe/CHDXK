@@ -62,6 +62,12 @@ func (s *ReviewCommandService) CreateReview(ctx context.Context, u *auth.User, c
 	reviewService := review.NewService(s.courseRepo, s.reviewRepo, s.createReviewPolicies(runtimeConfig.FrequencyPolicy))
 	now := time.Now()
 	rewards := buildCreateReviewRewards(runtimeConfig.Rewards, u.ID, cmd.CourseID, now)
+	if !u.HasPointsAccount {
+		rewards = nil
+	}
+	for i := range rewards {
+		rewards[i].ExternalSubject = u.Subject
+	}
 	result, err := reviewService.CreateWithReward(ctx, u, review.CreateReview{
 		CourseID: cmd.CourseID,
 		Semester: cmd.Semester,

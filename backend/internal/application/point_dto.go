@@ -26,7 +26,22 @@ func newPointRecordDTO(r *point.Record) PointRecordDTO {
 		ExternalID:  r.ExternalID,
 		Reason:      r.Reason,
 		Amount:      r.Amount,
-		Description: r.Description,
+		Description: pointRecordDescription(r.Description),
 		CreatedAt:   r.CreatedAt,
+	}
+}
+
+func pointRecordDescription(description string) string {
+	switch description {
+	case "review_create":
+		return "发布点评奖励"
+	case "course_first_review":
+		return "课程首评奖励"
+	case "冲正：review_create":
+		return "撤回发布点评奖励"
+	case "冲正：course_first_review":
+		return "撤回课程首评奖励"
+	default:
+		return description
 	}
 }

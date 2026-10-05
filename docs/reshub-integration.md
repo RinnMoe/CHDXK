@@ -98,3 +98,10 @@ Authorization: Bearer <OIDC access token>
 反向代理必须在 SPA fallback 之前转发 Discovery、`/oidc/` 和积分 API，并按
 res-hub 部署要求提供 HTTPS、mTLS 或可信代理配置。CHDXK 不再依赖 res-hub 的
 私有 API listener、共享会话 Cookie 或非标准登录路径。
+
+
+## 初始管理员和积分账户
+
+首次启动的本地初始超级管理员、魔法链接、频道账号绑定、账号选择，以及无积分账户的处理，参见 [初始管理员、频道账号和积分](bootstrap-and-points.md)。
+
+频道在 `res_hub_identity` scope 的身份信息中返回 `res_hub_has_points_account`。配置管理员通常没有积分账户，用户库账号具有积分账户；课程榜会区分可管理站点与可使用积分这两种能力。

@@ -39,6 +39,7 @@ var DefaultRewardConfig = RewardConfig{
 }
 
 type Reward struct {
+	ExternalSubject     string
 	ID                  int
 	UserID              int
 	Reason              RewardReason

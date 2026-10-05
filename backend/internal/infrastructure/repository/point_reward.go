@@ -14,6 +14,7 @@ import (
 func newPointRewardEntity(r *point.Reward) PointRewardEntity {
 	return PointRewardEntity{
 		ID:                  r.ID,
+		ExternalSubject:     r.ExternalSubject,
 		UserID:              r.UserID,
 		Reason:              string(r.Reason),
 		Amount:              r.Amount,
@@ -35,6 +36,7 @@ func newPointRewardEntity(r *point.Reward) PointRewardEntity {
 func newPointRewardDomain(e *PointRewardEntity) point.Reward {
 	return point.Reward{
 		ID:                  e.ID,
+		ExternalSubject:     e.ExternalSubject,
 		UserID:              e.UserID,
 		Reason:              point.RewardReason(e.Reason),
 		Amount:              e.Amount,

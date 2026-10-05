@@ -162,3 +162,30 @@ func resetSession(c *gin.Context) error {
 	s.Clear()
 	return s.Save()
 }
+
+func BootstrapSession(c *gin.Context) bool {
+	v, _ := sessions.Default(c).Get("bootstrap_account").(bool)
+	return v
+}
+func SetBootstrapSession(c *gin.Context, enabled bool, reset bool) error {
+	if reset {
+		if err := resetSession(c); err != nil {
+			return err
+		}
+	}
+	s := sessions.Default(c)
+	s.Set("bootstrap_account", enabled)
+	return s.Save()
+}
+func SetOIDCBinding(c *gin.Context, binding bool) error {
+	s := sessions.Default(c)
+	s.Set("oidc_binding", binding)
+	return s.Save()
+}
+func TakeOIDCBinding(c *gin.Context) bool {
+	s := sessions.Default(c)
+	v, _ := s.Get("oidc_binding").(bool)
+	s.Delete("oidc_binding")
+	_ = s.Save()
+	return v
+}

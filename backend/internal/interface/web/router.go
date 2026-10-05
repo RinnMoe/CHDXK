@@ -79,6 +79,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	teacherController := controller.NewTeacherController(container.TeacherQuery, container.CourseQuery)
 	pointController := controller.NewPointController(container.PointQuery)
 	accountController := controller.NewAccountController(container.AccountQuery, container.ResHubOIDC)
+	accountController.SetBootstrap(container.Bootstrap, container.ResHubOIDCClient, container.AuthResolution)
 	apiKeyController := controller.NewApiKeyController(container.ApiKeyQuery, container.ApiKeyCommand)
 	systemSettingsController := controller.NewSystemSettingsController(container.SystemSettingsQuery, container.SystemSettingsCommand)
 	siteStatsController := controller.NewSiteStatsController(container.SiteStatsQuery)
@@ -94,6 +95,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	publicAuthGroup := apiGroup.Group("/auth")
 	{
 		publicAuthGroup.GET("/csrf", func(c *gin.Context) { c.Status(http.StatusNoContent) })
+		publicAuthGroup.POST("/bootstrap/login", accountController.BootstrapLogin)
 		publicAuthGroup.GET("/oidc/start", accountController.OIDCStart)
 		publicAuthGroup.GET("/oidc/callback", accountController.OIDCCallback)
 	}
@@ -104,6 +106,8 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	{
 		authGroup.POST("/logout", accountController.Logout)
 		authGroup.GET("/me", accountController.Me)
+		authGroup.GET("/accounts", accountController.Accounts)
+		authGroup.POST("/accounts/select", accountController.SelectAccount)
 	}
 	courseGroup := apiGroup.Group("/course")
 	{

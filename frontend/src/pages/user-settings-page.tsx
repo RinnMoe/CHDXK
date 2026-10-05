@@ -1,3 +1,6 @@
+import { useAuth } from "@/contexts/auth-context"
+import { getAccountBindingURL } from "@/api/auth"
+import { Button } from "@/components/ui/button"
 import { copy } from "@/lib/copy"
 import { PageTitle } from "@/components/common/page-title"
 import { PageShell } from "@/components/layout/page-shell"
@@ -65,6 +68,7 @@ function ThemeSettings() {
 }
 
 export function UserSettingsPage() {
+  const { user } = useAuth()
   return (
     <>
       <PageTitle>
@@ -76,6 +80,34 @@ export function UserSettingsPage() {
             {copy("copy.user.pages.user-settings-page.7ce710f646db")}
           </h1>
 
+          {user?.is_bootstrap && (
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {copy("copy.user.pages.user-settings-page.273af86c2ffa")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  {user.subject
+                    ? copy("copy.user.pages.user-settings-page.c7444419a769", {
+                        v0: user.bound_nickname || "频道账号",
+                      })
+                    : copy("copy.user.pages.user-settings-page.60971d3b32b5")}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {copy("copy.user.pages.user-settings-page.7bb8c99f8a2e")}
+                </p>
+                <Button
+                  onClick={() => window.location.assign(getAccountBindingURL())}
+                >
+                  {user.subject
+                    ? copy("copy.user.pages.user-settings-page.9a5ba76dcae9")
+                    : copy("copy.user.pages.user-settings-page.a89a3f0314b6")}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardHeader>
               <CardTitle>

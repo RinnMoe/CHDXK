@@ -49,8 +49,18 @@ export function UserPointsPage() {
             {copy("copy.user.pages.user-points-page.10939f548645")}
           </h1>
           <p className="text-muted-foreground">
-            {copy("copy.user.pages.user-points-page.2638b77fee74")}
+            {user.is_bootstrap && !user.subject
+              ? copy("copy.user.pages.user-points-page.26f452c42a35")
+              : copy("copy.user.pages.user-points-page.eebaa630f4b6")}
           </p>
+          {user.is_bootstrap && !user.subject && (
+            <a
+              className="mt-4 inline-block text-primary underline"
+              href="/settings"
+            >
+              {copy("copy.user.pages.user-points-page.4dffd11b2323")}
+            </a>
+          )}
         </PageShell>
       </>
     )

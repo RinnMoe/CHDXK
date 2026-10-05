@@ -80,7 +80,7 @@ func TestReviewCommandService_CreateReviewEnqueuesHotCourseActivity(t *testing.T
 	t.Cleanup(func() { task.SetEnqueuer(oldEnqueuer) })
 	svc := newReviewCommandTestService(reviewRepo, &review.MockVoteRepository{})
 
-	err := svc.CreateReview(context.Background(), &auth.User{ID: 10}, &application.CreateReviewCommand{
+	err := svc.CreateReview(context.Background(), &auth.User{ID: 10, HasPointsAccount: true}, &application.CreateReviewCommand{
 		CourseID: 1,
 		Semester: "2025-2026-1",
 		Rating:   5,
@@ -119,7 +119,7 @@ func TestReviewCommandService_CreateReviewEnqueuesGrantRewardWhenEnabled(t *test
 		},
 	})
 
-	err := svc.CreateReview(context.Background(), &auth.User{ID: 10}, &application.CreateReviewCommand{
+	err := svc.CreateReview(context.Background(), &auth.User{ID: 10, HasPointsAccount: true}, &application.CreateReviewCommand{
 		CourseID: 1,
 		Semester: "2025-2026-1",
 		Rating:   5,
@@ -173,7 +173,7 @@ func TestReviewCommandService_CreateReviewEnqueuesReviewCreateRewardWhenEnabled(
 		},
 	})
 
-	err := svc.CreateReview(context.Background(), &auth.User{ID: 10}, &application.CreateReviewCommand{
+	err := svc.CreateReview(context.Background(), &auth.User{ID: 10, HasPointsAccount: true}, &application.CreateReviewCommand{
 		CourseID: 1,
 		Semester: "2025-2026-1",
 		Rating:   5,
@@ -224,7 +224,7 @@ func TestReviewCommandService_CreateReviewBuildsBothRewardsWhenEnabled(t *testin
 		},
 	})
 
-	err := svc.CreateReview(context.Background(), &auth.User{ID: 10}, &application.CreateReviewCommand{
+	err := svc.CreateReview(context.Background(), &auth.User{ID: 10, HasPointsAccount: true}, &application.CreateReviewCommand{
 		CourseID: 1,
 		Semester: "2025-2026-1",
 		Rating:   5,
@@ -258,7 +258,7 @@ func TestReviewCommandService_CreateReviewDoesNotEnqueueRewardWhenConflict(t *te
 		},
 	})
 
-	err := svc.CreateReview(context.Background(), &auth.User{ID: 10}, &application.CreateReviewCommand{
+	err := svc.CreateReview(context.Background(), &auth.User{ID: 10, HasPointsAccount: true}, &application.CreateReviewCommand{
 		CourseID: 1,
 		Semester: "2025-2026-1",
 		Rating:   5,
@@ -301,7 +301,7 @@ func TestReviewCommandService_CreateReviewEnqueuesFrequencyViolationTasks(t *tes
 	provider.ReviewRuntime.FrequencyViolationAdminEmails = []string{"admin@example.edu"}
 	svc := application.NewReviewCommandService(courseRepo, reviewRepo, &review.MockVoteRepository{}, provider)
 
-	err := svc.CreateReview(context.Background(), &auth.User{ID: 10}, &application.CreateReviewCommand{
+	err := svc.CreateReview(context.Background(), &auth.User{ID: 10, HasPointsAccount: true}, &application.CreateReviewCommand{
 		CourseID: 1,
 		Semester: "2025-2026-1",
 		Rating:   5,
@@ -519,5 +519,40 @@ func assertEmailTask(t *testing.T, taskItem task.Task, to string, userID string,
 	}
 	if payload.Email.To != to || payload.Email.Subject == "" || !strings.Contains(payload.Email.Body, userID) || !strings.Contains(payload.Email.Body, courseCode) || !strings.Contains(payload.Email.Body, courseName) || !strings.Contains(payload.Email.Body, reviewContent) || !strings.Contains(payload.Email.Body, "封禁到") {
 		t.Fatalf("email payload = %+v", payload)
+	}
+}
+
+func TestReviewCommandPointsEligibilityAndWalletAttribution(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		user auth.User
+		want int
+	}{
+		{"unbound owner", auth.User{ID: 1, Role: auth.RoleSuperAdmin, IsBootstrap: true}, 0},
+		{"config admin", auth.User{ID: 2, Role: auth.RoleSuperAdmin, Subject: "admin:root"}, 0},
+		{"linked owner", auth.User{ID: 1, Role: auth.RoleSuperAdmin, IsBootstrap: true, Subject: "user:8", HasPointsAccount: true}, 1},
+		{"ordinary member", auth.User{ID: 3, Subject: "user:8", HasPointsAccount: true}, 1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			repo := newFakeCommandReviewRepo()
+			repo.OnCreateWithReward = func(ctx context.Context, rv *review.Review, rewards []point.Reward) (review.CreateResult, error) {
+				if len(rewards) != tc.want {
+					t.Fatalf("reward count=%d", len(rewards))
+				}
+				for _, r := range rewards {
+					if r.ExternalSubject != tc.user.Subject {
+						t.Fatal("wallet attribution lost")
+					}
+				}
+				return review.CreateResult{}, nil
+			}
+			enqueuer := &fakeReviewCommandEnqueuer{}
+			old := task.SetEnqueuerForTest(enqueuer)
+			t.Cleanup(func() { task.SetEnqueuer(old) })
+			svc := newReviewCommandTestServiceWithRuntimeConfig(repo, &review.MockVoteRepository{}, application.ReviewRuntimeConfig{Vote: review.DefaultVoteConfig, FrequencyPolicy: policy.DefaultFrequencyPolicyConfig, Rewards: point.RewardConfig{ReviewCreateEnabled: true, ReviewCreatePoints: 1}})
+			if err := svc.CreateReview(context.Background(), &tc.user, &application.CreateReviewCommand{CourseID: 1, Semester: "2025-2026-1", Rating: 5, Content: "good course"}); err != nil {
+				t.Fatal(err)
+			}
+		})
 	}
 }
