@@ -6,25 +6,7 @@ import { HotCourseList } from "@/components/course/hot-course-list"
 import { HotTeacherList } from "@/components/teacher/hot-teacher-list"
 import { useHotCourses } from "@/hooks/use-course"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-
-function formatHotPeriodDescription(
-  period: "week" | "month",
-  periodKey?: string
-) {
-  if (!periodKey) return ""
-  const [year, value] = periodKey.split("-")
-  const number = Number(value)
-  if (!year || !Number.isFinite(number)) return ""
-  if (period === "week")
-    return copy("copy.user.pages.hot-courses-page.7f15ad783d80", {
-      v0: year,
-      v1: number,
-    })
-  return copy("copy.user.pages.hot-courses-page.dd3caeeb9921", {
-    v0: year,
-    v1: value,
-  })
-}
+import { formatHotPeriodDescription } from "@/lib/hot-period"
 
 export function HotCoursesPage() {
   const [period, setPeriod] = useState<"week" | "month">("week")
