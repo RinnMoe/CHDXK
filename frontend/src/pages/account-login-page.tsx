@@ -49,41 +49,46 @@ export function LoginAccountsPage() {
             {failure || copy("copy.user.pages.account-login-page.bd0bb959fbb4")}
           </p>
         )}
-        {data?.map((account) => (
-          <Button
-            key={account.id}
-            data-account-id={account.id}
-            variant="outline"
-            className="h-auto w-full justify-between p-4"
-            disabled={
-              busy ||
-              (!!account.suspended_at &&
-                (!account.suspend_till ||
-                  new Date(account.suspend_till) > new Date()))
-            }
-            onClick={() => void choose(account.id)}
-          >
-            <span className="text-left">
-              <span className="block">
-                {account.nickname || account.bound_nickname || account.username}
+        {data?.map((account) => {
+          const banned =
+            !!account.suspended_at &&
+            (!account.suspend_till ||
+              new Date(account.suspend_till) > new Date())
+          return (
+            <Button
+              key={account.id}
+              data-account-id={account.id}
+              variant="outline"
+              className="h-auto w-full justify-between p-4"
+              disabled={busy || banned}
+              onClick={() => void choose(account.id)}
+            >
+              <span className="text-left">
+                <span className="block">
+                  {account.nickname ||
+                    account.bound_nickname ||
+                    account.username}
+                </span>
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  {account.is_bootstrap
+                    ? copy("copy.user.pages.account-login-page.cbe255d58fc5")
+                    : account.role === "user"
+                      ? copy("copy.user.pages.account-login-page.f6a2faaac200")
+                      : copy(
+                          "copy.user.pages.account-login-page.e19796712f1c"
+                        )}{" "}
+                  {copy("copy.user.pages.account-login-page.bb9e59ffebc4")}
+                  {account.id}
+                </span>
               </span>
-              <span className="mt-1 block text-xs text-muted-foreground">
-                {account.is_bootstrap
-                  ? copy("copy.user.pages.account-login-page.cbe255d58fc5")
-                  : account.role === "user"
-                    ? copy("copy.user.pages.account-login-page.f6a2faaac200")
-                    : copy(
-                        "copy.user.pages.account-login-page.e19796712f1c"
-                      )}{" "}
-                {copy("copy.user.pages.account-login-page.bb9e59ffebc4")}
-                {account.id}
+              <span>
+                {banned
+                  ? "本站账号已封禁"
+                  : copy("copy.user.pages.account-login-page.1e2df9c3075a")}
               </span>
-            </span>
-            <span>
-              {copy("copy.user.pages.account-login-page.1e2df9c3075a")}
-            </span>
-          </Button>
-        ))}
+            </Button>
+          )
+        })}
       </div>
     </PageShell>
   )

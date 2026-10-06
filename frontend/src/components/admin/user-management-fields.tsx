@@ -21,6 +21,14 @@ export function UserManagementFields({
   setLocalRole: (role: string) => void
 }) {
   const inputClass = "h-9 rounded-md border bg-background px-3 text-sm"
+  const inheritedAdmin = [
+    "admin",
+    "administrator",
+    "superadmin",
+    "super_admin",
+    "super-admin",
+  ].includes(editing.target?.identity_role?.toLowerCase() ?? "")
+  const canReceivePermissions = localRole === "admin" || inheritedAdmin
   return (
     <>
       {(editing.action === "create" || editing.action === "profile") && (
@@ -80,22 +88,20 @@ export function UserManagementFields({
               <option value="admin">管理员</option>
             </select>
           </div>
-          {editing.target?.identity_role &&
-            [
-              "admin",
-              "administrator",
-              "superadmin",
-              "super_admin",
-              "super-admin",
-            ].includes(editing.target.identity_role) && (
-              <p className="text-sm text-muted-foreground">
-                此账号从资料站继承管理员身份。取消本站管理员身份后，仍具有继承的管理员身份。
-              </p>
-            )}
-          <fieldset className="space-y-3 rounded-lg border p-3">
+          {inheritedAdmin && (
+            <p className="text-sm text-muted-foreground">
+              此账号从资料站继承管理员身份。取消本站管理员身份后，仍具有继承的管理员身份。
+            </p>
+          )}
+          <fieldset
+            disabled={!canReceivePermissions}
+            className="space-y-3 rounded-lg border p-3 disabled:opacity-60"
+          >
             <legend className="px-1 text-sm font-medium">额外管理权限</legend>
             <p className="text-xs text-muted-foreground">
-              管理员默认可维护内容及处理违规用户。勾选下列功能后，可执行对应管理操作。
+              {canReceivePermissions
+                ? "管理员默认可维护内容及处理违规用户。勾选下列功能后，可执行对应管理操作。"
+                : "请先将本站身份设为管理员，再授予额外管理权限。"}
             </p>
             {capabilities
               .filter((p) => user?.can(p.key))
