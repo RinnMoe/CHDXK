@@ -123,7 +123,10 @@ function ImportDialog({ userID }: { userID: number }) {
           </DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="school">
-          <TabsList aria-label="课程导入方式">
+          <TabsList
+            aria-label="课程导入方式"
+            className="[&_[data-state=active]]:bg-primary [&_[data-state=active]]:text-primary-foreground [&_[data-state=active]]:shadow-sm [&_[data-state=active]:hover]:bg-primary [&_[data-state=active]:hover]:text-primary-foreground dark:[&_[data-state=active]]:bg-primary dark:[&_[data-state=active]:hover]:bg-primary"
+          >
             <TabsTrigger value="school" data-method="school">
               教务扫码
             </TabsTrigger>
