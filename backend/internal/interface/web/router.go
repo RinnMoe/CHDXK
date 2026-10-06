@@ -12,6 +12,7 @@ import (
 
 	"jcourse/config"
 	"jcourse/internal/app"
+	"jcourse/internal/domain/auth"
 	"jcourse/internal/interface/web/controller"
 	"jcourse/internal/interface/web/middleware"
 	"jcourse/pkg/logx"
@@ -79,8 +80,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	courseEnrollmentController := controller.NewCourseEnrollmentController(container.CourseEnrollmentQuery, container.CourseCommand)
 	teacherController := controller.NewTeacherController(container.TeacherQuery, container.CourseQuery)
 	pointController := controller.NewPointController(container.PointQuery)
-	accountController := controller.NewAccountController(container.AccountQuery, container.ResHubOIDC)
-	accountController.SetBootstrap(container.Bootstrap, container.ResHubOIDCClient, container.AuthResolution)
+	accountController := controller.NewAccountController(container.AccountQuery, container.ResHubOIDC, container.Accounts, container.AuthResolution)
 	apiKeyController := controller.NewApiKeyController(container.ApiKeyQuery, container.ApiKeyCommand)
 	systemSettingsController := controller.NewSystemSettingsController(container.SystemSettingsQuery, container.SystemSettingsCommand)
 	siteStatsController := controller.NewSiteStatsController(container.SiteStatsQuery)
@@ -96,19 +96,24 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	publicAuthGroup := apiGroup.Group("/auth")
 	{
 		publicAuthGroup.GET("/csrf", func(c *gin.Context) { c.Status(http.StatusNoContent) })
-		publicAuthGroup.POST("/bootstrap/login", accountController.BootstrapLogin)
+		publicAuthGroup.POST("/login", accountController.PasswordLogin)
+		publicAuthGroup.POST("/register", accountController.Register)
+		publicAuthGroup.GET("/options", accountController.Options)
+		publicAuthGroup.GET("/accounts", accountController.Accounts)
+		publicAuthGroup.POST("/accounts/select", accountController.SelectAccount)
+		publicAuthGroup.POST("/logout", accountController.Logout)
 		publicAuthGroup.GET("/oidc/start", accountController.OIDCStart)
 		publicAuthGroup.GET("/oidc/callback", accountController.OIDCCallback)
 	}
 
-	apiGroup.Use(middleware.RequireAuth())
+	apiGroup.Use(middleware.RequireAuth(), middleware.RequirePasswordChanged())
 
 	authGroup := apiGroup.Group("/auth")
 	{
-		authGroup.POST("/logout", accountController.Logout)
 		authGroup.GET("/me", accountController.Me)
-		authGroup.GET("/accounts", accountController.Accounts)
-		authGroup.POST("/accounts/select", accountController.SelectAccount)
+		authGroup.POST("/password", accountController.ChangePassword)
+		authGroup.PUT("/profile", accountController.Profile)
+		authGroup.DELETE("/binding", accountController.Unbind)
 	}
 	courseGroup := apiGroup.Group("/course")
 	{
@@ -162,13 +167,13 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		siteStatsGroup.GET("/daily/:date", siteStatsController.GetByDate)
 		siteStatsGroup.GET("/daily", siteStatsController.ListDaily)
 	}
-	adminApiKeyGroup := apiGroup.Group("/admin/api-key", middleware.RequireAdmin())
+	adminApiKeyGroup := apiGroup.Group("/admin/api-key", middleware.RequirePermission(auth.PermissionMaintenance))
 	{
 		adminApiKeyGroup.GET("/system", apiKeyController.ListSystemApiKeys)
 		adminApiKeyGroup.POST("/system", apiKeyController.CreateSystemApiKey)
 		adminApiKeyGroup.DELETE("/system/:apiKeyID", apiKeyController.DeleteSystemApiKey)
 	}
-	adminSystemSettingsGroup := apiGroup.Group("/admin/system-settings", middleware.RequireAdmin())
+	adminSystemSettingsGroup := apiGroup.Group("/admin/system-settings", middleware.RequirePermission(auth.PermissionSettings))
 	{
 		adminSystemSettingsGroup.GET("", systemSettingsController.ListAdmin)
 		adminSystemSettingsGroup.PUT("/:key", systemSettingsController.Update)
@@ -212,5 +217,15 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		announcementGroup.GET("/", announcementController.ListAnnouncements)
 	}
 
+	userAdmin := controller.NewUserManagementController(container.Accounts)
+	users := apiGroup.Group("/admin/users", middleware.RequireAdmin())
+	users.GET("", userAdmin.List)
+	users.POST("", middleware.RequirePermission(auth.PermissionUsers), userAdmin.Create)
+	users.PUT("/:userID", middleware.RequirePermission(auth.PermissionUsers), userAdmin.Update)
+	users.DELETE("/:userID", middleware.RequirePermission(auth.PermissionUsers), userAdmin.Delete)
+	users.POST("/:userID/password", middleware.RequirePermission(auth.PermissionUsers), userAdmin.ResetPassword)
+	users.PUT("/:userID/role", middleware.RequirePermission(auth.PermissionRoles), userAdmin.Role)
+	users.POST("/:userID/moderation", userAdmin.Moderate)
+	users.POST("/:userID/points", middleware.RequirePermission(auth.PermissionPoints), userAdmin.Points)
 	return g
 }

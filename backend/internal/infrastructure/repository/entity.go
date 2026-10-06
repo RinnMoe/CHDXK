@@ -156,11 +156,18 @@ func (ReviewRevisionEntity) TableName() string {
 }
 
 type UserEntity struct {
-	ID           int            `gorm:"column:id"`
-	Username     string         `gorm:"column:username;uniqueIndex"`
-	Email        sql.NullString `gorm:"column:email;uniqueIndex"`
-	Role         string         `gorm:"column:role"`
-	PasswordHash string         `gorm:"column:password_hash"`
+	Nickname           string
+	MustChangePassword bool
+	AuthVersion        int    `gorm:"default:1"`
+	Permissions        string `gorm:"type:jsonb;default:'[]'"`
+	MutedUntil         *time.Time
+	ModerationReason   string
+	DeletedAt          *time.Time
+	ID                 int            `gorm:"column:id"`
+	Username           string         `gorm:"column:username;uniqueIndex"`
+	Email              sql.NullString `gorm:"column:email;uniqueIndex"`
+	Role               string         `gorm:"column:role"`
+	PasswordHash       string         `gorm:"column:password_hash"`
 
 	CreatedAt  time.Time `gorm:"column:created_at"`
 	LastSeenAt time.Time `gorm:"column:last_seen_at"`
@@ -176,15 +183,16 @@ func (UserEntity) TableName() string {
 // UserIdentityEntity stores the res-hub subject separately from the local
 // projection used by course and review foreign keys.
 type UserIdentityEntity struct {
-	UserID       int       `gorm:"column:user_id;primaryKey"`
-	Issuer       string    `gorm:"column:issuer;uniqueIndex:uniq_user_identities_issuer_subject"`
-	Subject      string    `gorm:"column:subject;uniqueIndex:uniq_user_identities_issuer_subject"`
-	Username     string    `gorm:"column:username"`
-	Email        string    `gorm:"column:email"`
-	IdentityRole string    `gorm:"column:identity_role"`
-	IdentityType string    `gorm:"column:identity_type"`
-	CreatedAt    time.Time `gorm:"column:created_at"`
-	UpdatedAt    time.Time `gorm:"column:updated_at"`
+	HasPointsAccount bool
+	UserID           int       `gorm:"column:user_id;primaryKey"`
+	Issuer           string    `gorm:"column:issuer"`
+	Subject          string    `gorm:"column:subject"`
+	Username         string    `gorm:"column:username"`
+	Email            string    `gorm:"column:email"`
+	IdentityRole     string    `gorm:"column:identity_role"`
+	IdentityType     string    `gorm:"column:identity_type"`
+	CreatedAt        time.Time `gorm:"column:created_at"`
+	UpdatedAt        time.Time `gorm:"column:updated_at"`
 }
 
 func (UserIdentityEntity) TableName() string {

@@ -13,7 +13,7 @@ type ResolvedAuth struct {
 }
 
 type AuthResolutionService struct {
-	bootstrap     auth.BootstrapAccountRepository
+	accounts      auth.AccountRepository
 	apiKeySvc     *auth.ApiKeyService
 	accessTracker auth.AccessTracker
 	reshub        auth.ResHubOIDCClient
@@ -88,14 +88,22 @@ func (s *AuthResolutionService) recordAccess(ctx context.Context, resolved *Reso
 	}
 }
 
-func (s *AuthResolutionService) SetBootstrap(repo auth.BootstrapAccountRepository) {
-	s.bootstrap = repo
-}
-func (s *AuthResolutionService) ResolveAccount(ctx context.Context, bearer, token string, bootstrap bool) (*ResolvedAuth, error) {
-	if !bootstrap || bearer != "" {
-		return s.Resolve(ctx, bearer, token)
+func (s *AuthResolutionService) SetAccounts(repo auth.AccountRepository) { s.accounts = repo }
+func (s *AuthResolutionService) ResolveSession(ctx context.Context, bearer, token string, id, version int) (*ResolvedAuth, error) {
+	if bearer != "" {
+		return s.resolveAPIKey(ctx, bearer)
 	}
-	if s.bootstrap == nil {
+	if id == 0 {
+		return &ResolvedAuth{}, nil
+	}
+	if s.accounts == nil {
+		return nil, auth.ErrResHubSession
+	}
+	user, err := s.accounts.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil || user.AuthVersion != version {
 		return nil, auth.ErrResHubSession
 	}
 	if token != "" {
@@ -106,16 +114,22 @@ func (s *AuthResolutionService) ResolveAccount(ctx context.Context, bearer, toke
 		if err != nil {
 			return nil, err
 		}
-		ok, err := s.bootstrap.Matches(ctx, snapshot.Issuer, snapshot.Subject)
+		choices, err := s.accounts.ResHubAccounts(ctx, snapshot, false)
 		if err != nil {
 			return nil, err
 		}
-		if !ok {
+		found := false
+		for _, choice := range choices {
+			if choice.ID == id {
+				user = choice
+				found = true
+			}
+		}
+		if !found {
 			return nil, auth.ErrResHubSession
 		}
 	}
-	user, err := s.bootstrap.Current(ctx)
-	if err != nil {
+	if err := auth.EnsureUserActive(ctx, user); err != nil {
 		return nil, err
 	}
 	resolved := &ResolvedAuth{User: user}

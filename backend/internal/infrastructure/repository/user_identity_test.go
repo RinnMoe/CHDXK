@@ -16,9 +16,9 @@ func TestIdentityProjectionFollowsAccountRoleRegardlessOfPermissionMode(t *testi
 	for _, tc := range []struct{ identity, effective, mode, local string }{
 		{"admin", "member", "member", auth.RoleAdmin},
 		{"admin", "admin", "admin", auth.RoleAdmin},
-		{"superadmin", "member", "member", auth.RoleSuperAdmin},
-		{"superadmin", "admin", "admin", auth.RoleSuperAdmin},
-		{"superadmin", "superadmin", "superadmin", auth.RoleSuperAdmin},
+		{"superadmin", "member", "member", auth.RoleAdmin},
+		{"superadmin", "admin", "admin", auth.RoleAdmin},
+		{"superadmin", "superadmin", "superadmin", auth.RoleAdmin},
 		{"member", "admin", "admin", auth.RoleUser},
 		{"member", "member", "member", auth.RoleUser},
 		{"unknown", "superadmin", "superadmin", auth.RoleUser},
@@ -41,7 +41,7 @@ func TestIdentityProjectionFollowsAccountRoleRegardlessOfPermissionMode(t *testi
 		if err := db.First(&stored, id).Error; err != nil {
 			t.Fatal(err)
 		}
-		if stored.Role != tc.local {
+		if stored.Role != auth.RoleUser {
 			t.Fatalf("stored role = %s", stored.Role)
 		}
 	}

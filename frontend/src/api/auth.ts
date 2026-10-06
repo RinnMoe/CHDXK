@@ -2,6 +2,16 @@ import { apiClient } from "./client"
 import { BASE_URL } from "./constants"
 
 export interface AuthUserDTO {
+  nickname?: string
+  local_role?: string
+  permissions?: string[]
+  must_change_password?: boolean
+  has_password?: boolean
+  suspended_at?: string | null
+  suspend_till?: string | null
+  muted_until?: string | null
+  moderation_reason?: string
+  can: (permission: string) => boolean
   is_bootstrap?: boolean
   bound_nickname?: string
   id: number
@@ -22,11 +32,17 @@ export interface AuthUserDTO {
   is_super_admin: () => boolean
 }
 
-export type AuthUserResponse = Omit<AuthUserDTO, "is_admin" | "is_super_admin">
+export type AuthUserResponse = Omit<
+  AuthUserDTO,
+  "is_admin" | "is_super_admin" | "can"
+>
 
 export function normalizeAuthUser(user: AuthUserResponse): AuthUserDTO {
   return {
     ...user,
+    can: (permission) =>
+      user.role === "super_admin" ||
+      (user.role === "admin" && !!user.permissions?.includes(permission)),
     is_admin: () => user.role === "admin" || user.role === "super_admin",
     is_super_admin: () => user.role === "super_admin",
   }
@@ -62,21 +78,52 @@ export function logout(): Promise<{ message: string }> {
   })
 }
 
-export function bootstrapLogin(token: string) {
-  return apiClient(`${BASE_URL}/auth/bootstrap/login`, {
-    method: "POST",
-    body: JSON.stringify({ token }),
-  })
-}
 export function getLoginAccounts() {
   return apiClient<AuthUserResponse[]>(`${BASE_URL}/auth/accounts`)
 }
 export function selectLoginAccount(id: number) {
-  return apiClient(`${BASE_URL}/auth/accounts/select`, {
+  return apiClient<AuthUserResponse>(`${BASE_URL}/auth/accounts/select`, {
     method: "POST",
     body: JSON.stringify({ id }),
   })
 }
 export function getAccountBindingURL() {
   return `${BASE_URL}/auth/oidc/start?purpose=bind&return_to=/settings`
+}
+
+export function getAuthOptions() {
+  return apiClient<{ registration_enabled: boolean }>(
+    `${BASE_URL}/auth/options`
+  )
+}
+export function passwordLogin(username: string, password: string) {
+  return apiClient<AuthUserResponse>(`${BASE_URL}/auth/login`, {
+    method: "POST",
+    body: JSON.stringify({ username, password }),
+  })
+}
+export function registerAccount(
+  username: string,
+  nickname: string,
+  password: string
+) {
+  return apiClient<AuthUserResponse>(`${BASE_URL}/auth/register`, {
+    method: "POST",
+    body: JSON.stringify({ username, nickname, password }),
+  })
+}
+export function changePassword(old_password: string, password: string) {
+  return apiClient(`${BASE_URL}/auth/password`, {
+    method: "POST",
+    body: JSON.stringify({ old_password, password }),
+  })
+}
+export function updateAccountProfile(username: string, nickname: string) {
+  return apiClient(`${BASE_URL}/auth/profile`, {
+    method: "PUT",
+    body: JSON.stringify({ username, nickname }),
+  })
+}
+export function unbindAccount() {
+  return apiClient(`${BASE_URL}/auth/binding`, { method: "DELETE" })
 }

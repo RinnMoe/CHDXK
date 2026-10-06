@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"errors"
+	"encoding/json"
 
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -16,12 +16,12 @@ type UserRepository struct {
 }
 
 func newUserDomain(e *UserEntity) auth.User {
-	return auth.User{
-		ID:          e.ID,
-		Role:        e.Role,
-		SuspendedAt: e.SuspendedAt,
-		SuspendTill: e.SuspendTill,
+	u := auth.User{ID: e.ID, Role: e.Role, LocalRole: e.Role, Username: e.Username, Nickname: e.Nickname, Email: e.Email.String, IsBootstrap: e.ID == 1, MustChangePassword: e.MustChangePassword, HasPassword: e.PasswordHash != "", AuthVersion: e.AuthVersion, MutedUntil: e.MutedUntil, ModerationReason: e.ModerationReason, DeletedAt: e.DeletedAt, SuspendedAt: e.SuspendedAt, SuspendTill: e.SuspendTill}
+	_ = json.Unmarshal([]byte(e.Permissions), &u.Permissions)
+	if u.Permissions == nil {
+		u.Permissions = []string{}
 	}
+	return u
 }
 
 func (r *UserRepository) Update(ctx context.Context, u *auth.User) error {
@@ -29,7 +29,6 @@ func (r *UserRepository) Update(ctx context.Context, u *auth.User) error {
 		Model(&UserEntity{}).
 		Where("id = ?", u.ID).
 		Updates(map[string]any{
-			"role":         u.Role,
 			"suspended_at": u.SuspendedAt,
 			"suspend_till": u.SuspendTill,
 		}).Error; err != nil {
@@ -40,21 +39,7 @@ func (r *UserRepository) Update(ctx context.Context, u *auth.User) error {
 }
 
 func (r *UserRepository) FindByID(ctx context.Context, id int) (*auth.User, error) {
-	key := cacheKey("user", id)
-	if cached, ok := cacheGetJSON[auth.User](ctx, r.cache, key); ok {
-		return cached, nil
-	}
-
-	e, err := gorm.G[UserEntity](r.db).Where("id = ?", id).Take(ctx)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	d := newUserDomain(&e)
-	cacheSetJSON(ctx, r.cache, key, &d)
-	return &d, nil
+	return loadAccount(r.db.WithContext(ctx), id)
 }
 
 func NewUserRepository(db *gorm.DB, cache ...*redis.Client) *UserRepository {

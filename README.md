@@ -52,7 +52,7 @@ cd backend
 go run cmd/taskworker/main.go --config config/config.yaml
 ```
 
-登录契约：CHDXK 必须配置 res-hub OIDC，res-hub 是账户、角色、会话和积分的唯一来源。本站不提供本地注册、密码登录、密码重置或用户 API Key；配置字段和回调登记见 [res-hub OIDC 接入说明](docs/reshub-integration.md)。
+登录契约：本站支持独立账密登录，主要入口为资料站授权登录；一个资料站账号可绑定多个本站账号。初始超级管理员、注册开关、分项权限与资料站积分见 [账号与权限说明](docs/bootstrap-and-points.md)，客户端登记见 [res-hub OIDC 接入说明](docs/reshub-integration.md)。
 
 ### 4. 启动前端
 

@@ -18,7 +18,7 @@ import (
 
 type ServiceContainer struct {
 	ResHubOIDCClient      auth.ResHubOIDCClient
-	Bootstrap             auth.BootstrapAccountRepository
+	Accounts              *application.LocalAccountService
 	CourseSync            *application.CourseSyncService
 	EnrollmentSync        *application.EnrollmentSyncService
 	TeacherHotQuery       *application.TeacherHotQueryService
@@ -69,7 +69,7 @@ func NewServiceContainer(conf config.AppConfig) (*ServiceContainer, error) {
 	notificationRepo := repository.NewCourseNotificationRepository(db, redisClient)
 	pointRepo := repository.NewPointRepository(db, redisClient)
 	identityProjection := repository.NewUserIdentityRepository(db, conf.ResHub.Issuer)
-	bootstrap := repository.NewBootstrapAccountRepository(db)
+
 	userRepo := repository.NewUserRepository(db, redisClient)
 	systemSettingsRepo := repository.NewSystemSettingsRepository(db, redisClient)
 	systemSettingsService := newSystemSettingsService(systemSettingsRepo, courseRepo)
@@ -87,7 +87,7 @@ func NewServiceContainer(conf config.AppConfig) (*ServiceContainer, error) {
 		voteRepo,
 		siteSettings,
 	)
-	reviewCommand.SetGlobalSuspensionEnabled(false)
+	reviewCommand.SetGlobalSuspensionEnabled(true)
 	courseHotService := course.NewCourseHotService(courseHotRepo)
 	courseService := course.NewService(courseRepo)
 	courseRatingCommand := course.NewCourseRatingCommandService(courseRepo, conf.Course.RatingScore)
@@ -121,7 +121,7 @@ func NewServiceContainer(conf config.AppConfig) (*ServiceContainer, error) {
 	smtpSender := smtp.NewSMTPSender(conf.SMTP)
 	apiKeySvc := auth.NewApiKeyService(apiKeyRepo, apiKeyRepo, conf.APIKey)
 	authResolution := application.NewAuthResolutionService(apiKeySvc, accessTracker, resHubClient, identityProjection)
-	authResolution.SetBootstrap(bootstrap)
+	authResolution.SetAccounts(identityProjection)
 	apiKeyQuery := application.NewApiKeyQueryService(apiKeySvc)
 	apiKeyCommand := application.NewApiKeyCommandService(apiKeySvc)
 	systemSettingsQuery := application.NewSystemSettingsQueryService(systemSettingsService)
@@ -130,7 +130,7 @@ func NewServiceContainer(conf config.AppConfig) (*ServiceContainer, error) {
 	auditLogCommand := application.NewAuditLogCommandService(auditLogRepo)
 
 	return &ServiceContainer{
-		Bootstrap:             bootstrap,
+		Accounts:              application.NewLocalAccountService(identityProjection, systemSettingsService, resHubClient, auditLogRepo),
 		ResHubOIDCClient:      resHubClient,
 		ReviewQuery:           reviewQuery,
 		ReviewCommand:         reviewCommand,

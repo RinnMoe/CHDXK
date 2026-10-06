@@ -111,3 +111,19 @@ func randomURLToken(size int) (string, error) {
 	}
 	return base64.RawURLEncoding.EncodeToString(b), nil
 }
+
+func (s *ResHubOIDCService) CompleteIdentity(ctx context.Context, code, verifier, nonce string) (*auth.ResHubIdentity, auth.ResHubSession, error) {
+	if s == nil || s.client == nil {
+		return nil, auth.ResHubSession{}, auth.ErrResHubUnavailable
+	}
+	session, err := s.client.Exchange(ctx, code, verifier, nonce, s.redirectURI)
+	if err != nil {
+		return nil, session, err
+	}
+	identity, err := s.client.UserInfo(ctx, session.AccessToken)
+	return identity, session, err
+}
+
+func (s *ResHubOIDCService) Identity(ctx context.Context, token string) (*auth.ResHubIdentity, error) {
+	return s.client.UserInfo(ctx, token)
+}

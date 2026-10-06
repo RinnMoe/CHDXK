@@ -26,7 +26,7 @@ func ResolveCurrentUser(authResolution *application.AuthResolutionService) gin.H
 			return
 		}
 
-		resolved, err := authResolution.ResolveAccount(c.Request.Context(), bearerToken(c), OIDCAccessToken(c), BootstrapSession(c))
+		resolved, err := authResolution.ResolveSession(c.Request.Context(), bearerToken(c), OIDCAccessToken(c), AccountSessionID(c), AccountSessionVersion(c))
 		if err != nil {
 			if errors.Is(err, auth.ErrResHubSession) {
 				_ = ClearSession(c)
@@ -61,7 +61,7 @@ func ResolveCurrentUser(authResolution *application.AuthResolutionService) gin.H
 }
 
 func isPublicOIDCRoute(path string) bool {
-	return path == "/api/auth/bootstrap/login" || path == "/api/auth/csrf" || path == "/api/auth/oidc/start" || path == "/api/auth/oidc/callback" || path == "/api/site-copy" || path == "/api/site-theme" || path == "/api/site-pages" || path == "/api/site.webmanifest" || path == "/api/system-settings"
+	return path == "/api/auth/login" || path == "/api/auth/register" || path == "/api/auth/options" || path == "/api/auth/accounts" || path == "/api/auth/accounts/select" || path == "/api/auth/logout" || path == "/api/auth/csrf" || path == "/api/auth/oidc/start" || path == "/api/auth/oidc/callback" || path == "/api/site-copy" || path == "/api/site-theme" || path == "/api/site-pages" || path == "/api/site.webmanifest" || path == "/api/system-settings"
 }
 
 func RequireAuth() gin.HandlerFunc {
@@ -120,6 +120,32 @@ func RequireSelfOrAdmin(userIDParam string) gin.HandlerFunc {
 
 		if u.ID != userID && !u.IsAdmin() {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
+		c.Next()
+	}
+}
+
+func RequirePermission(permission string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		u := auth.GetUserFromCtx(c.Request.Context())
+		if u == nil {
+			c.AbortWithStatusJSON(401, gin.H{"error": "unauthorized"})
+			return
+		}
+		if !u.Can(permission) {
+			c.AbortWithStatusJSON(403, gin.H{"error": "没有此项管理权限"})
+			return
+		}
+		c.Next()
+	}
+}
+func RequirePasswordChanged() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		u := auth.GetUserFromCtx(c.Request.Context())
+		path := c.Request.URL.Path
+		if u != nil && u.MustChangePassword && path != "/api/auth/me" && path != "/api/auth/password" && path != "/api/auth/logout" {
+			c.AbortWithStatusJSON(403, gin.H{"error": "请先修改初始密码", "code": "password_change_required"})
 			return
 		}
 		c.Next()

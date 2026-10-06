@@ -34,7 +34,7 @@ func TestUserRepository_FindByIDAndUpdateAuthFields(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindByID after update: %v", err)
 	}
-	if got.Role != auth.RoleAdmin || got.SuspendedAt == nil || got.SuspendTill == nil {
+	if got.Role != e.Role || got.SuspendedAt == nil || got.SuspendTill == nil {
 		t.Fatalf("updated user = %+v", got)
 	}
 

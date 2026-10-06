@@ -47,14 +47,15 @@ func NewReviewCommandService(
 	}
 }
 
-// SetGlobalSuspensionEnabled disables the legacy local suspension side effect
-// when the identity authority is res-hub. Content moderation and notifications
-// continue to run independently.
+// SetGlobalSuspensionEnabled controls automatic suspension within CHDXK.
 func (s *ReviewCommandService) SetGlobalSuspensionEnabled(enabled bool) {
 	s.globalSuspensionEnabled = enabled
 }
 
 func (s *ReviewCommandService) CreateReview(ctx context.Context, u *auth.User, cmd *CreateReviewCommand) error {
+	if u != nil && u.IsMuted() {
+		return auth.ErrMuted
+	}
 	runtimeConfig, err := s.settings.ReviewRuntimeConfig(ctx)
 	if err != nil {
 		return err
@@ -98,6 +99,9 @@ func (s *ReviewCommandService) createReviewPolicies(config policy.FrequencyPolic
 }
 
 func (s *ReviewCommandService) UpdateReview(ctx context.Context, u *auth.User, cmd *UpdateReviewCommand) error {
+	if u != nil && u.IsMuted() && !u.IsAdmin() {
+		return auth.ErrMuted
+	}
 	existing, err := s.reviewRepo.Get(ctx, cmd.ReviewID)
 	if err != nil {
 		return err

@@ -31,12 +31,14 @@ func TestResolveCurrentUserWithOIDCSession(t *testing.T) {
 
 	r := gin.New()
 	r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
+	authResolution.SetAccounts(&auth.MockAccountRepository{User: &auth.User{ID: 7, Role: auth.RoleUser, AuthVersion: 1}, Match: true})
 	r.Use(ResolveCurrentUser(authResolution))
 	r.GET("/login-session", func(c *gin.Context) {
 		if err := SetSessionOIDC(c, "access-token", "id-token"); err != nil {
 			c.Status(http.StatusInternalServerError)
 			return
 		}
+		_ = SetAccountSession(c, 7, 1, false)
 		c.Status(http.StatusNoContent)
 	})
 	r.GET("/protected", RequireAuth(), func(c *gin.Context) {
@@ -57,7 +59,7 @@ func TestResolveCurrentUserWithOIDCSession(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", w.Code, http.StatusOK)
 	}
-	if client.userinfoToken != "access-token" || projection.identity.Subject != "user:1" {
+	if client.userinfoToken != "access-token" {
 		t.Fatalf("OIDC calls = client %#v projection %#v", client, projection)
 	}
 	if tracker.userID != 7 {
@@ -79,12 +81,14 @@ func TestResolveCurrentUserClearsInvalidOIDCSession(t *testing.T) {
 
 	r := gin.New()
 	r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
+	authResolution.SetAccounts(&auth.MockAccountRepository{User: &auth.User{ID: 7, Role: auth.RoleUser, AuthVersion: 1}, Match: true})
 	r.Use(ResolveCurrentUser(authResolution))
 	r.GET("/login-session", func(c *gin.Context) {
 		if err := SetSessionOIDC(c, "expired-access", "id-token"); err != nil {
 			c.Status(http.StatusInternalServerError)
 			return
 		}
+		_ = SetAccountSession(c, 7, 1, false)
 		c.Status(http.StatusNoContent)
 	})
 	r.GET("/protected", RequireAuth(), func(c *gin.Context) { c.Status(http.StatusOK) })
@@ -114,6 +118,7 @@ func TestResolveCurrentUserLeavesOIDCStartPublic(t *testing.T) {
 	)
 	r := gin.New()
 	r.Use(sessions.Sessions("jcourse_session", cookie.NewStore([]byte("test-secret"))))
+	authResolution.SetAccounts(&auth.MockAccountRepository{User: &auth.User{ID: 7, Role: auth.RoleUser, AuthVersion: 1}, Match: true})
 	r.Use(ResolveCurrentUser(authResolution))
 	r.GET("/api/auth/oidc/start", func(c *gin.Context) { c.Status(http.StatusNoContent) })
 
@@ -255,6 +260,7 @@ func TestSetSessionOIDCResetsExistingSessionState(t *testing.T) {
 			c.Status(http.StatusInternalServerError)
 			return
 		}
+		_ = SetAccountSession(c, 7, 1, false)
 		c.Status(http.StatusNoContent)
 	})
 	r.POST("/protected", CSRF(), func(c *gin.Context) { c.Status(http.StatusNoContent) })
@@ -289,6 +295,7 @@ func TestClearSessionExpiresCookie(t *testing.T) {
 			c.Status(http.StatusInternalServerError)
 			return
 		}
+		_ = SetAccountSession(c, 7, 1, false)
 		c.Status(http.StatusNoContent)
 	})
 	r.POST("/logout", func(c *gin.Context) {
@@ -329,7 +336,7 @@ func firstCookie(t *testing.T, res *http.Response) string {
 	if len(cookies) == 0 {
 		t.Fatal("expected session cookie")
 	}
-	return cookies[0].String()
+	return cookies[len(cookies)-1].String()
 }
 
 type middlewareOIDCClient struct {

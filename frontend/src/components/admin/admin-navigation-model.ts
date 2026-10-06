@@ -1,6 +1,7 @@
 import { copy } from "@/lib/copy"
 
 export const adminSections = [
+  { label: "用户与权限", items: [{ key: "users", label: "用户管理" }] },
   {
     label: copy("copy.admin.components.admin.admin-navigation.fea448341e76"),
     items: [
@@ -79,4 +80,18 @@ export function getAdminTab(value?: string | null): AdminTab {
   )
     ? (value as AdminTab)
     : "course-data"
+}
+
+export function canAccessAdminTab(
+  tab: AdminTab,
+  can: (permission: string) => boolean
+) {
+  if (
+    ["system-settings", "appearance", "site-copy", "content-pages"].includes(
+      tab
+    )
+  )
+    return can("settings")
+  if (tab === "system-api-key") return can("maintenance")
+  return true
 }

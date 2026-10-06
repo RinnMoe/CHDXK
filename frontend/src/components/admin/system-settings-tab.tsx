@@ -14,6 +14,7 @@ type DraftMap = Record<string, string>
 type ErrorMap = Record<string, string>
 
 const GROUP_LABELS: Record<string, string> = {
+  auth: "账号",
   admin: copy("copy.admin.components.admin.system-settings-tab.bb6d995724f4"),
   course: copy("copy.admin.components.admin.system-settings-tab.60db1afb4022"),
   review: copy("copy.admin.components.admin.system-settings-tab.d2469bc43d2c"),

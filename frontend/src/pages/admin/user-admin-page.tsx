@@ -1,3 +1,4 @@
+import { UsersPanel } from "@/components/admin/users-panel"
 import { copy } from "@/lib/copy"
 
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
@@ -13,6 +14,7 @@ import { TeacherProfilesPanel } from "@/components/admin/teacher-profiles-panel"
 import { AdminNavigation } from "@/components/admin/admin-navigation"
 import {
   getAdminTab,
+  canAccessAdminTab,
   type AdminTab,
 } from "@/components/admin/admin-navigation-model"
 import { PageTitle } from "@/components/common/page-title"
@@ -25,7 +27,9 @@ export function UserAdminPage() {
   const { user } = useAuth()
   const search = routeApi.useSearch()
   const navigate = useNavigate({ from: "/admin/user" })
-  const active = getAdminTab(search.tab)
+  const requested = getAdminTab(search.tab)
+  const active =
+    user && canAccessAdminTab(requested, user.can) ? requested : "course-data"
   function setActive(tab: AdminTab) {
     void navigate({
       search: (previous) => ({ ...previous, tab }),
@@ -50,9 +54,14 @@ export function UserAdminPage() {
         ) : (
           <div className="grid items-start gap-6 lg:grid-cols-[12rem_minmax(0,1fr)]">
             <aside className="lg:sticky lg:top-20">
-              <AdminNavigation active={active} onChange={setActive} />
+              <AdminNavigation
+                active={active}
+                onChange={setActive}
+                can={user.can}
+              />
             </aside>
             <div className="min-w-0">
+              {active === "users" && <UsersPanel />}
               {active === "course-data" && <CourseManagementTab />}
               {active === "teacher-profiles" && <TeacherProfilesPanel />}
               {active === "announcement" && <AnnouncementsTab />}

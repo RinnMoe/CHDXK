@@ -2,17 +2,14 @@ package repository
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
+	"encoding/json"
 	"errors"
-	"strings"
-	"time"
-
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/point"
+	"strings"
+	"time"
 )
 
 type UserIdentityRepository struct {
@@ -21,166 +18,145 @@ type UserIdentityRepository struct {
 }
 
 func NewUserIdentityRepository(db *gorm.DB, issuer string) *UserIdentityRepository {
-	issuer = strings.TrimRight(strings.TrimSpace(issuer), "/")
-	return &UserIdentityRepository{db: db, issuer: issuer}
+	return &UserIdentityRepository{db: db, issuer: strings.TrimRight(strings.TrimSpace(issuer), "/")}
 }
-
-func (r *UserIdentityRepository) Upsert(ctx context.Context, snapshot *auth.ResHubIdentity) (*auth.User, error) {
-	if r.issuer == "" || snapshot == nil || strings.TrimSpace(snapshot.Subject) == "" || strings.TrimSpace(snapshot.Issuer) == "" {
-		return nil, auth.ErrIdentityNotFound
-	}
-	if snapshot.Issuer != "" && strings.TrimRight(snapshot.Issuer, "/") != r.issuer {
-		return nil, auth.ErrIdentityNotFound
-	}
-
-	var lastErr error
-	for attempt := 0; attempt < 2; attempt++ {
-		result, err := r.upsertOnce(ctx, snapshot)
-		if err == nil {
-			return result, nil
+func loadAccount(db *gorm.DB, id int) (*auth.User, error) {
+	var e UserEntity
+	if err := db.Where("id=? AND deleted_at IS NULL", id).Take(&e).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
 		}
-		lastErr = err
-
-		// Two first requests for a new subject can race before the unique
-		// issuer/subject index is visible. If the competing transaction won,
-		// retry through the update path once; other failures are returned as-is.
-		var existing UserIdentityEntity
-		if findErr := r.db.WithContext(ctx).
-			Where("issuer = ? AND subject = ?", r.issuer, snapshot.Subject).
-			Take(&existing).Error; findErr != nil {
-			return nil, err
-		}
+		return nil, err
 	}
-	return nil, lastErr
+	u := newUserDomain(&e)
+	var i UserIdentityEntity
+	result := db.Where("user_id=?", id).Find(&i)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	if result.RowsAffected > 0 {
+		u.Subject = i.Subject
+		u.IdentityRole = i.IdentityRole
+		u.IdentityType = i.IdentityType
+		u.BoundNickname = i.Username
+		u.HasPointsAccount = i.HasPointsAccount
+		u.Email = i.Email
+		u.Role = auth.EffectiveRole(e.Role, i.IdentityRole)
+	}
+	return &u, nil
 }
-
-func (r *UserIdentityRepository) upsertOnce(ctx context.Context, snapshot *auth.ResHubIdentity) (*auth.User, error) {
-	var result *auth.User
-	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var identity UserIdentityEntity
-		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-			Where("issuer = ? AND subject = ?", r.issuer, snapshot.Subject).
-			Take(&identity).Error
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+func (r *UserIdentityRepository) FindByID(ctx context.Context, id int) (*auth.User, error) {
+	return loadAccount(r.db.WithContext(ctx), id)
+}
+func (r *UserIdentityRepository) validateIdentity(s *auth.ResHubIdentity) error {
+	if s == nil || strings.TrimSpace(s.Subject) == "" || r.issuer == "" || strings.TrimRight(s.Issuer, "/") != r.issuer {
+		return auth.ErrIdentityNotFound
+	}
+	return nil
+}
+func (r *UserIdentityRepository) BindAccount(ctx context.Context, id int, s *auth.ResHubIdentity) error {
+	if err := r.validateIdentity(s); err != nil {
+		return err
+	}
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var u UserEntity
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("id=? AND deleted_at IS NULL", id).Take(&u).Error; err != nil {
 			return err
 		}
-
-		now := time.Now()
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			user := UserEntity{
-				Username:     internalUsername(r.issuer, snapshot.Subject),
-				Role:         normalizeRole(snapshot.IdentityRole),
-				PasswordHash: "",
-				CreatedAt:    now,
-				LastSeenAt:   now,
-			}
-			if err := tx.Create(&user).Error; err != nil {
-				return err
-			}
-			identity = UserIdentityEntity{
-				UserID:       user.ID,
-				Issuer:       r.issuer,
-				Subject:      snapshot.Subject,
-				Username:     snapshot.Username,
-				Email:        snapshot.Email,
-				IdentityRole: snapshot.IdentityRole,
-				IdentityType: snapshot.IdentityType,
-				CreatedAt:    now,
-				UpdatedAt:    now,
-			}
-			if err := tx.Create(&identity).Error; err != nil {
-				return err
-			}
-		} else {
-			identity.Username = snapshot.Username
-			identity.Email = snapshot.Email
-			identity.IdentityRole = snapshot.IdentityRole
-			identity.IdentityType = snapshot.IdentityType
-			identity.UpdatedAt = now
-			if err := tx.Save(&identity).Error; err != nil {
-				return err
-			}
-			if err := tx.Model(&UserEntity{}).Where("id = ?", identity.UserID).Updates(map[string]any{
-				"last_seen_at": now,
-				"role":         normalizeRole(snapshot.IdentityRole),
-			}).Error; err != nil {
-				return err
-			}
+		if err := saveIdentity(tx, id, s); err != nil {
+			return err
 		}
-
-		result = userFromSnapshot(identity.UserID, snapshot)
+		return tx.Model(&u).Update("auth_version", gorm.Expr("auth_version+1")).Error
+	})
+}
+func saveIdentity(tx *gorm.DB, id int, s *auth.ResHubIdentity) error {
+	now := time.Now()
+	i := UserIdentityEntity{UserID: id, Issuer: strings.TrimRight(s.Issuer, "/"), Subject: s.Subject, Username: s.Username, Email: s.Email, IdentityRole: s.IdentityRole, IdentityType: s.IdentityType, HasPointsAccount: s.HasPointsAccount, CreatedAt: now, UpdatedAt: now}
+	return tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "user_id"}}, DoUpdates: clause.AssignmentColumns([]string{"issuer", "subject", "username", "email", "identity_role", "identity_type", "has_points_account", "updated_at"})}).Create(&i).Error
+}
+func (r *UserIdentityRepository) ResHubAccounts(ctx context.Context, s *auth.ResHubIdentity, create bool) ([]*auth.User, error) {
+	if err := r.validateIdentity(s); err != nil {
+		return nil, err
+	}
+	users := []*auth.User{}
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// Serialize first-login creation for each external subject, including across API replicas.
+		if err := tx.Exec("SELECT pg_advisory_xact_lock(hashtextextended(?, 21))", r.issuer+":"+s.Subject).Error; err != nil {
+			return err
+		}
+		var ids []int
+		if err := tx.Table("user_identities i").Joins("JOIN users u ON u.id=i.user_id").Where("i.issuer=? AND i.subject=? AND u.deleted_at IS NULL", r.issuer, s.Subject).Order("u.id").Pluck("u.id", &ids).Error; err != nil {
+			return err
+		}
+		if len(ids) == 0 && create {
+			suffix, err := randomAccountSecret()
+			if err != nil {
+				return err
+			}
+			now := time.Now()
+			e := UserEntity{Username: "hub_" + strings.ToLower(suffix[:12]), Nickname: s.Username, Role: auth.RoleUser, PasswordHash: "", Permissions: "[]", AuthVersion: 1, CreatedAt: now, LastSeenAt: now}
+			if err := tx.Create(&e).Error; err != nil {
+				return err
+			}
+			ids = append(ids, e.ID)
+		}
+		for _, id := range ids {
+			if err := saveIdentity(tx, id, s); err != nil {
+				return err
+			}
+			u, err := loadAccount(tx, id)
+			if err != nil {
+				return err
+			}
+			users = append(users, u)
+		}
 		return nil
 	})
+	return users, err
+}
+func (r *UserIdentityRepository) Upsert(ctx context.Context, s *auth.ResHubIdentity) (*auth.User, error) {
+	users, err := r.ResHubAccounts(ctx, s, true)
 	if err != nil {
 		return nil, err
 	}
-	return result, nil
+	return users[0], nil
 }
-
-func (r *UserIdentityRepository) SubjectByUserID(ctx context.Context, userID int) (string, error) {
-	if userID <= 0 {
-		return "", auth.ErrIdentityNotFound
-	}
-	if userID == 1 {
-		var binding BootstrapAccountEntity
-		result := r.db.WithContext(ctx).Where("user_id=1").Find(&binding)
-		if result.Error != nil {
-			return "", result.Error
+func (r *UserIdentityRepository) UnbindAccount(ctx context.Context, id int) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var e UserEntity
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("id=?", id).Take(&e).Error; err != nil {
+			return err
 		}
-		if result.RowsAffected > 0 {
-			if binding.Subject == "" || !binding.HasPointsAccount {
-				return "", point.ErrNoPointAccount
-			}
-			if binding.Issuer != r.issuer {
-				return "", auth.ErrIdentityNotFound
-			}
-			return binding.Subject, nil
+		if e.PasswordHash == "" {
+			return auth.ErrLocalLogin
 		}
-	}
-
-	var identity UserIdentityEntity
-	if err := r.db.WithContext(ctx).Where("issuer = ? AND user_id = ?", r.issuer, userID).Take(&identity).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return "", auth.ErrIdentityNotFound
+		if err := tx.Where("user_id=?", id).Delete(&UserIdentityEntity{}).Error; err != nil {
+			return err
 		}
+		return tx.Model(&e).Update("auth_version", gorm.Expr("auth_version+1")).Error
+	})
+}
+func (r *UserIdentityRepository) SubjectByUserID(ctx context.Context, id int) (string, error) {
+	u, err := r.FindByID(ctx, id)
+	if err != nil {
 		return "", err
 	}
-	return identity.Subject, nil
-}
-
-func userFromSnapshot(userID int, snapshot *auth.ResHubIdentity) *auth.User {
-	return &auth.User{
-		ID:               userID,
-		Role:             normalizeRole(snapshot.IdentityRole),
-		Subject:          snapshot.Subject,
-		Username:         snapshot.Username,
-		Email:            snapshot.Email,
-		IdentityRole:     snapshot.IdentityRole,
-		IdentityType:     snapshot.IdentityType,
-		PermissionMode:   snapshot.PermissionMode,
-		ViolationCount:   snapshot.ViolationCount,
-		InitialPassword:  snapshot.InitialPassword,
-		HasPointsAccount: snapshot.HasPointsAccount,
-		SessionID:        snapshot.SessionID,
-		ExpiresAt:        snapshot.ExpiresAt,
-		ImpersonatedBy:   snapshot.ImpersonatedBy,
+	if u == nil || u.Subject == "" || !u.HasPointsAccount {
+		return "", point.ErrNoPointAccount
 	}
-}
-
-func internalUsername(issuer, subject string) string {
-	sum := sha256.Sum256([]byte(issuer + ":" + subject))
-	return "oidc_" + hex.EncodeToString(sum[:])[:40]
-}
-
-func normalizeRole(role string) string {
-	switch strings.ToLower(strings.TrimSpace(role)) {
-	case "super_admin", "super-admin", "superadmin":
-		return auth.RoleSuperAdmin
-	case "admin", "administrator":
-		return auth.RoleAdmin
-	default:
-		return auth.RoleUser
+	var i UserIdentityEntity
+	if err := r.db.WithContext(ctx).Where("user_id=? AND issuer=?", id, r.issuer).Take(&i).Error; err != nil {
+		return "", err
 	}
+	return i.Subject, nil
+}
+func permissionsJSON(values []string) string {
+	if values == nil {
+		values = []string{}
+	}
+	b, _ := json.Marshal(values)
+	return string(b)
 }
 
 var _ auth.IdentityProjectionRepository = (*UserIdentityRepository)(nil)
+var _ auth.AccountRepository = (*UserIdentityRepository)(nil)

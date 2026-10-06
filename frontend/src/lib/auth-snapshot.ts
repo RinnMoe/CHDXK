@@ -30,6 +30,9 @@ function toAuthUserResponse(user: AuthUserDTO): AuthUserResponse {
     username: user.username,
     email: user.email,
     role: user.role,
+    nickname: user.nickname,
+    permissions: user.permissions,
+    must_change_password: user.must_change_password,
   }
 }
 

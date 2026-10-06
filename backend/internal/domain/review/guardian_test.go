@@ -3,6 +3,7 @@ package review
 import (
 	"context"
 	"testing"
+	"time"
 
 	"jcourse/internal/domain/auth"
 )
@@ -30,4 +31,14 @@ func TestGuardianCanDelete(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMutedAuthorCannotPublishOrEdit(t *testing.T) {
+	until := time.Now().Add(time.Hour)
+	u := &auth.User{ID:8,Role:auth.RoleUser,MutedUntil:&until}
+	g := NewGuardian(u,&Review{UserID:8})
+	if g.CanCreate(context.Background()) || g.CanUpdate(context.Background()) { t.Fatal("muted author can write") }
+	u.Role = auth.RoleAdmin
+	if !g.CanUpdate(context.Background()) { t.Fatal("content moderator cannot maintain existing review") }
+	if g.CanCreate(context.Background()) { t.Fatal("muted moderator can publish new review") }
 }

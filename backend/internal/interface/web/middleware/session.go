@@ -163,29 +163,52 @@ func resetSession(c *gin.Context) error {
 	return s.Save()
 }
 
-func BootstrapSession(c *gin.Context) bool {
-	v, _ := sessions.Default(c).Get("bootstrap_account").(bool)
+func AccountSessionID(c *gin.Context) int {
+	v, _ := sessions.Default(c).Get("account_id").(int)
 	return v
 }
-func SetBootstrapSession(c *gin.Context, enabled bool, reset bool) error {
-	if reset {
+func AccountSessionVersion(c *gin.Context) int {
+	v, _ := sessions.Default(c).Get("account_version").(int)
+	return v
+}
+func SetAccountSession(c *gin.Context, id, version int, rotate bool) error {
+	token, idToken := OIDCAccessToken(c), OIDCIDToken(c)
+	if rotate {
 		if err := resetSession(c); err != nil {
 			return err
 		}
 	}
 	s := sessions.Default(c)
-	s.Set("bootstrap_account", enabled)
+	s.Set("account_id", id)
+	s.Set("account_version", version)
+	if token != "" {
+		s.Set(sessionKeyOIDCAccessToken, token)
+		s.Set(sessionKeyOIDCIDToken, idToken)
+	}
 	return s.Save()
 }
-func SetOIDCBinding(c *gin.Context, binding bool) error {
+func SetOIDCBindingTarget(c *gin.Context, id, version int) error {
 	s := sessions.Default(c)
-	s.Set("oidc_binding", binding)
+	s.Set("oidc_binding_id", id)
+	s.Set("oidc_binding_version", version)
 	return s.Save()
 }
-func TakeOIDCBinding(c *gin.Context) bool {
+func TakeOIDCBindingTarget(c *gin.Context) (int, int) {
 	s := sessions.Default(c)
-	v, _ := s.Get("oidc_binding").(bool)
-	s.Delete("oidc_binding")
+	id, _ := s.Get("oidc_binding_id").(int)
+	version, _ := s.Get("oidc_binding_version").(int)
+	s.Delete("oidc_binding_id")
+	s.Delete("oidc_binding_version")
 	_ = s.Save()
-	return v
+	return id, version
+}
+
+func SetPasswordSession(c *gin.Context, id, version int) error {
+	if err := resetSession(c); err != nil {
+		return err
+	}
+	s := sessions.Default(c)
+	s.Set("account_id", id)
+	s.Set("account_version", version)
+	return s.Save()
 }

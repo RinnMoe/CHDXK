@@ -1,14 +1,11 @@
 # res-hub OIDC 接入
 
-res-hub 是 CHDXK 的唯一账户、角色、会话和积分来源。CHDXK 作为 OIDC
-Relying Party 使用标准 Authorization Code + PKCE；浏览器只参与授权跳转，
-client secret、access token 和 ID token 均由 CHDXK 后端保存和使用。
+CHDXK 保留独立本站账号、密码登录、角色与处罚。res-hub 是主要授权登录提供方，也是积分来源。CHDXK 使用 Authorization Code + PKCE，密钥及授权令牌只由后端保存。绑定关系为多个本站账号对应一个 `issuer + sub`；首次授权无绑定时创建本站账号，有多个绑定时由用户选择。
 
 ## 接入边界
 
-CHDXK 不再提供独立的登录账户来源。用户登录、注册、密码修改和账号状态由
-res-hub 管理；CHDXK 只维护本地课程、评价等业务数据，以及 `issuer + sub`
-到本地整数用户 ID 的投影。
+本站初始超级管理员可以独立账密登录；所有用户可以在本站设置密码与绑定资料站。资料站管理员继承本站管理员身份，本地管理员身份和分项权限由本站维护。注册开关与封禁、禁言只影响本站。
+
 
 配置中的 `reshub.issuer` 必须是 res-hub 的稳定公共 HTTPS Issuer。其余 OIDC
 端点一律从 `/.well-known/openid-configuration` 读取，不在 CHDXK 配置中复制
@@ -34,8 +31,7 @@ reshub:
 - 积分功能所需的 `client_credentials` grant，以及 `points.read`、
   `points.write` scope。
 
-OIDC 配置是 CHDXK 启动所需的必填配置；CHDXK 不会回退到本地注册、密码登录、
-用户 API Key 或本地积分实现。开发环境也应使用 res-hub 的测试 client。
+OIDC 配置用于接入资料站授权和积分；本站账密登录使用本地密码与 Redis 会话，积分不会回退为本地积分。开发环境使用 res-hub 测试 client。
 
 ## 登录流程
 
@@ -50,8 +46,7 @@ OIDC 配置是 CHDXK 启动所需的必填配置；CHDXK 不会回退到本地�
 5. CHDXK 后端通过 token endpoint 的 `client_secret_basic` 兑换 code，验证
    ID Token 的签名、`iss`、`aud`、`exp`、`nonce`、`sid` 和 `at_hash`，再用
    access token 请求 userinfo。
-6. userinfo 的 `sub` 与配置的 Issuer 一起写入本地身份投影；后端会话只保存
-   OIDC access token 和 ID token。前端不会接触 token。
+6. userinfo 的 `sub` 与配置 Issuer 用于查找绑定的本站账号。会话保存授权令牌、选定的本站账号 ID 和认证版本；多个绑定时先显示账号选择页。前端不会接触 token。
 
 userinfo 使用 res-hub 当前直接 claims：`sub`、`name`、
 `preferred_username`、`res_hub_identity_type`、`res_hub_role`、
@@ -60,16 +55,10 @@ userinfo 使用 res-hub 当前直接 claims：`sub`、`name`、
 
 ## 当前请求和退出
 
-除 OIDC 开始与回调外，受保护请求都从 HttpOnly Redis 会话取出 OIDC access
-token，并以 `Authorization: Bearer` 请求 userinfo。userinfo 失败或令牌失效时，
-CHDXK 清理本站会话并要求重新登录；身份投影每次以 res-hub 返回的账号角色
-`res_hub_role` 更新。主站管理员选择普通用户模式仍是本站管理员；
-`res_hub_effective_role` 和 `res_hub_permission_mode` 不参与本站授权。
-账号真正被撤销管理员身份后，本站下一次请求会同步为普通用户。
+受保护请求校验选定本站账号、认证版本与本站封禁状态。资料站登录会话另外请求 userinfo 并校验该身份仍绑定选定账号；失效时清理本站会话。角色使用 `res_hub_role`，不依据普通用户模式 `res_hub_effective_role` 或 `res_hub_permission_mode`。本站主动授予的管理员身份保留，资料站超管继承本站管理员，不自动获得本站超级管理员身份。
 
-退出时，CHDXK 使用 Discovery 的 `end_session_endpoint`，携带
-`id_token_hint`、`client_id` 和已登记的 `post_logout_redirect_uri`，然后清理
-本站会话。不会把 access token 当作注销凭证。
+本站账密会话不依赖资料站在线状态。退出登录只清理 CHDXK 会话，不注销资料站会话。密码更改、绑定更换、解绑使旧认证版本失效。
+
 
 ## 积分 API
 
@@ -102,6 +91,6 @@ res-hub 部署要求提供 HTTPS、mTLS 或可信代理配置。CHDXK 不再依�
 
 ## 初始管理员和积分账户
 
-首次启动的本地初始超级管理员、魔法链接、频道账号绑定、账号选择，以及无积分账户的处理，参见 [初始管理员、频道账号和积分](bootstrap-and-points.md)。
+首次启动的本地初始超级管理员、账密登录、资料站账号绑定、账号选择、分项权限，以及无积分账户的处理，参见 [初始管理员、频道账号和积分](bootstrap-and-points.md)。
 
 频道在 `res_hub_identity` scope 的身份信息中返回 `res_hub_has_points_account`。配置管理员通常没有积分账户，用户库账号具有积分账户；课程榜会区分可管理站点与可使用积分这两种能力。

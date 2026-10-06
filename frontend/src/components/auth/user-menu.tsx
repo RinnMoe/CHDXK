@@ -65,13 +65,17 @@ export function UserMenu() {
           <DropdownMenuLabel className="space-y-1.5 font-normal">
             <div className="flex items-start justify-between gap-3">
               <p className="min-w-0 flex-1 text-sm font-medium wrap-anywhere text-foreground">
-                {user.username.trim() ||
+                {user.nickname?.trim() ||
+                  user.bound_nickname?.trim() ||
+                  user.username.trim() ||
                   copy("copy.user.components.auth.user-menu.0d0e1a86b3aa")}
               </p>
               <Badge variant="secondary" className="shrink-0 text-xs">
-                {user.is_admin()
-                  ? copy("copy.user.components.auth.user-menu.e19796712f1c")
-                  : copy("copy.user.components.auth.user-menu.f6a2faaac200")}
+                {user.is_super_admin()
+                  ? "超级管理员"
+                  : user.is_admin()
+                    ? copy("copy.user.components.auth.user-menu.e19796712f1c")
+                    : copy("copy.user.components.auth.user-menu.f6a2faaac200")}
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">

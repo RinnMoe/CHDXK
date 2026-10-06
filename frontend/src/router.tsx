@@ -71,6 +71,8 @@ async function requireAuth({
       replace: true,
     })
   }
+  if (user.must_change_password && location.pathname !== "/change-password")
+    throw redirect({ to: "/change-password", replace: true })
   return { user }
 }
 
@@ -84,7 +86,9 @@ async function redirectAuthedUser({
   const user = await context.queryClient.fetchQuery(authMeQueryOptions())
   if (user) {
     throw redirect({
-      to: getSafeRedirectPath(search?.redirect),
+      to: user.must_change_password
+        ? "/change-password"
+        : getSafeRedirectPath(search?.redirect),
       replace: true,
     })
   }
@@ -125,12 +129,12 @@ export const loginRoute = createRoute({
   ),
 })
 
-const bootstrapLoginRoute = createRoute({
-  getParentRoute: () => publicRoute,
-  path: "/bootstrap-login",
+const changePasswordRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/change-password",
   component: lazyRouteComponent(
-    () => import("@/pages/account-login-page"),
-    "BootstrapLoginPage"
+    () => import("@/pages/change-password-page"),
+    "ChangePasswordPage"
   ),
 })
 const loginAccountsRoute = createRoute({
@@ -345,7 +349,6 @@ const notFoundRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([
-    bootstrapLoginRoute,
     loginAccountsRoute,
     loginRoute,
     aboutRoute,
@@ -354,6 +357,7 @@ const routeTree = rootRoute.addChildren([
   ]),
   appRoute.addChildren([
     homeRoute,
+    changePasswordRoute,
     coursesRoute,
     hotCoursesRoute,
     courseDetailRoute.addChildren([newReviewRoute]),
@@ -373,7 +377,6 @@ const routeTree = rootRoute.addChildren([
     notFoundRoute,
   ]),
 ])
-
 export const router = createRouter({
   routeTree,
   context: {
@@ -383,7 +386,6 @@ export const router = createRouter({
   defaultPendingMs: 250,
   scrollRestoration: true,
 })
-
 export function getLoginRedirectPath() {
   return buildLoginRedirectPath(
     `${router.state.location.pathname}${router.state.location.searchStr}${router.state.location.hash}`

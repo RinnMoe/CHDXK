@@ -1623,7 +1623,7 @@
     "location": "internal/domain/review/templates/review_frequency_suspension.html"
   },
   "copy.email.notice": {
-    "text": "系统检测到异常点评频率，本次提交已被阻止。请核查点评记录，需要限制账号时请在频道处理。",
+    "text": "系统检测到异常点评频率，本次提交已被阻止。请在本站核查点评记录及账号处理情况。",
     "audience": "admin",
     "location": "internal/domain/review/templates/review_frequency_suspension.html",
     "editable": true,
@@ -4433,7 +4433,7 @@
     "location": "pages/account-login-page.tsx"
   },
   "copy.user.pages.account-login-page.df2d3333e46e": {
-    "text": "该频道账号绑定了多个账号，请选择一个登录。",
+    "text": "该资料站账号绑定了多个本站账号，请选择一个登录。",
     "audience": "user",
     "location": "pages/account-login-page.tsx"
   },
@@ -5192,7 +5192,7 @@
     "location": "pages/user-settings-page.tsx"
   },
   "copy.user.pages.user-settings-page.7bb8c99f8a2e": {
-    "text": "绑定不会更改初始管理员权限，原来的魔法登录链接仍然有效。请妥善保存该链接。",
+    "text": "绑定后仍可通过本站账号密码登录，初始超级管理员权限不变。",
     "audience": "user",
     "location": "pages/user-settings-page.tsx"
   },

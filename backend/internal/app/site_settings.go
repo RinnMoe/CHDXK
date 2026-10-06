@@ -5,7 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"jcourse/internal/domain/course"
+	"jcourse/internal/application"
+ "jcourse/internal/domain/course"
 	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/review/policy"
@@ -16,6 +17,7 @@ import (
 
 func newSystemSettingsService(repo setting.SystemRepository, courseRepo course.CourseRepository) *setting.SystemSettingsService {
 	defs := []setting.Definition{
+		{Key: application.RegistrationSetting, Group: "账号", Label: "开放本站账号注册", Description: "关闭后隐藏注册入口，并停止接受新账号注册。资料站首次授权登录仍会创建绑定账号。", Type: setting.ValueTypeBool, DefaultValue: "false", Public: true},
 		{Key: sitetheme.Key, Group: "theme", Label: "主题外观", Type: setting.ValueTypeString, DefaultValue: sitetheme.Defaults,
 			Validator: setting.ValueValidatorFunc(func(_ context.Context, value string) error {
 				if _, err := sitetheme.Parse(value); err != nil {

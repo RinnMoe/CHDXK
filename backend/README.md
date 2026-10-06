@@ -134,7 +134,7 @@ Compress-Archive -Path "../tools/bkjw-course-source/data/bkjw/2026-2027-1/semest
 
 ## API 与权限
 
-路由集中定义在 `internal/interface/web/router.go`。公开接口只有 OIDC 开始/回调和 CSRF token；res-hub 是唯一账户、角色和会话来源，不存在本地注册、密码登录、密码重置或用户 API Key 入口。大多数 `/api` 接口需要 OIDC 会话；系统 API Key 仅用于管理员维护的服务端调用；站点统计、系统设置、公告、系统 API Key 和部分点评管理接口需要管理员权限。
+路由集中定义在 `internal/interface/web/router.go`。公开认证接口包括资料站授权、本站账密登录、注册与账号选择；注册受后台开关控制。受保护接口校验选定本站账号、会话版本、本站处罚和初始改密状态。系统接口密钥需开发维护权限，站点设置需站点配置权限，用户增删改、权限分配和积分调整分别授权。账号模型详见 [账号与权限说明](../docs/bootstrap-and-points.md)。
 
 前端开发服务器默认从 `http://localhost:5173` 访问后端。CORS 默认允许 `*`，可通过 `server.cors.allowed_origins` 或 `JCOURSE_SERVER_CORS_ALLOWED_ORIGINS` 覆盖，并启用 cookie 凭据。
 

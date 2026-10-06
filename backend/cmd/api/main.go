@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
@@ -25,7 +24,6 @@ func main() {
 	ctx := context.Background()
 
 	pflag.String("config", "", "path to config file (env: CONFIG_PATH)")
-	pflag.Bool("rotate-bootstrap-link", false, "replace the initial administrator magic link")
 	pflag.Parse()
 
 	if err := viper.BindPFlag("config", pflag.Lookup("config")); err != nil {
@@ -49,13 +47,12 @@ func main() {
 	if err != nil {
 		logx.Fatal(ctx, "failed to initialize services", "err", err)
 	}
-	rotate, _ := pflag.CommandLine.GetBool("rotate-bootstrap-link")
-	token, err := container.Bootstrap.Ensure(ctx, rotate)
+	credentials, err := container.Accounts.Repo.Initialize(ctx)
 	if err != nil {
-		logx.Fatal(ctx, "initialize bootstrap administrator", "err", err)
+		logx.Fatal(ctx, "initialize initial administrator", "err", err)
 	}
-	if token != "" {
-		logx.Info(ctx, "初始超级管理员登录链接，请妥善保存", "url", strings.TrimRight(conf.Bootstrap.PublicURL, "/")+"/bootstrap-login#token="+token)
+	if credentials != nil {
+		logx.Info(ctx, "初始超级管理员账号，请首次登录后修改密码", "username", credentials.Username, "password", credentials.Password)
 	}
 	engine := web.NewRouter(container, conf)
 
