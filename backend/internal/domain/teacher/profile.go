@@ -66,6 +66,7 @@ func ProfileCandidates(t TeacherView, teachers []TeacherView, profiles []Profile
 type ProfileSource interface {
 	List(context.Context, func(int, int)) ([]Profile, error)
 	Detail(context.Context, Profile) (Profile, error)
+	Find(context.Context, string, string) ([]Profile, error)
 }
 type ProfileStore interface {
 	Teachers(context.Context) ([]TeacherView, error)

@@ -85,10 +85,31 @@ func (c *Client) request(ctx context.Context, address string, body url.Values) (
 	return nil, fmt.Errorf("教师主页请求重试后仍失败")
 }
 func (c *Client) List(ctx context.Context, progress func(int, int)) ([]teacher.Profile, error) {
+	return c.list(ctx, "", progress)
+}
+func (c *Client) Find(ctx context.Context, name, department string) ([]teacher.Profile, error) {
+	rows, err := c.list(ctx, strings.TrimSpace(name), func(int, int) {})
+	if err != nil {
+		return nil, err
+	}
+	matches := []teacher.Profile{}
+	for _, p := range rows {
+		if teacher.ProfileIdentity(p.Name, p.Department) == teacher.ProfileIdentity(name, department) {
+			matches = append(matches, p)
+		}
+	}
+	return matches, nil
+}
+func (c *Client) list(ctx context.Context, name string, progress func(int, int)) ([]teacher.Profile, error) {
 	result := []teacher.Profile{}
 	seen := map[string]bool{}
 	for page := 1; page <= 500; page++ {
 		body := url.Values{"siteId": {"2"}, "pageIndex": {strconv.Itoa(page)}, "rows": {"100"}, "articleType": {"1"}, "level": {"0"}, "orders": {""}, "pageEvent": {"dataSearchByPageIndex"}, "conditions": {`[{"field":"language","value":"1","judge":"="},{"field":"ownDepartment","value":"","judge":"="},{"field":"title","value":"","judge":"like"},{"field":"published","value":"1","judge":"="}]`}, "returnInfos": {`[{"field":"title","name":"title"},{"field":"career","name":"career"},{"field":"cnUrl","name":"cnUrl"},{"field":"department","name":"department"},{"field":"publishStatus","name":"publishStatus"}]`}}
+		if name != "" {
+			conditions := []map[string]string{{"field": "language", "value": "1", "judge": "="}, {"field": "ownDepartment", "value": "", "judge": "="}, {"field": "title", "value": name, "judge": "like"}, {"field": "published", "value": "1", "judge": "="}}
+			encoded, _ := json.Marshal(conditions)
+			body.Set("conditions", string(encoded))
+		}
 		data, err := c.request(ctx, origin+"/_wp3services/generalQuery?queryObj=teacherHome", body)
 		if err != nil {
 			return nil, err
@@ -104,7 +125,13 @@ func (c *Client) List(ctx context.Context, progress func(int, int)) ([]teacher.P
 				Published  int    `json:"publishStatus"`
 			} `json:"data"`
 		}
-		if err := json.Unmarshal(data, &response); err != nil || response.Total < 1 || response.PageCount < 1 || len(response.Data) == 0 {
+		if err := json.Unmarshal(data, &response); err != nil {
+			return nil, fmt.Errorf("教师目录格式异常")
+		}
+		if name != "" && response.Total == 0 && response.Data != nil && len(response.Data) == 0 {
+			return result, nil
+		}
+		if response.Total < 1 || response.PageCount < 1 || len(response.Data) == 0 {
 			return nil, fmt.Errorf("教师目录格式异常，未保存本次同步")
 		}
 		added := 0

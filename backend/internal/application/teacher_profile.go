@@ -199,3 +199,48 @@ func (s *TeacherProfileService) Edit(ctx context.Context, id int, p teacher.Prof
 	p.UpdatedAt = time.Now()
 	return s.repo.Edit(ctx, id, p)
 }
+
+type TeacherProfilePreview struct {
+	Candidates []teacher.Profile `json:"candidates"`
+	Profile    *teacher.Profile  `json:"profile,omitempty"`
+}
+
+// Preview is read-only: it never saves or starts a global synchronization.
+func (s *TeacherProfileService) Preview(ctx context.Context, id int, name, department, address string) (*TeacherProfilePreview, error) {
+	name = strings.TrimSpace(name)
+	department = strings.TrimSpace(department)
+	if name == "" || department == "" || len(name) > 300 || len(department) > 300 {
+		return nil, apperr.BadRequest("请先填写姓名和学院")
+	}
+	rows, _, err := s.repo.List(ctx, teacher.TeacherFilter{TeacherIDs: []int{id}})
+	if err != nil {
+		return nil, err
+	}
+	if len(rows) != 1 {
+		return nil, apperr.BadRequest("教师不存在")
+	}
+	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+	candidates, err := s.source.Find(ctx, name, department)
+	if err != nil {
+		return nil, apperr.BadRequest("教师主页查询失败，请稍后重试，现有资料保留")
+	}
+	result := &TeacherProfilePreview{Candidates: candidates}
+	if address == "" && len(candidates) == 1 {
+		address = candidates[0].URL
+	}
+	if address == "" {
+		return result, nil
+	}
+	for _, candidate := range candidates {
+		if candidate.URL == address {
+			detail, err := s.source.Detail(ctx, candidate)
+			if err != nil {
+				return nil, apperr.BadRequest("该教师主页资料读取失败，请稍后重试，现有资料保留")
+			}
+			result.Profile = &detail
+			return result, nil
+		}
+	}
+	return nil, apperr.BadRequest("请选择姓名与学院匹配的候选主页")
+}

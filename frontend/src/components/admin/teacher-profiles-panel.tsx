@@ -74,7 +74,7 @@ export function TeacherProfilesPanel() {
               onClick={() => action.mutate("sync")}
               data-action="sync-teacher-profiles"
             >
-              同步教师资料
+              批量同步教师资料
             </Button>
             {running && (
               <Button

@@ -198,6 +198,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	profileGroup.GET("/matches", profileController.Matches)
 	profileGroup.GET("/teachers", profileController.Teachers)
 	profileGroup.PUT("/:teacherID/details", profileController.Edit)
+	profileGroup.POST("/:teacherID/preview", profileController.Preview)
 	profileGroup.PUT("/:teacherID", profileController.Bind)
 	{
 		adminCourseGroup.GET("/semester", courseAdminController.ListSemesters)

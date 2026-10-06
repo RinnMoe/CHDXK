@@ -1,7 +1,11 @@
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
-import { getTeacherFilters, type TeacherDTO } from "@/api/teacher"
+import {
+  getTeacherFilters,
+  type TeacherDTO,
+  type TeacherProfileDTO,
+} from "@/api/teacher"
 import type { PaginatedResult } from "@/api/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,6 +17,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
+
+import { teacherProfileForm, fillTeacherProfile } from "./teacher-profile-form"
 
 const fields = ["学位", "联系方式", "办公地点", "研究方向", "个人简介"]
 const base = "/api/admin/teacher-profiles"
@@ -176,25 +182,39 @@ function TeacherEditor({
   teacher: TeacherDTO
   close: () => void
 }) {
-  const p = teacher.profile
-  const [form, setForm] = useState({
-    name: teacher.name,
-    department: teacher.department,
-    title: teacher.title ?? "",
-    url: p?.url ?? "",
-    fields: {
-      学位: p?.fields["学位"] ?? "",
-      联系方式: [
-        p?.fields["电子邮箱"],
-        p?.fields["联系电话"],
-        p?.fields["联系方式"],
-      ]
-        .filter(Boolean)
-        .join("\n"),
-      办公地点: p?.fields["办公地点"] || p?.fields["办公地址"] || "",
-      研究方向: p?.fields["研究方向"] || p?.fields["研究领域"] || "",
-      个人简介: p?.fields["个人简介"] ?? "",
-    } as Record<string, string>,
+  const [form, setForm] = useState(() => teacherProfileForm(teacher))
+  const [feedback, setFeedback] = useState("")
+  const [candidates, setCandidates] = useState<TeacherProfileDTO[]>([])
+  const fill = useMutation({
+    mutationFn: (url: string) =>
+      apiClient<{
+        candidates: TeacherProfileDTO[]
+        profile?: TeacherProfileDTO
+      }>(`${base}/${teacher.id}/preview`, {
+        method: "POST",
+        body: JSON.stringify({
+          name: form.name,
+          department: form.department,
+          url,
+        }),
+      }),
+    onMutate: () => {
+      setFeedback("")
+      setCandidates([])
+    },
+    onSuccess: (result) => {
+      if (result.profile) {
+        const p = result.profile
+        setForm((current) => fillTeacherProfile(current, p))
+        setCandidates([])
+        setFeedback("资料已填入，请核对后保存。来源缺失的字段保留现有内容。")
+      } else if (result.candidates.length > 1) {
+        setCandidates(result.candidates)
+        setFeedback("找到同学院同名的教师，请选择要填入的资料。")
+      } else {
+        setFeedback("未找到姓名与学院都匹配的教师主页，现有内容保留。")
+      }
+    },
   })
   const client = useQueryClient()
   const save = useMutation({
@@ -231,6 +251,70 @@ function TeacherEditor({
           保存后用于本站展示，自动同步不会覆盖手动维护的资料。
         </DialogDescription>
       </DialogHeader>
+      <div className="space-y-3 rounded-lg border bg-muted/30 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-sm font-medium">从学校教师主页填充</span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            data-action="fill-teacher-profile"
+            disabled={
+              fill.isPending ||
+              save.isPending ||
+              !form.name.trim() ||
+              !form.department.trim()
+            }
+            onClick={() => fill.mutate("")}
+          >
+            {fill.isPending ? "正在获取资料…" : "获取并填入资料"}
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          根据当前填写的姓名与学院查询，仅填入这位教师的资料，核对后点击保存。
+        </p>
+        {feedback && (
+          <p className="text-sm" role="status">
+            {feedback}
+          </p>
+        )}
+        {fill.isError && (
+          <p role="alert" className="text-sm text-destructive">
+            {fill.error.message}
+          </p>
+        )}
+        {candidates.map((p) => (
+          <div
+            key={p.url}
+            className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm"
+          >
+            <div>
+              <p>
+                {p.name} · {p.department}
+                {p.title ? ` · ${p.title}` : ""}
+              </p>
+              <a
+                className="text-primary underline underline-offset-4"
+                href={p.url}
+                target="_blank"
+                rel="noreferrer"
+              >
+                查看学校主页
+              </a>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              data-fill-candidate={p.url}
+              disabled={fill.isPending || save.isPending}
+              onClick={() => fill.mutate(p.url)}
+            >
+              填入此教师资料
+            </Button>
+          </div>
+        ))}
+      </div>
       <form
         onSubmit={(e) => {
           e.preventDefault()
@@ -238,47 +322,59 @@ function TeacherEditor({
         }}
         className="space-y-4"
       >
-        <div className="grid gap-4 sm:grid-cols-2">
-          {(["name", "department", "title", "url"] as const).map((key) => (
-            <label key={key} className="space-y-2 text-sm">
-              <span>
-                {
+        <fieldset
+          disabled={fill.isPending || save.isPending}
+          className="space-y-4"
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            {(["name", "department", "title", "url"] as const).map((key) => (
+              <label key={key} className="space-y-2 text-sm">
+                <span>
                   {
-                    name: "姓名",
-                    department: "学院",
-                    title: "职称",
-                    url: "教师主页",
-                  }[key]
+                    {
+                      name: "姓名",
+                      department: "学院",
+                      title: "职称",
+                      url: "教师主页",
+                    }[key]
+                  }
+                </span>
+                <Input
+                  name={key}
+                  required={key === "name" || key === "department"}
+                  type={key === "url" ? "url" : "text"}
+                  value={form[key]}
+                  onChange={(e) => {
+                    setForm({ ...form, [key]: e.target.value })
+                    if (key === "name" || key === "department") {
+                      setCandidates([])
+                      setFeedback("")
+                      fill.reset()
+                    }
+                  }}
+                  maxLength={key === "url" ? 2000 : 100}
+                />
+              </label>
+            ))}
+          </div>
+          {fields.map((label) => (
+            <label key={label} className="block space-y-2 text-sm">
+              <span>{label}</span>
+              <Textarea
+                name={label}
+                value={form.fields[label]}
+                rows={label === "个人简介" ? 5 : 2}
+                maxLength={10000}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    fields: { ...form.fields, [label]: e.target.value },
+                  })
                 }
-              </span>
-              <Input
-                name={key}
-                required={key === "name" || key === "department"}
-                type={key === "url" ? "url" : "text"}
-                value={form[key]}
-                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                maxLength={key === "url" ? 2000 : 100}
               />
             </label>
           ))}
-        </div>
-        {fields.map((label) => (
-          <label key={label} className="block space-y-2 text-sm">
-            <span>{label}</span>
-            <Textarea
-              name={label}
-              value={form.fields[label]}
-              rows={label === "个人简介" ? 5 : 2}
-              maxLength={10000}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  fields: { ...form.fields, [label]: e.target.value },
-                })
-              }
-            />
-          </label>
-        ))}
+        </fieldset>
         {save.isError && (
           <p role="alert" className="text-sm text-destructive">
             {save.error.message}
@@ -293,7 +389,7 @@ function TeacherEditor({
           >
             取消
           </Button>
-          <Button type="submit" disabled={save.isPending}>
+          <Button type="submit" disabled={save.isPending || fill.isPending}>
             保存资料
           </Button>
         </div>

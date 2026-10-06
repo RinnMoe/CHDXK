@@ -79,3 +79,47 @@ func TestTeacherProfileEditValidation(t *testing.T) {
 		t.Fatal("editing during sync accepted")
 	}
 }
+
+func TestTeacherProfilePreviewDoesNotSaveAndRequiresCandidateChoice(t *testing.T) {
+	ctx := context.Background()
+	calls := 0
+	repo := &teacher.MockProfileStore{OnList: func(context.Context, teacher.TeacherFilter) ([]teacher.TeacherView, int64, error) {
+		return []teacher.TeacherView{{ID: 1}}, 1, nil
+	}}
+	candidates := []teacher.Profile{{Name: "张三", Department: "理学院", URL: "https://js.chd.edu.cn/a/list.htm"}, {Name: "张三", Department: "理学院", URL: "https://js.chd.edu.cn/b/list.htm"}}
+	source := &teacher.MockProfileSource{OnFind: func(_ context.Context, name, department string) ([]teacher.Profile, error) {
+		if name != "张三" || department != "理学院" {
+			t.Fatal("wrong query")
+		}
+		return candidates, nil
+	}, OnDetail: func(_ context.Context, p teacher.Profile) (teacher.Profile, error) {
+		calls++
+		p.Fields = map[string]string{"学位": "博士"}
+		return p, nil
+	}}
+	s := NewTeacherProfileService(repo, source)
+	got, err := s.Preview(ctx, 1, "张三", "理学院", "")
+	if err != nil || len(got.Candidates) != 2 || got.Profile != nil || calls != 0 {
+		t.Fatal(got, err, calls)
+	}
+	if _, err := s.Preview(ctx, 1, "张三", "理学院", "https://other.example/test"); err == nil || calls != 0 {
+		t.Fatal("non-candidate fetched")
+	}
+	got, err = s.Preview(ctx, 1, "张三", "理学院", candidates[1].URL)
+	if err != nil || got.Profile.URL != candidates[1].URL || calls != 1 {
+		t.Fatal(got, err, calls)
+	}
+	candidates = candidates[:1]
+	got, err = s.Preview(ctx, 1, "张三", "理学院", "")
+	if err != nil || got.Profile == nil || calls != 2 {
+		t.Fatal(got, err, calls)
+	}
+	candidates = []teacher.Profile{}
+	got, err = s.Preview(ctx, 1, "张三", "理学院", "")
+	if err != nil || got.Profile != nil || calls != 2 {
+		t.Fatal(got, err, calls)
+	}
+	if s.Status().State != "idle" {
+		t.Fatal("preview started a global sync")
+	}
+}

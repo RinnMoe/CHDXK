@@ -1,7 +1,11 @@
 package chdteachers
 
 import (
+	"context"
+	"io"
 	"jcourse/internal/domain/teacher"
+	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -27,5 +31,34 @@ func TestSourceURLRestrictsExternalHosts(t *testing.T) {
 	got, err := sourceURL("http://js.chd.edu.cn/a/list.htm")
 	if err != nil || got != "https://js.chd.edu.cn/a/list.htm" {
 		t.Fatal(got, err)
+	}
+}
+
+type profileTransport func(*http.Request) (*http.Response, error)
+
+func (f profileTransport) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
+func TestFindFiltersExactNameAndCollegeAndAllowsEmptyResults(t *testing.T) {
+	empty := false
+	client := &Client{HTTP: &http.Client{Transport: profileTransport(func(r *http.Request) (*http.Response, error) {
+		if err := r.ParseForm(); err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(r.Form.Get("conditions"), `"value":"张三"`) {
+			t.Fatal("name filter missing")
+		}
+		body := `{"total":3,"pageCount":1,"data":[{"title":"张三","department":"理学院","cnUrl":"/a/list.htm","publishStatus":1},{"title":"张三","department":"外国语学院","cnUrl":"/b/list.htm","publishStatus":1},{"title":"张三丰","department":"理学院","cnUrl":"/c/list.htm","publishStatus":1}]}`
+		if empty {
+			body = `{"total":0,"pageCount":0,"data":[]}`
+		}
+		return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(body)), Header: make(http.Header)}, nil
+	})}}
+	rows, err := client.Find(context.Background(), "张三", "理学院")
+	if err != nil || len(rows) != 1 || rows[0].URL != "https://js.chd.edu.cn/a/list.htm" {
+		t.Fatal(rows, err)
+	}
+	empty = true
+	rows, err = client.Find(context.Background(), "张三", "理学院")
+	if err != nil || len(rows) != 0 {
+		t.Fatal(rows, err)
 	}
 }

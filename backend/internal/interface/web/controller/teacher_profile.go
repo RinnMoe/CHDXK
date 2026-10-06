@@ -92,3 +92,26 @@ func (c *TeacherProfileController) Edit(g *gin.Context) {
 	}
 	g.Status(http.StatusNoContent)
 }
+
+func (c *TeacherProfileController) Preview(g *gin.Context) {
+	id, err := strconv.Atoi(g.Param("teacherID"))
+	if err != nil || id < 1 {
+		respondBadRequest(g, "教师编号无效")
+		return
+	}
+	var cmd struct {
+		Name       string `json:"name"`
+		Department string `json:"department"`
+		URL        string `json:"url"`
+	}
+	if err := g.ShouldBindJSON(&cmd); err != nil {
+		respondBindError(g, err)
+		return
+	}
+	result, err := c.service.Preview(g.Request.Context(), id, cmd.Name, cmd.Department, cmd.URL)
+	if err != nil {
+		respondError(g, err)
+		return
+	}
+	g.JSON(http.StatusOK, result)
+}
