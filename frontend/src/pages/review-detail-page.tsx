@@ -1,5 +1,10 @@
 import { copy } from "@/lib/copy"
-import { getRouteApi, useNavigate, useRouter } from "@tanstack/react-router"
+import {
+  Outlet,
+  getRouteApi,
+  useNavigate,
+  useRouter,
+} from "@tanstack/react-router"
 import { RiArrowLeftLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -48,6 +53,7 @@ export function ReviewDetailPage() {
             <Skeleton className="h-32 w-full" />
           </div>
         </PageShell>
+        <Outlet />
       </>
     )
   }
@@ -73,6 +79,7 @@ export function ReviewDetailPage() {
             </Button>
           </div>
         </PageShell>
+        <Outlet />
       </>
     )
   }
@@ -98,6 +105,7 @@ export function ReviewDetailPage() {
           <ReviewCard review={review} showCourse showVoteButtons />
         </div>
       </PageShell>
+      <Outlet />
     </>
   )
 }

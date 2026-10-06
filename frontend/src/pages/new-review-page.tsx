@@ -1,15 +1,6 @@
 import { copy } from "@/lib/copy"
-import {
-  getRouteApi,
-  Link,
-  useNavigate,
-  useRouter,
-} from "@tanstack/react-router"
-import { RiArrowLeftLine } from "@remixicon/react"
-import { Button } from "@/components/ui/button"
-import { PageShell } from "@/components/layout/page-shell"
-import { PageTitle } from "@/components/common/page-title"
-import { CourseHeaderMeta } from "@/components/course/course-header-meta"
+import { getRouteApi, useNavigate } from "@tanstack/react-router"
+import { ReviewDialog } from "@/components/review/review-dialog"
 import { ReviewForm } from "@/components/review/review-form"
 import { WrongCourseWarning } from "@/components/review/wrong-course-warning"
 import { useCourseDetail } from "@/hooks/use-course"
@@ -32,7 +23,6 @@ export function NewReviewPage() {
   const { courseID } = routeApi.useParams()
   const id = Number(courseID)
   const navigate = useNavigate()
-  const router = useRouter()
   const { user } = useAuth()
   const { data: course } = useCourseDetail(id)
   const systemSettingsQuery = useSystemSettings(!!user)
@@ -43,6 +33,15 @@ export function NewReviewPage() {
     : filterSemestersUpTo(getCourseSemesters(course), currentSemester)
   const defaultSemester = getDefaultSemester(semesters, currentSemester)
 
+  function closeDialog() {
+    if (!isPending)
+      void navigate({
+        to: "/course/$courseID",
+        params: { courseID: String(id) },
+        replace: true,
+      })
+  }
+
   async function handleSubmit(cmd: CreateReviewCommand | UpdateReviewCommand) {
     await mutateAsync(cmd as CreateReviewCommand)
     await navigate({
@@ -52,42 +51,22 @@ export function NewReviewPage() {
   }
 
   return (
-    <>
-      <PageTitle>
-        {copy("copy.user.pages.new-review-page.74cdbe78b5b2")}
-      </PageTitle>
-      <PageShell>
-        <Button asChild variant="ghost" size="sm" className="mb-4">
-          <Link to="/course/$courseID" params={{ courseID: String(id) }}>
-            <RiArrowLeftLine data-icon="inline-start" />
-            {copy("copy.user.pages.new-review-page.17d4b8e54563")}
-          </Link>
-        </Button>
-
-        <section className="space-y-4">
-          <div className="space-y-4">
-            <h1 className="text-lg font-medium">
-              {copy("copy.user.pages.new-review-page.74cdbe78b5b2")}
-            </h1>
-            {course && <CourseHeaderMeta course={course} />}
-          </div>
-
-          <WrongCourseWarning
-            course={course}
-            currentSemester={currentSemester}
-          />
-
-          <ReviewForm
-            courseID={id}
-            semesters={semesters}
-            defaultSemester={defaultSemester}
-            onSubmit={handleSubmit}
-            onCancel={() => router.history.back()}
-            isSubmitting={isPending}
-            draftUserID={user?.id}
-          />
-        </section>
-      </PageShell>
-    </>
+    <ReviewDialog
+      title={copy("copy.user.pages.new-review-page.74cdbe78b5b2")}
+      course={course}
+      onClose={closeDialog}
+      busy={isPending}
+    >
+      <WrongCourseWarning course={course} currentSemester={currentSemester} />
+      <ReviewForm
+        courseID={id}
+        semesters={semesters}
+        defaultSemester={defaultSemester}
+        onSubmit={handleSubmit}
+        onCancel={closeDialog}
+        isSubmitting={isPending}
+        draftUserID={user?.id}
+      />
+    </ReviewDialog>
   )
 }

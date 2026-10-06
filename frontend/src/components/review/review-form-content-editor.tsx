@@ -1,7 +1,12 @@
 import { copy } from "@/lib/copy"
 import { Link } from "@tanstack/react-router"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import MDEditor, {
+  commands,
+  type ICommand,
+} from "@uiw/react-md-editor/nohighlight"
+import "@uiw/react-md-editor/markdown-editor.css"
+import "./review-editor.css"
 import { cn } from "@/lib/utils"
 import { SafeMarkdown } from "./safe-markdown"
 import {
@@ -12,6 +17,25 @@ import {
   removeTemplateLine,
   REVIEW_TEMPLATE_LABELS,
 } from "./review-form-template"
+
+function localize(command: ICommand, label: string): ICommand {
+  return {
+    ...command,
+    buttonProps: { ...command.buttonProps, title: label, "aria-label": label },
+  }
+}
+const editorCommands = [
+  localize(commands.bold, "加粗"),
+  localize(commands.italic, "斜体"),
+  localize(commands.link, "插入链接"),
+  localize(commands.quote, "引用"),
+  localize(commands.unorderedListCommand, "无序列表"),
+  localize(commands.orderedListCommand, "有序列表"),
+]
+const previewCommands = [
+  { ...localize(commands.codeEdit, "编辑"), icon: <span>编辑</span> },
+  { ...localize(commands.codePreview, "预览"), icon: <span>预览</span> },
+]
 
 interface ReviewFormContentEditorProps {
   content: string
@@ -60,45 +84,32 @@ export function ReviewFormContentEditor({
           )
         })}
       </div>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">
-            {copy(
-              "copy.user.components.review.review-form-content-editor.051836569928"
-            )}
-          </p>
-          <Textarea
-            id="content"
-            placeholder={copy(
-              "copy.user.components.review.review-form-content-editor.5774b81023ea"
-            )}
-            value={content}
-            onChange={(e) => onChange(e.target.value)}
-            onBlur={onBlur}
-            maxLength={CONTENT_MAX_LENGTH}
-            rows={10}
-            className="resize-y font-sans text-sm"
-          />
-        </div>
-        <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">
-            {copy(
-              "copy.user.components.review.review-form-content-editor.13d61fea9f17"
-            )}
-          </p>
-          <div className="review-markdown prose prose-sm min-h-40 max-w-none dark:prose-invert">
-            {content.trim() ? (
-              <SafeMarkdown content={content} />
-            ) : (
-              <span className="text-muted-foreground italic">
-                {copy(
-                  "copy.user.components.review.review-form-content-editor.d5ee14c78799"
-                )}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
+      <MDEditor
+        data-review-editor=""
+        value={content}
+        onChange={(value) => onChange(value ?? "")}
+        height={260}
+        preview="edit"
+        visibleDragbar={false}
+        highlightEnable={false}
+        commands={editorCommands}
+        extraCommands={previewCommands}
+        textareaProps={{
+          id: "content",
+          "aria-label": "点评内容",
+          "aria-invalid": !!error,
+          maxLength: CONTENT_MAX_LENGTH,
+          onBlur,
+          placeholder: "分享课程内容、考核方式或你的上课体验…",
+        }}
+        components={{
+          preview: (source) => (
+            <div className="review-markdown prose prose-sm max-w-none wrap-break-word dark:prose-invert">
+              <SafeMarkdown content={source} />
+            </div>
+          ),
+        }}
+      />
       <p className="text-sm text-muted-foreground">
         {content.length} / {CONTENT_MAX_LENGTH}
         {copy(
@@ -114,7 +125,10 @@ export function ReviewFormContentEditor({
           {error}
         </p>
       )}
-      <div className="text-sm leading-6 text-muted-foreground [&_p]:m-0">
+      <details className="text-xs leading-6 text-muted-foreground [&_p]:m-0">
+        <summary className="cursor-pointer font-medium">
+          点评建议与发布须知
+        </summary>
         <p>
           {copy(
             "copy.user.components.review.review-form-content-editor.ac9aab1b8707"
@@ -141,7 +155,7 @@ export function ReviewFormContentEditor({
           </Link>
           。
         </p>
-      </div>
+      </details>
     </div>
   )
 }

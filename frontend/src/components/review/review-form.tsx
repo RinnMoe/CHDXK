@@ -227,7 +227,6 @@ export function ReviewForm({
           )
         }}
       </form.Field>
-
       <div className="grid gap-4 sm:grid-cols-2">
         <form.Field
           name="semester"
@@ -273,9 +272,14 @@ export function ReviewForm({
                     {error}
                   </p>
                 )}
-                <p className="text-sm leading-6 text-muted-foreground">
-                  {copy("copy.user.components.review.review-form.130cb02ba7b2")}
-                </p>
+                <details className="text-xs leading-5 text-muted-foreground">
+                  <summary className="cursor-pointer">学期说明</summary>
+                  <p>
+                    {copy(
+                      "copy.user.components.review.review-form.130cb02ba7b2"
+                    )}
+                  </p>
+                </details>
               </div>
             )
           }}
@@ -321,7 +325,6 @@ export function ReviewForm({
           }}
         </form.Field>
       </div>
-
       <form.Field
         name="content"
         validators={{
@@ -365,7 +368,6 @@ export function ReviewForm({
           )
         }}
       </form.Field>
-
       {submitError && (
         <p className="text-sm text-destructive" role="alert">
           {submitError}
@@ -378,7 +380,7 @@ export function ReviewForm({
         onClear={handleClearDraft}
       />
 
-      <div className="flex justify-end gap-2">
+      <div className="sticky bottom-0 z-10 flex justify-end gap-2 border-t bg-popover py-3 [&_button]:min-h-10">
         {onCancel && (
           <Button type="button" variant="ghost" onClick={onCancel}>
             {copy("copy.user.components.review.review-form.2cd0f3be8738")}

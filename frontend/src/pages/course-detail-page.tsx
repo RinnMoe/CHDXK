@@ -1,5 +1,5 @@
 import { copy } from "@/lib/copy"
-import { getRouteApi, Link, useNavigate } from "@tanstack/react-router"
+import { Outlet, getRouteApi, Link, useNavigate } from "@tanstack/react-router"
 import { RiArrowLeftLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -94,6 +94,7 @@ export function CourseDetailPage() {
             <Skeleton className="h-32 w-full" />
           </div>
         </PageShell>
+        <Outlet />
       </>
     )
   }
@@ -116,6 +117,7 @@ export function CourseDetailPage() {
             </Button>
           </div>
         </PageShell>
+        <Outlet />
       </>
     )
   }
@@ -177,6 +179,7 @@ export function CourseDetailPage() {
           {hasRelatedCourses && <RelatedCoursesSidebar course={course} />}
         </div>
       </PageShell>
+      <Outlet />
     </>
   )
 }

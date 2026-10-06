@@ -172,8 +172,8 @@ export const courseDetailRoute = createRoute({
 })
 
 export const newReviewRoute = createRoute({
-  getParentRoute: () => appRoute,
-  path: "/course/$courseID/review/new",
+  getParentRoute: () => courseDetailRoute,
+  path: "/review/new",
   component: lazyRouteComponent(
     () => import("@/pages/new-review-page"),
     "NewReviewPage"
@@ -220,8 +220,8 @@ export const reviewDetailRoute = createRoute({
 })
 
 export const editReviewRoute = createRoute({
-  getParentRoute: () => appRoute,
-  path: "/review/$reviewID/edit",
+  getParentRoute: () => reviewDetailRoute,
+  path: "/edit",
   component: lazyRouteComponent(
     () => import("@/pages/edit-review-page"),
     "EditReviewPage"
@@ -356,14 +356,12 @@ const routeTree = rootRoute.addChildren([
     homeRoute,
     coursesRoute,
     hotCoursesRoute,
-    courseDetailRoute,
-    newReviewRoute,
+    courseDetailRoute.addChildren([newReviewRoute]),
     reviewsRoute,
     followedReviewsRoute,
     userReviewsRoute,
     userCoursesRoute,
-    reviewDetailRoute,
-    editReviewRoute,
+    reviewDetailRoute.addChildren([editReviewRoute]),
     teachersRoute,
     teacherDetailRoute,
     userPointsRoute,

@@ -1,0 +1,36 @@
+[data-review-editor].w-md-editor {
+  --color-canvas-default: var(--popover);
+  --color-canvas-subtle: var(--muted);
+  --color-fg-default: var(--foreground);
+  --color-fg-muted: var(--muted-foreground);
+  --color-border-default: var(--border);
+  --color-accent-fg: var(--primary);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  box-shadow: none;
+}
+[data-review-editor] .w-md-editor-toolbar {
+  padding: 4px;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+[data-review-editor] .w-md-editor-toolbar li > button {
+  min-width: 32px;
+  height: 32px;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+[data-review-editor] .w-md-editor-toolbar li.active > button {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-radius: 4px;
+}
+[data-review-editor] .w-md-editor-text-input {
+  font-family: inherit;
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+}
+[data-review-editor] .w-md-editor-preview {
+  background: var(--popover);
+  overflow-wrap: anywhere;
+}
