@@ -11,6 +11,7 @@ import { PageShell } from "@/components/layout/page-shell"
 import { PageTitle } from "@/components/common/page-title"
 import { displayTeacherTitle } from "@/lib/utils"
 import { useTeacher, useTeacherCourses } from "@/hooks/use-teacher"
+import { TeacherProfile } from "@/components/teacher/teacher-profile"
 
 type CourseSort = "rating_score" | "rating_count"
 const routeApi = getRouteApi("/app/teacher/$teacherID")
@@ -65,42 +66,45 @@ export function TeacherDetailPage() {
           </Link>
         </Button>
 
-        <div className="space-y-6">
-          <header className="space-y-3">
-            {isTeacherLoading ? (
-              <>
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-9 w-40" />
-                <div className="flex gap-2">
-                  <Skeleton className="h-6 w-16" />
-                  <Skeleton className="h-6 w-24" />
-                </div>
-              </>
-            ) : teacher ? (
-              <>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-3xl font-bold">{teacher.name}</h1>
-                  {teacherTitle && <TitleBadge>{teacherTitle}</TitleBadge>}
-                </div>
-                {teacher.department && (
-                  <div className="text-sm text-muted-foreground">
-                    {teacher.department}
+        <div className="grid items-start gap-8 lg:grid-cols-[minmax(16rem,22rem)_minmax(0,1fr)]">
+          <aside className="min-w-0 space-y-6">
+            <header className="space-y-3">
+              {isTeacherLoading ? (
+                <>
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-9 w-40" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-6 w-16" />
+                    <Skeleton className="h-6 w-24" />
                   </div>
-                )}
-              </>
-            ) : (
-              <>
-                <div className="font-mono text-sm text-muted-foreground">
-                  #{id}
-                </div>
-                <h1 className="text-3xl font-bold">
-                  {copy("copy.user.pages.teacher-detail-page.91baccd86e58")}
-                </h1>
-              </>
-            )}
-          </header>
+                </>
+              ) : teacher ? (
+                <>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-3xl font-bold">{teacher.name}</h1>
+                    {teacherTitle && <TitleBadge>{teacherTitle}</TitleBadge>}
+                  </div>
+                  {teacher.department && (
+                    <div className="text-sm text-muted-foreground">
+                      {teacher.department}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="font-mono text-sm text-muted-foreground">
+                    #{id}
+                  </div>
+                  <h1 className="text-3xl font-bold">
+                    {copy("copy.user.pages.teacher-detail-page.91baccd86e58")}
+                  </h1>
+                </>
+              )}
+            </header>
+            {teacher && <TeacherProfile teacher={teacher} />}
+          </aside>
 
-          <section>
+          <section className="min-w-0">
             <div className="mb-3 space-y-3">
               <div className="flex items-baseline justify-between">
                 <h2 className="text-lg font-semibold">
