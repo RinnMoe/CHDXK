@@ -4,6 +4,8 @@ import { apiClient } from "@/api/client"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { SchoolLoginFeedback } from "./school-login-feedback"
+import { EnrollmentEditor } from "./enrollment-editor-dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Dialog,
   DialogContent,
@@ -52,6 +54,7 @@ export function EnrollmentImportDialog() {
 }
 
 function ImportDialog({ userID }: { userID: number }) {
+  const [open, setOpen] = useState(false)
   const storageKey = `chdxk.enrollment-import.${userID}`
   const [job, setJob] = useState(() => sessionStorage.getItem(storageKey) ?? "")
   const [busy, setBusy] = useState(false)
@@ -106,137 +109,167 @@ function ImportDialog({ userID }: { userID: number }) {
     }
   }
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" data-action="import-my-courses">
-          导入我的课程
+          导入课程
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>导入我的课程</DialogTitle>
+          <DialogTitle>导入课程</DialogTitle>
           <DialogDescription>
-            扫码登录本科教务，将全部可用学期的个人课程添加到选课记录。已有记录不会重复添加。
+            扫码导入全部学期，或手动选择本站已有课程和教学班。已有记录不会重复添加。
           </DialogDescription>
         </DialogHeader>
-        <section className="space-y-4" aria-label="教务扫码导入">
-          <h3 className="font-medium">教务扫码导入</h3>
-          {(!job || terminal(status?.state) || query.isError) && (
-            <Button
-              disabled={busy}
-              onClick={() => void action("start")}
-              data-action="connect"
-            >
-              扫码连接教务
-            </Button>
-          )}
-          {status && (
-            <div className="space-y-3 rounded-lg border p-4" aria-live="polite">
-              <p className="font-medium">
-                {states[status.state] ?? "正在处理"}
-              </p>
-              <SchoolLoginFeedback state={status.state} />
-              {status.qr && (
-                <img
-                  src={status.qr}
-                  alt="学校登录二维码"
-                  className="mx-auto size-56"
-                />
-              )}
-              {status.state === "ready" && (
-                <>
-                  <div className="grid grid-cols-2 gap-2">
-                    {status.semesters.map((semester) => (
-                      <span
-                        key={semester}
-                        className="text-sm text-muted-foreground"
-                      >
-                        {semester}
-                      </span>
-                    ))}
-                  </div>
-                  <Button
-                    disabled={busy || !selected.length}
-                    onClick={() => void action("run")}
-                    data-action="run"
-                  >
-                    导入全部学期（{selected.length}）
-                  </Button>
-                </>
-              )}
-              {status.state === "running" && (
-                <p>
-                  正在读取 {status.current || "课表"}，已完成{" "}
-                  {status.results.length} / {status.selected.length} 个学期。
-                </p>
-              )}
-              {status.state === "running" && !!status.progress?.retries && (
-                <p className="text-sm text-muted-foreground">
-                  教务响应暂时异常，正在自动重试（{status.progress.retries} /
-                  2），无需重新扫码。
-                </p>
-              )}
-              {status.message && (
-                <p className="text-destructive" role="alert">
-                  {status.message}
-                </p>
-              )}
-              {status.results.map((result) => (
-                <div key={result.semester} className="space-y-2 text-sm">
-                  <p>
-                    {result.semester}：匹配 {result.enrollment.matched} 门，新增{" "}
-                    {result.enrollment.added} 条记录。
-                  </p>
-                  {!!result.enrollment.unmatched.length && (
-                    <details>
-                      <summary className="cursor-pointer">
-                        {result.enrollment.unmatched.length} 门课程暂未匹配
-                      </summary>
-                      <p className="my-2 text-muted-foreground">
-                        这些课程尚未加入选课记录，请联系管理员补充对应学期的开课记录后再次导入。
-                      </p>
-                      <ul className="space-y-1">
-                        {result.enrollment.unmatched.map((item, i) => (
-                          <li key={`${item.lesson_no}:${i}`}>
-                            {item.name}
-                            {item.lesson_no ? `（${item.lesson_no}）` : ""}
-                          </li>
-                        ))}
-                      </ul>
-                    </details>
-                  )}
-                </div>
-              ))}
-              {!terminal(status.state) && (
+        <Tabs defaultValue="school">
+          <TabsList aria-label="课程导入方式">
+            <TabsTrigger value="school" data-method="school">
+              教务扫码
+            </TabsTrigger>
+            <TabsTrigger value="manual" data-method="manual">
+              手动添加
+            </TabsTrigger>
+            <TabsTrigger value="mychu" data-method="mychu">
+              MyCHU
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="school">
+            <section className="space-y-4" aria-label="教务扫码导入">
+              <h3 className="font-medium">教务扫码导入</h3>
+              {(!job || terminal(status?.state) || query.isError) && (
                 <Button
-                  variant="outline"
                   disabled={busy}
-                  onClick={() => void action("cancel")}
-                  data-action="cancel"
+                  onClick={() => void action("start")}
+                  data-action="connect"
                 >
-                  取消导入
+                  扫码连接教务
                 </Button>
               )}
-            </div>
-          )}
-          {(error || query.isError) && (
-            <p role="alert" className="text-sm text-destructive">
-              {error || "原导入连接已失效，请重新扫码连接教务"}
+              {status && (
+                <div
+                  className="space-y-3 rounded-lg border p-4"
+                  aria-live="polite"
+                >
+                  <p className="font-medium">
+                    {states[status.state] ?? "正在处理"}
+                  </p>
+                  <SchoolLoginFeedback state={status.state} />
+                  {status.qr && (
+                    <img
+                      src={status.qr}
+                      alt="学校登录二维码"
+                      className="mx-auto size-56"
+                    />
+                  )}
+                  {status.state === "ready" && (
+                    <>
+                      <div className="grid grid-cols-2 gap-2">
+                        {status.semesters.map((semester) => (
+                          <span
+                            key={semester}
+                            className="text-sm text-muted-foreground"
+                          >
+                            {semester}
+                          </span>
+                        ))}
+                      </div>
+                      <Button
+                        disabled={busy || !selected.length}
+                        onClick={() => void action("run")}
+                        data-action="run"
+                      >
+                        导入全部学期（{selected.length}）
+                      </Button>
+                    </>
+                  )}
+                  {status.state === "running" && (
+                    <p>
+                      正在读取 {status.current || "课表"}，已完成{" "}
+                      {status.results.length} / {status.selected.length}{" "}
+                      个学期。
+                    </p>
+                  )}
+                  {status.state === "running" && !!status.progress?.retries && (
+                    <p className="text-sm text-muted-foreground">
+                      教务响应暂时异常，正在自动重试（{status.progress.retries}{" "}
+                      / 2），无需重新扫码。
+                    </p>
+                  )}
+                  {status.message && (
+                    <p className="text-destructive" role="alert">
+                      {status.message}
+                    </p>
+                  )}
+                  {status.results.map((result) => (
+                    <div key={result.semester} className="space-y-2 text-sm">
+                      <p>
+                        {result.semester}：匹配 {result.enrollment.matched}{" "}
+                        门，新增 {result.enrollment.added} 条记录。
+                      </p>
+                      {!!result.enrollment.unmatched.length && (
+                        <details>
+                          <summary className="cursor-pointer">
+                            {result.enrollment.unmatched.length} 门课程暂未匹配
+                          </summary>
+                          <p className="my-2 text-muted-foreground">
+                            这些课程尚未加入选课记录，请联系管理员补充对应学期的开课记录后再次导入。
+                          </p>
+                          <ul className="space-y-1">
+                            {result.enrollment.unmatched.map((item, i) => (
+                              <li key={`${item.lesson_no}:${i}`}>
+                                {item.name}
+                                {item.lesson_no ? `（${item.lesson_no}）` : ""}
+                              </li>
+                            ))}
+                          </ul>
+                        </details>
+                      )}
+                    </div>
+                  ))}
+                  {!terminal(status.state) && (
+                    <Button
+                      variant="outline"
+                      disabled={busy}
+                      onClick={() => void action("cancel")}
+                      data-action="cancel"
+                    >
+                      取消导入
+                    </Button>
+                  )}
+                </div>
+              )}
+              {(error || query.isError) && (
+                <p role="alert" className="text-sm text-destructive">
+                  {error || "原导入连接已失效，请重新扫码连接教务"}
+                </p>
+              )}
+              <p className="text-sm text-muted-foreground">
+                仅导入个人课程，不修改教务数据。完成、取消或超时后关闭本次教务连接，下次导入需要重新扫码。关闭弹窗后本次导入继续进行。
+              </p>
+            </section>
+          </TabsContent>
+          <TabsContent value="manual" className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              选择本站已收录的课程、学期和教学班，添加到你的选课记录。
             </p>
-          )}
-          <p className="text-sm text-muted-foreground">
-            仅导入个人课程，不修改教务数据。完成、取消或超时后关闭本次教务连接，下次导入需要重新扫码。关闭弹窗后本次导入继续进行。
-          </p>
-        </section>
-        <section className="space-y-2 border-t pt-4" aria-label="MyCHU 导入">
-          <h3 className="font-medium">通过 MyCHU 应用导入</h3>
-          <p className="text-sm text-muted-foreground">
-            暂未开放。后续可从 MyCHU 将课程导入本站。
-          </p>
-          <Button variant="outline" disabled>
-            MyCHU 导入（暂未开放）
-          </Button>
-        </section>
+            <EnrollmentEditor onSaved={() => setOpen(false)} />
+          </TabsContent>
+          <TabsContent value="mychu">
+            <section
+              className="space-y-2 border-t pt-4"
+              aria-label="MyCHU 导入"
+            >
+              <h3 className="font-medium">通过 MyCHU 应用导入</h3>
+              <p className="text-sm text-muted-foreground">
+                暂未开放。后续可从 MyCHU 将课程导入本站。
+              </p>
+              <Button variant="outline" disabled>
+                MyCHU 导入（暂未开放）
+              </Button>
+            </section>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   )

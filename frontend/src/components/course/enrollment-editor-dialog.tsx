@@ -22,26 +22,24 @@ import {
 export function EnrollmentEditorDialog({
   enrollment,
 }: {
-  enrollment?: CourseEnrollmentDTO
+  enrollment: CourseEnrollmentDTO
 }) {
   const [open, setOpen] = useState(false)
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          variant={enrollment ? "ghost" : "outline"}
-          size={enrollment ? "icon-sm" : "default"}
-          aria-label={enrollment ? "编辑选课记录" : "手动添加课程"}
-          data-action={enrollment ? "edit-enrollment" : "add-enrollment"}
+          variant="ghost"
+          size="icon-sm"
+          aria-label="编辑选课记录"
+          data-action="edit-enrollment"
         >
-          {enrollment ? <RiEditLine /> : "手动添加课程"}
+          <RiEditLine />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>
-            {enrollment ? "编辑选课记录" : "手动添加课程"}
-          </DialogTitle>
+          <DialogTitle>编辑选课记录</DialogTitle>
           <DialogDescription>
             选择本站已收录的课程、学期和教学班。只修改你的选课记录。
           </DialogDescription>
@@ -57,7 +55,7 @@ export function EnrollmentEditorDialog({
   )
 }
 
-function EnrollmentEditor({
+export function EnrollmentEditor({
   enrollment,
   onSaved,
 }: {
