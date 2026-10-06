@@ -13,7 +13,16 @@ it("deduplicates teaching sections while ignoring teacher order and opaque cours
 })
 it("accepts an empty timetable, rejects incomplete data instead of importing partial records", () => {
   expect(personalCourses([])).toEqual([])
+  expect(personalCourses([[], [], []])).toEqual([])
   for (const value of [null, {}, [{courseName: "课程"}], [{courseId: "123"}], [null]]) {
     expect(() => personalCourses(value)).toThrow("PAGE_STRUCTURE")
   }
+})
+it("flattens EAMS time slots and deduplicates repeated teaching sections", () => {
+  const activity = {courseId: "53765(26ZY1407.07)", courseName: "程序设计"}
+  expect(personalCourses([[activity], [], [activity]])).toEqual([
+    {source_lesson_id: "53765", lesson_no: "", name: "程序设计"},
+  ])
+  expect(() => personalCourses([[activity], [null]])).toThrow("PAGE_STRUCTURE")
+  expect(() => personalCourses([[activity], activity])).toThrow("PAGE_STRUCTURE")
 })

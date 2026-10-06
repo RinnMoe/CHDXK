@@ -11,7 +11,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 
 export interface EnrollmentSyncStatus {
   id: string
@@ -36,7 +35,7 @@ const states: Record<string, string> = {
   connecting: "正在连接教务",
   waiting: "请用微信扫码并确认学校账号登录",
   scanned: "已扫码，请在手机上确认登录",
-  ready: "已连接，请选择要导入的学期",
+  ready: "已连接，可导入全部学期的课程",
   running: "正在读取并导入课程",
   done: "课程导入完成",
   failed: "课程导入已停止",
@@ -51,7 +50,6 @@ export function EnrollmentImportDialog() {
 function ImportDialog({ userID }: { userID: number }) {
   const storageKey = `chdxk.enrollment-import.${userID}`
   const [job, setJob] = useState(() => sessionStorage.getItem(storageKey) ?? "")
-  const [excluded, setExcluded] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
   const client = useQueryClient()
@@ -75,7 +73,7 @@ function ImportDialog({ userID }: { userID: number }) {
     void client.invalidateQueries({ queryKey: ["course-enrollments"] })
     void client.invalidateQueries({ queryKey: ["course"] })
   }, [client, marker])
-  const selected = status?.semesters.filter((s) => !excluded.includes(s)) ?? []
+  const selected = status?.semesters ?? []
   async function action(kind: "start" | "run" | "cancel") {
     setBusy(true)
     setError("")
@@ -95,7 +93,6 @@ function ImportDialog({ userID }: { userID: number }) {
       client.setQueryData(["enrollment-import", userID, value.id], value)
       setJob(value.id)
       sessionStorage.setItem(storageKey, value.id)
-      if (kind === "start") setExcluded([])
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "导入暂时无法完成，请稍后重试"
@@ -115,7 +112,7 @@ function ImportDialog({ userID }: { userID: number }) {
         <DialogHeader>
           <DialogTitle>导入我的课程</DialogTitle>
           <DialogDescription>
-            扫码登录本科教务，选择学期，将个人课表中的课程添加到选课记录。已有记录不会重复添加。
+            扫码登录本科教务，将全部可用学期的个人课程添加到选课记录。已有记录不会重复添加。
           </DialogDescription>
         </DialogHeader>
         <section className="space-y-4" aria-label="教务扫码导入">
@@ -145,24 +142,12 @@ function ImportDialog({ userID }: { userID: number }) {
                 <>
                   <div className="grid grid-cols-2 gap-2">
                     {status.semesters.map((semester) => (
-                      <label
+                      <span
                         key={semester}
-                        className="flex items-center gap-2 text-sm"
+                        className="text-sm text-muted-foreground"
                       >
-                        <Input
-                          type="checkbox"
-                          className="size-4"
-                          checked={!excluded.includes(semester)}
-                          onChange={(e) =>
-                            setExcluded((prev) =>
-                              e.target.checked
-                                ? prev.filter((s) => s !== semester)
-                                : [...prev, semester]
-                            )
-                          }
-                        />
                         {semester}
-                      </label>
+                      </span>
                     ))}
                   </div>
                   <Button
@@ -170,13 +155,13 @@ function ImportDialog({ userID }: { userID: number }) {
                     onClick={() => void action("run")}
                     data-action="run"
                   >
-                    导入所选学期（{selected.length}）
+                    导入全部学期（{selected.length}）
                   </Button>
                 </>
               )}
               {status.state === "running" && (
                 <p>
-                  正在读取 {status.current ?? "课表"}，已完成{" "}
+                  正在读取 {status.current || "课表"}，已完成{" "}
                   {status.results.length} / {status.selected.length} 个学期。
                 </p>
               )}

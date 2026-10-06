@@ -13,7 +13,10 @@ export interface PersonalCourse {
 export function personalCourses(value: unknown): PersonalCourse[] {
   if (!Array.isArray(value) || value.length > 10000) throw new Error("PAGE_STRUCTURE")
   const courses = new Map<string, PersonalCourse>()
-  for (const item of value) {
+  // EAMS stores arrays per timetable slot, including empty slots.
+  const activities = value.every(Array.isArray) ? value.flat() : value
+  if (activities.length > 10000) throw new Error("PAGE_STRUCTURE")
+  for (const item of activities) {
     if (!item || typeof item !== "object") throw new Error("PAGE_STRUCTURE")
     const raw = item as Record<string, unknown>
     const name = String(raw.courseName ?? "").trim()
@@ -31,16 +34,8 @@ export async function openPersonalSchedule(page: Page): Promise<SemesterOption[]
   // EAMS loads the query fragment inside its home page. Opening the fragment
   // alone loses the shared bg/jQuery scripts needed by searchTable().
   const menu = page.locator('a[href*="/eams/courseTableForStd.action"]').first()
-  if (!await menu.count()) throw new Error("PERSONAL_MENU_MISSING")
-  // The entry may live in a collapsed navigation group. EAMS binds its AJAX
-  // loader to the anchor; the same DOM click is used by the MyCHU importer.
-  await menu.evaluate(element => (element as HTMLElement).click())
-  try {
-    await page.waitForFunction(() => {
-      const win = window as unknown as {searchTable?: unknown}
-      return !!document.querySelector('#courseTableType') && typeof win.searchTable === 'function'
-    }, undefined, {timeout: 20000})
-  } catch { throw new Error("PERSONAL_QUERY_FAILED") }
+  try { await menu.waitFor({state: 'attached', timeout: 20000}) }
+  catch { throw new Error("PERSONAL_MENU_MISSING") }
   await page.evaluate(() => {
     // Semester-calendar initialization can invoke a native form submission.
     // Keep the EAMS fragment in the home document, as in the MyCHU importer.
@@ -50,6 +45,40 @@ export async function openPersonalSchedule(page: Page): Promise<SemesterOption[]
     const submit = form?.submit
     if (form && submit) form.submit = (f, action, target) => target ? submit.call(form, f, action, target) : undefined
   })
+  // The entry may live in a collapsed navigation group. EAMS binds its AJAX
+  // loader to the anchor; the same DOM click is used by the MyCHU importer.
+  await menu.evaluate(element => (element as HTMLElement).click())
+  try {
+    await page.waitForFunction(() => {
+      const win = window as unknown as {searchTable?: unknown}
+      return !!document.querySelector('#courseTableType') && typeof win.searchTable === 'function'
+    }, undefined, {timeout: 20000})
+  } catch { throw new Error("PERSONAL_QUERY_FAILED") }
+  // The personal page loads the complete semester catalog asynchronously.
+  // Read that catalog instead of driving a popup which may close itself.
+  await page.waitForFunction(() => {
+    const jq = (window as unknown as {jQuery?: (e: Element) => {data:(key: string) => unknown}}).jQuery
+    if (!jq) return true
+    return Array.from(document.querySelectorAll("input.calendar-text, #semesterCalendar_target")).some(input => {
+      const data = jq(input).data("semesters")
+      return data && typeof data === "object" && Object.values(data).some(value => Array.isArray(value) && value.length)
+    })
+  }, undefined, {timeout: 15000}).catch(() => { throw new Error("PERSONAL_CALENDAR_FAILED") })
+  const stored = await page.evaluate(() => {
+    const jq = (window as unknown as {jQuery?: (e: Element) => {data:(key: string) => unknown}}).jQuery
+    for (const input of document.querySelectorAll("input.calendar-text, #semesterCalendar_target")) {
+      const data = jq?.(input).data("semesters")
+      if (data && typeof data === "object") {
+        const items = Object.values(data).flat() as {id?: unknown; schoolYear?: unknown; name?: unknown}[]
+        return items.filter(item => item && item.id && /^\d{4}-\d{4}$/.test(String(item.schoolYear)) && /^\d+$/.test(String(item.name))).map(item => ({
+          id:String(item.id), academicYear:String(item.schoolYear), term:String(item.name),
+          label:`${item.schoolYear}学年${item.name}学期`, normalized:`${item.schoolYear}-${item.name}`,
+        }))
+      }
+    }
+    return []
+  })
+  if (stored.length) return stored
   try { return await discoverPageSemesters(page) }
   catch { throw new Error("PERSONAL_CALENDAR_FAILED") }
 }
@@ -76,5 +105,6 @@ export async function readPersonalCourses(page: Page, semester: SemesterOption, 
   await page.waitForFunction(() => Array.isArray((window as unknown as {table0?: {activities?: unknown}}).table0?.activities), undefined, {timeout: 15000})
   await new BkjwClient(page.context()).ensureAuthenticated(page)
   if (signal.aborted) throw new Error("CANCELLED")
-  return personalCourses(await page.evaluate(() => (window as unknown as {table0: {activities: unknown}}).table0.activities))
+  const activities = await page.evaluate(() => (window as unknown as {table0: {activities: unknown}}).table0.activities)
+  return personalCourses(activities)
 }
