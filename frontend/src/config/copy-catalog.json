@@ -1435,7 +1435,7 @@
     "location": "components/admin/theme-settings-panel.tsx"
   },
   "copy.admin.components.admin.theme-settings-panel.ec2d9b307796": {
-    "text": "请使用有效的颜色格式，例如 #218d86。",
+    "text": "请使用有效的颜色格式，例如 #004a99。",
     "audience": "admin",
     "location": "components/admin/theme-settings-panel.tsx"
   },
