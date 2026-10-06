@@ -3,6 +3,8 @@ package course
 import (
 	"context"
 	"time"
+
+	"jcourse/pkg/apperr"
 )
 
 type CourseEnrollment struct {
@@ -27,7 +29,15 @@ type CourseEnrollmentFilter struct {
 }
 
 type CourseEnrollmentRepository interface {
+	Save(ctx context.Context, enrollmentID, userID, sectionID int) error
 	Delete(ctx context.Context, enrollmentID, userID int) error
+}
+
+func (s *EnrollmentService) Save(ctx context.Context, userID, enrollmentID, sectionID int) error {
+	if userID <= 0 || enrollmentID < 0 || sectionID <= 0 {
+		return apperr.BadRequest("请选择系统已有的课程和教学班")
+	}
+	return s.enrollmentRepo.Save(ctx, enrollmentID, userID, sectionID)
 }
 
 type CourseEnrollmentQuery interface {

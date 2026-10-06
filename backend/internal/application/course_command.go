@@ -59,6 +59,10 @@ func (s *CourseCommandService) DeleteEnrollment(ctx context.Context, userID, enr
 	return s.enrollmentService.Delete(ctx, userID, enrollmentID)
 }
 
+func (s *CourseCommandService) SaveEnrollment(ctx context.Context, userID, enrollmentID, sectionID int) error {
+	return s.enrollmentService.Save(ctx, userID, enrollmentID, sectionID)
+}
+
 func (s *CourseCommandService) RecordActivity(ctx context.Context, payload course.RecordHotCourseActivityPayload) error {
 	scores, err := s.settings.HotScoreConfig(ctx)
 	if err != nil {

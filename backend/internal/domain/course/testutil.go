@@ -176,10 +176,18 @@ func containsInt(values []int, target int) bool {
 }
 
 type MockCourseEnrollmentRepository struct {
+	OnSave              func(context.Context, int, int, int) error
 	DeletedEnrollmentID int
 	DeletedUserID       int
 
 	OnDelete func(context.Context, int, int) error
+}
+
+func (r *MockCourseEnrollmentRepository) Save(ctx context.Context, enrollmentID, userID, sectionID int) error {
+	if r.OnSave != nil {
+		return r.OnSave(ctx, enrollmentID, userID, sectionID)
+	}
+	return nil
 }
 
 func (r *MockCourseEnrollmentRepository) Delete(ctx context.Context, enrollmentID, userID int) error {

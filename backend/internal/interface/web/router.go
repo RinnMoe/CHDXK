@@ -120,6 +120,8 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		courseGroup.POST("/enrollment-sync/:jobID/run", enrollmentSyncController.Sync)
 		courseGroup.POST("/enrollment-sync/:jobID/cancel", enrollmentSyncController.Cancel)
 		courseGroup.GET("/enrolled", courseEnrollmentController.ListMyEnrollments)
+		courseGroup.POST("/enrollment", courseEnrollmentController.SaveEnrollment)
+		courseGroup.PUT("/enrollment/:enrollmentID", courseEnrollmentController.SaveEnrollment)
 		courseGroup.DELETE("/enrollment/:enrollmentID", courseEnrollmentController.DeleteEnrollment)
 		courseGroup.GET("/followed", courseController.ListFollowedCourses)
 		courseGroup.GET("/ignored", courseController.ListIgnoredCourses)

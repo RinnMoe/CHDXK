@@ -18,6 +18,7 @@ import { CourseBadges, CourseSemesterBadge } from "./course-badges"
 import { RatingDisplay } from "./rating-display"
 import { useDeleteCourseEnrollment } from "@/hooks/use-course"
 import type { CourseEnrollmentDTO } from "@/api/course"
+import { EnrollmentEditorDialog } from "./enrollment-editor-dialog"
 
 interface CourseEnrollmentListProps {
   enrollments: CourseEnrollmentDTO[]
@@ -103,6 +104,7 @@ export function CourseEnrollmentList({
               <RatingDisplay rating={course.rating} size="sm" />
             </div>
             <div className="flex shrink-0 flex-col items-end gap-2 self-center">
+              <EnrollmentEditorDialog enrollment={enrollment} />
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button

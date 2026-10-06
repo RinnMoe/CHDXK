@@ -2,17 +2,78 @@ package repository
 
 import (
 	"context"
+	"errors"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
 	"jcourse/internal/domain/course"
+	"jcourse/pkg/apperr"
 )
 
 type CourseEnrollmentRepository struct {
 	db    *gorm.DB
 	cache *redis.Client
+}
+
+func (r *CourseEnrollmentRepository) Save(ctx context.Context, enrollmentID, userID, sectionID int) error {
+	enrollment := &course.CourseEnrollment{ID: enrollmentID, UserID: userID, CreatedAt: time.Now()}
+	previousCourseID := 0
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if enrollment.ID > 0 {
+			var existing CourseEnrollmentEntity
+			if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ? AND user_id = ?", enrollment.ID, enrollment.UserID).Take(&existing).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return apperr.NotFound("选课记录不存在")
+				}
+				return err
+			}
+			previousCourseID = existing.CourseID
+		}
+		var selection struct {
+			CourseID int
+			Semester string
+		}
+		if err := tx.Table("course_sections AS section").Select("offering.course_id, offering.semester").Joins("JOIN offered_courses AS offering ON offering.id = section.offered_course_id").Where("section.id = ?", sectionID).Take(&selection).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return apperr.BadRequest("该教学班已不存在，请重新选择")
+			}
+			return err
+		}
+		enrollment.CourseID, enrollment.Semester = selection.CourseID, selection.Semester
+		var count int64
+		if err := tx.Model(&CourseEntity{}).Where("id = ?", enrollment.CourseID).Count(&count).Error; err != nil {
+			return err
+		}
+		if count == 0 {
+			return course.ErrCourseNotFound
+		}
+		if err := tx.Model(&CourseEnrollmentEntity{}).Where("user_id = ? AND course_id = ? AND semester = ? AND id <> ?", enrollment.UserID, enrollment.CourseID, enrollment.Semester, enrollment.ID).Count(&count).Error; err != nil {
+			return err
+		}
+		if count > 0 {
+			return apperr.BadRequest("该课程在此学期已有选课记录")
+		}
+		if enrollment.ID == 0 {
+			entity := CourseEnrollmentEntity{UserID: enrollment.UserID, CourseID: enrollment.CourseID, Semester: enrollment.Semester, CreatedAt: enrollment.CreatedAt}
+			if err := tx.Create(&entity).Error; err != nil {
+				return err
+			}
+			enrollment.ID = entity.ID
+			return nil
+		}
+		return tx.Model(&CourseEnrollmentEntity{}).Where("id = ? AND user_id = ?", enrollment.ID, enrollment.UserID).Updates(map[string]any{"course_id": enrollment.CourseID, "semester": enrollment.Semester}).Error
+	})
+	var sqlError interface{ SQLState() string }
+	if errors.As(err, &sqlError) && sqlError.SQLState() == "23505" {
+		return apperr.BadRequest("该课程在此学期已有选课记录")
+	}
+	if err == nil {
+		r.deleteEnrollmentCache(ctx, enrollment.UserID, previousCourseID, enrollment.CourseID)
+	}
+	return err
 }
 
 func NewCourseEnrollmentRepository(db *gorm.DB, cache ...*redis.Client) *CourseEnrollmentRepository {

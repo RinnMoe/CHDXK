@@ -15,6 +15,35 @@ type CourseEnrollmentController struct {
 	command *application.CourseCommandService
 }
 
+func (ctrl *CourseEnrollmentController) SaveEnrollment(c *gin.Context) {
+	u := auth.GetUserFromCtx(c.Request.Context())
+	if u == nil {
+		respondUnauthorized(c)
+		return
+	}
+	id := 0
+	if raw := c.Param("enrollmentID"); raw != "" {
+		var err error
+		id, err = strconv.Atoi(raw)
+		if err != nil || id <= 0 {
+			respondBadRequest(c, "选课记录无效")
+			return
+		}
+	}
+	var cmd struct {
+		SectionID int `json:"section_id"`
+	}
+	if c.ShouldBindJSON(&cmd) != nil {
+		respondBadRequest(c, "请填写课程和学期")
+		return
+	}
+	if err := ctrl.command.SaveEnrollment(c.Request.Context(), u.ID, id, cmd.SectionID); err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "ok"})
+}
+
 func NewCourseEnrollmentController(query *application.CourseEnrollmentQueryService, command *application.CourseCommandService) *CourseEnrollmentController {
 	return &CourseEnrollmentController{query: query, command: command}
 }
