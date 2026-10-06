@@ -25,6 +25,7 @@ type TeacherFilter struct {
 
 // Read model: teacher query result
 type TeacherView struct {
+	Profile    *Profile
 	ID         int
 	Code       string
 	Name       string

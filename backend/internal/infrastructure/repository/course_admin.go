@@ -360,9 +360,9 @@ func upsertCourseTeachers(ctx context.Context, tx *gorm.DB, searchConfig, semest
 	conflict := clause.OnConflict{
 		Columns: []clause.Column{{Name: "code"}},
 		DoUpdates: clause.Assignments(map[string]any{
-			"name":          clause.Column{Table: "excluded", Name: "name"},
-			"department":    clause.Column{Table: "excluded", Name: "department"},
-			"search_vector": clause.Column{Table: "excluded", Name: "search_vector"},
+			"name":          gorm.Expr("CASE WHEN teachers.profile_override = '{}'::jsonb THEN excluded.name ELSE teachers.name END"),
+			"department":    gorm.Expr("CASE WHEN teachers.profile_override = '{}'::jsonb THEN excluded.department ELSE teachers.department END"),
+			"search_vector": gorm.Expr("CASE WHEN teachers.profile_override = '{}'::jsonb THEN excluded.search_vector ELSE teachers.search_vector END"),
 			"last_semester": clause.Column{Table: "excluded", Name: "last_semester"},
 			"updated_at":    clause.Column{Table: "excluded", Name: "updated_at"},
 		}),

@@ -20,6 +20,16 @@ export interface TeacherDTO {
   name: string
   department: string
   title?: string
+  profile?: TeacherProfileDTO
+}
+
+export interface TeacherProfileDTO {
+  url: string
+  name: string
+  department: string
+  title: string
+  fields: Record<string, string>
+  updated_at: string
 }
 
 export interface HotTeacherListDTO {

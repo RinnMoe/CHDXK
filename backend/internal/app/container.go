@@ -9,6 +9,7 @@ import (
 	"jcourse/internal/domain/email"
 	"jcourse/internal/domain/point"
 	"jcourse/internal/infrastructure/bkjw"
+	"jcourse/internal/infrastructure/chdteachers"
 	"jcourse/internal/infrastructure/persistence"
 	"jcourse/internal/infrastructure/repository"
 	"jcourse/internal/infrastructure/reshub"
@@ -28,6 +29,7 @@ type ServiceContainer struct {
 	CourseManagement      *application.CourseManagementService
 	CourseEnrollmentQuery *application.CourseEnrollmentQueryService
 	TeacherQuery          *application.TeacherQueryService
+	TeacherProfiles       *application.TeacherProfileService
 	PointQuery            *application.PointQueryService
 	PointRewardCommand    *application.PointRewardCommandService
 	SiteStatsQuery        *application.SiteStatsQueryService
@@ -139,6 +141,7 @@ func NewServiceContainer(conf config.AppConfig) (*ServiceContainer, error) {
 		EnrollmentSync:        application.NewEnrollmentSyncService(&bkjw.Source{Config: conf.CourseSource, Personal: true}, courseEnrollmentRepo),
 		CourseEnrollmentQuery: courseEnrollmentQuery,
 		TeacherQuery:          teacherQuery,
+		TeacherProfiles:       application.NewTeacherProfileService(teacherRepo, chdteachers.NewClient()),
 		TeacherHotQuery:       application.NewTeacherHotQueryService(courseHotRepo),
 		PointQuery:            pointQuery,
 		PointRewardCommand:    pointRewardCommand,

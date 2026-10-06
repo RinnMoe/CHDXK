@@ -4,11 +4,12 @@ import "jcourse/internal/domain/teacher"
 
 // Read model: teacher query result
 type TeacherDTO struct {
-	ID         int    `json:"id"`
-	Code       string `json:"code"`
-	Name       string `json:"name"`
-	Department string `json:"department"`
-	Title      string `json:"title,omitempty"`
+	ID         int              `json:"id"`
+	Code       string           `json:"code"`
+	Name       string           `json:"name"`
+	Department string           `json:"department"`
+	Title      string           `json:"title,omitempty"`
+	Profile    *teacher.Profile `json:"profile,omitempty"`
 }
 
 func newTeacherDTO(t *teacher.TeacherView) TeacherDTO {
@@ -18,6 +19,7 @@ func newTeacherDTO(t *teacher.TeacherView) TeacherDTO {
 		Name:       t.Name,
 		Department: t.Department,
 		Title:      t.Title,
+		Profile:    t.Profile,
 	}
 }
 

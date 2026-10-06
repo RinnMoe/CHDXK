@@ -9,11 +9,16 @@ import (
 )
 
 type TeacherEntity struct {
-	ID         int    `gorm:"column:id"`
-	Code       string `gorm:"column:code;uniqueIndex"`
-	Name       string `gorm:"column:name"`
-	Department string `gorm:"column:department;index"`
-	Title      string `gorm:"column:title"`
+	ID                 int            `gorm:"column:id"`
+	Code               string         `gorm:"column:code;uniqueIndex"`
+	Name               string         `gorm:"column:name"`
+	Department         string         `gorm:"column:department;index"`
+	Title              string         `gorm:"column:title"`
+	Profile            datatypes.JSON `gorm:"column:profile;type:jsonb;not null;default:'{}'"`
+	ProfileCandidates  datatypes.JSON `gorm:"column:profile_candidates;type:jsonb;not null;default:'[]'"`
+	ProfileStatus      string         `gorm:"column:profile_status;not null;default:'unmatched'"`
+	ProfileOverride    datatypes.JSON `gorm:"column:profile_override;type:jsonb;not null;default:'{}'"`
+	ProfileSelectedURL string         `gorm:"column:profile_selected_url;not null;default:''"`
 
 	SearchVector string `gorm:"column:search_vector;type:tsvector;index:,type:gin"`
 

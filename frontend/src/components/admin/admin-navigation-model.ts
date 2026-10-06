@@ -4,6 +4,7 @@ export const adminSections = [
   {
     label: copy("copy.admin.components.admin.admin-navigation.fea448341e76"),
     items: [
+      { key: "teacher-profiles", label: "教师资料" },
       {
         key: "course-data",
         label: copy(

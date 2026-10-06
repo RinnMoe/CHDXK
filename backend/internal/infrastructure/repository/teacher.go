@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 
 	"github.com/redis/go-redis/v9"
@@ -30,13 +31,23 @@ func (r *TeacherRepository) baseTeacherQuery() gorm.ChainInterface[TeacherEntity
 }
 
 func newTeacherViewFromEntity(e *TeacherEntity) teacher.TeacherView {
-	return teacher.TeacherView{
+	view := teacher.TeacherView{
 		ID:         e.ID,
 		Code:       e.Code,
 		Name:       e.Name,
 		Department: e.Department,
 		Title:      e.Title,
 	}
+	if len(e.Profile) > 2 {
+		var profile teacher.Profile
+		if json.Unmarshal(e.Profile, &profile) == nil && (profile.URL != "" || len(e.ProfileOverride) > 2) {
+			view.Profile = &profile
+			if profile.Title != "" || len(e.ProfileOverride) > 2 {
+				view.Title = profile.Title
+			}
+		}
+	}
+	return view
 }
 
 func (r *TeacherRepository) applyFilter(db gorm.ChainInterface[TeacherEntity], filter teacher.TeacherFilter) gorm.ChainInterface[TeacherEntity] {
@@ -47,7 +58,7 @@ func (r *TeacherRepository) applyFilter(db gorm.ChainInterface[TeacherEntity], f
 		db = db.Where("department = ?", filter.Department)
 	}
 	if filter.Title != "" {
-		db = db.Where("title = ?", filter.Title)
+		db = db.Where("COALESCE(NULLIF(profile->>'title', ''), NULLIF(title, ''), '暂无数据') = ?", filter.Title)
 	}
 	if filter.Q != "" {
 		db = applySearchVectorOrNameChainFilter(db, r.searchConfig, "search_vector", "name", filter.Q)
@@ -141,8 +152,8 @@ func (r *TeacherRepository) GetFilters(ctx context.Context) (*teacher.TeacherFil
 
 	var titles []teacher.FilterItem
 	if err := r.db.WithContext(ctx).Model(&TeacherEntity{}).
-		Select("title AS name, COUNT(*) AS count").
-		Group("title").Order("title").
+		Select("COALESCE(NULLIF(profile->>'title', ''), NULLIF(title, ''), '暂无数据') AS name, COUNT(*) AS count").
+		Group("COALESCE(NULLIF(profile->>'title', ''), NULLIF(title, ''), '暂无数据')").Order("name").
 		Scan(&titles).Error; err != nil {
 		return nil, err
 	}

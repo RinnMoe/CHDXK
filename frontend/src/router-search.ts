@@ -55,6 +55,7 @@ export type UserAdminSearch = {
     | "announcement"
     | "audit-log"
     | "course-data"
+    | "teacher-profiles"
   audit_page?: number
   audit_start_time?: string
   audit_end_time?: string
@@ -163,6 +164,7 @@ export function validateUserAdminSearch(search: SearchRecord): UserAdminSearch {
       "announcement",
       "audit-log",
       "course-data",
+      "teacher-profiles",
     ] as const),
     audit_page: numberParam(search.audit_page),
     audit_start_time: rawStringParam(search.audit_start_time),

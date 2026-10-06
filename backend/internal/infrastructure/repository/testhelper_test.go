@@ -120,6 +120,7 @@ func migrateTestDB(t *testing.T, db *gorm.DB) {
 		&repository.CourseNotificationEntity{},
 		&repository.CourseHotScoreEntity{},
 		&repository.SiteDailyStatEntity{},
+		&repository.TeacherProfileSourceEntity{},
 		&repository.AnnouncementEntity{},
 	)
 	if err != nil {

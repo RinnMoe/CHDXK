@@ -9,6 +9,7 @@ import { SystemSettingsTab } from "@/components/admin/system-settings-tab"
 import { CopySettingsPanel } from "@/components/admin/copy-settings-panel"
 import { ThemeSettingsPanel } from "@/components/admin/theme-settings-panel"
 import { ContentPagesPanel } from "@/components/admin/content-pages-panel"
+import { TeacherProfilesPanel } from "@/components/admin/teacher-profiles-panel"
 import { AdminNavigation } from "@/components/admin/admin-navigation"
 import {
   getAdminTab,
@@ -53,6 +54,7 @@ export function UserAdminPage() {
             </aside>
             <div className="min-w-0">
               {active === "course-data" && <CourseManagementTab />}
+              {active === "teacher-profiles" && <TeacherProfilesPanel />}
               {active === "announcement" && <AnnouncementsTab />}
               {active === "system-settings" && <SystemSettingsTab />}
               {active === "appearance" && <ThemeSettingsPanel />}
