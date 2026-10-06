@@ -58,6 +58,7 @@ export async function qrLogin(context: BrowserContext, emit: (event: object) => 
   emit({type: "qr", qr: `data:image/png;base64,${(await image.body()).toString("base64")}`})
   const deadline = Date.now() + 180000
   let last = ""
+  let scanned = false
   while (!signal.aborted && Date.now() < deadline) {
     await new Promise<void>((resolve) => setTimeout(resolve, 2000))
     if (signal.aborted) throw new Error("CANCELLED")
@@ -70,13 +71,14 @@ export async function qrLogin(context: BrowserContext, emit: (event: object) => 
     const code = /window\.wx_code\s*=\s*['"]([^'"]+)['"]/.exec(text)?.[1]
     last = /window\.wx_errcode\s*=\s*(\d+)/.exec(text)?.[1] ?? last
     if (code) {
+      emit({type: "authenticating"})
       qr.callbackUrl.searchParams.set("code", code)
       const page = await context.newPage()
       try { await completeQrLogin(page, qr.callbackUrl) }
       finally { await page.close() }
       return
     }
-    if (last === "404") emit({type: "scanned"})
+    if (last === "404" && !scanned) { emit({type: "scanned"}); scanned = true }
     if (["402", "403", "500"].includes(last)) break
   }
   throw new Error(signal.aborted ? "CANCELLED" : "QR_EXPIRED")

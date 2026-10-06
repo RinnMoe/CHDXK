@@ -6,6 +6,7 @@ import { invalidateCourseDataQueries } from "@/hooks/use-admin-course"
 import { apiClient } from "@/api/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { SchoolLoginFeedback } from "@/components/course/school-login-feedback"
 import { getErrorMessage } from "./admin-utils"
 import { CourseSyncProgress } from "./course-sync-progress"
 import type { SyncProgress } from "./course-sync-progress-utils"
@@ -16,6 +17,8 @@ interface SyncStatus {
     | "connecting"
     | "waiting"
     | "scanned"
+    | "authenticating"
+    | "discovering"
     | "ready"
     | "running"
     | "done"
@@ -34,6 +37,8 @@ const storageKey = "chdxk.course-sync-job"
 const terminal = (state?: string) =>
   ["done", "failed", "cancelled"].includes(state ?? "")
 const states: Record<SyncStatus["state"], string> = {
+  authenticating: "手机已确认，正在连接本科教务",
+  discovering: "教务登录成功，正在读取学期列表",
   connecting: copy(
     "copy.admin.components.admin.course-sync-panel.12dc5b9fe571"
   ),
@@ -118,8 +123,9 @@ export function CourseSyncPanel() {
         </Button>
       )}
       {status && (
-        <div className="space-y-4 rounded-lg border p-4">
+        <div className="space-y-4 rounded-lg border p-4" aria-live="polite">
           <h4 className="font-medium">{states[status.state]}</h4>
+          <SchoolLoginFeedback state={status.state} />
           {status.qr && (
             <img
               src={status.qr}

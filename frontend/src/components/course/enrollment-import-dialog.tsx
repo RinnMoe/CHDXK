@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
+import { SchoolLoginFeedback } from "./school-login-feedback"
 import {
   Dialog,
   DialogContent,
@@ -35,6 +36,8 @@ const states: Record<string, string> = {
   connecting: "正在连接教务",
   waiting: "请用微信扫码并确认学校账号登录",
   scanned: "已扫码，请在手机上确认登录",
+  authenticating: "手机已确认，正在连接本科教务",
+  discovering: "教务登录成功，正在读取学期列表",
   ready: "已连接，可导入全部学期的课程",
   running: "正在读取并导入课程",
   done: "课程导入完成",
@@ -131,6 +134,7 @@ function ImportDialog({ userID }: { userID: number }) {
               <p className="font-medium">
                 {states[status.state] ?? "正在处理"}
               </p>
+              <SchoolLoginFeedback state={status.state} />
               {status.qr && (
                 <img
                   src={status.qr}

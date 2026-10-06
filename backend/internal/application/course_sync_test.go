@@ -51,6 +51,39 @@ func syncFixture() (*CourseSyncService, *testSourceConnection) {
 	return s, c
 }
 
+func TestCourseSyncReportsPhoneConfirmationAndSchoolLogin(t *testing.T) {
+	s, c := syncFixture()
+	job, err := s.Start(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Cancel(1, job.ID)
+	c.events <- course.SourceEvent{Type: "qr", QR: "data:image/png;base64,test"}
+	if waitSync(t, s, job.ID, "waiting").QR == "" {
+		t.Fatal("missing QR before scan")
+	}
+	c.events <- course.SourceEvent{Type: "scanned"}
+	if waitSync(t, s, job.ID, "scanned").QR == "" {
+		t.Fatal("QR removed before phone confirmation")
+	}
+	c.events <- course.SourceEvent{Type: "authenticating"}
+	if waitSync(t, s, job.ID, "authenticating").QR != "" {
+		t.Fatal("QR retained after phone confirmation")
+	}
+	c.events <- course.SourceEvent{Type: "discovering"}
+	status := waitSync(t, s, job.ID, "discovering")
+	if status.QR != "" || len(status.Semesters) != 0 {
+		t.Fatal("discovery reported ready prematurely")
+	}
+	if _, err := s.Sync(1, job.ID, []string{testSemester}); err == nil {
+		t.Fatal("import started before semester discovery")
+	}
+	c.events <- course.SourceEvent{Type: "ready", Semesters: []string{testSemester}}
+	if len(waitSync(t, s, job.ID, "ready").Semesters) != 1 {
+		t.Fatal("missing semesters")
+	}
+}
+
 func TestCourseSyncDetailedProgressAndImportStage(t *testing.T) {
 	s, c := syncFixture()
 	importStarted := make(chan struct{})

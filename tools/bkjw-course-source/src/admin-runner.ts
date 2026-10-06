@@ -34,6 +34,7 @@ try {
   stage = "QR_LOGIN_FAILED"
   await qrLogin(context, emit, abort.signal)
   if (abort.signal.aborted) throw new Error("CANCELLED")
+  emit({type: "discovering"})
   const client = new BkjwClient(context)
   const page = await client.newPage()
   stage = "SEMESTER_DISCOVERY_FAILED"

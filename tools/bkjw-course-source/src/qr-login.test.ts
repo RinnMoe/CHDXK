@@ -1,5 +1,5 @@
-import { expect, it } from "vitest"
-import { completeQrLogin, parseWechatPage } from "./qr-login.js"
+import { expect, it, vi } from "vitest"
+import { completeQrLogin, parseWechatPage, qrLogin } from "./qr-login.js"
 
 function callbackPage(finalService = true, unbound = false, direct = false) {
   let current = "about:blank"
@@ -48,4 +48,40 @@ it("reads QR image and callback without executing login page scripts", () => {
 })
 it("rejects a callback outside school CAS", () => {
   expect(() => parseWechatPage('<img class="web_qrcode_img" src="/qrcode"><script>var t="https://example.com/steal"; "qrconnect?uuid=abcdefghijkl"</script>', "https://open.weixin.qq.com/")).toThrow()
+})
+
+it.each([true, false])("reports phone confirmation before callback navigation (scan event: %s)", async scanned => {
+  vi.useFakeTimers()
+  try {
+    const events: {type: string}[] = []
+    let release: () => void = () => {}
+    const gate = new Promise<void>(resolve => {release = resolve})
+    const {page} = callbackPage(true, false, true)
+    const goto = page.goto
+    let closed = false
+    const callback = {...page, goto: async (url: string) => {await gate; return goto(url)}, close: async () => {closed = true}}
+    let polls = 0
+    const context = {
+      request: {
+        storageState: async () => ({cookies: []}),
+        get: async (url: string) => {
+          const path = new URL(url).pathname
+          const html = path === "/authserver/login" ? '<iframe id="iframe" src="/authserver/wxEntry"></iframe>'
+            : path === "/connect/qrconnect" ? '<img class="web_qrcode_img" src="/connect/qrcode/test"><script>var t="https://ids.chd.edu.cn/authserver/callback"; "qrconnect?uuid=abcdefghijkl"</script>'
+            : path === "/connect/l/qrconnect" ? (scanned && ++polls < 3 ? 'window.wx_errcode=404;' : 'window.wx_errcode=200;window.wx_code="fixture-code";') : ""
+          return {text:async () => html, url:() => "https://open.weixin.qq.com/connect/qrconnect", ok:() => true, body:async () => Buffer.from("image")}
+        },
+      },
+      newPage: async () => callback,
+    }
+    let completed = false
+    const login = qrLogin(context as never, event => events.push(event as {type:string}), new AbortController().signal).then(() => {completed = true})
+    await vi.advanceTimersByTimeAsync(6000)
+    expect(events.map(event => event.type)).toEqual(scanned ? ["qr", "scanned", "authenticating"] : ["qr", "authenticating"])
+    expect(completed).toBe(false)
+    expect(JSON.stringify(events)).not.toContain("fixture-code")
+    release()
+    await login
+    expect(closed).toBe(true)
+  } finally {vi.useRealTimers()}
 })

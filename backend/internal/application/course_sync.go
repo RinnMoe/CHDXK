@@ -206,6 +206,9 @@ func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSess
 				}
 			case "scanned":
 				session.status.State = "scanned"
+			case "authenticating", "discovering":
+				session.status.State = event.Type
+				session.status.QR = ""
 			case "ready":
 				session.status.QR = ""
 				for _, semester := range event.Semesters {
