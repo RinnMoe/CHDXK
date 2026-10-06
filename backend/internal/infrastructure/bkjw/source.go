@@ -21,7 +21,10 @@ type Config struct {
 	Runner      string `mapstructure:"runner"`
 	BrowserPath string `mapstructure:"browser_path"`
 }
-type Source struct{ Config Config }
+type Source struct {
+	Config   Config
+	Personal bool
+}
 
 func (s *Source) Connect(ctx context.Context) (course.SourceConnection, error) {
 	if !s.Config.Enabled || s.Config.Runner == "" {
@@ -35,7 +38,11 @@ func (s *Source) Connect(ctx context.Context) (course.SourceConnection, error) {
 	if node == "" {
 		node = "node"
 	}
-	cmd := exec.Command(node, file)
+	args := []string{file}
+	if s.Personal {
+		args = append(args, "--personal")
+	}
+	cmd := exec.Command(node, args...)
 	cmd.Dir = filepath.Dir(file)
 	if s.Config.BrowserPath != "" {
 		browserPath, err := filepath.Abs(s.Config.BrowserPath)

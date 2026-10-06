@@ -40,6 +40,9 @@ type CourseSyncService struct {
 	session       *courseSyncSession
 	source        course.CourseSource
 	importArchive func(context.Context, []byte) (*CourseImportResult, error)
+	importEvent   func(context.Context, course.SourceEvent) (*CourseImportResult, error)
+	lifetime      time.Duration
+	personal      bool
 }
 
 func NewCourseSyncService(source course.CourseSource, management *CourseManagementService) *CourseSyncService {
@@ -57,7 +60,11 @@ func (s *CourseSyncService) Start(owner int) (*CourseSyncStatus, error) {
 		}
 		old.cancel()
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Hour)
+	lifetime := s.lifetime
+	if lifetime == 0 {
+		lifetime = 24 * time.Hour
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), lifetime)
 	connection, err := s.source.Connect(ctx)
 	if err != nil {
 		cancel()
@@ -69,7 +76,7 @@ func (s *CourseSyncService) Start(owner int) (*CourseSyncStatus, error) {
 		connection.Close()
 		return nil, err
 	}
-	session := &courseSyncSession{owner: owner, connection: connection, cancel: cancel, status: CourseSyncStatus{ID: hex.EncodeToString(id), State: "connecting", Semesters: []string{}, Selected: []string{}, Results: []CourseImportResult{}, ExpiresAt: time.Now().Add(24 * time.Hour)}}
+	session := &courseSyncSession{owner: owner, connection: connection, cancel: cancel, status: CourseSyncStatus{ID: hex.EncodeToString(id), State: "connecting", Semesters: []string{}, Selected: []string{}, Results: []CourseImportResult{}, ExpiresAt: time.Now().Add(lifetime)}}
 	s.session = session
 	go s.consume(ctx, session)
 	return session.snapshot(), nil
@@ -240,15 +247,22 @@ func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSess
 					s.fail(session, "同步学期与所选学期不一致")
 					return
 				}
-				archive, err := sourceArchive(event)
-				if err != nil {
-					s.fail(session, "本学期采集结果不完整，未导入，请重新同步")
-					return
-				}
 				session.mu.Lock()
 				session.status.Progress = &course.SourceProgress{Stage: "importing", UpdatedAt: time.Now()}
 				session.mu.Unlock()
-				result, err := s.importArchive(ctx, archive)
+				var result *CourseImportResult
+				var err error
+				if s.importEvent != nil {
+					result, err = s.importEvent(ctx, event)
+				} else {
+					var archive []byte
+					archive, err = sourceArchive(event)
+					if err != nil {
+						s.fail(session, "本学期采集结果不完整，未导入，请重新同步")
+						return
+					}
+					result, err = s.importArchive(ctx, archive)
+				}
 				if err != nil {
 					s.fail(session, "本学期未通过导入校验或保存失败，已停止同步")
 					return
@@ -281,8 +295,17 @@ func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSess
 				if event.Error == "SEMESTER_DISCOVERY_FAILED" || event.Error == "PAGE_STRUCTURE" {
 					message = "未能读取教务学期列表，请稍后重新连接；如持续失败，请联系技术管理员"
 				}
+				if event.Error == "PERSONAL_MENU_MISSING" || event.Error == "PERSONAL_QUERY_FAILED" {
+					message = "未能打开个人课表，请确认学校账号可查看本科教务的个人课表后重新连接"
+				}
+				if event.Error == "PERSONAL_CALENDAR_FAILED" {
+					message = "个人课表的学期列表未能加载，请稍后重新连接"
+				}
 				if event.Error == "PERMISSION_DENIED" {
 					message = "当前学校账号无权访问全校开课查询，请使用有访问权限的账号重新连接"
+					if s.personal {
+						message = "当前学校账号无权访问个人课表，请使用学生账号重新连接"
+					}
 				}
 				s.fail(session, message)
 				return

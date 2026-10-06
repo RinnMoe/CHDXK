@@ -73,6 +73,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 
 	reviewController := controller.NewReviewController(container.ReviewQuery, container.ReviewCommand)
 	courseController := controller.NewCourseController(container.CourseQuery, container.CourseCommand)
+	enrollmentSyncController := controller.NewCourseSyncController(container.EnrollmentSync)
 	courseSyncController := controller.NewCourseSyncController(container.CourseSync)
 	courseAdminController := controller.NewCourseAdminController(container.CourseManagement)
 	courseEnrollmentController := controller.NewCourseEnrollmentController(container.CourseEnrollmentQuery, container.CourseCommand)
@@ -114,6 +115,10 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		courseGroup.GET("/filter", courseController.GetCourseFilters)
 		courseGroup.GET("/hot", courseController.ListHotCourses)
 		courseGroup.GET("/", courseController.ListCourses)
+		courseGroup.POST("/enrollment-sync", enrollmentSyncController.Start)
+		courseGroup.GET("/enrollment-sync/:jobID", enrollmentSyncController.Status)
+		courseGroup.POST("/enrollment-sync/:jobID/run", enrollmentSyncController.Sync)
+		courseGroup.POST("/enrollment-sync/:jobID/cancel", enrollmentSyncController.Cancel)
 		courseGroup.GET("/enrolled", courseEnrollmentController.ListMyEnrollments)
 		courseGroup.DELETE("/enrollment/:enrollmentID", courseEnrollmentController.DeleteEnrollment)
 		courseGroup.GET("/followed", courseController.ListFollowedCourses)

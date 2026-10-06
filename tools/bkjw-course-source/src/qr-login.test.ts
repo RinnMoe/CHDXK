@@ -20,7 +20,7 @@ it("exchanges CAS authentication for an EAMS session when callback stays on CAS"
   const {page, urls} = callbackPage()
   await completeQrLogin(page as never, new URL("https://ids.chd.edu.cn/authserver/callback?code=test"))
   expect(urls).toHaveLength(2)
-  expect(new URL(urls[1]).searchParams.get("service")).toBe("http://bkjw.chd.edu.cn/eams/login.action")
+  expect(new URL(urls[1]!).searchParams.get("service")).toBe("http://bkjw.chd.edu.cn/eams/login.action")
 })
 
 it("does not re-login when callback already reaches EAMS", async () => {

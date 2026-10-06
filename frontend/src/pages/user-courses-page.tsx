@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CourseList } from "@/components/course/course-list"
+import { EnrollmentImportDialog } from "@/components/course/enrollment-import-dialog"
 import { CourseEnrollmentList } from "@/components/course/course-enrollment-list"
 import { CourseNotificationDeleteAction } from "@/components/course/course-notification-delete-action"
 import { PaginationComponent } from "@/components/common/pagination"
@@ -140,6 +141,8 @@ export function UserCoursesPage() {
               </Link>
             </Button>
           </div>
+
+          {view === "enrolled" && <EnrollmentImportDialog />}
 
           <Tabs value={view} onValueChange={handleViewChange}>
             <TabsList>

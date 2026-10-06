@@ -128,44 +128,7 @@ export class BkjwClient {
 
   async discoverSemesters(page: Page): Promise<SemesterOption[]> {
     await this.navigateEntry(page)
-    const semesterInput = page.locator('input[id$="Semester"]').first()
-    try {
-      await semesterInput.waitFor({ state: "visible", timeout: 15_000 })
-    } catch {
-      throw new PageStructureError("入口页缺少学期选择器")
-    }
-    await semesterInput.click()
-    await page.waitForTimeout(100)
-
-    const years = unique((await page.locator("#semesterCalendar_yearTb td").allTextContents()).map((year) => year.trim()).filter(Boolean))
-    const discovered: SemesterOption[] = []
-    for (const year of years) {
-      const academicYear = year.match(/\d{4}-\d{4}/)?.[0] ?? year
-      const yearCell = page.locator("#semesterCalendar_yearTb td").filter({ hasText: year }).first()
-      if (!(await yearCell.isVisible())) {
-        await semesterInput.click()
-        await page.waitForTimeout(50)
-      }
-      await yearCell.click()
-      await page.waitForTimeout(120)
-      const termCells = await page.locator("#semesterCalendar_termTb td").all()
-      for (const termCell of termCells) {
-        const id = (await termCell.getAttribute("val"))?.trim() || (await termCell.getAttribute("data-value"))?.trim() || ""
-        const termLabel = (await termCell.innerText()).trim()
-        const term = normalizeTerm(termLabel)
-        if (!id || !/^\d+$/.test(term)) continue
-        discovered.push({
-          id,
-          academicYear,
-          term,
-          label: `${academicYear}学年${term}学期`,
-          normalized: `${academicYear}-${term}`,
-        })
-      }
-    }
-
-    if (discovered.length > 0) return dedupeSemesters(discovered)
-    return parseSemesterOptions(await page.content())
+    return discoverPageSemesters(page)
   }
 
   async collectListings(page: Page, semesterId: string, requestedPageSize: number, onProgress?: (progress: CollectionProgress) => void): Promise<ListingCollection> {
@@ -401,4 +364,46 @@ function dedupeSemesters(options: SemesterOption[]): SemesterOption[] {
     seen.add(key)
     return true
   })
+}
+
+export async function discoverPageSemesters(page: Page): Promise<SemesterOption[]> {
+    const semesterInput = page.locator('input.calendar-text:visible, input[id$="Semester"]:visible').first()
+    try {
+      await semesterInput.waitFor({ state: "visible", timeout: 15_000 })
+    } catch {
+      throw new PageStructureError("入口页缺少学期选择器")
+    }
+    await semesterInput.click()
+    await page.waitForTimeout(100)
+
+    await page.locator("#semesterCalendar_yearTb td").first().waitFor({state: "visible", timeout: 15000})
+    const years = unique((await page.locator("#semesterCalendar_yearTb td").allTextContents()).map((year) => year.trim()).filter(Boolean))
+    const discovered: SemesterOption[] = []
+    for (const year of years) {
+      const academicYear = year.match(/\d{4}-\d{4}/)?.[0] ?? year
+      const yearCell = page.locator("#semesterCalendar_yearTb td").filter({ hasText: year }).first()
+      if (!(await yearCell.isVisible())) {
+        await semesterInput.click()
+        await page.waitForTimeout(50)
+      }
+      await yearCell.click()
+      await page.waitForTimeout(120)
+      const termCells = await page.locator("#semesterCalendar_termTb td").all()
+      for (const termCell of termCells) {
+        const id = (await termCell.getAttribute("val"))?.trim() || (await termCell.getAttribute("data-value"))?.trim() || ""
+        const termLabel = (await termCell.innerText()).trim()
+        const term = normalizeTerm(termLabel)
+        if (!id || !/^\d+$/.test(term)) continue
+        discovered.push({
+          id,
+          academicYear,
+          term,
+          label: `${academicYear}学年${term}学期`,
+          normalized: `${academicYear}-${term}`,
+        })
+      }
+    }
+
+    if (discovered.length > 0) return dedupeSemesters(discovered)
+    return parseSemesterOptions(await page.content())
 }

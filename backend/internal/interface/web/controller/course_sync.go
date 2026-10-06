@@ -7,11 +7,15 @@ import (
 	"net/http"
 )
 
-type CourseSyncController struct {
-	service *application.CourseSyncService
+type CourseSyncOperations interface {
+	Start(int) (*application.CourseSyncStatus, error)
+	Status(int, string) (*application.CourseSyncStatus, error)
+	Sync(int, string, []string) (*application.CourseSyncStatus, error)
+	Cancel(int, string) (*application.CourseSyncStatus, error)
 }
+type CourseSyncController struct{ service CourseSyncOperations }
 
-func NewCourseSyncController(service *application.CourseSyncService) *CourseSyncController {
+func NewCourseSyncController(service CourseSyncOperations) *CourseSyncController {
 	return &CourseSyncController{service}
 }
 func (ctrl *CourseSyncController) Start(c *gin.Context) {

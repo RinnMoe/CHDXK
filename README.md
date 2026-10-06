@@ -120,3 +120,5 @@ Compress-Archive -Path "tools/bkjw-course-source/data/bkjw/2026-2027-1/semester.
 ## 安全提示
 
 不要提交真实的数据库密码、Redis 密码、SMTP 凭据、OAuth 密钥或 session secret。新增接口时请检查 `backend/internal/interface/web/router.go` 中的认证与管理员权限要求。
+
+个人课程扫码导入与 MyCHU 预留入口见 [我的课程导入](docs/my-courses-import.md)。

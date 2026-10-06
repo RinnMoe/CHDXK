@@ -29,10 +29,11 @@ func NewCourseManagementService(repo course.CourseDataRepository) *CourseManagem
 }
 
 type CourseImportResult struct {
-	Semester      string `json:"semester"`
-	CourseCount   int    `json:"course_count"`
-	SectionCount  int    `json:"section_count"`
-	ReplacedCount int    `json:"replaced_count"`
+	Enrollment    *course.EnrollmentImportResult `json:"enrollment,omitempty"`
+	Semester      string                         `json:"semester"`
+	CourseCount   int                            `json:"course_count"`
+	SectionCount  int                            `json:"section_count"`
+	ReplacedCount int                            `json:"replaced_count"`
 }
 
 func (s *CourseManagementService) ListSemesters(ctx context.Context) ([]string, error) {

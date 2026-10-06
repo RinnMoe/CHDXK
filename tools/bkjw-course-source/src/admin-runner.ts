@@ -7,6 +7,7 @@ import { BkjwClient } from "./client.js"
 import { fetchSemester } from "./orchestrator.js"
 import { semesterDirectory } from "./storage.js"
 import { qrLogin } from "./qr-login.js"
+import { openPersonalSchedule, readPersonalCourses } from "./personal-schedule.js"
 import { BkjwError } from "./types.js"
 
 const emit = (event: object) => process.stdout.write(`${JSON.stringify(event)}\n`)
@@ -36,20 +37,29 @@ try {
   const client = new BkjwClient(context)
   const page = await client.newPage()
   stage = "SEMESTER_DISCOVERY_FAILED"
-  const semesters = await client.discoverSemesters(page)
-  await client.closePage(page)
+  const personal = process.argv.includes("--personal")
+  const semesters = personal ? await openPersonalSchedule(page) : await client.discoverSemesters(page)
+  if (!personal) await client.closePage(page)
   emit({type: "ready", semesters: semesters.map((item) => item.normalized)})
   const selected = await selection
   if (abort.signal.aborted) throw new Error("CANCELLED")
   const runtimeRoot = resolve(fileURLToPath(new URL("../../../.local/course-sync/", import.meta.url)))
   stage = "COURSE_COLLECTION_FAILED"
-  await mkdir(runtimeRoot, {recursive: true})
-  output = await mkdtemp(join(runtimeRoot, "run-"))
+  if (!personal) {
+    await mkdir(runtimeRoot, {recursive: true})
+    output = await mkdtemp(join(runtimeRoot, "run-"))
+  }
   for (const semester of selected) {
     if (abort.signal.aborted) throw new Error("CANCELLED")
     const option = semesters.find((item) => item.normalized === semester)
     if (!option) throw new Error("INVALID_SEMESTER")
     emit({type: "collecting", semester})
+    if (personal) {
+      const courses = await readPersonalCourses(page, option, abort.signal)
+      emit({type: "archive", semester, document: {semester, courses}})
+      continue
+    }
+    if (!output) throw new Error("COURSE_COLLECTION_FAILED")
     const report = await fetchSemester(client, option, {outputRoot: output, pageSize: 100, detailConcurrency: 2, resume: false, signal: abort.signal,
       onProgress: (progress) => emit({type: "progress", semester, progress})})
     const directory = semesterDirectory(output, semester)
@@ -59,7 +69,7 @@ try {
   emit({type: "done"})
 } catch (error) {
   const code = error instanceof BkjwError ? error.code : error instanceof Error ? error.message : "UNKNOWN"
-  const known = ["QR_PAGE_CHANGED", "QR_ENTRY_CHANGED", "QR_CALLBACK_INVALID", "QR_IMAGE_INVALID", "QR_ENTRY_INVALID", "QR_IMAGE_UNAVAILABLE", "QR_EXPIRED", "WECHAT_UNBOUND", "CANCELLED"]
+  const known = ["QR_PAGE_CHANGED", "QR_ENTRY_CHANGED", "QR_CALLBACK_INVALID", "QR_IMAGE_INVALID", "QR_ENTRY_INVALID", "QR_IMAGE_UNAVAILABLE", "QR_EXPIRED", "WECHAT_UNBOUND", "CANCELLED", "PERSONAL_MENU_MISSING", "PERSONAL_QUERY_FAILED", "PERSONAL_CALENDAR_FAILED"]
   // Never expose redirected URLs, codes, cookies, or collector internals in events.
   const policyCodes = ["QR_LOGIN_FAILED", "AUTH_REQUIRED", "PAGE_STRUCTURE", "PERMISSION_DENIED"]
   emit({type: "error", error: [...known, ...policyCodes].includes(code) ? code : stage})

@@ -19,6 +19,7 @@ type ServiceContainer struct {
 	ResHubOIDCClient      auth.ResHubOIDCClient
 	Bootstrap             auth.BootstrapAccountRepository
 	CourseSync            *application.CourseSyncService
+	EnrollmentSync        *application.EnrollmentSyncService
 	TeacherHotQuery       *application.TeacherHotQueryService
 	ReviewQuery           *application.ReviewQueryService
 	ReviewCommand         *application.ReviewCommandService
@@ -135,6 +136,7 @@ func NewServiceContainer(conf config.AppConfig) (*ServiceContainer, error) {
 		CourseCommand:         courseCommand,
 		CourseManagement:      courseManagement,
 		CourseSync:            application.NewCourseSyncService(&bkjw.Source{Config: conf.CourseSource}, courseManagement),
+		EnrollmentSync:        application.NewEnrollmentSyncService(&bkjw.Source{Config: conf.CourseSource, Personal: true}, courseEnrollmentRepo),
 		CourseEnrollmentQuery: courseEnrollmentQuery,
 		TeacherQuery:          teacherQuery,
 		TeacherHotQuery:       application.NewTeacherHotQueryService(courseHotRepo),
