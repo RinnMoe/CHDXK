@@ -1,6 +1,7 @@
 import type { Page } from "playwright"
 import { BkjwClient, BJW_ORIGIN, discoverPageSemesters } from "./client.js"
 import type { SemesterOption } from "./types.js"
+import { setTimeout as delay } from "node:timers/promises"
 
 export interface PersonalCourse {
   lesson_no: string
@@ -83,11 +84,13 @@ export async function openPersonalSchedule(page: Page): Promise<SemesterOption[]
   catch { throw new Error("PERSONAL_CALENDAR_FAILED") }
 }
 
-export async function readPersonalCourses(page: Page, semester: SemesterOption, signal: AbortSignal): Promise<PersonalCourse[]> {
+async function readPersonalCoursesOnce(page: Page, semester: SemesterOption, signal: AbortSignal): Promise<PersonalCourse[]> {
   if (signal.aborted) throw new Error("CANCELLED")
   // Fill the hidden target through the query page's existing form and submit
   // exactly its own read-only timetable request.
-  const [result] = await Promise.all([page.waitForResponse(r => r.url().includes('/eams/courseTableForStd!courseTable.action') && new URLSearchParams(r.request().postData() ?? new URL(r.url()).search).get("semester.id") === semester.id, {timeout: 30000}),
+  let result
+  try {
+  ;[result] = await Promise.all([page.waitForResponse(r => r.url().includes('/eams/courseTableForStd!courseTable.action') && new URLSearchParams(r.request().postData() ?? new URL(r.url()).search).get("semester.id") === semester.id, {timeout: 30000}),
   page.evaluate(id => {
     const target = document.querySelector<HTMLInputElement>('#semesterCalendar_target, input[name="semester.id"]')
     if (!target) throw new Error("PAGE_STRUCTURE")
@@ -101,10 +104,45 @@ export async function readPersonalCourses(page: Page, semester: SemesterOption, 
     if (typeof win.searchTable !== 'function') throw new Error("PAGE_STRUCTURE")
     win.searchTable()
   }, semester.id)])
-  if (!result.ok()) throw new Error("AUTH_REQUIRED")
-  await page.waitForFunction(() => Array.isArray((window as unknown as {table0?: {activities?: unknown}}).table0?.activities), undefined, {timeout: 15000})
+  } catch (error) {
+    if (signal.aborted) throw new Error("CANCELLED")
+    if (error instanceof Error && error.message.includes("PERMISSION_DENIED")) throw new Error("PERMISSION_DENIED")
+    throw new Error("PERSONAL_REQUEST_FAILED")
+  }
+  if (result.status() === 401) throw new Error("AUTH_REQUIRED")
+  if (result.status() === 403) throw new Error("PERMISSION_DENIED")
+  if (!result.ok() || await result.finished()) throw new Error("PERSONAL_REQUEST_FAILED")
+  try {
+    await page.waitForFunction(() => Array.isArray((window as unknown as {table0?: {activities?: unknown}}).table0?.activities), undefined, {timeout: 15000})
+  } catch {
+    if (signal.aborted) throw new Error("CANCELLED")
+    await new BkjwClient(page.context()).ensureAuthenticated(page)
+    throw new Error("PERSONAL_RENDER_FAILED")
+  }
   await new BkjwClient(page.context()).ensureAuthenticated(page)
   if (signal.aborted) throw new Error("CANCELLED")
   const activities = await page.evaluate(() => (window as unknown as {table0: {activities: unknown}}).table0.activities)
-  return personalCourses(activities)
+  try { return personalCourses(activities) }
+  catch { throw new Error("PERSONAL_PARSE_FAILED") }
+}
+
+// Retry only temporary request/render failures. Reloading the same authenticated
+// page cancels stale requests and restores query controls before another attempt.
+export async function readPersonalCourses(page: Page, semester: SemesterOption, signal: AbortSignal, onRetry?: (attempt: number) => void): Promise<PersonalCourse[]> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      if (signal.aborted) throw new Error("CANCELLED")
+      if (attempt) {
+        onRetry?.(attempt)
+        await delay(attempt * 1000, undefined, {signal}).catch(() => {throw new Error("CANCELLED")})
+        await openPersonalSchedule(page)
+      }
+      return await readPersonalCoursesOnce(page, semester, signal)
+    } catch (error) {
+      if (signal.aborted) throw new Error("CANCELLED")
+      const code = error instanceof Error ? error.message : "UNKNOWN"
+      if (attempt === 2 || !["PERSONAL_REQUEST_FAILED", "PERSONAL_RENDER_FAILED", "PERSONAL_MENU_MISSING", "PERSONAL_QUERY_FAILED", "PERSONAL_CALENDAR_FAILED"].includes(code)) throw error
+    }
+  }
+  throw new Error("PERSONAL_REQUEST_FAILED")
 }

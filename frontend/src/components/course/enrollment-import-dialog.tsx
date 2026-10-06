@@ -21,6 +21,7 @@ export interface EnrollmentSyncStatus {
   selected: string[]
   current?: string
   message?: string
+  progress?: { retries: number }
   results: {
     semester: string
     enrollment: {
@@ -167,6 +168,12 @@ function ImportDialog({ userID }: { userID: number }) {
                 <p>
                   正在读取 {status.current || "课表"}，已完成{" "}
                   {status.results.length} / {status.selected.length} 个学期。
+                </p>
+              )}
+              {status.state === "running" && !!status.progress?.retries && (
+                <p className="text-sm text-muted-foreground">
+                  教务响应暂时异常，正在自动重试（{status.progress.retries} /
+                  2），无需重新扫码。
                 </p>
               )}
               {status.message && (

@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"log/slog"
 	"strings"
 	"sync"
 	"time"
@@ -281,6 +282,7 @@ func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSess
 				}
 				session.status.State = "done"
 			case "error":
+				slog.Warn("academic collection stopped", "job_id", session.status.ID, "semester", session.status.Current, "error_code", safeSourceErrorCode(event.Error))
 				session.mu.Unlock()
 				message := "教务连接或采集失败，请检查教务系统是否可访问后重新连接"
 				if event.Error == "QR_EXPIRED" {
@@ -294,6 +296,21 @@ func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSess
 				}
 				if event.Error == "AUTH_REQUIRED" {
 					message = "学校登录已确认，但未能进入本科教务系统，请重新连接"
+				}
+				if s.personal && event.Error == "AUTH_REQUIRED" {
+					message = "教务登录已过期，请重新扫码；已完成学期的记录保留"
+				}
+				if event.Error == "PERSONAL_REQUEST_FAILED" {
+					message = "本学期课表请求失败，自动重试后仍未成功；已完成学期的记录保留，请稍后重试"
+				}
+				if event.Error == "PERSONAL_RENDER_FAILED" {
+					message = "本学期课表未能加载，自动重试后仍未成功；已完成学期的记录保留"
+				}
+				if event.Error == "PERSONAL_PARSE_FAILED" {
+					message = "本学期课表格式无法读取，未保存本学期，请联系技术管理员；已完成学期的记录保留"
+				}
+				if s.personal && session.snapshot().Current != "" {
+					message = session.snapshot().Current + "：" + message
 				}
 				if event.Error == "SEMESTER_DISCOVERY_FAILED" || event.Error == "PAGE_STRUCTURE" {
 					message = "未能读取教务学期列表，请稍后重新连接；如持续失败，请联系技术管理员"
@@ -319,6 +336,15 @@ func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSess
 				return
 			}
 		}
+	}
+}
+
+func safeSourceErrorCode(code string) string {
+	switch code {
+	case "PERSONAL_REQUEST_FAILED", "PERSONAL_RENDER_FAILED", "PERSONAL_PARSE_FAILED", "PERSONAL_MENU_MISSING", "PERSONAL_QUERY_FAILED", "PERSONAL_CALENDAR_FAILED", "AUTH_REQUIRED", "PERMISSION_DENIED", "QR_EXPIRED", "QR_LOGIN_FAILED", "COURSE_COLLECTION_FAILED", "SEMESTER_DISCOVERY_FAILED", "PAGE_STRUCTURE":
+		return code
+	default:
+		return "SOURCE_UNAVAILABLE"
 	}
 }
 func containsSemester(items []string, value string) bool {

@@ -56,7 +56,7 @@ try {
     if (!option) throw new Error("INVALID_SEMESTER")
     emit({type: "collecting", semester})
     if (personal) {
-      const courses = await readPersonalCourses(page, option, abort.signal)
+      const courses = await readPersonalCourses(page, option, abort.signal, attempt => emit({type:"progress", semester, progress:{stage:"listing",completed:0,failed:0,retries:attempt}}))
       emit({type: "archive", semester, document: {semester, courses}})
       continue
     }
@@ -70,7 +70,7 @@ try {
   emit({type: "done"})
 } catch (error) {
   const code = error instanceof BkjwError ? error.code : error instanceof Error ? error.message : "UNKNOWN"
-  const known = ["QR_PAGE_CHANGED", "QR_ENTRY_CHANGED", "QR_CALLBACK_INVALID", "QR_IMAGE_INVALID", "QR_ENTRY_INVALID", "QR_IMAGE_UNAVAILABLE", "QR_EXPIRED", "WECHAT_UNBOUND", "CANCELLED", "PERSONAL_MENU_MISSING", "PERSONAL_QUERY_FAILED", "PERSONAL_CALENDAR_FAILED"]
+  const known = ["QR_PAGE_CHANGED", "QR_ENTRY_CHANGED", "QR_CALLBACK_INVALID", "QR_IMAGE_INVALID", "QR_ENTRY_INVALID", "QR_IMAGE_UNAVAILABLE", "QR_EXPIRED", "WECHAT_UNBOUND", "CANCELLED", "PERSONAL_MENU_MISSING", "PERSONAL_QUERY_FAILED", "PERSONAL_CALENDAR_FAILED", "PERSONAL_REQUEST_FAILED", "PERSONAL_RENDER_FAILED", "PERSONAL_PARSE_FAILED"]
   // Never expose redirected URLs, codes, cookies, or collector internals in events.
   const policyCodes = ["QR_LOGIN_FAILED", "AUTH_REQUIRED", "PAGE_STRUCTURE", "PERMISSION_DENIED"]
   emit({type: "error", error: [...known, ...policyCodes].includes(code) ? code : stage})

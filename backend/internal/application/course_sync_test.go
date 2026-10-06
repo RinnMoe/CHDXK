@@ -84,6 +84,30 @@ func TestCourseSyncReportsPhoneConfirmationAndSchoolLogin(t *testing.T) {
 	}
 }
 
+func TestCourseSyncClassifiesPersonalFailureAndPreservesResults(t *testing.T) {
+	s, c := syncFixture()
+	s.personal = true
+	job, err := s.Start(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.events <- course.SourceEvent{Type: "ready", Semesters: []string{testSemester, "2025-2026-2"}}
+	waitSync(t, s, job.ID, "ready")
+	if _, err := s.Sync(1, job.ID, []string{testSemester, "2025-2026-2"}); err != nil {
+		t.Fatal(err)
+	}
+	c.events <- course.SourceEvent{Type: "archive", Semester: testSemester, Document: json.RawMessage(`{"semester":"2026-2027-1"}`), Report: json.RawMessage(`{}`)}
+	c.events <- course.SourceEvent{Type: "collecting", Semester: "2025-2026-2"}
+	c.events <- course.SourceEvent{Type: "error", Error: "PERSONAL_REQUEST_FAILED"}
+	status := waitSync(t, s, job.ID, "failed")
+	if len(status.Results) != 1 || !strings.Contains(status.Message, "2025-2026-2") || !strings.Contains(status.Message, "自动重试") {
+		t.Fatalf("lost results or vague failure: %+v", status)
+	}
+	if safeSourceErrorCode("http://example.com/?credential=secret") != "SOURCE_UNAVAILABLE" {
+		t.Fatal("unsafe source error exposed")
+	}
+}
+
 func TestCourseSyncDetailedProgressAndImportStage(t *testing.T) {
 	s, c := syncFixture()
 	importStarted := make(chan struct{})
