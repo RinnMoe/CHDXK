@@ -18,10 +18,15 @@ type EnrollmentSyncService struct {
 	source   course.CourseSource
 	importer course.EnrollmentImporter
 	limit    int
+	queue    *CollectorQueue
 }
 
-func NewEnrollmentSyncService(source course.CourseSource, importer course.EnrollmentImporter) *EnrollmentSyncService {
-	return &EnrollmentSyncService{jobs: make(map[int]*CourseSyncService), source: source, importer: importer, limit: 4}
+func NewEnrollmentSyncService(source course.CourseSource, importer course.EnrollmentImporter, queues ...*CollectorQueue) *EnrollmentSyncService {
+	s := &EnrollmentSyncService{jobs: make(map[int]*CourseSyncService), source: source, importer: importer, limit: 32}
+	if len(queues) > 0 {
+		s.queue = queues[0]
+	}
+	return s
 }
 func (s *EnrollmentSyncService) Start(owner int) (*CourseSyncStatus, error) {
 	s.mu.Lock()
@@ -44,7 +49,7 @@ func (s *EnrollmentSyncService) Start(owner int) (*CourseSyncStatus, error) {
 	if active >= s.limit {
 		return nil, apperr.Conflict("当前扫码导入人数较多，请稍后重试")
 	}
-	service := &CourseSyncService{source: s.source, lifetime: 15 * time.Minute, personal: true}
+	service := &CourseSyncService{source: s.source, lifetime: 15 * time.Minute, personal: true, queue: s.queue}
 	service.importEvent = func(ctx context.Context, event course.SourceEvent) (*CourseImportResult, error) {
 		var document struct {
 			Semester string                          `json:"semester"`

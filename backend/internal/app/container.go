@@ -128,6 +128,7 @@ func NewServiceContainer(conf config.AppConfig) (*ServiceContainer, error) {
 	systemSettingsCommand := application.NewSystemSettingsCommandService(systemSettingsService)
 	auditLogQuery := application.NewAuditLogQueryService(auditLogRepo)
 	auditLogCommand := application.NewAuditLogCommandService(auditLogRepo)
+	collectorQueue := application.NewCollectorQueue(32)
 
 	return &ServiceContainer{
 		Accounts:              application.NewLocalAccountService(identityProjection, systemSettingsService, resHubClient, auditLogRepo),
@@ -137,8 +138,8 @@ func NewServiceContainer(conf config.AppConfig) (*ServiceContainer, error) {
 		CourseQuery:           courseQuery,
 		CourseCommand:         courseCommand,
 		CourseManagement:      courseManagement,
-		CourseSync:            application.NewCourseSyncService(&bkjw.Source{Config: conf.CourseSource}, courseManagement),
-		EnrollmentSync:        application.NewEnrollmentSyncService(&bkjw.Source{Config: conf.CourseSource, Personal: true}, courseEnrollmentRepo),
+		CourseSync:            application.NewCourseSyncService(&bkjw.Source{Config: conf.CourseSource}, courseManagement, collectorQueue),
+		EnrollmentSync:        application.NewEnrollmentSyncService(&bkjw.Source{Config: conf.CourseSource, Personal: true}, courseEnrollmentRepo, collectorQueue),
 		CourseEnrollmentQuery: courseEnrollmentQuery,
 		TeacherQuery:          teacherQuery,
 		TeacherProfiles:       application.NewTeacherProfileService(teacherRepo, chdteachers.NewClient()),

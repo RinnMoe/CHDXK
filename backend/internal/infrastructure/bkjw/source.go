@@ -43,6 +43,7 @@ func (s *Source) Connect(ctx context.Context) (course.SourceConnection, error) {
 		args = append(args, "--personal")
 	}
 	cmd := exec.Command(node, args...)
+	configureCollectorProcess(cmd)
 	cmd.Dir = filepath.Dir(file)
 	if s.Config.BrowserPath != "" {
 		browserPath, err := filepath.Abs(s.Config.BrowserPath)
@@ -97,6 +98,8 @@ func (s *Source) Connect(ctx context.Context) (course.SourceConnection, error) {
 			_, _ = io.Copy(io.Discard, stdout)
 		}
 		_ = cmd.Wait()
+		// A crashed Node process must not leave Chromium children behind.
+		terminateCollectorProcess(cmd)
 		if !terminal {
 			select {
 			case c.events <- course.SourceEvent{Type: "error", Error: "SOURCE_UNAVAILABLE"}:
@@ -125,6 +128,7 @@ type connection struct {
 }
 
 func (c *connection) Events() <-chan course.SourceEvent { return c.events }
+func (c *connection) WaitClosed()                       { <-c.done }
 func (c *connection) Sync(semesters []string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -144,7 +148,7 @@ func (c *connection) Close() {
 			select {
 			case <-c.done:
 			case <-time.After(35 * time.Second):
-				_ = c.cmd.Process.Kill()
+				terminateCollectorProcess(c.cmd)
 			}
 		}()
 	})

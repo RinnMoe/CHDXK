@@ -17,17 +17,18 @@ import (
 )
 
 type CourseSyncStatus struct {
-	ID        string                 `json:"id"`
-	State     string                 `json:"state"`
-	QR        string                 `json:"qr,omitempty"`
-	Semesters []string               `json:"semesters"`
-	Selected  []string               `json:"selected"`
-	Current   string                 `json:"current,omitempty"`
-	Message   string                 `json:"message,omitempty"`
-	Results   []CourseImportResult   `json:"results"`
-	ExpiresAt time.Time              `json:"expires_at"`
-	StartedAt *time.Time             `json:"started_at,omitempty"`
-	Progress  *course.SourceProgress `json:"progress,omitempty"`
+	ID            string                 `json:"id"`
+	State         string                 `json:"state"`
+	QR            string                 `json:"qr,omitempty"`
+	Semesters     []string               `json:"semesters"`
+	Selected      []string               `json:"selected"`
+	Current       string                 `json:"current,omitempty"`
+	Message       string                 `json:"message,omitempty"`
+	Results       []CourseImportResult   `json:"results"`
+	ExpiresAt     time.Time              `json:"expires_at"`
+	StartedAt     *time.Time             `json:"started_at,omitempty"`
+	Progress      *course.SourceProgress `json:"progress,omitempty"`
+	QueuePosition int                    `json:"queue_position,omitempty"`
 }
 type courseSyncSession struct {
 	mu         sync.Mutex
@@ -35,6 +36,7 @@ type courseSyncSession struct {
 	status     CourseSyncStatus
 	connection course.SourceConnection
 	cancel     context.CancelFunc
+	ticket     *collectorTicket
 }
 type CourseSyncService struct {
 	mu            sync.Mutex
@@ -44,10 +46,15 @@ type CourseSyncService struct {
 	importEvent   func(context.Context, course.SourceEvent) (*CourseImportResult, error)
 	lifetime      time.Duration
 	personal      bool
+	queue         *CollectorQueue
 }
 
-func NewCourseSyncService(source course.CourseSource, management *CourseManagementService) *CourseSyncService {
-	return &CourseSyncService{source: source, importArchive: management.ImportArchive}
+func NewCourseSyncService(source course.CourseSource, management *CourseManagementService, queues ...*CollectorQueue) *CourseSyncService {
+	s := &CourseSyncService{source: source, importArchive: management.ImportArchive}
+	if len(queues) > 0 {
+		s.queue = queues[0]
+	}
+	return s
 }
 func (s *CourseSyncService) Start(owner int) (*CourseSyncStatus, error) {
 	s.mu.Lock()
@@ -64,6 +71,22 @@ func (s *CourseSyncService) Start(owner int) (*CourseSyncStatus, error) {
 	lifetime := s.lifetime
 	if lifetime == 0 {
 		lifetime = 24 * time.Hour
+	}
+	if s.queue != nil {
+		ticket, err := s.queue.enqueue()
+		if err != nil {
+			return nil, err
+		}
+		id := make([]byte, 16)
+		if _, err = rand.Read(id); err != nil {
+			ticket.release()
+			return nil, err
+		}
+		ctx, cancel := context.WithCancel(context.Background())
+		session := &courseSyncSession{owner: owner, cancel: cancel, ticket: ticket, status: CourseSyncStatus{ID: hex.EncodeToString(id), State: "queued", Semesters: []string{}, Selected: []string{}, Results: []CourseImportResult{}, ExpiresAt: time.Now().Add(30 * time.Minute)}}
+		s.session = session
+		go s.connectQueued(ctx, session, lifetime)
+		return session.snapshot(), nil
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), lifetime)
 	connection, err := s.source.Connect(ctx)
@@ -89,6 +112,9 @@ func (session *courseSyncSession) snapshot() *CourseSyncStatus {
 	session.mu.Lock()
 	defer session.mu.Unlock()
 	status := session.status
+	if status.State == "queued" && session.ticket != nil {
+		status.QueuePosition = session.ticket.position()
+	}
 	status.Semesters = append([]string{}, status.Semesters...)
 	status.Selected = append([]string{}, status.Selected...)
 	status.Results = append([]CourseImportResult{}, status.Results...)
@@ -182,10 +208,27 @@ func (s *CourseSyncService) fail(session *courseSyncSession, message string) {
 	session.cancel()
 }
 func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSession) {
-	defer session.connection.Close()
+	idle := time.NewTimer(5 * time.Minute)
+	defer idle.Stop()
+	defer func() {
+		session.connection.Close()
+		// Do not launch the next Chromium while the previous process is exiting.
+		if waiter, ok := session.connection.(interface{ WaitClosed() }); ok {
+			waiter.WaitClosed()
+		}
+	}()
 	defer session.cancel()
 	for {
 		select {
+		case <-idle.C:
+			session.mu.Lock()
+			running := session.status.State == "running"
+			session.mu.Unlock()
+			if !running {
+				s.fail(session, "连接等待超时，请重新排队导入")
+				return
+			}
+			idle.Reset(5 * time.Minute)
 		case <-ctx.Done():
 			s.fail(session, "连接已到期，请重新扫码登录")
 			return
@@ -337,6 +380,36 @@ func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSess
 			}
 		}
 	}
+}
+
+func (s *CourseSyncService) connectQueued(ctx context.Context, session *courseSyncSession, lifetime time.Duration) {
+	defer session.ticket.release()
+	defer session.cancel()
+	waitCtx, cancelWait := context.WithTimeout(ctx, 30*time.Minute)
+	defer cancelWait()
+	if err := session.ticket.wait(waitCtx); err != nil {
+		s.fail(session, "排队已取消或超时，请重新导入")
+		return
+	}
+	activeCtx, cancel := context.WithTimeout(ctx, lifetime)
+	defer cancel()
+	session.mu.Lock()
+	if syncTerminal(session.status.State) {
+		session.mu.Unlock()
+		return
+	}
+	session.status.State = "connecting"
+	session.status.ExpiresAt = time.Now().Add(lifetime)
+	session.mu.Unlock()
+	connection, err := s.source.Connect(activeCtx)
+	if err != nil {
+		s.fail(session, "教务连接暂不可用，请稍后重试")
+		return
+	}
+	session.mu.Lock()
+	session.connection = connection
+	session.mu.Unlock()
+	s.consume(activeCtx, session)
 }
 
 func safeSourceErrorCode(code string) string {

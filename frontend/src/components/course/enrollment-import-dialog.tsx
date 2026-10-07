@@ -18,6 +18,7 @@ import {
 export interface EnrollmentSyncStatus {
   id: string
   state: string
+  queue_position?: number
   qr?: string
   semesters: string[]
   selected: string[]
@@ -36,6 +37,7 @@ export interface EnrollmentSyncStatus {
 const terminal = (state?: string) =>
   ["done", "failed", "cancelled"].includes(state ?? "")
 const states: Record<string, string> = {
+  queued: "正在排队，轮到后会显示登录二维码",
   connecting: "正在连接教务",
   waiting: "请用微信扫码并确认学校账号登录",
   scanned: "已扫码，请在手机上确认登录",
@@ -155,6 +157,7 @@ function ImportDialog({ userID }: { userID: number }) {
                     {states[status.state] ?? "正在处理"}
                   </p>
                   <SchoolLoginFeedback state={status.state} />
+                  {status.state === "queued" && <p className="text-sm text-muted-foreground">前面还有 {status.queue_position ?? 0} 个任务。可取消排队；二维码显示后再扫码。</p>}
                   {status.qr && (
                     <img
                       src={status.qr}

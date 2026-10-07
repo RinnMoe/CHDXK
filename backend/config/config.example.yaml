@@ -14,6 +14,8 @@ server:
       - "http://127.0.0.1:5173"
 
 postgres:
+  max_open_conns: 6
+  max_idle_conns: 2
   dsn: "host=localhost port=5432 user=postgres password=postgres dbname=jcourse sslmode=disable"
 
 redis:

@@ -61,7 +61,7 @@ try {
       continue
     }
     if (!output) throw new Error("COURSE_COLLECTION_FAILED")
-    const report = await fetchSemester(client, option, {outputRoot: output, pageSize: 100, detailConcurrency: 2, resume: false, signal: abort.signal,
+    const report = await fetchSemester(client, option, {outputRoot: output, pageSize: 100, detailConcurrency: 1, resume: false, signal: abort.signal,
       onProgress: (progress) => emit({type: "progress", semester, progress})})
     const directory = semesterDirectory(output, semester)
     // The server's existing import validator is the final authority on completeness.

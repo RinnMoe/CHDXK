@@ -2,6 +2,10 @@ name: chdxk
 
 x-app-environment: &app-environment
   TZ: Asia/Shanghai
+  GOMEMLIMIT: 48MiB
+  GOMAXPROCS: "1"
+  NODE_OPTIONS: --max-old-space-size=96
+  JCOURSE_ASYNQ_CONCURRENCY: "1"
   JCOURSE_SERVER_ADDR: :8080
   JCOURSE_POSTGRES_DSN: host=postgres port=5432 user=chdxk password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD} dbname=chdxk sslmode=disable
   JCOURSE_REDIS_ADDR: redis:6379
@@ -16,6 +20,9 @@ x-app-environment: &app-environment
 
 services:
   postgres:
+    mem_limit: 192m
+    memswap_limit: 192m
+    command: [postgres, -c, shared_buffers=32MB, -c, work_mem=1MB, -c, maintenance_work_mem=16MB, -c, max_connections=20, -c, max_parallel_workers_per_gather=0]
     image: dujiajun/postgres-pg-jieba:17
     build:
       context: ../postgres
@@ -35,8 +42,10 @@ services:
       retries: 30
     restart: unless-stopped
   redis:
+    mem_limit: 48m
+    memswap_limit: 48m
     image: redis:7-alpine
-    command: [redis-server, --appendonly, "yes"]
+    command: [redis-server, --appendonly, "yes", --maxmemory, 24mb, --maxmemory-policy, noeviction, --save, ""]
     volumes:
       - redis_data:/data
     healthcheck:
@@ -46,12 +55,14 @@ services:
       retries: 20
     restart: unless-stopped
   api:
+    mem_limit: 560m
+    memswap_limit: 560m
     image: chdxk/api:${CHDXK_VERSION:-0.1.0}
     build:
       context: ../..
       dockerfile: backend/api.Dockerfile
     init: true
-    shm_size: 256mb
+    shm_size: 64mb
     environment: *app-environment
     command: [--config, /app/config/config.yaml]
     volumes:
@@ -63,6 +74,8 @@ services:
         condition: service_healthy
     restart: unless-stopped
   taskworker:
+    mem_limit: 96m
+    memswap_limit: 96m
     image: chdxk/taskworker:${CHDXK_VERSION:-0.1.0}
     build:
       context: ../..
@@ -78,6 +91,11 @@ services:
         condition: service_healthy
     restart: unless-stopped
   frontend:
+    cpus: 1
+    environment:
+      NGINX_ENTRYPOINT_WORKER_PROCESSES_AUTOTUNE: "1"
+    mem_limit: 32m
+    memswap_limit: 32m
     image: chdxk/frontend:${CHDXK_VERSION:-0.1.0}
     build:
       context: ../../frontend

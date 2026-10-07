@@ -20,7 +20,9 @@ func NewGormLogger() logger.Interface {
 }
 
 type PostgresConfig struct {
-	DSN string `mapstructure:"dsn"`
+	DSN          string `mapstructure:"dsn"`
+	MaxOpenConns int    `mapstructure:"max_open_conns"`
+	MaxIdleConns int    `mapstructure:"max_idle_conns"`
 }
 
 func NewPostgres(conf PostgresConfig) *gorm.DB {
@@ -30,6 +32,24 @@ func NewPostgres(conf PostgresConfig) *gorm.DB {
 	if err != nil {
 		panic(err)
 	}
+	pool, err := db.DB()
+	if err != nil {
+		panic(err)
+	}
+	maxOpen := conf.MaxOpenConns
+	if maxOpen <= 0 {
+		maxOpen = 6
+	}
+	maxIdle := conf.MaxIdleConns
+	if maxIdle <= 0 {
+		maxIdle = 2
+	}
+	if maxIdle > maxOpen {
+		maxIdle = maxOpen
+	}
+	pool.SetMaxOpenConns(maxOpen)
+	pool.SetMaxIdleConns(maxIdle)
+	pool.SetConnMaxIdleTime(5 * time.Minute)
 
 	return db
 }

@@ -14,6 +14,7 @@ import type { SyncProgress } from "./course-sync-progress-utils"
 interface SyncStatus {
   id: string
   state:
+    | "queued"
     | "connecting"
     | "waiting"
     | "scanned"
@@ -25,6 +26,7 @@ interface SyncStatus {
     | "failed"
     | "cancelled"
   qr?: string
+  queue_position?: number
   semesters: string[]
   selected: string[]
   current?: string
@@ -37,6 +39,7 @@ const storageKey = "chdxk.course-sync-job"
 const terminal = (state?: string) =>
   ["done", "failed", "cancelled"].includes(state ?? "")
 const states: Record<SyncStatus["state"], string> = {
+  queued: "正在排队，轮到后会显示登录二维码",
   authenticating: "手机已确认，正在连接本科教务",
   discovering: "教务登录成功，正在读取学期列表",
   connecting: copy(
@@ -125,6 +128,7 @@ export function CourseSyncPanel() {
       {status && (
         <div className="space-y-4 rounded-lg border p-4" aria-live="polite">
           <h4 className="font-medium">{states[status.state]}</h4>
+          {status.state === "queued" && <p className="text-sm text-muted-foreground">前面还有 {status.queue_position ?? 0} 个任务。可取消排队；二维码显示后再扫码。</p>}
           <SchoolLoginFeedback state={status.state} />
           {status.qr && (
             <img
