@@ -72,8 +72,8 @@ smtp:
   password: ""
   from: "noreply@example.com"
 
-# CHDXK uses res-hub as the unified user, role, session and points authority.
-# OIDC configuration is required; there is no local-account fallback.
+# CHDXK has independent local accounts; res-hub provides SSO and shared points.
+# Initial administrator password login does not require res-hub to be online.
 reshub:
   # Discovery is read from this stable public OIDC issuer.
   issuer: "https://res-hub.example.com"

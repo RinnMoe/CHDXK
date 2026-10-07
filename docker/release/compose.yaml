@@ -1,0 +1,92 @@
+name: chdxk
+
+x-app-environment: &app-environment
+  TZ: Asia/Shanghai
+  JCOURSE_SERVER_ADDR: :8080
+  JCOURSE_POSTGRES_DSN: host=postgres port=5432 user=chdxk password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD} dbname=chdxk sslmode=disable
+  JCOURSE_REDIS_ADDR: redis:6379
+  JCOURSE_SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET}
+  JCOURSE_SESSION_SECURE: ${SESSION_SECURE:-true}
+  JCOURSE_RESHUB_ISSUER: ${RESHUB_ISSUER:?Set RESHUB_ISSUER}
+  JCOURSE_RESHUB_CLIENT_ID: ${RESHUB_CLIENT_ID:-chdxk}
+  JCOURSE_RESHUB_CLIENT_SECRET: ${RESHUB_CLIENT_SECRET:?Set RESHUB_CLIENT_SECRET}
+  JCOURSE_RESHUB_REDIRECT_URI: ${CHDXK_PUBLIC_URL:?Set CHDXK_PUBLIC_URL}/api/auth/oidc/callback
+  JCOURSE_RESHUB_LOGOUT_RETURN_URI: ${CHDXK_PUBLIC_URL}/
+  JCOURSE_RESHUB_TIMEOUT: 10s
+
+services:
+  postgres:
+    image: dujiajun/postgres-pg-jieba:17
+    build:
+      context: ../postgres
+    environment:
+      POSTGRES_USER: chdxk
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: chdxk
+      TZ: Asia/Shanghai
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - ../../backend/script:/migrations:ro
+      - ./init-schema.sh:/docker-entrypoint-initdb.d/10-chdxk-schema.sh:ro
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -h 127.0.0.1 -U chdxk -d chdxk"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    command: [redis-server, --appendonly, "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  api:
+    image: chdxk/api:${CHDXK_VERSION:-0.1.0}
+    build:
+      context: ../..
+      dockerfile: backend/api.Dockerfile
+    init: true
+    shm_size: 256mb
+    environment: *app-environment
+    command: [--config, /app/config/config.yaml]
+    volumes:
+      - ../../backend/config/config.example.yaml:/app/config/config.yaml:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+  taskworker:
+    image: chdxk/taskworker:${CHDXK_VERSION:-0.1.0}
+    build:
+      context: ../..
+      dockerfile: backend/taskworker.Dockerfile
+    environment: *app-environment
+    command: [--config, /app/config/config.yaml]
+    volumes:
+      - ../../backend/config/config.example.yaml:/app/config/config.yaml:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+  frontend:
+    image: chdxk/frontend:${CHDXK_VERSION:-0.1.0}
+    build:
+      context: ../../frontend
+    ports:
+      - "${CHDXK_BIND_ADDRESS:-127.0.0.1}:${CHDXK_PORT:-8088}:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:

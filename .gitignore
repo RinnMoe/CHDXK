@@ -12,3 +12,5 @@ backend/loadtest/loadtest.config.json
 
 # Isolated local integration runs
 .local/
+docker/release/.env
+docker/release/certs/

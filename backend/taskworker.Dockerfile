@@ -4,19 +4,15 @@ FROM golang:${GO_VERSION} AS builder
 
 WORKDIR /src
 
-COPY go.mod go.sum ./
+COPY backend/go.mod backend/go.sum ./
 
 ENV GOPROXY=https://goproxy.cn,direct
 
 RUN go mod download
 
-COPY . .
+COPY backend/ .
 
-RUN wget "https://arms-apm-cn-hangzhou.oss-cn-hangzhou.aliyuncs.com/instgo/instgo-linux-amd64" -O instgo
-
-RUN chmod +x instgo
-
-RUN CGO_ENABLED=0 ./instgo go build -o /out/jcourse-taskworker ./cmd/taskworker
+RUN CGO_ENABLED=0 go build -trimpath -o /out/jcourse-taskworker ./cmd/taskworker
 
 FROM alpine:3.22
 
@@ -30,7 +26,7 @@ WORKDIR /app
 
 COPY --from=builder /out/jcourse-taskworker /usr/local/bin/jcourse-taskworker
 
-COPY config/config.example.yaml /app/config/config.yaml
+COPY backend/config/config.example.yaml /app/config/config.yaml
 
 USER app
 

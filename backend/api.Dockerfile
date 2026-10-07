@@ -12,11 +12,7 @@ RUN go mod download
 
 COPY backend/ .
 
-RUN wget "https://arms-apm-cn-hangzhou.oss-cn-hangzhou.aliyuncs.com/instgo/instgo-linux-amd64" -O instgo
-
-RUN chmod +x instgo
-
-RUN CGO_ENABLED=0 ./instgo go build -o /out/jcourse-api ./cmd/api
+RUN CGO_ENABLED=0 go build -trimpath -o /out/jcourse-api ./cmd/api
 
 FROM node:22-bookworm-slim AS collector
 

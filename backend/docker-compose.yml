@@ -18,7 +18,8 @@ services:
 
   task_worker:
     build:
-      dockerfile: taskworker.Dockerfile
+      context: ..
+      dockerfile: backend/taskworker.Dockerfile
     image: ${CHDXK_TASKWORKER_IMAGE:-chdxk/taskworker:latest}
     container_name: ${CHDXK_TASKWORKER_CONTAINER:-chdxk_taskworker}
     environment:

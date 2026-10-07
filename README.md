@@ -1,5 +1,7 @@
 # 频道课程榜
 
+当前发行版：**v0.1.0**。服务器新安装请使用 [Docker 部署与资料站登录配置指南](docs/deploy-v0.1.0.md)，完整编排在 `docker/release/compose.yaml`；[更新记录](CHANGELOG.md)。
+
 频道课程榜（项目标识：CHDXK）是一个课程点评与选课辅助系统，包含 Go 后端和 React/Vite 前端。项目提供课程与教师检索、课程点评、评分趋势、关注课程、课程通知、个人课程、积分转账、系统 API Key、站点统计和后台运营能力。`jcourse` 仅作为内部 Go module、数据库和配置命名保留。
 
 ## 目录结构
