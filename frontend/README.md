@@ -51,6 +51,14 @@ pnpm dev
 
 默认访问地址为 `http://localhost:5173`。开发环境下，Vite 会将 `/api` 代理到 `http://localhost:8080`。登录由后端通过 res-hub OIDC Authorization Code + PKCE 完成，前端不保存 OIDC token。
 
+若 API 使用其他端口，在 `frontend/.env.local` 中配置代理地址，例如本地两站联调使用：
+
+```dotenv
+VITE_API_PROXY_TARGET=http://127.0.0.1:18080
+```
+
+该文件不提交到 Git，Vite 启动时会读取它，重启后仍生效。进程环境变量中的同名配置优先。检查前后端连接时应访问 `/api/auth/options`（正常返回 200）和 `/api/auth/me`（未登录返回 401），不能只检查网页 HTML 是否返回 200。
+
 ### 3. 配合后端开发
 
 先在仓库根目录启动 PostgreSQL 和 Redis，再启动后端 API：
