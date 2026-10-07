@@ -34,7 +34,7 @@ func ResolveCurrentUser(authResolution *application.AuthResolutionService) gin.H
 				return
 			}
 			if errors.Is(err, auth.ErrUserSuspended) {
-				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": err.Error()})
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": err.Error(), "code": "account_suspended"})
 				return
 			}
 			if errors.Is(err, auth.ErrInvalidApiKeyRole) {
@@ -61,7 +61,7 @@ func ResolveCurrentUser(authResolution *application.AuthResolutionService) gin.H
 }
 
 func isPublicOIDCRoute(path string) bool {
-	return path == "/api/auth/login" || path == "/api/auth/register" || path == "/api/auth/options" || path == "/api/auth/accounts" || path == "/api/auth/accounts/select" || path == "/api/auth/logout" || path == "/api/auth/csrf" || path == "/api/auth/oidc/start" || path == "/api/auth/oidc/callback" || path == "/api/site-copy" || path == "/api/site-theme" || path == "/api/site-pages" || path == "/api/site.webmanifest" || path == "/api/system-settings"
+	return path == "/api/auth/native/exchange" || path == "/api/auth/login" || path == "/api/auth/register" || path == "/api/auth/options" || path == "/api/auth/accounts" || path == "/api/auth/accounts/select" || path == "/api/auth/logout" || path == "/api/auth/csrf" || path == "/api/auth/oidc/start" || path == "/api/auth/oidc/callback" || path == "/api/site-copy" || path == "/api/site-theme" || path == "/api/site-pages" || path == "/api/site.webmanifest" || path == "/api/system-settings"
 }
 
 func RequireAuth() gin.HandlerFunc {

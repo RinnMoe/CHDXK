@@ -154,6 +154,10 @@ func (ctrl *AccountController) Me(c *gin.Context) {
 	c.JSON(200, dto)
 }
 func (ctrl *AccountController) accountChoices(c *gin.Context) ([]*auth.User, error) {
+	if middleware.NativePendingExpired(c) {
+		_ = middleware.ClearSession(c)
+		return nil, auth.ErrResHubSession
+	}
 	token := middleware.OIDCAccessToken(c)
 	if token == "" {
 		return nil, auth.ErrResHubSession

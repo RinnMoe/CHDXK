@@ -6,13 +6,23 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"jcourse/internal/domain/auth"
 	"jcourse/pkg/apperr"
 	"jcourse/pkg/sitecopy"
 )
 
 func respondError(c *gin.Context, err error) {
 	if appErr, ok := errors.AsType[*apperr.AppError](err); ok {
-		c.JSON(appErr.StatusCode, gin.H{"error": sitecopy.Text(c.Request.Context(), appErr.Msg)})
+		body := gin.H{"error": sitecopy.Text(c.Request.Context(), appErr.Msg)}
+		switch {
+		case errors.Is(err, auth.ErrPasswordRequired):
+			body["code"] = "password_change_required"
+		case errors.Is(err, auth.ErrUserSuspended):
+			body["code"] = "account_suspended"
+		case errors.Is(err, auth.ErrMuted):
+			body["code"] = "muted"
+		}
+		c.JSON(appErr.StatusCode, body)
 		return
 	}
 	c.JSON(http.StatusInternalServerError, gin.H{"error": sitecopy.Text(c.Request.Context(), "服务器内部错误")})

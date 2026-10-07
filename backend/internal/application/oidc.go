@@ -113,10 +113,24 @@ func randomURLToken(size int) (string, error) {
 }
 
 func (s *ResHubOIDCService) CompleteIdentity(ctx context.Context, code, verifier, nonce string) (*auth.ResHubIdentity, auth.ResHubSession, error) {
+	if s == nil {
+		return nil, auth.ResHubSession{}, auth.ErrResHubUnavailable
+	}
+	return s.completeIdentity(ctx, code, verifier, nonce, s.redirectURI)
+}
+
+// NativeRedirectURI is an internal token-exchange marker, never a browser URL.
+const NativeRedirectURI = "urn:reshub:native"
+
+func (s *ResHubOIDCService) CompleteNativeIdentity(ctx context.Context, code, verifier, state string) (*auth.ResHubIdentity, auth.ResHubSession, error) {
+	return s.completeIdentity(ctx, code, verifier, state, NativeRedirectURI)
+}
+
+func (s *ResHubOIDCService) completeIdentity(ctx context.Context, code, verifier, nonce, redirectURI string) (*auth.ResHubIdentity, auth.ResHubSession, error) {
 	if s == nil || s.client == nil {
 		return nil, auth.ResHubSession{}, auth.ErrResHubUnavailable
 	}
-	session, err := s.client.Exchange(ctx, code, verifier, nonce, s.redirectURI)
+	session, err := s.client.Exchange(ctx, code, verifier, nonce, redirectURI)
 	if err != nil {
 		return nil, session, err
 	}

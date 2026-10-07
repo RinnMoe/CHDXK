@@ -101,6 +101,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		publicAuthGroup.GET("/options", accountController.Options)
 		publicAuthGroup.GET("/accounts", accountController.Accounts)
 		publicAuthGroup.POST("/accounts/select", accountController.SelectAccount)
+		publicAuthGroup.POST("/native/exchange", accountController.NativeExchange)
 		publicAuthGroup.POST("/logout", accountController.Logout)
 		publicAuthGroup.GET("/oidc/start", accountController.OIDCStart)
 		publicAuthGroup.GET("/oidc/callback", accountController.OIDCCallback)

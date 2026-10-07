@@ -3,6 +3,7 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/redis"
@@ -69,6 +70,17 @@ func OIDCAccessToken(c *gin.Context) string {
 	s := sessions.Default(c)
 	token, _ := sessionString(s, sessionKeyOIDCAccessToken)
 	return token
+}
+
+func SetNativePending(c *gin.Context, ttl time.Duration) error {
+	s := sessions.Default(c)
+	s.Set("native_pending_until", time.Now().Add(ttl).Unix())
+	return s.Save()
+}
+
+func NativePendingExpired(c *gin.Context) bool {
+	until, ok := sessions.Default(c).Get("native_pending_until").(int64)
+	return ok && time.Now().Unix() >= until
 }
 
 func OIDCIDToken(c *gin.Context) string {

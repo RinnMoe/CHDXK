@@ -31,12 +31,12 @@ func CSRF() gin.HandlerFunc {
 		default:
 			expected, ok := s.Get(sessionKeyCSRFToken).(string)
 			if !ok || expected == "" {
-				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "csrf token missing"})
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "csrf token missing", "code": "csrf_invalid"})
 				return
 			}
 			actual := c.GetHeader(csrfHeader)
 			if subtle.ConstantTimeCompare([]byte(actual), []byte(expected)) != 1 {
-				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "csrf token mismatch"})
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "csrf token mismatch", "code": "csrf_invalid"})
 				return
 			}
 			c.Next()
