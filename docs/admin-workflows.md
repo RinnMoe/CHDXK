@@ -57,35 +57,10 @@
 
 ### 技术管理员配置
 
-API 镜像内置开课计划采集器、CAS 微信扫码登录实现、Node 和 Chromium，无需在宿主机安装 SDK、浏览器或指定个人目录。浏览器版本随采集器锁文件安装，构建时通过 Playwright 的 `install --with-deps chromium` 安装对应浏览器及容器系统依赖（[官方说明](https://playwright.dev/docs/browsers)）。当前进度保存在 API 进程内，多个 API 副本需要将该入口统一路由到一个实例。管理员不再上传 ZIP，学期数据统一从教务同步获取。
+API 镜像内置 Go HTTP 教务采集器，无需宿主机 SDK、采集器目录、Node 或浏览器。当前进度和临时 Cookie 保存在 API 进程内，多副本需将该入口固定到一个实例。管理员不上传 ZIP，学期数据统一从教务同步获取。
 
-```powershell
-# 在项目根目录构建；之后按部署环境配置数据库、Redis 和频道 SSO
-docker compose -f backend/docker-compose.yml build api
-docker compose -f backend/docker-compose.yml up -d api
-```
+镜像默认启用教务同步；设置 `JCOURSE_COURSE_SOURCE_ENABLED=false` 可关闭。采集器在 API 内运行，不开启额外端口、不写学校凭据或临时课表文件。扫码确认后先完成 CAS 回调、自动提交登录表单和业务会话验证，再读取全部学期目录。管理员与个人导入共用串行队列，结束、取消或超时后释放本次连接。
 
-镜像自动启用教务同步，下列环境变量默认值由镜像提供，不需要额外配置或挂载采集器目录：
-
-```text
-JCOURSE_COURSE_SOURCE_ENABLED=true
-JCOURSE_COURSE_SOURCE_NODE=/usr/local/bin/node
-JCOURSE_COURSE_SOURCE_RUNNER=/app/tools/bkjw-course-source/dist/admin-runner.js
-JCOURSE_COURSE_SOURCE_BROWSER_PATH=/opt/playwright
-```
-
-这些路径均为镜像内部路径，与宿主机项目位置无关。Compose 为 API 开启进程回收并提供 256 MB 共享内存。更改启动环境变量后需重新创建容器；如需关闭教务同步，设置 `JCOURSE_COURSE_SOURCE_ENABLED=false`。采集器通过标准输入输出与 API 通信，不开启额外端口。临时采集文件位于容器 `/app/.local/course-sync`，任务结束时删除，Cookie 只在进程内保存。非 Docker 开发仍可在本地安装采集器，并通过上述环境变量指定开发环境路径。
-
-CAS 扫码过程参考 CHUAuthSDK 的登录入口、微信轮询与回调流程；开课计划学期发现、分页、详情、数量检查继续复用 `tools/bkjw-course-source`，后台导入继续复用 `CourseManagementService.ImportArchive`。
-
-扫码确认不等于本科教务登录完成。采集器让扫码请求与课程页面共用浏览器会话，以浏览器访问登录回调；如果回调仍停留在统一认证站，再为本科教务申请登录跳转。确认进入本科教务后才读取学期。后台分别提示扫码未完成、教务登录未完成、学期列表读取失败与账号无查询权限，不向页面显示登录凭据或底层错误。
-
-### 验证范围
-
-已通过真实学校 CAS 二维码获取、手机扫码后的本科教务登录与学期发现（读取到 17 个学期）、后台接口权限、重复任务拒绝、未登录禁止同步、取消关闭采集进程；解析、断点采集、跨进程协议、学期选择和导入校验有自动测试。尚未执行真实学校课程批量导入；未使用已打开的学校浏览器 Cookie。
-
-已实际构建 API 镜像，并在不挂载宿主机目录的非 root 容器中验证 Chromium 启动、采集器文件及临时目录可用、真实 CAS 二维码获取和取消退出。采集器构建、21 项测试与 lint、后端全套测试、Compose 配置校验通过。浏览器模拟回调还验证了自动提交登录表单、复用 CAS 会话并建立教务会话的流程。
-
-详细进度已通过容器采集器、Node 到 Go 的事件传递、后台状态和保存阶段测试，以及前端数量、未知总数、等待响应、完成后计时停止的测试与浏览器展示验证。已有真实同步在更新前成功保存 2026-2027-1 学期的 3270 门课程、4916 个教学班；更新未打断该任务。新版实时进度用于更新后新建的同步任务。
+详见 [Go HTTP 采集器](http-course-collector.md) 和 [资源预算](resource-budget.md)。旧浏览器版本的实际扫码结果不视为 Go 版本验证；新版本无人值守验证覆盖模拟 CAS/EAMS 完整链路，真实扫码后的业务采集需另行验证。
 
 如果部署主机缺少所需运行环境、网络不可达，且修复需要修改操作系统或网络配置，按本任务范围记录为阻塞，不修改系统配置。

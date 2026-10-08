@@ -108,13 +108,9 @@ go test -tags test ./internal/infrastructure/repository -run TestCourseHotReposi
 
 ## 数据导入
 
-课程数据由管理员在前端“课程与学期数据”页面导入和维护。上传包含 `semester.json` 与 `report.json` 的采集器 ZIP；后端验证来源、版本、学期、采集完成状态、数量和课节 ID 后，在事务中替换该学期的开课记录及教学班。已有评价按课程代码继续保留并跨学期汇总。
+课程数据由管理员在“开课记录”展开“从教务同步课程”，扫码登录本科教务并选择学期进行同步。内嵌 Go HTTP 采集器读取分页与详情，后端校验完整性，在事务中替换对应学期的开课记录及教学班，保留已有评价。普通用户可在“我的课程”扫码导入全部学期的个人课程。
 
-```powershell
-Compress-Archive -Path "../tools/bkjw-course-source/data/bkjw/2026-2027-1/semester.json", "../tools/bkjw-course-source/data/bkjw/2026-2027-1/report.json" -DestinationPath "$env:TEMP/2026-2027-1.zip"
-```
-
-完成后在管理员后台选择 ZIP 上传；同一学期再次上传会替换开课数据。课程详情按学期展示课程和教学班快照，历史评价记录保留原学期。
+无需外部 SDK、Node 或浏览器。配置 `course_source.enabled` 或环境变量 `JCOURSE_COURSE_SOURCE_ENABLED` 控制入口。采集实现位于 `internal/infrastructure/bkjw`，详见 [采集说明](../docs/http-course-collector.md)。
 
 ## 配置重点
 

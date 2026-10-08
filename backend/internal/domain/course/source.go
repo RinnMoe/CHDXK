@@ -29,7 +29,7 @@ type SourceProgress struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// SourceConnection holds one temporary, authenticated collector process.
+// SourceConnection holds one temporary, authenticated HTTP collector session.
 type SourceConnection interface {
 	Events() <-chan SourceEvent
 	Sync([]string) error

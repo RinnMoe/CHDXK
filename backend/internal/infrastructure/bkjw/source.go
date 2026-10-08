@@ -1,14 +1,11 @@
 package bkjw
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
-	"io"
-	"os"
-	"os/exec"
-	"path/filepath"
+	"net/http"
+	"net/http/cookiejar"
 	"sync"
 	"time"
 
@@ -16,10 +13,7 @@ import (
 )
 
 type Config struct {
-	Enabled     bool   `mapstructure:"enabled"`
-	Node        string `mapstructure:"node"`
-	Runner      string `mapstructure:"runner"`
-	BrowserPath string `mapstructure:"browser_path"`
+	Enabled bool `mapstructure:"enabled"`
 }
 type Source struct {
 	Config   Config
@@ -27,129 +21,157 @@ type Source struct {
 }
 
 func (s *Source) Connect(ctx context.Context) (course.SourceConnection, error) {
-	if !s.Config.Enabled || s.Config.Runner == "" {
-		return nil, errors.New("collector not configured")
+	if !s.Config.Enabled {
+		return nil, errors.New("collector disabled")
 	}
-	file, err := filepath.Abs(s.Config.Runner)
-	if err != nil {
-		return nil, err
+	return s.connect(ctx, nil), nil
+}
+
+// Each connection owns an in-memory cookie jar. No browser or session file is used.
+func (s *Source) connect(parent context.Context, transport http.RoundTripper) *connection {
+	ctx, cancel := context.WithCancel(parent)
+	jar, _ := cookiejar.New(nil)
+	if transport == nil {
+		transport = &http.Transport{Proxy: http.ProxyFromEnvironment, MaxIdleConns: 4, MaxIdleConnsPerHost: 2, IdleConnTimeout: 30 * time.Second, TLSHandshakeTimeout: 10 * time.Second, ResponseHeaderTimeout: 30 * time.Second}
 	}
-	node := s.Config.Node
-	if node == "" {
-		node = "node"
-	}
-	args := []string{file}
-	if s.Personal {
-		args = append(args, "--personal")
-	}
-	cmd := exec.Command(node, args...)
-	configureCollectorProcess(cmd)
-	cmd.Dir = filepath.Dir(file)
-	if s.Config.BrowserPath != "" {
-		browserPath, err := filepath.Abs(s.Config.BrowserPath)
-		if err != nil {
-			return nil, err
-		}
-		cmd.Env = append(os.Environ(), "PLAYWRIGHT_BROWSERS_PATH="+browserPath)
-	}
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, err
-	}
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		return nil, err
-	}
-	// stderr is intentionally discarded: upstream URLs can contain CAS credentials.
-	cmd.Stderr = io.Discard
-	if err = cmd.Start(); err != nil {
-		_ = stdin.Close()
-		return nil, err
-	}
-	c := &connection{cmd: cmd, stdin: stdin, events: make(chan course.SourceEvent, 8), done: make(chan struct{}), stop: make(chan struct{})}
-	go func() {
-		defer close(c.events)
-		defer close(c.done)
-		scanner := bufio.NewScanner(stdout)
-		scanner.Buffer(make([]byte, 4096), 64<<20)
-		terminal := false
-		protocolFailed := false
-		for scanner.Scan() {
-			var event course.SourceEvent
-			if json.Unmarshal(scanner.Bytes(), &event) != nil {
-				protocolFailed = true
-				break
-			}
-			select {
-			case c.events <- event:
-			case <-c.stop:
-			}
-			terminal = event.Type == "done" || event.Type == "error"
-		}
-		if protocolFailed || scanner.Err() != nil {
-			select {
-			case c.events <- course.SourceEvent{Type: "error", Error: "SOURCE_UNAVAILABLE"}:
-			case <-c.stop:
-			}
-			terminal = true
-			c.Close()
-			// Drain outstanding output so the child can close gracefully instead of
-			// blocking forever on an oversized JSON event.
-			_, _ = io.Copy(io.Discard, stdout)
-		}
-		_ = cmd.Wait()
-		// A crashed Node process must not leave Chromium children behind.
-		terminateCollectorProcess(cmd)
-		if !terminal {
-			select {
-			case c.events <- course.SourceEvent{Type: "error", Error: "SOURCE_UNAVAILABLE"}:
-			case <-c.stop:
-			}
-		}
-	}()
-	go func() {
-		select {
-		case <-ctx.Done():
-			c.Close()
-		case <-c.done:
-		}
-	}()
-	return c, nil
+	client := &http.Client{Jar: jar, Transport: transport, Timeout: 30 * time.Second, CheckRedirect: checkRedirect}
+	c := &connection{ctx: ctx, cancel: cancel, client: client, events: make(chan course.SourceEvent), commands: make(chan []string, 1), done: make(chan struct{}), personal: s.Personal}
+	go c.run()
+	return c
 }
 
 type connection struct {
-	cmd    *exec.Cmd
-	stdin  io.WriteCloser
-	events chan course.SourceEvent
-	done   chan struct{}
-	stop   chan struct{}
-	mu     sync.Mutex
-	once   sync.Once
+	ctx       context.Context
+	cancel    context.CancelFunc
+	client    *http.Client
+	events    chan course.SourceEvent
+	commands  chan []string
+	done      chan struct{}
+	personal  bool
+	once      sync.Once
+	mu        sync.Mutex
+	submitted bool
 }
 
 func (c *connection) Events() <-chan course.SourceEvent { return c.events }
 func (c *connection) WaitClosed()                       { <-c.done }
+func (c *connection) Close()                            { c.once.Do(c.cancel) }
 func (c *connection) Sync(semesters []string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return json.NewEncoder(c.stdin).Encode(struct {
-		Type      string   `json:"type"`
-		Semesters []string `json:"semesters"`
-	}{"sync", semesters})
+	if err := c.ctx.Err(); err != nil {
+		return err
+	}
+	if c.submitted || len(semesters) == 0 {
+		return errors.New("selection already submitted or empty")
+	}
+	select {
+	case <-c.ctx.Done():
+		return c.ctx.Err()
+	case c.commands <- append([]string{}, semesters...):
+		c.submitted = true
+		return nil
+	}
 }
-func (c *connection) Close() {
-	c.once.Do(func() {
-		close(c.stop)
-		c.mu.Lock()
-		_ = json.NewEncoder(c.stdin).Encode(map[string]string{"type": "cancel"})
-		_ = c.stdin.Close()
-		c.mu.Unlock()
-		go func() {
-			select {
-			case <-c.done:
-			case <-time.After(35 * time.Second):
-				terminateCollectorProcess(c.cmd)
+func (c *connection) emit(event course.SourceEvent) bool {
+	select {
+	case <-c.ctx.Done():
+		return false
+	case c.events <- event:
+		return true
+	}
+}
+func (c *connection) run() {
+	defer close(c.done)
+	defer close(c.events)
+	defer c.cancel()
+	defer func() { c.client.CloseIdleConnections(); c.client.Jar = nil }()
+	stage := "QR_LOGIN_FAILED"
+	fail := func(err error) {
+		if c.ctx.Err() == nil {
+			c.emit(course.SourceEvent{Type: "error", Error: errorCode(err, stage)})
+		}
+	}
+	if err := c.login(); err != nil {
+		fail(err)
+		return
+	}
+	c.emit(course.SourceEvent{Type: "discovering"})
+	stage = "SEMESTER_DISCOVERY_FAILED"
+	entry := "/eams/stdSyllabus.action"
+	if c.personal {
+		entry = "/eams/courseTableForStd.action"
+	}
+	page, _, err := c.eams("GET", entry, nil)
+	if err != nil {
+		fail(err)
+		return
+	}
+	options, err := c.semesters(page)
+	if err != nil {
+		fail(err)
+		return
+	}
+	ids := make([]string, 0, len(options))
+	for _, s := range options {
+		ids = append(ids, s.Name)
+	}
+	if !c.emit(course.SourceEvent{Type: "ready", Semesters: ids}) {
+		return
+	}
+	var selected []string
+	select {
+	case <-c.ctx.Done():
+		return
+	case selected = <-c.commands:
+	}
+	chosen := make([]semester, 0, len(selected))
+	seen := map[string]bool{}
+	for _, name := range selected {
+		found := false
+		for _, s := range options {
+			if s.Name == name && !seen[name] {
+				chosen = append(chosen, s)
+				seen[name] = true
+				found = true
+				break
 			}
-		}()
-	})
+		}
+		if !found {
+			fail(codeError("INVALID_SEMESTER"))
+			return
+		}
+	}
+	stage = "COURSE_COLLECTION_FAILED"
+	for _, s := range chosen {
+		if !c.emit(course.SourceEvent{Type: "collecting", Semester: s.Name}) {
+			return
+		}
+		var event course.SourceEvent
+		if c.personal {
+			event, err = c.personalArchive(page, s)
+		} else {
+			event, err = c.adminArchive(s)
+		}
+		if err != nil {
+			fail(err)
+			return
+		}
+		if !c.emit(event) {
+			return
+		}
+	}
+	c.emit(course.SourceEvent{Type: "done"})
+}
+func marshal(value any) json.RawMessage { data, _ := json.Marshal(value); return data }
+
+type codeError string
+
+func (e codeError) Error() string { return string(e) }
+func errorCode(err error, fallback string) string {
+	var e codeError
+	if errors.As(err, &e) {
+		return string(e)
+	}
+	return fallback
 }

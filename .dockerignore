@@ -1,9 +1,6 @@
 **
 !backend/
 !backend/**
-!tools/
-!tools/bkjw-course-source/
-!tools/bkjw-course-source/**
 **/node_modules
 **/dist
 **/.git

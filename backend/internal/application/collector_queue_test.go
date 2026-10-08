@@ -21,7 +21,7 @@ type queueTestConnection struct {
 func (c *queueTestConnection) Close()      { c.once.Do(func() { close(c.closing) }) }
 func (c *queueTestConnection) WaitClosed() { <-c.closed }
 
-func TestCollectorQueueSerializesAdminAndPersonalAndWaitsForBrowserExit(t *testing.T) {
+func TestCollectorQueueSerializesAdminAndPersonalAndWaitsForCollectorExit(t *testing.T) {
 	queue := NewCollectorQueue(3)
 	connected := make(chan *queueTestConnection, 3)
 	source := &course.MockCourseSource{ConnectFn: func(context.Context) (course.SourceConnection, error) {
@@ -76,11 +76,11 @@ func TestCollectorQueueSerializesAdminAndPersonalAndWaitsForBrowserExit(t *testi
 	select {
 	case <-c.closing:
 	case <-time.After(time.Second):
-		t.Fatal("browser not closed")
+		t.Fatal("collector not closed")
 	}
 	select {
 	case <-connected:
-		t.Fatal("next browser started before previous exit")
+		t.Fatal("next collector started before previous exit")
 	case <-time.After(20 * time.Millisecond):
 	}
 	close(c.closed)
@@ -88,7 +88,7 @@ func TestCollectorQueueSerializesAdminAndPersonalAndWaitsForBrowserExit(t *testi
 	select {
 	case next = <-connected:
 	case <-time.After(time.Second):
-		t.Fatal("queue stalled after browser exit")
+		t.Fatal("queue stalled after collector exit")
 	}
 	_, _ = personal.Cancel(3, third.ID)
 	close(next.closed)

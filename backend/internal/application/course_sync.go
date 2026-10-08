@@ -212,7 +212,7 @@ func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSess
 	defer idle.Stop()
 	defer func() {
 		session.connection.Close()
-		// Do not launch the next Chromium while the previous process is exiting.
+		// Wait for the previous HTTP collector to release requests and cookies.
 		if waiter, ok := session.connection.(interface{ WaitClosed() }); ok {
 			waiter.WaitClosed()
 		}

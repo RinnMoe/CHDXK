@@ -4,7 +4,6 @@ services:
       context: ..
       dockerfile: backend/api.Dockerfile
     init: true
-    shm_size: 256mb
     image: ${CHDXK_API_IMAGE:-chdxk/api:latest}
     container_name: ${CHDXK_API_CONTAINER:-chdxk_api}
     environment:

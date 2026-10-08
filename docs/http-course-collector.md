@@ -1,0 +1,22 @@
+# 内嵌 Go 教务采集器
+
+`backend/internal/infrastructure/bkjw` 在 Go API 内完成 CAS 微信扫码、扫码轮询、CAS 回调、自动提交登录表单、EAMS 业务会话验证、学期目录、开课计划分页与详情、个人课表读取。无需安装 Node、Playwright、Chromium 或外部 SDK；仅需容器能够访问学校统一认证、本科教务和微信扫码服务。
+
+通过 `course_source.enabled` / `JCOURSE_COURSE_SOURCE_ENABLED` 启用，默认开启。旧的 node、runner、browser_path 配置已移除。不要把旧采集器挂载到镜像中。
+
+学校登录态仅保存在当前任务独立的 Cookie jar；完成、取消、失败或超时后关闭 HTTP 连接并释放 Cookie，不写凭据文件，下次重新扫码。CAS 表单、跳转地址仅允许已知学校与微信服务，不执行上游 JavaScript；课表中仅解析 TaskActivity 的课程 ID 与名称字符串。课程 ID 用于内部教学班匹配，不显示给用户。
+
+学期目录读取 EAMS `dataQuery.action` 的完整 semesterCalendar 数据，不从当前学年的可见下拉框猜测。个人查询只使用 std 分支的 ids，逐学期发起请求、去重教学班，合法空课表返回空列表；陌生错误页面、解析异常、未登录或无权限不会当成空课表。暂时性请求失败最多重试三次。
+
+开课计划逐页校验页码、总数、表头和重复课节，逐条串行读取详情并校验学期与课程代码，最后沿用现有完整学期导入校验和事务。当前单响应最多 16 MiB、学期最多 20000 条课节、完整文档和报告最多 32 MiB；个人单学期最多 1000 个去重教学班。超限或采集不完整不会提交该学期。
+
+自动测试：
+
+```bash
+cd backend
+go test -race -tags test ./internal/infrastructure/bkjw ./internal/application
+# 可选真实二维码获取测试，不需要手机确认，不打印二维码或登录凭据
+BKJW_LIVE_QR=1 go test -tags test ./internal/infrastructure/bkjw -run TestLiveQRCode -v
+```
+
+本轮无人值守验证：模拟 CAS/EAMS 完整流程、真实二维码获取、Linux API Docker 构建。真实扫码后的学校全学期采集尚未验收；旧浏览器版本的成功记录不替代新版本验证。公网域名与资料站登录配置不受本次采集器迁移影响。

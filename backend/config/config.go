@@ -138,7 +138,7 @@ func Load(configPath string) (AppConfig, error) {
 }
 
 func setDefaults(v *viper.Viper) {
-	setSectionDefaults(v, "course_source", map[string]any{"enabled": false, "node": "node", "runner": "", "browser_path": ""})
+	setSectionDefaults(v, "course_source", map[string]any{"enabled": true})
 	setSectionDefaults(v, "server", map[string]any{
 		"addr":  ":8080",
 		"debug": false,

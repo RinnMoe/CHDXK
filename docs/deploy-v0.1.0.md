@@ -72,7 +72,7 @@ docker compose --env-file .env -f compose.yaml ps
 
 PostgreSQL 使用带 `pg_jieba` 的镜像 `dujiajun/postgres-pg-jieba:17`。若镜像无法拉取，可在项目已有 Docker 构建环境内执行 `docker compose --env-file .env -f compose.yaml build postgres`。若 Docker、网络、系统环境本身存在问题，应由服务器技术管理员处理。
 
-API 镜像已包含教务采集器、Node 和 Chromium，无需宿主机的 CHUAuthSDK 或固定目录。worker 必须运行，点评积分奖励等异步任务依赖它。
+v0.1.0 发布镜像使用旧浏览器采集器；后续源码已改为内嵌 Go HTTP 采集器，无需宿主机的 CHUAuthSDK、Node、浏览器或固定目录。v0.1.0 标签不会自动包含该改动，部署新采集器需使用包含迁移提交的源码重新构建。worker 必须运行，点评积分奖励等异步任务依赖它。
 
 将已有 HTTPS 网关的课程榜域名全部请求转发到 `http://127.0.0.1:8088`，保留 `Host` 并设置 `X-Forwarded-Proto: https`。容器前端自动转发 `/api/` 到 API；前端路由由 SPA 处理。仅前端端口暴露到宿主机，数据库与 Redis 不对外映射。
 

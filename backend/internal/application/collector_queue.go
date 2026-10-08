@@ -7,8 +7,8 @@ import (
 	"jcourse/pkg/apperr"
 )
 
-// CollectorQueue shares one browser slot across administrative and personal imports.
-// Waiting tasks contain no browser, QR code or upstream login state.
+// CollectorQueue shares one HTTP collector slot across administrative and personal imports.
+// Waiting tasks contain no upstream request, QR code or login state.
 type CollectorQueue struct {
 	mu       sync.Mutex
 	tickets  []*collectorTicket

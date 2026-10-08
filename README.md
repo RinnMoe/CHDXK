@@ -104,13 +104,9 @@ JCOURSE_SERVER_ADDR=:9090 go run cmd/api/main.go --config config/config.yaml
 
 管理员可在后台“开课记录”展开“从教务同步课程”，扫码连接本科教务并同步学期数据，在“开课记录”按课程代码、名称、主讲教师、开课单位、课程序号和教学班数量组合筛选，按列排序、分页维护课程与教学班。已移除手动 ZIP 上传；教务同步仍校验采集完整性并替换对应学期开课数据，已有课程评价保留。教师信息缺失的教学班也可导入。
 
-```powershell
-Compress-Archive -Path "tools/bkjw-course-source/data/bkjw/2026-2027-1/semester.json", "tools/bkjw-course-source/data/bkjw/2026-2027-1/report.json" -DestinationPath "$env:TEMP/2026-2027-1.zip"
-```
-
 ## 长大教务课程数据源
 
-`tools/bkjw-course-source` 提供可复用的 TypeScript + Playwright CLI，从长大教务系统的全校开课查询页按学期保存列表与详情 JSON。首次使用运行 `pnpm --dir tools/bkjw-course-source start login`，按终端提示输入账号密码；需要验证码时查看浏览器中的图片并手动输入。登录验证成功后再使用 `semesters`、`fetch --semester` 或 `fetch --all`；详见 [工具说明](tools/bkjw-course-source/README.md)。
+教务采集器已内嵌到 Go API，通过 HTTP 完成 CAS 微信扫码、学期目录、开课计划分页及详情、全部学期个人课表读取。无需安装 SDK、Node、Playwright 或浏览器；学校登录态仅在本次任务内保存。使用说明见 [教务采集器](docs/http-course-collector.md)，内存设置见 [资源预算](docs/resource-budget.md)。
 
 ## 开发约定
 
