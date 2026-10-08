@@ -2,7 +2,9 @@ package application
 
 import (
 	"context"
+	"jcourse/internal/domain/setting"
 	"sync"
+	"time"
 
 	"jcourse/pkg/apperr"
 )
@@ -14,6 +16,7 @@ type CollectorQueue struct {
 	tickets     []*collectorTicket
 	capacity    int
 	concurrency int
+	settings    *setting.SystemSettingsService
 }
 
 type collectorTicket struct {
@@ -32,9 +35,37 @@ func NewCollectorQueue(capacity int, concurrency ...int) *CollectorQueue {
 	return &CollectorQueue{capacity: capacity, concurrency: n}
 }
 
+func (q *CollectorQueue) SetConcurrency(n int) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	q.concurrency = max(1, min(n, 64))
+	q.schedule()
+}
+
+// Bind before accepting requests; settings are first read after schema initialization.
+func (q *CollectorQueue) UseSettings(settings *setting.SystemSettingsService) {
+	q.settings = settings
+}
+
 func (q *CollectorQueue) enqueue(exclusive ...bool) (*collectorTicket, error) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
+	key := ImportSchoolEnabled
+	if len(exclusive) > 0 && exclusive[0] {
+		key = ImportAdminEnabled
+	}
+	if q.settings != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		snapshot, err := q.settings.Snapshot(ctx)
+		if err != nil {
+			return nil, err
+		}
+		q.concurrency = max(1, min(snapshot.Int(ImportConcurrency), 64))
+		if !snapshot.Bool(key) {
+			return nil, apperr.Forbidden("该导入方式已关闭")
+		}
+	}
 	if len(q.tickets) >= q.capacity {
 		return nil, apperr.Conflict("导入队列已满，请稍后重试")
 	}

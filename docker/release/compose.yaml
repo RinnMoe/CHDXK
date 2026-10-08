@@ -4,7 +4,6 @@ x-app-environment: &app-environment
   TZ: Asia/Shanghai
   GOMEMLIMIT: 48MiB
   GOMAXPROCS: "1"
-  JCOURSE_COURSE_SOURCE_CONCURRENCY: ${COURSE_IMPORT_CONCURRENCY:-64}
   JCOURSE_ASYNQ_CONCURRENCY: "1"
   JCOURSE_SERVER_ADDR: :8080
   JCOURSE_POSTGRES_DSN: host=postgres port=5432 user=chdxk password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD} dbname=chdxk sslmode=disable
@@ -20,8 +19,8 @@ x-app-environment: &app-environment
 
 services:
   postgres:
-    mem_limit: 160m
-    memswap_limit: 160m
+    mem_limit: 192m
+    memswap_limit: 192m
     command: [postgres, -c, shared_buffers=32MB, -c, work_mem=1MB, -c, maintenance_work_mem=16MB, -c, max_connections=20, -c, max_parallel_workers_per_gather=0]
     image: dujiajun/postgres-pg-jieba:17
     build:
@@ -73,13 +72,15 @@ services:
         condition: service_healthy
     restart: unless-stopped
   taskworker:
-    mem_limit: 80m
-    memswap_limit: 80m
+    mem_limit: 48m
+    memswap_limit: 48m
     image: chdxk/taskworker:${CHDXK_VERSION:-0.1.0}
     build:
       context: ../..
       dockerfile: backend/taskworker.Dockerfile
-    environment: *app-environment
+    environment:
+      <<: *app-environment
+      GOMEMLIMIT: 32MiB
     command: [--config, /app/config/config.yaml]
     volumes:
       - ../../backend/config/config.example.yaml:/app/config/config.yaml:ro

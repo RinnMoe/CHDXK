@@ -1,3 +1,4 @@
+import { useImportSettings } from "@/hooks/use-import-settings"
 import { copy } from "@/lib/copy"
 
 import { useEffect, useRef, useState } from "react"
@@ -55,6 +56,7 @@ const states: Record<SyncStatus["state"], string> = {
 }
 
 export function CourseSyncPanel() {
+  const methods = useImportSettings()
   const [job, setJob] = useState(() => sessionStorage.getItem(storageKey) ?? "")
   const [excluded, setExcluded] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
@@ -112,7 +114,7 @@ export function CourseSyncPanel() {
       <p className="text-sm text-muted-foreground">
         {copy("copy.admin.components.admin.course-sync-panel.2cda2b1766b5")}
       </p>
-      {(!job || terminal(status?.state) || query.isError) && (
+      {methods.admin && (!job || terminal(status?.state) || query.isError) && (
         <Button
           data-action="connect"
           disabled={busy}
@@ -125,10 +127,20 @@ export function CourseSyncPanel() {
               )}
         </Button>
       )}
+      {!methods.admin && (
+        <p className="text-sm text-muted-foreground">
+          教务同步已关闭，已提交的任务可继续完成。
+        </p>
+      )}
       {status && (
         <div className="space-y-4 rounded-lg border p-4" aria-live="polite">
           <h4 className="font-medium">{states[status.state]}</h4>
-          {status.state === "queued" && <p className="text-sm text-muted-foreground">前面还有 {status.queue_position ?? 0} 个任务。可取消排队；二维码显示后再扫码。</p>}
+          {status.state === "queued" && (
+            <p className="text-sm text-muted-foreground">
+              前面还有 {status.queue_position ?? 0}{" "}
+              个任务。可取消排队；二维码显示后再扫码。
+            </p>
+          )}
           <SchoolLoginFeedback state={status.state} />
           {status.qr && (
             <img

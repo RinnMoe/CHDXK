@@ -83,7 +83,9 @@ export function SettingControl({
       type={
         setting.type === "int" || setting.type === "float" ? "number" : "text"
       }
-      step={setting.type === "float" ? "0.01" : undefined}
+      step={setting.type === "float" ? "0.01" : 1}
+      min={setting.key === "import.concurrency" ? 1 : undefined}
+      max={setting.key === "import.concurrency" ? 64 : undefined}
       value={value}
       disabled={disabled}
       onChange={(event) => onChange(event.target.value)}

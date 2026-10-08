@@ -95,4 +95,3 @@ reshub:
 # Embedded pure-Go HTTP collector; no external SDK or browser required.
 course_source:
   enabled: true
-  concurrency: 64

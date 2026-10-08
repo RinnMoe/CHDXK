@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"jcourse/internal/application"
- "jcourse/internal/domain/course"
+	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/review"
 	"jcourse/internal/domain/review/policy"
@@ -165,6 +165,7 @@ func newSystemSettingsService(repo setting.SystemRepository, courseRepo course.C
 			visible = append(visible, def)
 		}
 	}
+	visible = append(visible, application.ImportSettingDefinitions()...)
 	registry := setting.NewRegistry(append(visible, copyDefinitions()...))
 	return setting.NewSystemSettingsService(repo, registry)
 }

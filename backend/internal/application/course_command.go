@@ -5,6 +5,7 @@ import (
 
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/course"
+	"jcourse/internal/domain/setting"
 )
 
 var ErrCourseNotFound = course.ErrCourseNotFound
@@ -16,6 +17,7 @@ type CourseCommandService struct {
 	hotService           *course.CourseHotService
 	ratingCommandService *course.CourseRatingCommandService
 	settings             SiteSettingsProvider
+	importSettings       *setting.SystemSettingsService
 }
 
 func NewCourseCommandService(
@@ -59,7 +61,16 @@ func (s *CourseCommandService) DeleteEnrollment(ctx context.Context, userID, enr
 	return s.enrollmentService.Delete(ctx, userID, enrollmentID)
 }
 
+func (s *CourseCommandService) SetImportSettings(settings *setting.SystemSettingsService) {
+	s.importSettings = settings
+}
+
 func (s *CourseCommandService) SaveEnrollment(ctx context.Context, userID, enrollmentID, sectionID int) error {
+	if enrollmentID == 0 {
+		if err := requireImportEnabled(ctx, s.importSettings, ImportManualEnabled); err != nil {
+			return err
+		}
+	}
 	return s.enrollmentService.Save(ctx, userID, enrollmentID, sectionID)
 }
 

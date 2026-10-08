@@ -1,3 +1,4 @@
+import { useAuth } from "@/contexts/auth-context"
 import { copy } from "@/lib/copy"
 import { useMemo, useState } from "react"
 import type { SystemSettingDTO } from "@/api/system-settings"
@@ -15,6 +16,7 @@ type ErrorMap = Record<string, string>
 
 const GROUP_LABELS: Record<string, string> = {
   auth: "账号",
+  import: "导入设置（仅超级管理员）",
   admin: copy("copy.admin.components.admin.system-settings-tab.bb6d995724f4"),
   course: copy("copy.admin.components.admin.system-settings-tab.60db1afb4022"),
   review: copy("copy.admin.components.admin.system-settings-tab.d2469bc43d2c"),
@@ -24,6 +26,7 @@ const GROUP_LABELS: Record<string, string> = {
 }
 
 export function SystemSettingsTab() {
+  const { user } = useAuth()
   const settingsQuery = useAdminSystemSettings()
   const filtersQuery = useCourseFilters()
   const updateMutation = useUpdateSystemSetting()
@@ -40,14 +43,15 @@ export function SystemSettingsTab() {
       (setting) =>
         !setting.key.startsWith("copy.") &&
         !setting.key.startsWith("theme.") &&
-        !setting.key.startsWith("content.")
+        !setting.key.startsWith("content.") &&
+        (setting.group !== "import" || user?.role === "super_admin")
     )
     return items.reduce<Record<string, SystemSettingDTO[]>>((acc, item) => {
       const group = item.group || "other"
       acc[group] = [...(acc[group] ?? []), item]
       return acc
     }, {})
-  }, [settingsQuery.data])
+  }, [settingsQuery.data, user?.role])
 
   function draftValue(setting: SystemSettingDTO) {
     return drafts[setting.key] ?? setting.value

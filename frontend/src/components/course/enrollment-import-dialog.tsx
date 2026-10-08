@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
+import { useImportSettings } from "@/hooks/use-import-settings"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { SchoolLoginFeedback } from "./school-login-feedback"
@@ -57,6 +58,8 @@ export function EnrollmentImportDialog() {
 }
 
 function ImportDialog({ userID }: { userID: number }) {
+  const methods = useImportSettings()
+  const [method, setMethod] = useState("school")
   const [open, setOpen] = useState(false)
   const storageKey = `chdxk.enrollment-import.${userID}`
   const [job, setJob] = useState(() => sessionStorage.getItem(storageKey) ?? "")
@@ -111,6 +114,17 @@ function ImportDialog({ userID }: { userID: number }) {
       setBusy(false)
     }
   }
+  const schoolVisible =
+    methods.school || (!!job && !terminal(status?.state) && !query.isError)
+  const available = [
+    schoolVisible && "school",
+    methods.manual && "manual",
+    methods.mychu && "mychu",
+  ].filter(Boolean) as string[]
+  const activeMethod = available.includes(method)
+    ? method
+    : (available[0] ?? "")
+  if (!available.length) return null
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -122,33 +136,40 @@ function ImportDialog({ userID }: { userID: number }) {
         <DialogHeader>
           <DialogTitle>导入课程</DialogTitle>
           <DialogDescription>
-            扫码导入全部学期，或手动选择本站已有课程和教学班。已有记录不会重复添加。
+            选择可用的导入方式。已有选课记录不会重复添加。
           </DialogDescription>
         </DialogHeader>
-        <Tabs defaultValue="school">
+        <Tabs value={activeMethod} onValueChange={setMethod}>
           <TabsList aria-label="课程导入方式">
-            <TabsTrigger value="school" data-method="school">
-              教务扫码
-            </TabsTrigger>
-            <TabsTrigger value="manual" data-method="manual">
-              手动添加
-            </TabsTrigger>
-            <TabsTrigger value="mychu" data-method="mychu">
-              MyCHU
-            </TabsTrigger>
+            {schoolVisible && (
+              <TabsTrigger value="school" data-method="school">
+                教务扫码
+              </TabsTrigger>
+            )}
+            {methods.manual && (
+              <TabsTrigger value="manual" data-method="manual">
+                手动添加
+              </TabsTrigger>
+            )}
+            {methods.mychu && (
+              <TabsTrigger value="mychu" data-method="mychu">
+                MyCHU
+              </TabsTrigger>
+            )}
           </TabsList>
           <TabsContent value="school">
             <section className="space-y-4" aria-label="教务扫码导入">
               <h3 className="font-medium">教务扫码导入</h3>
-              {(!job || terminal(status?.state) || query.isError) && (
-                <Button
-                  disabled={busy}
-                  onClick={() => void action("start")}
-                  data-action="connect"
-                >
-                  扫码连接教务
-                </Button>
-              )}
+              {methods.school &&
+                (!job || terminal(status?.state) || query.isError) && (
+                  <Button
+                    disabled={busy}
+                    onClick={() => void action("start")}
+                    data-action="connect"
+                  >
+                    扫码连接教务
+                  </Button>
+                )}
               {status && (
                 <div
                   className="space-y-3 rounded-lg border p-4"
@@ -158,7 +179,12 @@ function ImportDialog({ userID }: { userID: number }) {
                     {states[status.state] ?? "正在处理"}
                   </p>
                   <SchoolLoginFeedback state={status.state} />
-                  {status.state === "queued" && <p className="text-sm text-muted-foreground">前面还有 {status.queue_position ?? 0} 个任务。可取消排队；二维码显示后再扫码。</p>}
+                  {status.state === "queued" && (
+                    <p className="text-sm text-muted-foreground">
+                      前面还有 {status.queue_position ?? 0}{" "}
+                      个任务。可取消排队；二维码显示后再扫码。
+                    </p>
+                  )}
                   {status.qr && (
                     <img
                       src={status.qr}
@@ -227,8 +253,11 @@ function ImportDialog({ userID }: { userID: number }) {
                               </li>
                             ))}
                           </ul>
-                          {result.enrollment.unmatched_count > result.enrollment.unmatched.length && (
-                            <p className="mt-2 text-muted-foreground">这里只展示前 20 门未匹配课程。</p>
+                          {result.enrollment.unmatched_count >
+                            result.enrollment.unmatched.length && (
+                            <p className="mt-2 text-muted-foreground">
+                              这里只展示前 20 门未匹配课程。
+                            </p>
                           )}
                         </details>
                       )}

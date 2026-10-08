@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/setting"
 	"jcourse/pkg/sitecopy"
 	"jcourse/pkg/sitepages"
@@ -48,6 +49,16 @@ func (s *SystemSettingsQueryService) ListAdmin(ctx context.Context) ([]SystemSet
 	settings, err := s.settings.List(ctx, true)
 	if err != nil {
 		return nil, err
+	}
+	actor := auth.GetUserFromCtx(ctx)
+	if actor == nil || !actor.IsSuperAdmin() {
+		visible := settings[:0]
+		for _, item := range settings {
+			if item.Definition.Group != "import" {
+				visible = append(visible, item)
+			}
+		}
+		settings = visible
 	}
 	return newSystemSettingDTOs(settings), nil
 }

@@ -13,8 +13,7 @@ import (
 )
 
 type Config struct {
-	Enabled     bool `mapstructure:"enabled"`
-	Concurrency int  `mapstructure:"concurrency"`
+	Enabled bool `mapstructure:"enabled"`
 }
 type Source struct {
 	Config   Config

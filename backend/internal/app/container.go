@@ -128,8 +128,10 @@ func NewServiceContainer(conf config.AppConfig) (*ServiceContainer, error) {
 	systemSettingsCommand := application.NewSystemSettingsCommandService(systemSettingsService)
 	auditLogQuery := application.NewAuditLogQueryService(auditLogRepo)
 	auditLogCommand := application.NewAuditLogCommandService(auditLogRepo)
-	collectorConcurrency := max(1, min(conf.CourseSource.Concurrency, 64))
-	collectorQueue := application.NewCollectorQueue(128, collectorConcurrency)
+	collectorQueue := application.NewCollectorQueue(128, 64)
+	collectorQueue.UseSettings(systemSettingsService)
+	systemSettingsCommand.SetCollectorQueue(collectorQueue)
+	courseCommand.SetImportSettings(systemSettingsService)
 
 	return &ServiceContainer{
 		Accounts:              application.NewLocalAccountService(identityProjection, systemSettingsService, resHubClient, auditLogRepo),
