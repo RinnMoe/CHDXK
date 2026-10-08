@@ -8,9 +8,10 @@ type EnrollmentSourceCourse struct {
 	Name           string `json:"name"`
 }
 type EnrollmentImportResult struct {
-	Matched   int                      `json:"matched"`
-	Added     int                      `json:"added"`
-	Unmatched []EnrollmentSourceCourse `json:"unmatched"`
+	Matched        int                      `json:"matched"`
+	Added          int                      `json:"added"`
+	Unmatched      []EnrollmentSourceCourse `json:"unmatched"`
+	UnmatchedCount int                      `json:"unmatched_count"`
 }
 type EnrollmentImporter interface {
 	ImportSemester(context.Context, int, string, []EnrollmentSourceCourse) (*EnrollmentImportResult, error)

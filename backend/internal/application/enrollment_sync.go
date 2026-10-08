@@ -22,7 +22,7 @@ type EnrollmentSyncService struct {
 }
 
 func NewEnrollmentSyncService(source course.CourseSource, importer course.EnrollmentImporter, queues ...*CollectorQueue) *EnrollmentSyncService {
-	s := &EnrollmentSyncService{jobs: make(map[int]*CourseSyncService), source: source, importer: importer, limit: 32}
+	s := &EnrollmentSyncService{jobs: make(map[int]*CourseSyncService), source: source, importer: importer, limit: 128}
 	if len(queues) > 0 {
 		s.queue = queues[0]
 	}
@@ -49,6 +49,21 @@ func (s *EnrollmentSyncService) Start(owner int) (*CourseSyncStatus, error) {
 	if active >= s.limit {
 		return nil, apperr.Conflict("当前扫码导入人数较多，请稍后重试")
 	}
+	// Completed reports are transient. Bound retained users as well as active jobs.
+	if len(s.jobs) >= s.limit {
+		oldestUser := 0
+		var oldest time.Time
+		for user, service := range s.jobs {
+			status := service.session.snapshot()
+			if syncTerminal(status.State) && (oldestUser == 0 || status.ExpiresAt.Before(oldest)) {
+				oldestUser = user
+				oldest = status.ExpiresAt
+			}
+		}
+		if oldestUser != 0 {
+			delete(s.jobs, oldestUser)
+		}
+	}
 	service := &CourseSyncService{source: s.source, lifetime: 15 * time.Minute, personal: true, queue: s.queue}
 	service.importEvent = func(ctx context.Context, event course.SourceEvent) (*CourseImportResult, error) {
 		var document struct {
@@ -67,6 +82,16 @@ func (s *EnrollmentSyncService) Start(owner int) (*CourseSyncStatus, error) {
 		if err != nil {
 			return nil, err
 		}
+		// Keep exact counts, but do not retain thousands of long names per semester.
+		result.UnmatchedCount = len(result.Unmatched)
+		sample := make([]course.EnrollmentSourceCourse, 0, min(20, len(result.Unmatched)))
+		for _, item := range result.Unmatched[:min(20, len(result.Unmatched))] {
+			item.Name = shortImportLabel(item.Name)
+			item.LessonNo = shortImportLabel(item.LessonNo)
+			item.SourceLessonID = shortImportLabel(item.SourceLessonID)
+			sample = append(sample, item)
+		}
+		result.Unmatched = sample
 		return &CourseImportResult{Semester: document.Semester, Enrollment: result}, nil
 	}
 	status, err := service.Start(owner)
@@ -74,6 +99,14 @@ func (s *EnrollmentSyncService) Start(owner int) (*CourseSyncStatus, error) {
 		s.jobs[owner] = service
 	}
 	return status, err
+}
+
+func shortImportLabel(value string) string {
+	runes := []rune(value)
+	if len(runes) > 128 {
+		return string(runes[:128]) + "…"
+	}
+	return string(runes)
 }
 func (s *EnrollmentSyncService) owned(owner int) (*CourseSyncService, error) {
 	s.mu.Lock()

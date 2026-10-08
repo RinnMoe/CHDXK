@@ -11,6 +11,42 @@ import (
 	"jcourse/internal/domain/course"
 )
 
+func TestCollectorQueueConcurrencyExclusiveBarrierAndCancellation(t *testing.T) {
+	q := NewCollectorQueue(8, 2)
+	a, _ := q.enqueue()
+	b, _ := q.enqueue()
+	admin, _ := q.enqueue(true)
+	later, _ := q.enqueue()
+	if !a.started || !b.started || admin.started || later.started {
+		t.Fatal("wrong initial admission")
+	}
+	a.release()
+	if admin.started || later.started {
+		t.Fatal("exclusive job did not wait for drain")
+	}
+	b.release()
+	if !admin.started || later.started {
+		t.Fatal("exclusive barrier bypassed")
+	}
+	admin.release()
+	if !later.started {
+		t.Fatal("queue did not resume")
+	}
+	later.release()
+	if len(q.tickets) != 0 {
+		t.Fatal("tickets retained")
+	}
+	a, _ = q.enqueue()
+	admin, _ = q.enqueue(true)
+	later, _ = q.enqueue()
+	admin.release()
+	if !later.started {
+		t.Fatal("cancelled exclusive waiter blocked free slot")
+	}
+	a.release()
+	later.release()
+}
+
 type queueTestConnection struct {
 	testSourceConnection
 	closing chan struct{}

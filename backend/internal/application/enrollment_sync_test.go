@@ -6,9 +6,45 @@ import (
 	"context"
 	"encoding/json"
 	"jcourse/internal/domain/course"
+	"strings"
 	"testing"
 	"time"
 )
+
+func TestEnrollmentSyncBoundsUnmatchedReportAndHistory(t *testing.T) {
+	c := &testSourceConnection{events: make(chan course.SourceEvent, 10)}
+	items := make([]course.EnrollmentSourceCourse, 1000)
+	for i := range items {
+		items[i] = course.EnrollmentSourceCourse{LessonNo: "L1", Name: strings.Repeat("课", 300)}
+	}
+	s := NewEnrollmentSyncService(&course.MockCourseSource{ConnectFn: func(context.Context) (course.SourceConnection, error) { return c, nil }}, &course.MockEnrollmentImporter{ImportSemesterFn: func(context.Context, int, string, []course.EnrollmentSourceCourse) (*course.EnrollmentImportResult, error) {
+		return &course.EnrollmentImportResult{Unmatched: items}, nil
+	}})
+	s.limit = 1
+	job, err := s.Start(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.events <- course.SourceEvent{Type: "ready", Semesters: []string{testSemester}}
+	waitSync(t, s.jobs[1], job.ID, "ready")
+	s.Sync(1, job.ID, []string{testSemester})
+	doc, _ := json.Marshal(map[string]any{"semester": testSemester, "courses": []course.EnrollmentSourceCourse{{LessonNo: "L1", Name: "课程"}}})
+	c.events <- course.SourceEvent{Type: "archive", Semester: testSemester, Document: doc}
+	c.events <- course.SourceEvent{Type: "done"}
+	status := waitSync(t, s.jobs[1], job.ID, "done")
+	result := status.Results[0].Enrollment
+	if result.UnmatchedCount != 1000 || len(result.Unmatched) != 20 || len([]rune(result.Unmatched[0].Name)) != 129 {
+		t.Fatal("report unbounded or counts lost")
+	}
+	second, err := s.Start(2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Cancel(2, second.ID)
+	if len(s.jobs) != 1 || s.jobs[1] != nil {
+		t.Fatal("completed history grew past capacity")
+	}
+}
 
 func TestEnrollmentSyncIsolationImportAndCapacity(t *testing.T) {
 	connections := []*testSourceConnection{}

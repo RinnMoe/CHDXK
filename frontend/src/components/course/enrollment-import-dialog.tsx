@@ -31,6 +31,7 @@ export interface EnrollmentSyncStatus {
       matched: number
       added: number
       unmatched: { lesson_no: string; name: string }[]
+      unmatched_count: number
     }
   }[]
 }
@@ -213,7 +214,7 @@ function ImportDialog({ userID }: { userID: number }) {
                       {!!result.enrollment.unmatched.length && (
                         <details>
                           <summary className="cursor-pointer">
-                            {result.enrollment.unmatched.length} 门课程暂未匹配
+                            {result.enrollment.unmatched_count} 门课程暂未匹配
                           </summary>
                           <p className="my-2 text-muted-foreground">
                             这些课程尚未加入选课记录，请联系管理员补充对应学期的开课记录后再次导入。
@@ -226,6 +227,9 @@ function ImportDialog({ userID }: { userID: number }) {
                               </li>
                             ))}
                           </ul>
+                          {result.enrollment.unmatched_count > result.enrollment.unmatched.length && (
+                            <p className="mt-2 text-muted-foreground">这里只展示前 20 门未匹配课程。</p>
+                          )}
                         </details>
                       )}
                     </div>

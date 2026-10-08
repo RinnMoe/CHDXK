@@ -106,6 +106,7 @@ func (c *connection) adminArchive(s semester) (course.SourceEvent, error) {
 
 var stdIDsPattern = regexp.MustCompile(`(?s)(?:val\(\)\s*==\s*["']std["']|["']std["']\s*==[^\n{]+)\s*\)\s*\{[^}]*?addInput\s*\(\s*form\s*,\s*["']ids["']\s*,\s*["']([\d,]+)["']`)
 var addInputPattern = regexp.MustCompile(`addInput\s*\(\s*form\s*,\s*["']([^"']+)["']\s*,\s*["']([^"']*)["']`)
+var sourceLessonPattern = regexp.MustCompile(`^(\d+)(?:\([^)]*\))?$`)
 
 func personalParams(page []byte) (url.Values, error) {
 	values := url.Values{}
@@ -165,7 +166,7 @@ func parsePersonal(data []byte) ([]course.EnrollmentSourceCourse, error) {
 	add := func(id, lesson, name string) error {
 		name = strings.TrimSpace(name)
 		lesson = strings.TrimSpace(lesson)
-		id = match(regexp.MustCompile(`^(\d+)(?:\([^)]*\))?$`), id)
+		id = match(sourceLessonPattern, id)
 		if name == "" || (id == "" && lesson == "") {
 			return codeError("PERSONAL_PARSE_FAILED")
 		}

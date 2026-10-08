@@ -67,6 +67,7 @@ func (r *CourseEnrollmentRepository) ImportSemester(ctx context.Context, userID 
 		return nil, err
 	}
 	r.deleteEnrollmentCache(ctx, userID, courseIDs...)
+	result.UnmatchedCount = len(result.Unmatched)
 	return result, nil
 }
 

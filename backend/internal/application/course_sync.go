@@ -73,7 +73,7 @@ func (s *CourseSyncService) Start(owner int) (*CourseSyncStatus, error) {
 		lifetime = 24 * time.Hour
 	}
 	if s.queue != nil {
-		ticket, err := s.queue.enqueue()
+		ticket, err := s.queue.enqueue(!s.personal)
 		if err != nil {
 			return nil, err
 		}

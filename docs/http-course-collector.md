@@ -20,3 +20,9 @@ BKJW_LIVE_QR=1 go test -tags test ./internal/infrastructure/bkjw -run TestLiveQR
 ```
 
 本轮无人值守验证：模拟 CAS/EAMS 完整流程、真实二维码获取、Linux API Docker 构建。真实扫码后的学校全学期采集尚未验收；旧浏览器版本的成功记录不替代新版本验证。公网域名与资料站登录配置不受本次采集器迁移影响。
+
+## 并发与内存
+
+默认支持 64 个个人导入同时运行，队列总容量 128；管理员全校课程同步独占运行。`.env` 中 `COURSE_IMPORT_CONCURRENCY` 可调低并发，代码上限为 64。五容器内存额度合计 512 MiB，详见 [资源预算与压测记录](resource-budget.md)。临时结果保留准确统计及每学期前 20 条未匹配明细，任务历史最多 128 个用户，不影响已保存的选课记录。
+
+容量测试可在隔离的 Linux API 容器中运行编译好的 Go 测试程序：`BKJW_LOAD_CONCURRENCY=64` 启用模拟采集；额外设置 `BKJW_LOAD_DB=1` 则用容器中的 `JCOURSE_POSTGRES_DSN` 创建并清理独立 schema，验证实际匹配与写入。禁止将容量测试指向生产数据库；测试不访问学校服务。
