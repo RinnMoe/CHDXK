@@ -3,6 +3,7 @@ package bkjw
 import (
 	"encoding/json"
 	"jcourse/internal/domain/course"
+	"log/slog"
 	"net/url"
 	"regexp"
 	"strings"
@@ -27,7 +28,29 @@ func (c *connection) adminArchive(s semester) (course.SourceEvent, error) {
 				return err
 			}
 			listing, err = parseListing(data)
-			return err
+			if err != nil {
+				slog.Warn("academic listing parse failed", "semester", s.Name, "page", page)
+				return err
+			}
+			if listing.Page != page || (total >= 0 && (listing.Total != total || listing.Signature != signature || listing.Size != size)) {
+				slog.Warn("academic listing pagination mismatch", "semester", s.Name, "requested_page", page, "received_page", listing.Page, "expected_total", total, "received_total", listing.Total, "expected_size", size, "received_size", listing.Size, "same_columns", total < 0 || listing.Signature == signature)
+				return codeError("PAGE_STRUCTURE")
+			}
+			expected := min(listing.Size, max(listing.Total-(page-1)*listing.Size, 0))
+			if len(listing.Lessons) != expected {
+				slog.Warn("academic listing count mismatch", "semester", s.Name, "page", page, "expected", expected, "received", len(listing.Lessons))
+				return codeError("PAGE_STRUCTURE")
+			}
+			pageIDs := map[string]bool{}
+			for _, lesson := range listing.Lessons {
+				id := lesson["id"].(string)
+				if seen[id] || pageIDs[id] {
+					slog.Warn("academic listing duplicate rows", "semester", s.Name, "page", page)
+					return codeError("PAGE_STRUCTURE")
+				}
+				pageIDs[id] = true
+			}
+			return nil
 		}, func(int) { retries++; c.progress(s, "listing", len(lessons), max(total, 0), retries, 0, 0) })
 		if err != nil {
 			return course.SourceEvent{}, err
@@ -37,18 +60,8 @@ func (c *connection) adminArchive(s semester) (course.SourceEvent, error) {
 			signature = listing.Signature
 			size = listing.Size
 		}
-		if listing.Page != page || listing.Total != total || listing.Signature != signature || listing.Size != size {
-			return course.SourceEvent{}, codeError("PAGE_STRUCTURE")
-		}
-		expected := min(size, max(total-(page-1)*size, 0))
-		if len(listing.Lessons) != expected {
-			return course.SourceEvent{}, codeError("PAGE_STRUCTURE")
-		}
 		for _, lesson := range listing.Lessons {
 			id := lesson["id"].(string)
-			if seen[id] {
-				return course.SourceEvent{}, codeError("PAGE_STRUCTURE")
-			}
 			seen[id] = true
 			lessons = append(lessons, lesson)
 		}
@@ -56,9 +69,6 @@ func (c *connection) adminArchive(s semester) (course.SourceEvent, error) {
 		c.progress(s, "listing", len(lessons), total, retries, page, pages)
 		if page >= pages {
 			break
-		}
-		if err := c.pause(150 * time.Millisecond); err != nil {
-			return course.SourceEvent{}, err
 		}
 	}
 	if len(lessons) != total {
@@ -91,9 +101,6 @@ func (c *connection) adminArchive(s semester) (course.SourceEvent, error) {
 			return course.SourceEvent{}, err
 		}
 		c.progress(s, "details", i+1, total, retries, 0, 0)
-		if err := c.pause(100 * time.Millisecond); err != nil {
-			return course.SourceEvent{}, err
-		}
 	}
 	c.progress(s, "validating", total, total, retries, 0, 0)
 	document := marshal(map[string]any{"schema_version": 1, "source": map[string]any{"host": "bkjw.chd.edu.cn", "semester_id": s.ID}, "semester": s.Name, "expected_count": total, "lessons": lessons})

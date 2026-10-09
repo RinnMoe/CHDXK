@@ -75,7 +75,7 @@ func (c *connection) login() error {
 		callback = decoded
 	}
 	cb, err := url.Parse(callback)
-	if err != nil || cb.Scheme != "https" || cb.Host != "ids.chd.edu.cn" || !strings.HasPrefix(cb.Path, "/authserver/") {
+	if err != nil || cb.Scheme != "https" || cb.Hostname() != "ids.chd.edu.cn" || !allowedURL(callback) || !strings.HasPrefix(cb.Path, "/authserver/") {
 		return codeError("QR_CALLBACK_INVALID")
 	}
 	params := cb.Query()
@@ -165,6 +165,13 @@ func (c *connection) navigate(raw string) ([]byte, string, error) {
 		if err != nil {
 			return nil, "", err
 		}
+		// WeChat login can finish at the CAS account portal. Its scripts are not
+		// part of the service login; completeLogin will request the EAMS service
+		// with the CAS cookie established by this redirect chain.
+		u, _ := url.Parse(final)
+		if u.Hostname() == "ids.chd.edu.cn" && u.Path == casLandingPath {
+			return data, final, nil
+		}
 		page := string(data)
 		if strings.Contains(page, "首次使用微信联合登录") {
 			return nil, "", codeError("WECHAT_UNBOUND")
@@ -248,6 +255,5 @@ func (c *connection) completeLogin(callback string) error {
 		return codeError("AUTH_REQUIRED")
 	}
 	// Verify an authenticated business page, not just a CAS ticket redirect.
-	_, _, err = c.eams("GET", "/eams/home.action", nil)
-	return err
+	return c.retry(func() error { _, _, e := c.eams("GET", "/eams/home.action", nil); return e }, func(int) {})
 }

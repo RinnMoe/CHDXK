@@ -35,7 +35,7 @@ func (s *Source) connect(parent context.Context, transport http.RoundTripper) *c
 		transport = &http.Transport{Proxy: http.ProxyFromEnvironment, MaxIdleConns: 4, MaxIdleConnsPerHost: 2, IdleConnTimeout: 30 * time.Second, TLSHandshakeTimeout: 10 * time.Second, ResponseHeaderTimeout: 30 * time.Second}
 	}
 	client := &http.Client{Jar: jar, Transport: transport, Timeout: 30 * time.Second, CheckRedirect: checkRedirect}
-	c := &connection{ctx: ctx, cancel: cancel, client: client, events: make(chan course.SourceEvent), commands: make(chan []string, 1), done: make(chan struct{}), personal: s.Personal}
+	c := &connection{ctx: ctx, cancel: cancel, client: client, pacer: &requestPacer{interval: 1100 * time.Millisecond}, events: make(chan course.SourceEvent), commands: make(chan []string, 1), done: make(chan struct{}), personal: s.Personal}
 	go c.run()
 	return c
 }
@@ -47,6 +47,7 @@ type connection struct {
 	events    chan course.SourceEvent
 	commands  chan []string
 	done      chan struct{}
+	pacer     *requestPacer
 	personal  bool
 	once      sync.Once
 	mu        sync.Mutex
@@ -102,12 +103,12 @@ func (c *connection) run() {
 	if c.personal {
 		entry = "/eams/courseTableForStd.action"
 	}
-	page, _, err := c.eams("GET", entry, nil)
-	if err != nil {
-		fail(err)
-		return
+	var page []byte
+	var options []semester
+	err := c.retry(func() error { var e error; page, _, e = c.eams("GET", entry, nil); return e }, func(int) {})
+	if err == nil {
+		err = c.retry(func() error { var e error; options, e = c.semesters(page); return e }, func(int) {})
 	}
-	options, err := c.semesters(page)
 	if err != nil {
 		fail(err)
 		return

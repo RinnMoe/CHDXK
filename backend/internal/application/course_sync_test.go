@@ -108,6 +108,53 @@ func TestCourseSyncClassifiesPersonalFailureAndPreservesResults(t *testing.T) {
 	}
 }
 
+func TestSafeSourceErrorCodePreservesLoginDiagnostics(t *testing.T) {
+	for _, code := range []string{"QR_ENTRY_CHANGED", "QR_PAGE_CHANGED", "QR_CALLBACK_INVALID", "QR_IMAGE_INVALID", "URL_NOT_ALLOWED", "WECHAT_UNBOUND", "INVALID_SEMESTER"} {
+		if got := safeSourceErrorCode(code); got != code {
+			t.Errorf("safeSourceErrorCode(%q) = %q", code, got)
+		}
+	}
+	for _, unsafe := range []string{"http://example.com/?credential=secret", "URL_NOT_ALLOWED: token=secret", "unknown upstream response"} {
+		if got := safeSourceErrorCode(unsafe); got != "SOURCE_UNAVAILABLE" {
+			t.Errorf("unrecognized diagnostic was not redacted")
+		}
+	}
+}
+
+func TestCourseSyncReportsRejectedLoginRedirect(t *testing.T) {
+	s, c := syncFixture()
+	job, err := s.Start(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.events <- course.SourceEvent{Type: "authenticating"}
+	waitSync(t, s, job.ID, "authenticating")
+	c.events <- course.SourceEvent{Type: "error", Error: "URL_NOT_ALLOWED"}
+	status := waitSync(t, s, job.ID, "failed")
+	if !strings.Contains(status.Message, "跳转地址") || strings.Contains(status.Message, "是否可访问") {
+		t.Fatalf("rejected redirect reported as generic connectivity failure: %q", status.Message)
+	}
+}
+
+func TestCourseSyncClassifiesCollectionStructureFailure(t *testing.T) {
+	s, c := syncFixture()
+	job, err := s.Start(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.events <- course.SourceEvent{Type: "ready", Semesters: []string{testSemester}}
+	waitSync(t, s, job.ID, "ready")
+	if _, err := s.Sync(1, job.ID, []string{testSemester}); err != nil {
+		t.Fatal(err)
+	}
+	c.events <- course.SourceEvent{Type: "collecting", Semester: testSemester}
+	c.events <- course.SourceEvent{Type: "error", Error: "PAGE_STRUCTURE"}
+	status := waitSync(t, s, job.ID, "failed")
+	if !strings.Contains(status.Message, "完整性校验") || strings.Contains(status.Message, "学期列表") || len(status.Results) != 0 {
+		t.Fatalf("wrong collection failure: %+v", status)
+	}
+}
+
 func TestCourseSyncDetailedProgressAndImportStage(t *testing.T) {
 	s, c := syncFixture()
 	importStarted := make(chan struct{})

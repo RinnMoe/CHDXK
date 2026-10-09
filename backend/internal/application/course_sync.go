@@ -340,6 +340,12 @@ func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSess
 				if event.Error == "AUTH_REQUIRED" {
 					message = "学校登录已确认，但未能进入本科教务系统，请重新连接"
 				}
+				if event.Error == "RATE_LIMITED" {
+					message = "教务系统暂时限制了请求频率，自动降速重试后仍未成功；未保存当前学期，请稍后重新连接"
+				}
+				if event.Error == "URL_NOT_ALLOWED" {
+					message = "学校登录返回了尚未支持的跳转地址，已停止连接，请联系技术管理员"
+				}
 				if s.personal && event.Error == "AUTH_REQUIRED" {
 					message = "教务登录已过期，请重新扫码；已完成学期的记录保留"
 				}
@@ -355,8 +361,11 @@ func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSess
 				if s.personal && session.snapshot().Current != "" {
 					message = session.snapshot().Current + "：" + message
 				}
-				if event.Error == "SEMESTER_DISCOVERY_FAILED" || event.Error == "PAGE_STRUCTURE" {
+				if event.Error == "SEMESTER_DISCOVERY_FAILED" || (event.Error == "PAGE_STRUCTURE" && session.snapshot().Current == "") {
 					message = "未能读取教务学期列表，请稍后重新连接；如持续失败，请联系技术管理员"
+				}
+				if event.Error == "PAGE_STRUCTURE" && session.snapshot().Current != "" {
+					message = "教务课程数据未通过完整性校验，重试后仍未成功，未保存当前学期；已完成学期保留，请稍后重试"
 				}
 				if event.Error == "PERSONAL_MENU_MISSING" || event.Error == "PERSONAL_QUERY_FAILED" {
 					message = "未能打开个人课表，请确认学校账号可查看本科教务的个人课表后重新连接"
@@ -414,7 +423,7 @@ func (s *CourseSyncService) connectQueued(ctx context.Context, session *courseSy
 
 func safeSourceErrorCode(code string) string {
 	switch code {
-	case "PERSONAL_REQUEST_FAILED", "PERSONAL_RENDER_FAILED", "PERSONAL_PARSE_FAILED", "PERSONAL_MENU_MISSING", "PERSONAL_QUERY_FAILED", "PERSONAL_CALENDAR_FAILED", "AUTH_REQUIRED", "PERMISSION_DENIED", "QR_EXPIRED", "QR_LOGIN_FAILED", "COURSE_COLLECTION_FAILED", "SEMESTER_DISCOVERY_FAILED", "PAGE_STRUCTURE":
+	case "RATE_LIMITED", "PERSONAL_REQUEST_FAILED", "PERSONAL_RENDER_FAILED", "PERSONAL_PARSE_FAILED", "PERSONAL_MENU_MISSING", "PERSONAL_QUERY_FAILED", "PERSONAL_CALENDAR_FAILED", "AUTH_REQUIRED", "PERMISSION_DENIED", "QR_EXPIRED", "QR_LOGIN_FAILED", "COURSE_COLLECTION_FAILED", "SEMESTER_DISCOVERY_FAILED", "PAGE_STRUCTURE", "QR_ENTRY_CHANGED", "QR_PAGE_CHANGED", "QR_CALLBACK_INVALID", "QR_IMAGE_INVALID", "URL_NOT_ALLOWED", "WECHAT_UNBOUND", "INVALID_SEMESTER":
 		return code
 	default:
 		return "SOURCE_UNAVAILABLE"

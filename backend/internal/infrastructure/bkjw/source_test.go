@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"jcourse/internal/domain/course"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
 	"os"
@@ -204,6 +205,95 @@ func TestHTTPCollectorEndToEnd(t *testing.T) {
 	}
 }
 
+func TestLoginThroughCASAccountPortal(t *testing.T) {
+	var portal, business atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Host + r.URL.Path {
+		case "ids.chd.edu.cn/authserver/callback":
+			http.SetCookie(w, &http.Cookie{Name: "TGC", Value: "test-session", Path: "/", Secure: true})
+			http.Redirect(w, r, casOrigin+":443"+casLandingPath, http.StatusFound)
+		case "ids.chd.edu.cn:443" + casLandingPath:
+			portal.Add(1)
+			fmt.Fprint(w, `<script>function logout(){location.href='https://evil.invalid/logout';}</script>`)
+		case "ids.chd.edu.cn/authserver/login":
+			cookie, err := r.Cookie("TGC")
+			if err != nil || cookie.Value != "test-session" || r.URL.Query().Get("service") != eamsOrigin+"/eams/login.action" {
+				t.Error("CAS service login lost the authenticated session")
+			}
+			http.Redirect(w, r, eamsOrigin+"/eams/login.action?ticket=test-ticket", http.StatusFound)
+		case "bkjw.chd.edu.cn/eams/login.action":
+			if r.URL.Query().Get("ticket") != "test-ticket" {
+				t.Error("missing service ticket")
+			}
+			http.SetCookie(w, &http.Cookie{Name: "JSESSIONID", Value: "eams-session", Path: "/eams/"})
+			http.Redirect(w, r, "/eams/home.action", http.StatusFound)
+		case "bkjw.chd.edu.cn/eams/home.action":
+			if _, err := r.Cookie("JSESSIONID"); err != nil {
+				t.Error("business session missing")
+			}
+			business.Add(1)
+			fmt.Fprint(w, "<html>教务首页</html>")
+		default:
+			t.Error("unexpected portal script navigation", r.Host, r.URL.Path)
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+	jar, _ := cookiejar.New(nil)
+	c := &connection{ctx: context.Background(), client: &http.Client{Jar: jar, Transport: mappedTransport{server.URL}, CheckRedirect: checkRedirect}}
+	defer c.client.CloseIdleConnections()
+	if err := c.completeLogin(casOrigin + "/authserver/callback?code=fake-code"); err != nil {
+		t.Fatal(err)
+	}
+	if portal.Load() != 1 || business.Load() < 2 {
+		t.Fatal("portal redirect or authenticated business verification missing")
+	}
+	for _, raw := range []string{casOrigin + ":443/authserver/login", casOrigin + ":443" + casLandingPath, "http://bkjw.chd.edu.cn:80/eams/home.action", "https://bkjw.chd.edu.cn:443/eams/home.action"} {
+		if !allowedURL(raw) {
+			t.Errorf("rejected trusted address with default port: %s", raw)
+		}
+	}
+	for _, raw := range []string{casOrigin + "/personalInfo/other", "http://ids.chd.edu.cn" + casLandingPath, casOrigin + ":8443" + casLandingPath, "https://evil.invalid" + casLandingPath} {
+		if allowedURL(raw) {
+			t.Errorf("accepted unintended portal address: %s", raw)
+		}
+	}
+}
+
+func TestAdminArchiveRetriesStalePagination(t *testing.T) {
+	var secondPageRequests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/eams/stdSyllabus!info.action" {
+			w.Write(fixture(t, "detail"))
+			return
+		}
+		r.ParseForm()
+		page := integer(r.Form.Get("pageNo"))
+		if page == 2 && secondPageRequests.Add(1) == 1 {
+			page = 1 // A transient stale response must not append duplicate rows.
+		}
+		fmt.Fprintf(w, `<table class="gridtable"><tr><th></th><th>课程序号</th><th>课程代码</th><th>课程名称</th><th>课程类别</th><th>教学班</th><th>教师</th></tr><tr><td><input name="lesson.id" value="%d"></td><td>CS101.0%d</td><td>CS101</td><td><a href="/eams/stdSyllabus!info.action?lesson.id=%d">程序设计</a></td><td>通识课程</td><td>班级</td><td>张三</td></tr></table><script>grid.pageInfo(%d,1,2);</script>`, 100+page, page, 100+page, page)
+	}))
+	defer server.Close()
+	c := &connection{ctx: context.Background(), client: &http.Client{Transport: mappedTransport{server.URL}, CheckRedirect: checkRedirect}, events: make(chan course.SourceEvent, 20)}
+	defer c.client.CloseIdleConnections()
+	event, err := c.adminArchive(semester{ID: "101", Name: "2025-2026-1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var archive struct {
+		Lessons []struct {
+			ID string `json:"id"`
+		} `json:"lessons"`
+	}
+	if err := json.Unmarshal(event.Document, &archive); err != nil {
+		t.Fatal(err)
+	}
+	if secondPageRequests.Load() != 2 || len(archive.Lessons) != 2 || archive.Lessons[0].ID == archive.Lessons[1].ID {
+		t.Fatal("stale page was not retried before saving complete archive", archive)
+	}
+}
+
 func TestParsersRejectIncompleteAndUnsafeData(t *testing.T) {
 	good := fixture(t, "listing")
 	got, err := parseListing(good)
@@ -307,4 +397,135 @@ func TestLiveQRCode(t *testing.T) {
 	}
 	c.Close()
 	c.(*connection).WaitClosed()
+}
+
+func TestEAMSDetectsRateLimitAndSlowsSharedPacer(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `<html><div>请不要过快点击</div><a href="javascript:history.back()">[返回前页]</a></html>`)
+	}))
+	defer server.Close()
+	c := &connection{ctx: context.Background(), client: &http.Client{Transport: mappedTransport{server.URL}}, pacer: &requestPacer{interval: 100 * time.Millisecond}}
+	defer c.client.CloseIdleConnections()
+	if _, _, err := c.eams("GET", "/eams/stdSyllabus!info.action", nil); err != codeError("RATE_LIMITED") {
+		t.Fatal("wrong rate limit classification", err)
+	}
+	if c.pacer.interval < time.Second {
+		t.Fatal("pacing was not reduced")
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if finish, err := c.pacer.begin(ctx); err == nil {
+		finish()
+		t.Fatal("cancelled request continued")
+	}
+}
+
+func TestEAMSReplaysQueryAfterSessionRefresh(t *testing.T) {
+	var reads atomic.Int32
+	detail := fixture(t, "detail")
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/eams/home.action" {
+			fmt.Fprint(w, "<html>教务首页</html>")
+			return
+		}
+		if reads.Add(1) == 1 {
+			http.SetCookie(w, &http.Cookie{Name: "JSESSIONID", Value: "renewed-fixture", Path: "/"})
+			http.Redirect(w, r, eamsOrigin+"/eams/home.action", 302)
+			return
+		}
+		cookie, err := r.Cookie("JSESSIONID")
+		if err != nil || cookie.Value != "renewed-fixture" {
+			w.WriteHeader(401)
+			return
+		}
+		w.Write(detail)
+	}))
+	defer server.Close()
+	jar, _ := cookiejar.New(nil)
+	c := &connection{ctx: context.Background(), client: &http.Client{Jar: jar, Transport: mappedTransport{server.URL}, CheckRedirect: checkRedirect}}
+	defer c.client.CloseIdleConnections()
+	retries := 0
+	err := c.retry(func() error {
+		data, _, err := c.eams("GET", "/eams/stdSyllabus!info.action", nil)
+		if err != nil {
+			return err
+		}
+		_, err = parseDetail(data)
+		return err
+	}, func(int) { retries++ })
+	if err != nil || reads.Load() != 2 || retries != 1 {
+		t.Fatal("query was not replayed after renewal", err, reads.Load(), retries)
+	}
+}
+
+func TestPacingIncludesDirectLoginRequestAndResponseTime(t *testing.T) {
+	var calls atomic.Int32
+	var completed time.Time
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if calls.Add(1) == 1 {
+			time.Sleep(80 * time.Millisecond)
+			completed = time.Now()
+			fmt.Fprint(w, "login complete")
+			return
+		}
+		if time.Since(completed) < 95*time.Millisecond {
+			t.Error("query sent before response cooldown")
+		}
+		fmt.Fprint(w, "query complete")
+	}))
+	defer server.Close()
+	c := &connection{ctx: context.Background(), client: &http.Client{Transport: mappedTransport{server.URL}}, pacer: &requestPacer{interval: 100 * time.Millisecond}}
+	defer c.client.CloseIdleConnections()
+	if _, _, err := c.request("GET", eamsOrigin+"/eams/home.action", nil, nil); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := c.eams("GET", "/eams/stdSyllabus.action", nil); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestRateLimitPageRequiresActualErrorNotice(t *testing.T) {
+	for _, page := range []string{
+		`<html><script>var message="请不要过快点击";</script><a>[返回前页]</a></html>`,
+		`<table><tr><td>课程代码</td><td>CS101</td></tr></table><div>请不要过快点击</div><a>[返回前页]</a>`,
+		`<html>请稍后</html>`,
+	} {
+		if isRateLimitPage([]byte(page)) {
+			t.Fatal("normal or unrelated page classified as rate limit")
+		}
+	}
+	if !isRateLimitPage([]byte(`<div class="actionError"><font>请不要过快点击</font></div><a href="javascript:history.go(-1)">[返回前页]</a>`)) {
+		t.Fatal("school error notice missed")
+	}
+}
+
+func TestCASRedirectWaitsBeforeBusinessVerification(t *testing.T) {
+	var homeCalls atomic.Int32
+	var landed time.Time
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Host + r.URL.Path {
+		case "ids.chd.edu.cn" + casLandingPath:
+			fmt.Fprint(w, "<html>account portal</html>")
+		case "ids.chd.edu.cn/authserver/login":
+			http.Redirect(w, r, eamsOrigin+"/eams/home.action", 302)
+		case "bkjw.chd.edu.cn/eams/home.action":
+			if homeCalls.Add(1) == 1 {
+				landed = time.Now()
+			} else if time.Since(landed) < 95*time.Millisecond {
+				t.Error("CAS landing was not included in pacing")
+			}
+			fmt.Fprint(w, "<html>教务首页</html>")
+		default:
+			w.WriteHeader(404)
+		}
+	}))
+	defer server.Close()
+	c := &connection{ctx: context.Background(), client: &http.Client{Transport: mappedTransport{server.URL}, CheckRedirect: checkRedirect}, pacer: &requestPacer{interval: 100 * time.Millisecond}}
+	defer c.client.CloseIdleConnections()
+	if err := c.completeLogin(casOrigin + casLandingPath); err != nil {
+		t.Fatal(err)
+	}
+	if homeCalls.Load() != 2 {
+		t.Fatal("business page verification missing")
+	}
 }
