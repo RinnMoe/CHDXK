@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { SchoolLoginFeedback } from "./school-login-feedback"
 import { EnrollmentEditor } from "./enrollment-editor-dialog"
+import { recentEnrollmentSemesters } from "./enrollment-semesters"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Dialog,
@@ -47,7 +48,7 @@ const states: Record<string, string> = {
   scanned: "已扫码，请在手机上确认登录",
   authenticating: "手机已确认，正在连接本科教务",
   discovering: "教务登录成功，正在读取学期列表",
-  ready: "已连接，可导入全部学期的课程",
+  ready: "已连接，请选择要导入的学期",
   running: "正在读取并导入课程",
   done: "课程导入完成",
   failed: "课程导入已停止",
@@ -68,6 +69,10 @@ function ImportDialog({ userID }: { userID: number }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
   const [fresh, setFresh] = useState(false)
+  const [selection, setSelection] = useState<{
+    job: string
+    semesters: string[]
+  }>()
   const client = useQueryClient()
   const query = useQuery({
     queryKey: ["enrollment-import", userID, job],
@@ -88,7 +93,13 @@ function ImportDialog({ userID }: { userID: number }) {
     void client.invalidateQueries({ queryKey: ["course-enrollments"] })
     void client.invalidateQueries({ queryKey: ["course"] })
   }, [client, marker])
-  const selected = status?.semesters ?? []
+  const selected =
+    selection?.job === status?.id
+      ? (selection?.semesters ?? [])
+      : recentEnrollmentSemesters(status?.semesters ?? [])
+  function selectSemesters(semesters: string[]) {
+    if (status) setSelection({ job: status.id, semesters })
+  }
   async function action(kind: "start" | "run" | "cancel") {
     setBusy(true)
     setError("")
@@ -203,16 +214,62 @@ function ImportDialog({ userID }: { userID: number }) {
                           checked={fresh}
                           onChange={(e) => setFresh(e.target.checked)}
                         />
-                        重新读取全部学期（不使用已有缓存）
+                        重新读取所选学期（不使用已有缓存）
                       </label>
+                      <p className="text-sm text-muted-foreground">
+                        默认选择最近 5
+                        个学年，减少空学期查询。可按实际就读时间调整；需要更早的课程时选择全部学期。
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            selectSemesters(
+                              recentEnrollmentSemesters(status.semesters)
+                            )
+                          }
+                        >
+                          最近 5 个学年
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => selectSemesters(status.semesters)}
+                        >
+                          全部学期
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => selectSemesters([])}
+                        >
+                          清空选择
+                        </Button>
+                      </div>
                       <div className="grid grid-cols-2 gap-2">
                         {status.semesters.map((semester) => (
-                          <span
+                          <label
                             key={semester}
-                            className="text-sm text-muted-foreground"
+                            className="flex items-center gap-2 text-sm"
                           >
+                            <Input
+                              type="checkbox"
+                              className="size-4"
+                              checked={selected.includes(semester)}
+                              onChange={(e) =>
+                                selectSemesters(
+                                  e.target.checked
+                                    ? status.semesters.filter(
+                                        (s) =>
+                                          s === semester || selected.includes(s)
+                                      )
+                                    : selected.filter((s) => s !== semester)
+                                )
+                              }
+                            />
                             {semester}
-                          </span>
+                          </label>
                         ))}
                       </div>
                       <Button
@@ -220,7 +277,7 @@ function ImportDialog({ userID }: { userID: number }) {
                         onClick={() => void action("run")}
                         data-action="run"
                       >
-                        导入全部学期（{selected.length}）
+                        导入所选学期（{selected.length}）
                       </Button>
                     </>
                   )}
