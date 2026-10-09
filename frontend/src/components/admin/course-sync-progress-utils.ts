@@ -7,6 +7,8 @@ export interface SyncProgress {
   page?: number
   pages?: number
   updated_at: string
+  cached?: number
+  retry_at?: string
 }
 
 export function progressPercent(progress: SyncProgress): number | undefined {

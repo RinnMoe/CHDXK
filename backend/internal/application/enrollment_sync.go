@@ -124,7 +124,7 @@ func (s *EnrollmentSyncService) Status(owner int, id string) (*CourseSyncStatus,
 	}
 	return service.Status(owner, id)
 }
-func (s *EnrollmentSyncService) Sync(owner int, id string, selected []string) (*CourseSyncStatus, error) {
+func (s *EnrollmentSyncService) Sync(owner int, id string, selected []string, _ ...bool) (*CourseSyncStatus, error) {
 	service, err := s.owned(owner)
 	if err != nil {
 		return nil, err

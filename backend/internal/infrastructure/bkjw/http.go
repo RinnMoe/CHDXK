@@ -258,19 +258,49 @@ func (c *connection) pause(d time.Duration) error {
 }
 func (c *connection) retry(operation func() error, onRetry func(int)) error {
 	var err error
-	for attempt := 0; attempt < 3; attempt++ {
+	started := time.Now()
+	defer func() { c.retryAt = nil }()
+	for attempt := 0; attempt < 50 && time.Since(started) < 20*time.Minute; attempt++ {
+		if c.ctx.Err() != nil {
+			return c.ctx.Err()
+		}
 		if attempt > 0 {
-			onRetry(attempt)
-			if err = c.pause(time.Duration(attempt) * time.Second); err != nil {
+			delay := min(2*time.Second<<min(attempt-1, 5), time.Minute)
+			if c.retryDelay != nil {
+				delay = c.retryDelay(attempt)
+			}
+			next := time.Now().Add(delay)
+			c.retryAt = &next
+			if onRetry != nil {
+				onRetry(attempt)
+			}
+			if err = c.pause(delay); err != nil {
 				return err
 			}
+			c.retryAt = nil
 		}
 		err = operation()
 		if err == nil {
 			return nil
 		}
-		if code, fatal := err.(codeError); (fatal && code != "PAGE_STRUCTURE" && code != "RATE_LIMITED" && code != "SESSION_REFRESHED") || c.ctx.Err() != nil {
-			return err
+		var code codeError
+		if errors.As(err, &code) {
+			switch code {
+			case "AUTH_REQUIRED", "PERMISSION_DENIED":
+				if attempt >= 2 {
+					return err
+				}
+			case "PAGE_STRUCTURE", "PERSONAL_PARSE_FAILED":
+				if attempt >= 7 {
+					return err
+				}
+			case "RATE_LIMITED", "SESSION_REFRESHED":
+			default:
+				return err
+			}
+		}
+		if c.ctx.Err() != nil {
+			return c.ctx.Err()
 		}
 	}
 	return err

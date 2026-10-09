@@ -10,7 +10,7 @@ import (
 type CourseSyncOperations interface {
 	Start(int) (*application.CourseSyncStatus, error)
 	Status(int, string) (*application.CourseSyncStatus, error)
-	Sync(int, string, []string) (*application.CourseSyncStatus, error)
+	Sync(int, string, []string, ...bool) (*application.CourseSyncStatus, error)
 	Cancel(int, string) (*application.CourseSyncStatus, error)
 }
 type CourseSyncController struct{ service CourseSyncOperations }
@@ -52,12 +52,13 @@ func (ctrl *CourseSyncController) Sync(c *gin.Context) {
 	}
 	var cmd struct {
 		Semesters []string `json:"semesters"`
+		Fresh     bool     `json:"fresh"`
 	}
 	if err := c.ShouldBindJSON(&cmd); err != nil {
 		respondBindError(c, err)
 		return
 	}
-	status, err := ctrl.service.Sync(user.ID, c.Param("jobID"), cmd.Semesters)
+	status, err := ctrl.service.Sync(user.ID, c.Param("jobID"), cmd.Semesters, cmd.Fresh)
 	if err != nil {
 		respondError(c, err)
 		return

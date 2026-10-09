@@ -13,7 +13,8 @@ import (
 )
 
 type Config struct {
-	Enabled bool `mapstructure:"enabled"`
+	Enabled  bool   `mapstructure:"enabled"`
+	CacheDir string `mapstructure:"cache_dir"`
 }
 type Source struct {
 	Config   Config
@@ -32,32 +33,46 @@ func (s *Source) connect(parent context.Context, transport http.RoundTripper) *c
 	ctx, cancel := context.WithCancel(parent)
 	jar, _ := cookiejar.New(nil)
 	if transport == nil {
-		transport = &http.Transport{Proxy: http.ProxyFromEnvironment, MaxIdleConns: 4, MaxIdleConnsPerHost: 2, IdleConnTimeout: 30 * time.Second, TLSHandshakeTimeout: 10 * time.Second, ResponseHeaderTimeout: 30 * time.Second}
+		transport = &http.Transport{Proxy: http.ProxyFromEnvironment, MaxIdleConns: 4, MaxIdleConnsPerHost: 2, IdleConnTimeout: 30 * time.Second, TLSHandshakeTimeout: 20 * time.Second, ResponseHeaderTimeout: 75 * time.Second}
 	}
-	client := &http.Client{Jar: jar, Transport: transport, Timeout: 30 * time.Second, CheckRedirect: checkRedirect}
+	client := &http.Client{Jar: jar, Transport: transport, Timeout: 90 * time.Second, CheckRedirect: checkRedirect}
 	c := &connection{ctx: ctx, cancel: cancel, client: client, pacer: &requestPacer{interval: 1100 * time.Millisecond}, events: make(chan course.SourceEvent), commands: make(chan []string, 1), done: make(chan struct{}), personal: s.Personal}
+	if !s.Personal && s.Config.CacheDir != "" {
+		c.cache = &checkpointStore{root: s.Config.CacheDir}
+	}
 	go c.run()
 	return c
 }
 
 type connection struct {
-	ctx       context.Context
-	cancel    context.CancelFunc
-	client    *http.Client
-	events    chan course.SourceEvent
-	commands  chan []string
-	done      chan struct{}
-	pacer     *requestPacer
-	personal  bool
-	once      sync.Once
-	mu        sync.Mutex
-	submitted bool
+	ctx        context.Context
+	cancel     context.CancelFunc
+	client     *http.Client
+	events     chan course.SourceEvent
+	commands   chan []string
+	done       chan struct{}
+	pacer      *requestPacer
+	personal   bool
+	once       sync.Once
+	mu         sync.Mutex
+	submitted  bool
+	cache      *checkpointStore
+	restored   int
+	fresh      bool
+	retryAt    *time.Time
+	retryDelay func(int) time.Duration
 }
 
 func (c *connection) Events() <-chan course.SourceEvent { return c.events }
 func (c *connection) WaitClosed()                       { <-c.done }
 func (c *connection) Close()                            { c.once.Do(c.cancel) }
 func (c *connection) Sync(semesters []string) error {
+	return c.syncSelected(semesters, false)
+}
+func (c *connection) SyncFresh(semesters []string) error {
+	return c.syncSelected(semesters, true)
+}
+func (c *connection) syncSelected(semesters []string, fresh bool) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if err := c.ctx.Err(); err != nil {
@@ -66,6 +81,7 @@ func (c *connection) Sync(semesters []string) error {
 	if c.submitted || len(semesters) == 0 {
 		return errors.New("selection already submitted or empty")
 	}
+	c.fresh = fresh
 	select {
 	case <-c.ctx.Done():
 		return c.ctx.Err()
@@ -145,6 +161,7 @@ func (c *connection) run() {
 	}
 	stage = "COURSE_COLLECTION_FAILED"
 	for _, s := range chosen {
+		c.restored = 0
 		if !c.emit(course.SourceEvent{Type: "collecting", Semester: s.Name}) {
 			return
 		}

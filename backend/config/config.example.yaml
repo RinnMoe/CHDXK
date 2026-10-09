@@ -95,3 +95,5 @@ reshub:
 # Embedded pure-Go HTTP collector; no external SDK or browser required.
 course_source:
   enabled: true
+  # Public catalog checkpoints only; mount this directory persistently in Docker.
+  cache_dir: ".local/course-cache"

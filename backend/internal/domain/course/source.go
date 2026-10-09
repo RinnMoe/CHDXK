@@ -19,14 +19,16 @@ type SourceEvent struct {
 
 // SourceProgress contains counts only, never upstream URLs or credentials.
 type SourceProgress struct {
-	Stage     string    `json:"stage"`
-	Completed int       `json:"completed"`
-	Total     *int      `json:"total,omitempty"`
-	Failed    int       `json:"failed"`
-	Retries   int       `json:"retries"`
-	Page      int       `json:"page,omitempty"`
-	Pages     int       `json:"pages,omitempty"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Stage     string     `json:"stage"`
+	Completed int        `json:"completed"`
+	Total     *int       `json:"total,omitempty"`
+	Failed    int        `json:"failed"`
+	Retries   int        `json:"retries"`
+	Page      int        `json:"page,omitempty"`
+	Pages     int        `json:"pages,omitempty"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	Cached    int        `json:"cached,omitempty"`
+	RetryAt   *time.Time `json:"retry_at,omitempty"`
 }
 
 // SourceConnection holds one temporary, authenticated HTTP collector session.

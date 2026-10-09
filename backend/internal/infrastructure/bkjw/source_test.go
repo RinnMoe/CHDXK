@@ -343,13 +343,14 @@ func TestCancellationAndRetry(t *testing.T) {
 	}
 	ctx, cancel = context.WithCancel(context.Background())
 	defer cancel()
-	c = &connection{ctx: ctx}
+	c = &connection{ctx: ctx, retryDelay: func(int) time.Duration { return 0 }}
 	calls := 0
 	retries := 0
 	err := c.retry(func() error { calls++; return codeError("AUTH_REQUIRED") }, func(int) { retries++ })
-	if err == nil || calls != 1 || retries != 0 {
-		t.Fatal("auth retried")
+	if err == nil || calls != 3 || retries != 2 {
+		t.Fatal("auth confirmation retries", calls, retries)
 	}
+	calls, retries = 0, 0
 	err = c.retry(func() error {
 		calls++
 		if calls < 4 {
@@ -357,7 +358,7 @@ func TestCancellationAndRetry(t *testing.T) {
 		}
 		return nil
 	}, func(int) { retries++ })
-	if err != nil || retries != 2 {
+	if err != nil || retries != 3 {
 		t.Fatal("retry", err, retries)
 	}
 }

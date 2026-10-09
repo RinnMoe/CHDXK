@@ -59,6 +59,7 @@ export function CourseSyncPanel() {
   const methods = useImportSettings()
   const [job, setJob] = useState(() => sessionStorage.getItem(storageKey) ?? "")
   const [excluded, setExcluded] = useState<string[]>([])
+  const [fresh, setFresh] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
   const client = useQueryClient()
@@ -66,9 +67,8 @@ export function CourseSyncPanel() {
     queryKey: ["course-sync", job],
     queryFn: () => apiClient<SyncStatus>(`/api/admin/course-sync/${job}`),
     enabled: !!job,
-    refetchInterval: (q) =>
-      terminal(q.state.data?.state) || q.state.error ? false : 2000,
-    retry: false,
+    refetchInterval: (q) => (terminal(q.state.data?.state) ? false : 2000),
+    retry: 3,
   })
   const status = query.data
   const refreshed = useRef("")
@@ -95,7 +95,7 @@ export function CourseSyncPanel() {
           method: "POST",
           body:
             kind === "run"
-              ? JSON.stringify({ semesters: selected })
+              ? JSON.stringify({ semesters: selected, fresh })
               : undefined,
         }
       )
@@ -160,6 +160,15 @@ export function CourseSyncPanel() {
           )}
           {status.state === "ready" && (
             <>
+              <label className="flex items-center gap-2 text-sm">
+                <Input
+                  type="checkbox"
+                  className="size-4"
+                  checked={fresh}
+                  onChange={(event) => setFresh(event.target.checked)}
+                />
+                重新采集所选学期（不使用已有缓存）
+              </label>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
@@ -294,7 +303,8 @@ export function CourseSyncPanel() {
         </p>
       )}
       <p className="text-sm text-muted-foreground">
-        {copy("copy.admin.components.admin.course-sync-panel.e106a82ff9da")}
+        采集进度自动缓存 24
+        小时。中断后重新扫码、选择相同学期即可续采；完整学期通过校验后才保存，已发布的点评保留。缓存不包含学校登录态。
       </p>
     </section>
   )

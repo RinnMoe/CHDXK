@@ -71,6 +71,9 @@ export function CourseSyncProgress({
               <>
                 <span>读取失败 {progress.failed} 条</span>
                 <span>已重试 {progress.retries} 次</span>
+                {!!progress.cached && (
+                  <span>从缓存恢复 {progress.cached} 条</span>
+                )}
               </>
             )}
           </div>
@@ -89,6 +92,14 @@ export function CourseSyncProgress({
           </span>
         )}
       </div>
+      {active && progress?.retry_at && (
+        <p className="text-sm text-muted-foreground" role="status">
+          {Date.parse(progress.retry_at) > now
+            ? `教务响应暂时异常，正在等待自动重试（约 ${duration((Date.parse(progress.retry_at) - now) / 1000)}）。`
+            : "正在重新请求教务系统。"}
+          已读取的数据保留，可继续等待。
+        </p>
+      )}
       {active && progress && now - Date.parse(progress.updated_at) > 30000 && (
         <p className="text-xs text-muted-foreground">
           正在等待教务系统响应，进度暂未更新。可继续等待或取消任务。

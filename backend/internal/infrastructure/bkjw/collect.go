@@ -11,7 +11,7 @@ import (
 )
 
 func (c *connection) progress(s semester, stage string, completed, total, retries, page, pages int) {
-	c.emit(course.SourceEvent{Type: "progress", Semester: s.Name, Progress: &course.SourceProgress{Stage: stage, Completed: completed, Total: &total, Retries: retries, Page: page, Pages: pages, UpdatedAt: time.Now()}})
+	c.emit(course.SourceEvent{Type: "progress", Semester: s.Name, Progress: &course.SourceProgress{Stage: stage, Completed: completed, Total: &total, Retries: retries, Page: page, Pages: pages, UpdatedAt: time.Now(), Cached: c.restored, RetryAt: c.retryAt}})
 }
 func (c *connection) adminArchive(s semester) (course.SourceEvent, error) {
 	lessons := []map[string]any{}
@@ -20,7 +20,26 @@ func (c *connection) adminArchive(s semester) (course.SourceEvent, error) {
 	signature := ""
 	size := 100
 	retries := 0
-	for page := 1; page <= 2000; page++ {
+	checkpoint, err := c.cache.load(s)
+	if err != nil {
+		return course.SourceEvent{}, err
+	}
+	if c.fresh {
+		checkpoint = nil
+	}
+	startPage := 1
+	if checkpoint != nil {
+		lessons, total, signature, size = checkpoint.Lessons, checkpoint.Total, checkpoint.Signature, checkpoint.Size
+		startPage = checkpoint.NextPage
+		for _, lesson := range lessons {
+			seen[lesson["id"].(string)] = true
+		}
+		c.progress(s, "listing", len(lessons), total, 0, startPage-1, max(1, (total+size-1)/size))
+	}
+	for page := startPage; page <= 2000; page++ {
+		if total >= 0 && len(lessons) == total {
+			break
+		}
 		var listing listing
 		err := c.retry(func() error {
 			data, _, err := c.eams("POST", "/eams/stdSyllabus!search.action", url.Values{"lesson.project.id": {"1"}, "lesson.semester.id": {s.ID}, "pageNo": {itoa(page)}, "pageSize": {itoa(size)}})
@@ -66,6 +85,13 @@ func (c *connection) adminArchive(s semester) (course.SourceEvent, error) {
 			lessons = append(lessons, lesson)
 		}
 		pages := max(1, (total+size-1)/size)
+		if checkpoint == nil {
+			checkpoint = &catalogCheckpoint{Version: 1, CreatedAt: time.Now(), Semester: s.Name, SemesterID: s.ID}
+		}
+		checkpoint.Lessons, checkpoint.Total, checkpoint.Signature, checkpoint.Size, checkpoint.NextPage = lessons, total, signature, size, page+1
+		if err := c.cache.saveCatalog(s, checkpoint); err != nil {
+			return course.SourceEvent{}, err
+		}
 		c.progress(s, "listing", len(lessons), total, retries, page, pages)
 		if page >= pages {
 			break
@@ -75,6 +101,12 @@ func (c *connection) adminArchive(s semester) (course.SourceEvent, error) {
 		return course.SourceEvent{}, codeError("PAGE_STRUCTURE")
 	}
 	for i, lesson := range lessons {
+		if detail := c.cache.loadDetail(s, checkpoint, lesson); detail != nil {
+			lesson["detail"] = detail
+			c.restored++
+			c.progress(s, "details", i+1, total, retries, 0, 0)
+			continue
+		}
 		path := lesson["links"].(map[string]any)["detail"].(string)
 		err := c.retry(func() error {
 			data, _, err := c.eams("GET", path, nil)
@@ -98,6 +130,9 @@ func (c *connection) adminArchive(s semester) (course.SourceEvent, error) {
 			return nil
 		}, func(int) { retries++; c.progress(s, "details", i, total, retries, 0, 0) })
 		if err != nil {
+			return course.SourceEvent{}, err
+		}
+		if err := c.cache.saveDetail(s, checkpoint, lesson); err != nil {
 			return course.SourceEvent{}, err
 		}
 		c.progress(s, "details", i+1, total, retries, 0, 0)

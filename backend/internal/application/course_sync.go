@@ -148,7 +148,7 @@ func (s *CourseSyncService) Status(owner int, id string) (*CourseSyncStatus, err
 	}
 	return session.snapshot(), nil
 }
-func (s *CourseSyncService) Sync(owner int, id string, selected []string) (*CourseSyncStatus, error) {
+func (s *CourseSyncService) Sync(owner int, id string, selected []string, fresh ...bool) (*CourseSyncStatus, error) {
 	session, err := s.owned(owner, id)
 	if err != nil {
 		return nil, err
@@ -175,7 +175,15 @@ func (s *CourseSyncService) Sync(owner int, id string, selected []string) (*Cour
 	now := time.Now()
 	session.status.StartedAt = &now
 	session.status.QR = ""
-	err = session.connection.Sync(selected)
+	if len(fresh) > 0 && fresh[0] {
+		if connection, ok := session.connection.(interface{ SyncFresh([]string) error }); ok {
+			err = connection.SyncFresh(selected)
+		} else {
+			err = session.connection.Sync(selected)
+		}
+	} else {
+		err = session.connection.Sync(selected)
+	}
 	session.mu.Unlock()
 	if err != nil {
 		s.fail(session, "连接已中断，请重新扫码登录")
@@ -341,7 +349,7 @@ func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSess
 					message = "学校登录已确认，但未能进入本科教务系统，请重新连接"
 				}
 				if event.Error == "RATE_LIMITED" {
-					message = "教务系统暂时限制了请求频率，自动降速重试后仍未成功；未保存当前学期，请稍后重新连接"
+					message = "教务系统暂时限制了请求频率，持续降速重试后仍未恢复，请稍后重新连接"
 				}
 				if event.Error == "URL_NOT_ALLOWED" {
 					message = "学校登录返回了尚未支持的跳转地址，已停止连接，请联系技术管理员"
@@ -378,6 +386,12 @@ func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSess
 					if s.personal {
 						message = "当前学校账号无权访问个人课表，请使用学生账号重新连接"
 					}
+				}
+				if event.Error == "CACHE_WRITE_FAILED" {
+					message = "采集进度缓存无法保存，请联系技术管理员检查存储空间与目录权限"
+				}
+				if !s.personal && event.Error != "CACHE_WRITE_FAILED" && session.snapshot().Current != "" {
+					message += "；已缓存的课程可在重新扫码并选择相同学期后继续采集"
 				}
 				s.fail(session, message)
 				return
@@ -423,7 +437,7 @@ func (s *CourseSyncService) connectQueued(ctx context.Context, session *courseSy
 
 func safeSourceErrorCode(code string) string {
 	switch code {
-	case "RATE_LIMITED", "PERSONAL_REQUEST_FAILED", "PERSONAL_RENDER_FAILED", "PERSONAL_PARSE_FAILED", "PERSONAL_MENU_MISSING", "PERSONAL_QUERY_FAILED", "PERSONAL_CALENDAR_FAILED", "AUTH_REQUIRED", "PERMISSION_DENIED", "QR_EXPIRED", "QR_LOGIN_FAILED", "COURSE_COLLECTION_FAILED", "SEMESTER_DISCOVERY_FAILED", "PAGE_STRUCTURE", "QR_ENTRY_CHANGED", "QR_PAGE_CHANGED", "QR_CALLBACK_INVALID", "QR_IMAGE_INVALID", "URL_NOT_ALLOWED", "WECHAT_UNBOUND", "INVALID_SEMESTER":
+	case "CACHE_WRITE_FAILED", "RATE_LIMITED", "PERSONAL_REQUEST_FAILED", "PERSONAL_RENDER_FAILED", "PERSONAL_PARSE_FAILED", "PERSONAL_MENU_MISSING", "PERSONAL_QUERY_FAILED", "PERSONAL_CALENDAR_FAILED", "AUTH_REQUIRED", "PERMISSION_DENIED", "QR_EXPIRED", "QR_LOGIN_FAILED", "COURSE_COLLECTION_FAILED", "SEMESTER_DISCOVERY_FAILED", "PAGE_STRUCTURE", "QR_ENTRY_CHANGED", "QR_PAGE_CHANGED", "QR_CALLBACK_INVALID", "QR_IMAGE_INVALID", "URL_NOT_ALLOWED", "WECHAT_UNBOUND", "INVALID_SEMESTER":
 		return code
 	default:
 		return "SOURCE_UNAVAILABLE"
@@ -439,7 +453,7 @@ func containsSemester(items []string, value string) bool {
 }
 
 func validSourceProgress(p *course.SourceProgress) bool {
-	if p == nil || p.Completed < 0 || p.Failed < 0 || p.Retries < 0 || p.Page < 0 || p.Pages < 0 {
+	if p == nil || p.Completed < 0 || p.Failed < 0 || p.Retries < 0 || p.Cached < 0 || p.Cached > p.Completed || p.Page < 0 || p.Pages < 0 {
 		return false
 	}
 	if p.Stage != "listing" && p.Stage != "details" && p.Stage != "validating" {
