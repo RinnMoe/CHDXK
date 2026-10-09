@@ -28,6 +28,7 @@ type CourseSyncStatus struct {
 	ExpiresAt     time.Time              `json:"expires_at"`
 	StartedAt     *time.Time             `json:"started_at,omitempty"`
 	Progress      *course.SourceProgress `json:"progress,omitempty"`
+	Cached        int                    `json:"cached"`
 	QueuePosition int                    `json:"queue_position,omitempty"`
 }
 type courseSyncSession struct {
@@ -289,6 +290,10 @@ func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSess
 					}
 				}
 			case "archive":
+				cached := 0
+				if session.status.Progress != nil {
+					cached = session.status.Progress.Cached
+				}
 				session.status.Progress = &course.SourceProgress{Stage: "validating", UpdatedAt: time.Now()}
 				status := session.status
 				session.mu.Unlock()
@@ -324,6 +329,7 @@ func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSess
 				}
 				session.mu.Lock()
 				session.status.Results = append(session.status.Results, *result)
+				session.status.Cached += cached
 				session.status.Progress = &course.SourceProgress{Stage: "completed", UpdatedAt: time.Now()}
 			case "done":
 				if len(session.status.Results) != len(session.status.Selected) || session.status.State != "running" {

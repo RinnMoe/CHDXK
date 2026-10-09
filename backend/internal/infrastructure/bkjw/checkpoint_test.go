@@ -164,3 +164,55 @@ func TestCheckpointWriteFailureIsReported(t *testing.T) {
 		t.Fatal("cache failure hidden", err)
 	}
 }
+
+func TestPersonalCheckpointIsolatedBySchoolIdentityAndSemester(t *testing.T) {
+	store := &checkpointStore{root: t.TempDir()}
+	s := semester{ID: "101", Name: "2025-2026-1"}
+	rows := []course.EnrollmentSourceCourse{{Name: "数学", SourceLessonID: "100"}}
+	if err := store.savePersonal(s, "school-A", rows); err != nil {
+		t.Fatal(err)
+	}
+	if got, ok := store.loadPersonal(s, "school-A"); !ok || len(got) != 1 {
+		t.Fatal("completed semester lost", got, ok)
+	}
+	if _, ok := store.loadPersonal(s, "school-B"); ok {
+		t.Fatal("another school identity reused private courses")
+	}
+	if _, ok := store.loadPersonal(semester{ID: "102", Name: "2025-2026-2"}, "school-A"); ok {
+		t.Fatal("semester cache mixed")
+	}
+	if err := writeCheckpoint(store.personalPath(s, "school-A"), personalCheckpoint{CreatedAt: time.Now().Add(-25 * time.Hour), Courses: rows}); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := store.loadPersonal(s, "school-A"); ok {
+		t.Fatal("expired personal cache reused")
+	}
+}
+
+func TestPersonalArchiveResumesAfterReconnection(t *testing.T) {
+	store := &checkpointStore{root: t.TempDir()}
+	var reads atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reads.Add(1)
+		fmt.Fprint(w, `{"activities":[{"courseId":"101","courseName":"数学","lessonNo":"M101"}]}`)
+	}))
+	defer server.Close()
+	s := semester{ID: "101", Name: "2025-2026-1"}
+	collect := func(page string, fresh bool) (int, error) {
+		c := &connection{ctx: context.Background(), client: &http.Client{Transport: mappedTransport{server.URL}}, cache: store, fresh: fresh, events: make(chan course.SourceEvent, 10)}
+		_, err := c.personalArchive([]byte(page), s)
+		return c.restored, err
+	}
+	if _, err := collect(entryPage, false); err != nil {
+		t.Fatal(err)
+	}
+	if cached, err := collect(entryPage, false); err != nil || cached != 1 || reads.Load() != 1 {
+		t.Fatal("cached semester fetched again", err, cached)
+	}
+	if _, err := collect(strings.ReplaceAll(entryPage, `"77"`, `"99"`), false); err != nil || reads.Load() != 2 {
+		t.Fatal("another school account reused cache", err)
+	}
+	if cached, err := collect(entryPage, true); err != nil || cached != 0 || reads.Load() != 3 {
+		t.Fatal("fresh personal import reused cache", err)
+	}
+}

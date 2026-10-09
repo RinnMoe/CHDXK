@@ -64,7 +64,7 @@ func (s *EnrollmentSyncService) Start(owner int) (*CourseSyncStatus, error) {
 			delete(s.jobs, oldestUser)
 		}
 	}
-	service := &CourseSyncService{source: s.source, lifetime: 15 * time.Minute, personal: true, queue: s.queue}
+	service := &CourseSyncService{source: s.source, lifetime: 2 * time.Hour, personal: true, queue: s.queue}
 	service.importEvent = func(ctx context.Context, event course.SourceEvent) (*CourseImportResult, error) {
 		var document struct {
 			Semester string                          `json:"semester"`
@@ -124,12 +124,12 @@ func (s *EnrollmentSyncService) Status(owner int, id string) (*CourseSyncStatus,
 	}
 	return service.Status(owner, id)
 }
-func (s *EnrollmentSyncService) Sync(owner int, id string, selected []string, _ ...bool) (*CourseSyncStatus, error) {
+func (s *EnrollmentSyncService) Sync(owner int, id string, selected []string, fresh ...bool) (*CourseSyncStatus, error) {
 	service, err := s.owned(owner)
 	if err != nil {
 		return nil, err
 	}
-	return service.Sync(owner, id, selected)
+	return service.Sync(owner, id, selected, fresh...)
 }
 func (s *EnrollmentSyncService) Cancel(owner int, id string) (*CourseSyncStatus, error) {
 	service, err := s.owned(owner)

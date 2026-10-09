@@ -14,6 +14,7 @@ import (
 	"jcourse/internal/infrastructure/repository"
 	"jcourse/internal/infrastructure/reshub"
 	"jcourse/internal/infrastructure/smtp"
+	"path/filepath"
 )
 
 type ServiceContainer struct {
@@ -145,7 +146,7 @@ func NewServiceContainer(conf config.AppConfig) (*ServiceContainer, error) {
 		EnrollmentSync:        application.NewEnrollmentSyncService(&bkjw.Source{Config: conf.CourseSource, Personal: true}, courseEnrollmentRepo, collectorQueue),
 		CourseEnrollmentQuery: courseEnrollmentQuery,
 		TeacherQuery:          teacherQuery,
-		TeacherProfiles:       application.NewTeacherProfileService(teacherRepo, chdteachers.NewClient()),
+		TeacherProfiles:       application.NewTeacherProfileService(teacherRepo, chdteachers.NewClient(filepath.Join(conf.CourseSource.CacheDir, "teacher-profiles"))),
 		TeacherHotQuery:       application.NewTeacherHotQueryService(courseHotRepo),
 		PointQuery:            pointQuery,
 		PointRewardCommand:    pointRewardCommand,

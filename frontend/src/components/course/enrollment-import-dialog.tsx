@@ -4,6 +4,7 @@ import { apiClient } from "@/api/client"
 import { useImportSettings } from "@/hooks/use-import-settings"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { SchoolLoginFeedback } from "./school-login-feedback"
 import { EnrollmentEditor } from "./enrollment-editor-dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -24,8 +25,9 @@ export interface EnrollmentSyncStatus {
   semesters: string[]
   selected: string[]
   current?: string
+  cached?: number
   message?: string
-  progress?: { retries: number }
+  progress?: { retries: number; cached?: number; retry_at?: string }
   results: {
     semester: string
     enrollment: {
@@ -65,15 +67,15 @@ function ImportDialog({ userID }: { userID: number }) {
   const [job, setJob] = useState(() => sessionStorage.getItem(storageKey) ?? "")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
+  const [fresh, setFresh] = useState(false)
   const client = useQueryClient()
   const query = useQuery({
     queryKey: ["enrollment-import", userID, job],
     queryFn: () =>
       apiClient<EnrollmentSyncStatus>(`/api/course/enrollment-sync/${job}`),
     enabled: !!job,
-    refetchInterval: (q) =>
-      terminal(q.state.data?.state) || q.state.error ? false : 2000,
-    retry: false,
+    refetchInterval: (q) => (terminal(q.state.data?.state) ? false : 2000),
+    retry: 3,
   })
   const status = query.data
   const refreshed = useRef("")
@@ -99,7 +101,7 @@ function ImportDialog({ userID }: { userID: number }) {
           method: "POST",
           body:
             kind === "run"
-              ? JSON.stringify({ semesters: selected })
+              ? JSON.stringify({ semesters: selected, fresh })
               : undefined,
         }
       )
@@ -194,6 +196,15 @@ function ImportDialog({ userID }: { userID: number }) {
                   )}
                   {status.state === "ready" && (
                     <>
+                      <label className="flex items-center gap-2 text-sm">
+                        <Input
+                          type="checkbox"
+                          className="size-4"
+                          checked={fresh}
+                          onChange={(e) => setFresh(e.target.checked)}
+                        />
+                        重新读取全部学期（不使用已有缓存）
+                      </label>
                       <div className="grid grid-cols-2 gap-2">
                         {status.semesters.map((semester) => (
                           <span
@@ -222,8 +233,13 @@ function ImportDialog({ userID }: { userID: number }) {
                   )}
                   {status.state === "running" && !!status.progress?.retries && (
                     <p className="text-sm text-muted-foreground">
-                      教务响应暂时异常，正在自动重试（{status.progress.retries}{" "}
-                      / 2），无需重新扫码。
+                      已自动重试 {status.progress.retries}{" "}
+                      次，暂时的响应异常会持续等待重试，无需重新扫码。
+                    </p>
+                  )}
+                  {!!status.cached && (
+                    <p className="text-sm text-muted-foreground">
+                      已从缓存恢复 {status.cached} 门课程。
                     </p>
                   )}
                   {status.message && (
@@ -281,7 +297,8 @@ function ImportDialog({ userID }: { userID: number }) {
                 </p>
               )}
               <p className="text-sm text-muted-foreground">
-                仅导入个人课程，不修改教务数据。完成、取消或超时后关闭本次教务连接，下次导入需要重新扫码。关闭弹窗后本次导入继续进行。
+                仅导入个人课程，不修改教务数据。已读取的学期缓存 24
+                小时，再次扫码同一学校账号可继续导入。完成、取消或超时后关闭本次连接，下次仍需扫码。关闭弹窗后导入继续进行。
               </p>
             </section>
           </TabsContent>

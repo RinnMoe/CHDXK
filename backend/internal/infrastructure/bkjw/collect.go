@@ -182,6 +182,13 @@ func (c *connection) personalArchive(page []byte, s semester) (course.SourceEven
 		return course.SourceEvent{}, err
 	}
 	params.Set("semester.id", s.ID)
+	if !c.fresh {
+		if rows, ok := c.cache.loadPersonal(s, params.Get("ids")); ok {
+			c.restored = len(rows)
+			c.progress(s, "validating", len(rows), len(rows), 0, 0, 0)
+			return course.SourceEvent{Type: "archive", Semester: s.Name, Document: marshal(map[string]any{"semester": s.Name, "courses": rows})}, nil
+		}
+	}
 	var courses []course.EnrollmentSourceCourse
 	retries := 0
 	err = c.retry(func() error {
@@ -196,6 +203,9 @@ func (c *connection) personalArchive(page []byte, s semester) (course.SourceEven
 		if _, typed := err.(codeError); !typed {
 			err = codeError("PERSONAL_REQUEST_FAILED")
 		}
+		return course.SourceEvent{}, err
+	}
+	if err := c.cache.savePersonal(s, params.Get("ids"), courses); err != nil {
 		return course.SourceEvent{}, err
 	}
 	c.progress(s, "validating", len(courses), len(courses), retries, 0, 0)

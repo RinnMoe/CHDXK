@@ -17,15 +17,23 @@ import (
 
 const origin = "https://js.chd.edu.cn"
 
-type Client struct{ HTTP *http.Client }
+type Client struct {
+	HTTP       *http.Client
+	CacheDir   string
+	retryDelay func(int) time.Duration
+}
 
-func NewClient() *Client {
-	return &Client{HTTP: &http.Client{Timeout: 25 * time.Second, CheckRedirect: func(r *http.Request, via []*http.Request) error {
+func NewClient(cacheDir ...string) *Client {
+	c := &Client{HTTP: &http.Client{Timeout: 90 * time.Second, CheckRedirect: func(r *http.Request, via []*http.Request) error {
 		if r.URL.Hostname() != "js.chd.edu.cn" || len(via) > 5 {
 			return fmt.Errorf("教师主页跳转地址无效")
 		}
 		return nil
 	}}}
+	if len(cacheDir) > 0 {
+		c.CacheDir = cacheDir[0]
+	}
+	return c
 }
 func sourceURL(raw string) (string, error) {
 	u, err := url.Parse(strings.TrimSpace(raw))
@@ -44,13 +52,30 @@ func sourceURL(raw string) (string, error) {
 var urlBase, _ = url.Parse(origin)
 
 func (c *Client) request(ctx context.Context, address string, body url.Values) ([]byte, error) {
-	for attempt := 0; attempt < 3; attempt++ {
+	if data := c.cached(ctx, address, body); data != nil {
+		return data, nil
+	}
+	started := time.Now()
+	var lastErr error
+	for attempt := 0; attempt < 50 && time.Since(started) < 20*time.Minute; attempt++ {
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
 		if attempt > 0 {
+			delay := min(2*time.Second<<min(attempt-1, 5), time.Minute)
+			if c.retryDelay != nil {
+				delay = c.retryDelay(attempt)
+			}
+			notify(ctx, teacher.FetchProgress{Retry: true, WaitDelta: 1})
+			timer := time.NewTimer(delay)
 			select {
 			case <-ctx.Done():
+				timer.Stop()
+				notify(ctx, teacher.FetchProgress{WaitDelta: -1})
 				return nil, ctx.Err()
-			case <-time.After(time.Duration(attempt) * time.Second):
+			case <-timer.C:
 			}
+			notify(ctx, teacher.FetchProgress{WaitDelta: -1})
 		}
 		method := http.MethodGet
 		var reader io.Reader
@@ -68,21 +93,31 @@ func (c *Client) request(ctx context.Context, address string, body url.Values) (
 		}
 		resp, err := c.HTTP.Do(req)
 		if err != nil {
-			if attempt == 2 {
-				return nil, fmt.Errorf("教师主页连接失败: %w", err)
-			}
+			lastErr = err
 			continue
 		}
-		data, readErr := io.ReadAll(io.LimitReader(resp.Body, 2<<20))
+		data, readErr := io.ReadAll(io.LimitReader(resp.Body, (2<<20)+1))
 		resp.Body.Close()
-		if resp.StatusCode == 200 && readErr == nil {
-			return data, nil
+		if resp.StatusCode == 200 && readErr == nil && len(data) <= 2<<20 {
+			if err := validResponse(data, body); err == nil {
+				if err := c.saveCache(address, body, data); err != nil {
+					return nil, err
+				}
+				return data, nil
+			} else {
+				lastErr = err
+				if attempt >= 7 {
+					return nil, lastErr
+				}
+				continue
+			}
 		}
-		if resp.StatusCode < 500 && resp.StatusCode != 429 {
+		if readErr == nil && resp.StatusCode != 200 && resp.StatusCode < 500 && resp.StatusCode != 429 {
 			return nil, fmt.Errorf("教师主页返回 HTTP %d", resp.StatusCode)
 		}
+		lastErr = fmt.Errorf("教师主页响应未完成（HTTP %d）", resp.StatusCode)
 	}
-	return nil, fmt.Errorf("教师主页请求重试后仍失败")
+	return nil, fmt.Errorf("教师主页持续重试后仍失败: %w", lastErr)
 }
 func (c *Client) List(ctx context.Context, progress func(int, int)) ([]teacher.Profile, error) {
 	return c.list(ctx, "", progress)

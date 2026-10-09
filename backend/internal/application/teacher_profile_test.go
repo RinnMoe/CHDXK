@@ -53,6 +53,34 @@ func TestTeacherProfileSyncReadsOnlyMatchingColleges(t *testing.T) {
 	}
 }
 
+func TestTeacherPartialSyncRetainsSuccessfulProfiles(t *testing.T) {
+	saved := false
+	repo := &teacher.MockProfileStore{OnTeachers: func(context.Context) ([]teacher.TeacherView, error) {
+		return []teacher.TeacherView{{Name: "张三", Department: "理学院"}, {Name: "李四", Department: "理学院"}}, nil
+	}, OnSave: func(_ context.Context, _ []teacher.TeacherView, rows []teacher.Profile) error {
+		saved = true
+		if rows[0].Fields["职称"] != "教授" || !rows[1].UpdatedAt.IsZero() {
+			t.Error("successful profile lost or failure treated as fresh data")
+		}
+		return nil
+	}}
+	source := &teacher.MockProfileSource{OnList: func(context.Context, func(int, int)) ([]teacher.Profile, error) {
+		return []teacher.Profile{{Name: "张三", Department: "理学院"}, {Name: "李四", Department: "理学院"}}, nil
+	}, OnDetail: func(_ context.Context, p teacher.Profile) (teacher.Profile, error) {
+		if p.Name == "李四" {
+			return p, errors.New("network outage")
+		}
+		p.Fields = map[string]string{"职称": "教授"}
+		return p, nil
+	}}
+	s := NewTeacherProfileService(repo, source)
+	ctx, cancel := context.WithCancel(context.Background())
+	s.run(ctx, cancel)
+	if !saved || s.Status().State != "partial" || s.Status().Failed != 1 {
+		t.Fatal(s.Status(), saved)
+	}
+}
+
 func TestTeacherProfileEditValidation(t *testing.T) {
 	saved := false
 	repo := &teacher.MockProfileStore{OnEdit: func(_ context.Context, _ int, p teacher.Profile) error {

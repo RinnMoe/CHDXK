@@ -14,6 +14,9 @@ interface Status {
   total: number
   failed: number
   message: string
+  cached: number
+  retries: number
+  waiting: number
 }
 interface Match {
   teacher_id: number
@@ -27,6 +30,7 @@ const base = "/api/admin/teacher-profiles"
 export function TeacherProfilesPanel() {
   const client = useQueryClient()
   const [search, setSearch] = useState("")
+  const [fresh, setFresh] = useState(false)
   const status = useQuery({
     queryKey: ["teacher-profile-sync"],
     queryFn: () => apiClient<Status>(base),
@@ -38,7 +42,10 @@ export function TeacherProfilesPanel() {
   })
   const action = useMutation({
     mutationFn: (kind: "sync" | "cancel") =>
-      apiClient<Status>(`${base}/${kind}`, { method: "POST" }),
+      apiClient<Status>(`${base}/${kind}`, {
+        method: "POST",
+        body: kind === "sync" ? JSON.stringify({ fresh }) : undefined,
+      }),
     onSuccess: (value) => client.setQueryData(["teacher-profile-sync"], value),
   })
   const previous = useRef("")
@@ -86,11 +93,35 @@ export function TeacherProfilesPanel() {
               </Button>
             )}
           </div>
+          <label className="flex items-center gap-2 text-sm">
+            <Input
+              type="checkbox"
+              className="size-4"
+              disabled={running}
+              checked={fresh}
+              onChange={(e) => setFresh(e.target.checked)}
+            />
+            重新采集全部教师资料（不使用已有缓存）
+          </label>
+          <p className="text-sm text-muted-foreground">
+            目录页和教师主页自动缓存 24
+            小时，中断后再次同步会补读未完成的资料。手工修改的资料保留。
+          </p>
           {status.data && status.data.state !== "idle" && (
             <div className="rounded-lg border p-4 text-sm" aria-live="polite">
               {running
                 ? `${status.data.stage === "catalog" ? "读取教师目录" : status.data.stage === "details" ? "读取详细资料" : "保存资料"}：${status.data.completed} / ${status.data.total}`
                 : status.data.message}
+              <p className="mt-2 text-muted-foreground">
+                从缓存恢复 {status.data.cached ?? 0} 个页面，已重试{" "}
+                {status.data.retries ?? 0} 次
+              </p>
+              {running && !!status.data.waiting && (
+                <p className="mt-2 text-muted-foreground" role="status">
+                  {status.data.waiting}{" "}
+                  个请求正在等待自动重试，已读取的资料保留，可继续等待。
+                </p>
+              )}
               {!!status.data.failed && (
                 <p className="mt-2 text-muted-foreground">
                   {status.data.failed}{" "}

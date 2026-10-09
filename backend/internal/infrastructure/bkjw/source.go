@@ -37,7 +37,7 @@ func (s *Source) connect(parent context.Context, transport http.RoundTripper) *c
 	}
 	client := &http.Client{Jar: jar, Transport: transport, Timeout: 90 * time.Second, CheckRedirect: checkRedirect}
 	c := &connection{ctx: ctx, cancel: cancel, client: client, pacer: &requestPacer{interval: 1100 * time.Millisecond}, events: make(chan course.SourceEvent), commands: make(chan []string, 1), done: make(chan struct{}), personal: s.Personal}
-	if !s.Personal && s.Config.CacheDir != "" {
+	if s.Config.CacheDir != "" {
 		c.cache = &checkpointStore{root: s.Config.CacheDir}
 	}
 	go c.run()

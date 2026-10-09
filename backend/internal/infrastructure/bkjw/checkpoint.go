@@ -6,13 +6,15 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"jcourse/internal/domain/course"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
-// Only public course metadata is stored. Cookies, login URLs, and personal
-// timetables are never written to this cache. A new connection still logs in.
+// Cookies and login URLs are never stored. Personal results are isolated by
+// the school identity obtained after a new authenticated connection.
 type checkpointStore struct{ root string }
 type catalogCheckpoint struct {
 	Version    int
@@ -142,4 +144,34 @@ func (store *checkpointStore) saveDetail(s semester, catalog *catalogCheckpoint,
 	}
 	fingerprint := lessonFingerprint(lesson)
 	return writeCheckpoint(filepath.Join(store.dir(s), fingerprint+".json"), detailCheckpoint{Generation: catalog.CreatedAt, Fingerprint: fingerprint, Detail: lesson["detail"].(map[string]any)})
+}
+
+type personalCheckpoint struct {
+	CreatedAt time.Time
+	Courses   []course.EnrollmentSourceCourse
+}
+
+func (store *checkpointStore) personalPath(s semester, schoolID string) string {
+	return filepath.Join(store.root, "personal", cacheKey([]string{schoolID, s.ID, s.Name})+".json")
+}
+func (store *checkpointStore) loadPersonal(s semester, schoolID string) ([]course.EnrollmentSourceCourse, bool) {
+	if store == nil {
+		return nil, false
+	}
+	var v personalCheckpoint
+	if readCheckpoint(store.personalPath(s, schoolID), &v, 2<<20) != nil || time.Since(v.CreatedAt) > checkpointLifetime || v.CreatedAt.After(time.Now()) || v.Courses == nil || len(v.Courses) > 1000 {
+		return nil, false
+	}
+	for _, item := range v.Courses {
+		if strings.TrimSpace(item.Name) == "" || (item.LessonNo == "" && item.SourceLessonID == "") {
+			return nil, false
+		}
+	}
+	return v.Courses, true
+}
+func (store *checkpointStore) savePersonal(s semester, schoolID string, rows []course.EnrollmentSourceCourse) error {
+	if store == nil {
+		return nil
+	}
+	return writeCheckpoint(store.personalPath(s, schoolID), personalCheckpoint{time.Now(), rows})
 }

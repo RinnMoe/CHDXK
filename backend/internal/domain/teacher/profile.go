@@ -68,6 +68,13 @@ type ProfileSource interface {
 	Detail(context.Context, Profile) (Profile, error)
 	Find(context.Context, string, string) ([]Profile, error)
 }
+
+// Optional collector telemetry; counts contain no credentials or URLs.
+type FetchProgress struct {
+	Cached    bool
+	Retry     bool
+	WaitDelta int
+}
 type ProfileStore interface {
 	Teachers(context.Context) ([]TeacherView, error)
 	Save(context.Context, []TeacherView, []Profile) error

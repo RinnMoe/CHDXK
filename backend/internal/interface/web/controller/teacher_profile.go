@@ -17,7 +17,16 @@ func NewTeacherProfileController(service *application.TeacherProfileService) *Te
 }
 func (c *TeacherProfileController) Status(g *gin.Context) { g.JSON(http.StatusOK, c.service.Status()) }
 func (c *TeacherProfileController) Start(g *gin.Context) {
-	result, err := c.service.Start()
+	var cmd struct {
+		Fresh bool `json:"fresh"`
+	}
+	if g.Request.ContentLength != 0 {
+		if err := g.ShouldBindJSON(&cmd); err != nil {
+			respondBindError(g, err)
+			return
+		}
+	}
+	result, err := c.service.Start(cmd.Fresh)
 	if err != nil {
 		respondError(g, err)
 		return

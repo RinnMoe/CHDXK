@@ -18,6 +18,9 @@ type TeacherProfileSyncStatus struct {
 	Total     int    `json:"total"`
 	Failed    int    `json:"failed"`
 	Message   string `json:"message"`
+	Cached    int    `json:"cached"`
+	Retries   int    `json:"retries"`
+	Waiting   int    `json:"waiting"`
 }
 type TeacherProfileService struct {
 	repo   teacher.ProfileStore
@@ -46,15 +49,30 @@ func (s *TeacherProfileService) Bind(ctx context.Context, id int, address string
 	}
 	return s.repo.Bind(ctx, id, address)
 }
-func (s *TeacherProfileService) Start() (TeacherProfileSyncStatus, error) {
+func (s *TeacherProfileService) Start(fresh ...bool) (TeacherProfileSyncStatus, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.status.State == "running" {
 		return s.status, apperr.BadRequest("教师资料同步正在进行")
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Hour)
 	s.cancel = cancel
 	s.status = TeacherProfileSyncStatus{State: "running", Stage: "catalog"}
+	if source, ok := s.source.(interface {
+		CollectionContext(context.Context, bool, func(teacher.FetchProgress)) context.Context
+	}); ok {
+		ctx = source.CollectionContext(ctx, len(fresh) > 0 && fresh[0], func(p teacher.FetchProgress) {
+			s.mu.Lock()
+			defer s.mu.Unlock()
+			if p.Cached {
+				s.status.Cached++
+			}
+			if p.Retry {
+				s.status.Retries++
+			}
+			s.status.Waiting = max(0, s.status.Waiting+p.WaitDelta)
+		})
+	}
 	go s.run(ctx, cancel)
 	return s.status, nil
 }
@@ -72,7 +90,7 @@ func (s *TeacherProfileService) fail(ctx context.Context, message string) {
 	s.status.Message = message
 	if ctx.Err() != nil {
 		s.status.State = "cancelled"
-		s.status.Message = "同步已取消或超时，原有资料保留"
+		s.status.Message = "同步已取消或超时，原有资料保留；再次同步可从缓存继续"
 	}
 }
 func (s *TeacherProfileService) run(ctx context.Context, cancel context.CancelFunc) {
@@ -84,7 +102,7 @@ func (s *TeacherProfileService) run(ctx context.Context, cancel context.CancelFu
 	}
 	profiles, err := s.source.List(ctx, func(done, total int) { s.mu.Lock(); s.status.Completed = done; s.status.Total = total; s.mu.Unlock() })
 	if err != nil {
-		s.fail(ctx, "教师主页目录读取失败，原有资料保留，请稍后重试")
+		s.fail(ctx, "教师主页目录持续重试后仍无法读取，原有资料保留；再次同步可从缓存继续")
 		return
 	}
 	keys := map[string]bool{}
@@ -152,6 +170,10 @@ func (s *TeacherProfileService) run(ctx context.Context, cancel context.CancelFu
 	s.mu.Lock()
 	s.status.State = "done"
 	s.status.Message = "教师资料同步完成，请在重名处理页确认无法唯一匹配的教师"
+	if s.status.Failed > 0 {
+		s.status.State = "partial"
+		s.status.Message = "已保存成功读取的资料；部分主页仍无法读取，原有资料保留。再次同步可复用缓存，补读未完成的资料"
+	}
 	s.mu.Unlock()
 }
 
