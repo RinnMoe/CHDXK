@@ -7,7 +7,8 @@ const capabilities = [
   { key: "roles", label: "用户身份与权限分配" },
   { key: "points", label: "资料站积分发放与收回" },
   { key: "settings", label: "站点配置" },
-  { key: "maintenance", label: "开发维护与接口密钥" },
+  { key: "course_data", label: "课程数据（教师资料、开课记录与教务同步）" },
+  { key: "maintenance", label: "开发维护（接口密钥与操作记录）" },
 ]
 export function UserManagementFields({
   editing,

@@ -92,6 +92,9 @@ export function canAccessAdminTab(
     )
   )
     return can("settings")
-  if (tab === "system-api-key") return can("maintenance")
+  if (["teacher-profiles", "course-data"].includes(tab))
+    return can("course_data")
+  if (["system-api-key", "audit-log"].includes(tab))
+    return can("maintenance")
   return true
 }

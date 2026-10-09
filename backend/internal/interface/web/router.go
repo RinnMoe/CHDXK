@@ -179,7 +179,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		adminSystemSettingsGroup.GET("", systemSettingsController.ListAdmin)
 		adminSystemSettingsGroup.PUT("/:key", systemSettingsController.Update)
 	}
-	adminAuditGroup := apiGroup.Group("/admin/audit-log", middleware.RequireAdmin())
+	adminAuditGroup := apiGroup.Group("/admin/audit-log", middleware.RequirePermission(auth.PermissionMaintenance))
 	{
 		adminAuditGroup.GET("", auditLogController.ListAuditLogs)
 	}
@@ -190,14 +190,14 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 		adminAnnouncementGroup.PUT("/:announcementID", announcementController.UpdateAnnouncement)
 		adminAnnouncementGroup.DELETE("/:announcementID", announcementController.DeleteAnnouncement)
 	}
-	syncGroup := apiGroup.Group("/admin/course-sync", middleware.RequireAdmin())
+	syncGroup := apiGroup.Group("/admin/course-sync", middleware.RequirePermission(auth.PermissionCourseData))
 	syncGroup.POST("", courseSyncController.Start)
 	syncGroup.GET("/:jobID", courseSyncController.Status)
 	syncGroup.POST("/:jobID/run", courseSyncController.Sync)
 	syncGroup.POST("/:jobID/cancel", courseSyncController.Cancel)
-	adminCourseGroup := apiGroup.Group("/admin/course", middleware.RequireAdmin())
+	adminCourseGroup := apiGroup.Group("/admin/course", middleware.RequirePermission(auth.PermissionCourseData))
 	profileController := controller.NewTeacherProfileController(container.TeacherProfiles)
-	profileGroup := apiGroup.Group("/admin/teacher-profiles", middleware.RequireAdmin())
+	profileGroup := apiGroup.Group("/admin/teacher-profiles", middleware.RequirePermission(auth.PermissionCourseData))
 	profileGroup.GET("", profileController.Status)
 	profileGroup.POST("/sync", profileController.Start)
 	profileGroup.POST("/cancel", profileController.Cancel)

@@ -29,7 +29,7 @@ export function UserAdminPage() {
   const navigate = useNavigate({ from: "/admin/user" })
   const requested = getAdminTab(search.tab)
   const active =
-    user && canAccessAdminTab(requested, user.can) ? requested : "course-data"
+    user && canAccessAdminTab(requested, user.can) ? requested : "users"
   function setActive(tab: AdminTab) {
     void navigate({
       search: (previous) => ({ ...previous, tab }),

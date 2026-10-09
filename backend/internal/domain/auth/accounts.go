@@ -13,9 +13,10 @@ const (
 	PermissionPoints      = "points"
 	PermissionSettings    = "settings"
 	PermissionMaintenance = "maintenance"
+	PermissionCourseData  = "course_data"
 )
 
-var AdminPermissions = []string{PermissionUsers, PermissionRoles, PermissionPoints, PermissionSettings, PermissionMaintenance}
+var AdminPermissions = []string{PermissionUsers, PermissionRoles, PermissionPoints, PermissionSettings, PermissionMaintenance, PermissionCourseData}
 var ErrLocalLogin = apperr.Unauthorized("账号或密码不正确")
 var ErrAccountUnavailable = apperr.Forbidden("该本站账号已被停用")
 var ErrMuted = apperr.Forbidden("你暂时无法发表或修改点评")

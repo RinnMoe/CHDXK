@@ -34,3 +34,36 @@ func TestPasswordAndDelegatedPermissionGates(t *testing.T) {
 		}
 	}
 }
+
+func TestCourseDataAndMaintenancePermissions(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	for _, permission := range []string{auth.PermissionCourseData, auth.PermissionMaintenance} {
+		for _, tc := range []struct {
+			name   string
+			user   *auth.User
+			status int
+		}{
+			{"anonymous", nil, 401},
+			{"admin", &auth.User{Role: auth.RoleAdmin}, 403},
+			{"delegated admin", &auth.User{Role: auth.RoleAdmin, Permissions: []string{permission}}, 204},
+			{"regular user", &auth.User{Role: auth.RoleUser, Permissions: []string{permission}}, 403},
+			{"superadmin", &auth.User{Role: auth.RoleSuperAdmin}, 204},
+			{"unrelated delegation", &auth.User{Role: auth.RoleAdmin, Permissions: []string{auth.PermissionSettings}}, 403},
+		} {
+			t.Run(permission+"/"+tc.name, func(t *testing.T) {
+				r := gin.New()
+				r.Use(func(c *gin.Context) {
+					if tc.user != nil {
+						c.Request = c.Request.WithContext(auth.WithUser(c.Request.Context(), tc.user))
+					}
+				})
+				r.GET("/restricted", RequirePermission(permission), func(c *gin.Context) { c.Status(204) })
+				w := httptest.NewRecorder()
+				r.ServeHTTP(w, httptest.NewRequest("GET", "/restricted", nil))
+				if w.Code != tc.status {
+					t.Fatalf("got %d want %d", w.Code, tc.status)
+				}
+			})
+		}
+	}
+}
