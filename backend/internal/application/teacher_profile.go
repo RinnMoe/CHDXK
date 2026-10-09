@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"log/slog"
 	"net/url"
 	"strings"
 	"sync"
@@ -102,6 +103,7 @@ func (s *TeacherProfileService) run(ctx context.Context, cancel context.CancelFu
 	}
 	profiles, err := s.source.List(ctx, func(done, total int) { s.mu.Lock(); s.status.Completed = done; s.status.Total = total; s.mu.Unlock() })
 	if err != nil {
+		slog.Warn("teacher catalog collection failed", "error", err.Error())
 		s.fail(ctx, "教师主页目录持续重试后仍无法读取，原有资料保留；再次同步可从缓存继续")
 		return
 	}

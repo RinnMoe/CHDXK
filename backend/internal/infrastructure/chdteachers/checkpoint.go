@@ -98,7 +98,6 @@ func (c *Client) cached(ctx context.Context, address string, body url.Values) []
 	if err != nil || json.Unmarshal(data, &v) != nil || time.Since(v.CreatedAt) > 24*time.Hour || v.CreatedAt.After(time.Now()) || validResponse(v.Data, body) != nil {
 		return nil
 	}
-	notify(ctx, teacher.FetchProgress{Cached: true})
 	return v.Data
 }
 func (c *Client) saveCache(address string, body url.Values, data []byte) error {

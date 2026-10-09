@@ -115,3 +115,50 @@ func TestMalformedTeacherResponseIsNotCached(t *testing.T) {
 		t.Fatal("incomplete catalog accepted")
 	}
 }
+
+func TestDuplicateCachedPageIsDiscardedAndRetried(t *testing.T) {
+	root := t.TempDir()
+	reads := map[string]int{}
+	var secondBody url.Values
+	stale := false
+	pageData := func(page string) string {
+		return fmt.Sprintf(`{"total":3,"pageCount":3,"data":[{"title":"教师%s","department":"理学院","cnUrl":"/%s/list.htm","publishStatus":1}]}`, page, page)
+	}
+	transport := profileTransport(func(r *http.Request) (*http.Response, error) {
+		r.ParseForm()
+		page := r.Form.Get("pageIndex")
+		reads[page]++
+		if page == "2" {
+			secondBody = r.PostForm
+		}
+		data := pageData(page)
+		if stale && page == "2" && reads[page] == 2 {
+			data = pageData("1")
+		}
+		return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(data))}, nil
+	})
+	c := &Client{HTTP: &http.Client{Transport: transport}, CacheDir: root, retryDelay: func(int) time.Duration { return 0 }}
+	if rows, err := c.List(context.Background(), func(int, int) {}); err != nil || len(rows) != 3 {
+		t.Fatal(rows, err)
+	}
+	// Reproduce the stale page persisted by the previous collector version.
+	if err := c.saveCache(origin+"/_wp3services/generalQuery?queryObj=teacherHome", secondBody, []byte(pageData("1"))); err != nil {
+		t.Fatal(err)
+	}
+	stale = true
+	cached, retries := 0, 0
+	ctx := c.CollectionContext(context.Background(), false, func(p teacher.FetchProgress) {
+		if p.Cached {
+			cached++
+		}
+		if p.Retry {
+			retries++
+		}
+	})
+	if rows, err := c.List(ctx, func(int, int) {}); err != nil || len(rows) != 3 {
+		t.Fatal(rows, err)
+	}
+	if reads["1"] != 1 || reads["2"] != 3 || reads["3"] != 1 || cached != 2 || retries != 1 {
+		t.Fatal("stale page was reused or completed pages refetched", reads, cached, retries)
+	}
+}

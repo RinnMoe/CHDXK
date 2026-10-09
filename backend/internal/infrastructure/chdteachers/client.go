@@ -3,10 +3,12 @@ package chdteachers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -51,9 +53,28 @@ func sourceURL(raw string) (string, error) {
 
 var urlBase, _ = url.Parse(origin)
 
-func (c *Client) request(ctx context.Context, address string, body url.Values) ([]byte, error) {
+var errStalePage = errors.New("教师目录返回重复分页")
+
+func (c *Client) request(ctx context.Context, address string, body url.Values, checks ...func([]byte) error) ([]byte, error) {
+	validate := func(data []byte) error {
+		if err := validResponse(data, body); err != nil {
+			return err
+		}
+		for _, check := range checks {
+			if err := check(data); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 	if data := c.cached(ctx, address, body); data != nil {
-		return data, nil
+		if validate(data) == nil {
+			notify(ctx, teacher.FetchProgress{Cached: true})
+			return data, nil
+		}
+		// A successful HTTP response can still be a stale pagination result.
+		// Invalidate only this generated cache entry, preserving prior pages.
+		_ = os.Remove(c.cachePath(address, body))
 	}
 	started := time.Now()
 	var lastErr error
@@ -99,14 +120,14 @@ func (c *Client) request(ctx context.Context, address string, body url.Values) (
 		data, readErr := io.ReadAll(io.LimitReader(resp.Body, (2<<20)+1))
 		resp.Body.Close()
 		if resp.StatusCode == 200 && readErr == nil && len(data) <= 2<<20 {
-			if err := validResponse(data, body); err == nil {
+			if err := validate(data); err == nil {
 				if err := c.saveCache(address, body, data); err != nil {
 					return nil, err
 				}
 				return data, nil
 			} else {
 				lastErr = err
-				if attempt >= 7 {
+				if attempt >= 7 && !errors.Is(err, errStalePage) {
 					return nil, lastErr
 				}
 				continue
@@ -139,13 +160,34 @@ func (c *Client) list(ctx context.Context, name string, progress func(int, int))
 	result := []teacher.Profile{}
 	seen := map[string]bool{}
 	for page := 1; page <= 500; page++ {
-		body := url.Values{"siteId": {"2"}, "pageIndex": {strconv.Itoa(page)}, "rows": {"100"}, "articleType": {"1"}, "level": {"0"}, "orders": {""}, "pageEvent": {"dataSearchByPageIndex"}, "conditions": {`[{"field":"language","value":"1","judge":"="},{"field":"ownDepartment","value":"","judge":"="},{"field":"title","value":"","judge":"like"},{"field":"published","value":"1","judge":"="}]`}, "returnInfos": {`[{"field":"title","name":"title"},{"field":"career","name":"career"},{"field":"cnUrl","name":"cnUrl"},{"field":"department","name":"department"},{"field":"publishStatus","name":"publishStatus"}]`}}
+		body := url.Values{"siteId": {"2"}, "pageIndex": {strconv.Itoa(page)}, "rows": {"100"}, "articleType": {"1"}, "level": {"0"}, "orders": {`[{"field":"letter","type":"asc"}]`}, "pageEvent": {"dataSearchByPageIndex"}, "conditions": {`[{"field":"language","value":"1","judge":"="},{"field":"ownDepartment","value":"","judge":"="},{"field":"title","value":"","judge":"like"},{"field":"published","value":"1","judge":"="}]`}, "returnInfos": {`[{"field":"title","name":"title"},{"field":"career","name":"career"},{"field":"cnUrl","name":"cnUrl"},{"field":"department","name":"department"},{"field":"publishStatus","name":"publishStatus"}]`}}
 		if name != "" {
 			conditions := []map[string]string{{"field": "language", "value": "1", "judge": "="}, {"field": "ownDepartment", "value": "", "judge": "="}, {"field": "title", "value": name, "judge": "like"}, {"field": "published", "value": "1", "judge": "="}}
 			encoded, _ := json.Marshal(conditions)
 			body.Set("conditions", string(encoded))
 		}
-		data, err := c.request(ctx, origin+"/_wp3services/generalQuery?queryObj=teacherHome", body)
+		data, err := c.request(ctx, origin+"/_wp3services/generalQuery?queryObj=teacherHome", body, func(data []byte) error {
+			var v struct {
+				PageCount int `json:"pageCount"`
+				Data      []struct {
+					URL       string `json:"cnUrl"`
+					Published int    `json:"publishStatus"`
+				} `json:"data"`
+			}
+			if err := json.Unmarshal(data, &v); err != nil {
+				return err
+			}
+			if page >= v.PageCount {
+				return nil
+			}
+			for _, row := range v.Data {
+				address, err := sourceURL(row.URL)
+				if row.Published == 1 && err == nil && !seen[address] {
+					return nil
+				}
+			}
+			return errStalePage
+		})
 		if err != nil {
 			return nil, err
 		}
