@@ -15,6 +15,7 @@ type MockCourseRepository struct {
 
 	OnGet                   func(context.Context, int) (*CourseView, error)
 	OnFindBy                func(context.Context, CourseFilter) ([]CourseView, int64, error)
+	OnFindDiscovery         func(context.Context, string, string, int) ([]CourseView, error)
 	OnGetDetail             func(context.Context, int) (*CourseDetailView, error)
 	OnFindOfferedCourses    func(context.Context, int) ([]OfferedCourseView, error)
 	OnGetFilters            func(context.Context) (*CourseFilters, error)
@@ -43,6 +44,13 @@ func (r *MockCourseRepository) Get(ctx context.Context, courseID int) (*CourseVi
 	}
 	copy := *c
 	return &copy, nil
+}
+
+func (r *MockCourseRepository) FindDiscovery(ctx context.Context, semester, date string, limit int) ([]CourseView, error) {
+	if r.OnFindDiscovery != nil {
+		return r.OnFindDiscovery(ctx, semester, date, limit)
+	}
+	return []CourseView{}, nil
 }
 
 func (r *MockCourseRepository) FindBy(ctx context.Context, filter CourseFilter) ([]CourseView, int64, error) {

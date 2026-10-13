@@ -211,6 +211,26 @@ function makeReviewTrend(list: ReviewDTO[]): CourseReviewTrendItemDTO[] {
 }
 
 export const courseHandlers = [
+  http.get("/api/course/discover", async () => {
+    await randomDelay()
+    const semester = filters.semesters?.[0]?.name ?? ""
+    return HttpResponse.json({ semester, items: mockCourses.slice(0, 24) })
+  }),
+
+  http.get("/api/course/review-prompts", async () => {
+    await randomDelay()
+    const user = mockSession.userID
+      ? findUserByID(mockSession.userID)
+      : undefined
+    if (!user)
+      return HttpResponse.json({ error: "unauthorized" }, { status: 401 })
+    const items = mockCourses
+      .filter((course) => !shouldShowMockMyReview(course.id, user))
+      .slice(0, 3)
+      .map((course) => ({ course, semester: course.last_semester }))
+    return HttpResponse.json({ has_enrollments: true, items })
+  }),
+
   http.get("/api/course/filter", async () => {
     await randomDelay()
     return HttpResponse.json(filters)

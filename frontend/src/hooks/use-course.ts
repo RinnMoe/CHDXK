@@ -6,6 +6,8 @@ import {
 } from "@tanstack/react-query"
 import {
   listCourses,
+  discoverCourses,
+  listCourseReviewPrompts,
   getCourseFilters,
   getCourseDetail,
   listCourseReviews,
@@ -24,6 +26,18 @@ import {
   type UpdateCourseModeratorRemarkCommand,
 } from "@/api/course"
 import type { ReviewListFilter } from "@/api/review"
+
+export function useCourseDiscovery() {
+  return useQuery({ queryKey: ["course-discovery"], queryFn: discoverCourses })
+}
+
+export function useCourseReviewPrompts(userID?: number) {
+  return useQuery({
+    queryKey: ["course-review-prompts", userID],
+    queryFn: listCourseReviewPrompts,
+    enabled: !!userID,
+  })
+}
 
 export function useCourseFilters() {
   return useQuery({
@@ -166,6 +180,9 @@ export function useDeleteCourseEnrollment() {
     mutationFn: (enrollmentID: number) => deleteCourseEnrollment(enrollmentID),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["course-enrollments"] })
+      void queryClient.invalidateQueries({
+        queryKey: ["course-review-prompts"],
+      })
     },
   })
 }

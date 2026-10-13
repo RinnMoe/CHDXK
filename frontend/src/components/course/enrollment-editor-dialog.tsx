@@ -103,6 +103,7 @@ export function EnrollmentEditor({
       ),
     onSuccess: async () => {
       await Promise.all([
+        client.invalidateQueries({ queryKey: ["course-review-prompts"] }),
         client.invalidateQueries({ queryKey: ["course-enrollments"] }),
         client.invalidateQueries({ queryKey: ["course"] }),
       ])

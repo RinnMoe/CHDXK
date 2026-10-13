@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net"
 	"net/http"
 	"net/http/cookiejar"
 	"sync"
@@ -19,6 +20,9 @@ type Config struct {
 type Source struct {
 	Config   Config
 	Personal bool
+	Budget   *RequestBudget
+	// KeepSessionOpen is opt-in for local read-only debugging; application jobs never enable it.
+	KeepSessionOpen bool
 }
 
 func (s *Source) Connect(ctx context.Context) (course.SourceConnection, error) {
@@ -31,12 +35,16 @@ func (s *Source) Connect(ctx context.Context) (course.SourceConnection, error) {
 // Each connection owns an in-memory cookie jar. No browser or session file is used.
 func (s *Source) connect(parent context.Context, transport http.RoundTripper) *connection {
 	ctx, cancel := context.WithCancel(parent)
+	if s.KeepSessionOpen {
+		cancel()
+		ctx, cancel = context.WithTimeout(parent, 30*time.Minute)
+	}
 	jar, _ := cookiejar.New(nil)
 	if transport == nil {
-		transport = &http.Transport{Proxy: http.ProxyFromEnvironment, MaxIdleConns: 4, MaxIdleConnsPerHost: 2, IdleConnTimeout: 30 * time.Second, TLSHandshakeTimeout: 20 * time.Second, ResponseHeaderTimeout: 75 * time.Second}
+		transport = &http.Transport{DialContext: (&net.Dialer{Timeout: 15 * time.Second, KeepAlive: 30 * time.Second}).DialContext, ForceAttemptHTTP2: true, Proxy: http.ProxyFromEnvironment, MaxIdleConns: 4, MaxIdleConnsPerHost: 2, IdleConnTimeout: 30 * time.Second, TLSHandshakeTimeout: 20 * time.Second, ResponseHeaderTimeout: 75 * time.Second}
 	}
 	client := &http.Client{Jar: jar, Transport: transport, Timeout: 90 * time.Second, CheckRedirect: checkRedirect}
-	c := &connection{ctx: ctx, cancel: cancel, client: client, pacer: &requestPacer{interval: 1100 * time.Millisecond}, events: make(chan course.SourceEvent), commands: make(chan []string, 1), done: make(chan struct{}), personal: s.Personal}
+	c := &connection{ctx: ctx, cancel: cancel, client: client, pacer: &requestPacer{interval: 600 * time.Millisecond, adaptive: true}, budget: s.Budget, events: make(chan course.SourceEvent), commands: make(chan []string, 1), done: make(chan struct{}), personal: s.Personal, keepSessionOpen: s.KeepSessionOpen}
 	if s.Config.CacheDir != "" {
 		c.cache = &checkpointStore{root: s.Config.CacheDir}
 	}
@@ -45,22 +53,28 @@ func (s *Source) connect(parent context.Context, transport http.RoundTripper) *c
 }
 
 type connection struct {
-	ctx        context.Context
-	cancel     context.CancelFunc
-	client     *http.Client
-	events     chan course.SourceEvent
-	commands   chan []string
-	done       chan struct{}
-	pacer      *requestPacer
-	personal   bool
-	once       sync.Once
-	mu         sync.Mutex
-	submitted  bool
-	cache      *checkpointStore
-	restored   int
-	fresh      bool
-	retryAt    *time.Time
-	retryDelay func(int) time.Duration
+	ctx             context.Context
+	cancel          context.CancelFunc
+	keepSessionOpen bool
+	client          *http.Client
+	events          chan course.SourceEvent
+	commands        chan []string
+	done            chan struct{}
+	budget          *RequestBudget
+	retryAfter      time.Time
+	refreshTried    bool
+	shortRetries    bool
+	failedDetails   int
+	pacer           *requestPacer
+	personal        bool
+	once            sync.Once
+	mu              sync.Mutex
+	submitted       bool
+	cache           *checkpointStore
+	restored        int
+	fresh           bool
+	retryAt         *time.Time
+	retryDelay      func(int) time.Duration
 }
 
 func (c *connection) Events() <-chan course.SourceEvent { return c.events }
@@ -121,10 +135,15 @@ func (c *connection) run() {
 	}
 	var page []byte
 	var options []semester
-	err := c.retry(func() error { var e error; page, _, e = c.eams("GET", entry, nil); return e }, func(int) {})
-	if err == nil {
-		err = c.retry(func() error { var e error; options, e = c.semesters(page); return e }, func(int) {})
-	}
+	err := c.retry(func() error {
+		var e error
+		page, _, e = c.eams("GET", entry, nil)
+		if e != nil {
+			return e
+		}
+		options, e = c.semesters(page)
+		return e
+	}, func(int) {})
 	if err != nil {
 		fail(err)
 		return
@@ -136,12 +155,32 @@ func (c *connection) run() {
 	if !c.emit(course.SourceEvent{Type: "ready", Semesters: ids}) {
 		return
 	}
-	var selected []string
-	select {
-	case <-c.ctx.Done():
-		return
-	case selected = <-c.commands:
+	stage = "COURSE_COLLECTION_FAILED"
+	for {
+		var selected []string
+		select {
+		case <-c.ctx.Done():
+			return
+		case selected = <-c.commands:
+		}
+		err := c.collectSelected(page, options, selected)
+		if c.keepSessionOpen {
+			c.mu.Lock()
+			c.submitted = false
+			c.mu.Unlock()
+		}
+		if err != nil {
+			fail(err)
+		} else {
+			c.emit(course.SourceEvent{Type: "done"})
+		}
+		if !c.keepSessionOpen || c.ctx.Err() != nil {
+			return
+		}
 	}
+}
+
+func (c *connection) collectSelected(page []byte, options []semester, selected []string) error {
 	chosen := make([]semester, 0, len(selected))
 	seen := map[string]bool{}
 	for _, name := range selected {
@@ -155,16 +194,16 @@ func (c *connection) run() {
 			}
 		}
 		if !found {
-			fail(codeError("INVALID_SEMESTER"))
-			return
+			return codeError("INVALID_SEMESTER")
 		}
 	}
-	stage = "COURSE_COLLECTION_FAILED"
 	for _, s := range chosen {
 		c.restored = 0
+		c.failedDetails = 0
 		if !c.emit(course.SourceEvent{Type: "collecting", Semester: s.Name}) {
-			return
+			return c.ctx.Err()
 		}
+		var err error
 		var event course.SourceEvent
 		if c.personal {
 			event, err = c.personalArchive(page, s)
@@ -172,15 +211,15 @@ func (c *connection) run() {
 			event, err = c.adminArchive(s)
 		}
 		if err != nil {
-			fail(err)
-			return
+			return err
 		}
 		if !c.emit(event) {
-			return
+			return c.ctx.Err()
 		}
 	}
-	c.emit(course.SourceEvent{Type: "done"})
+	return nil
 }
+
 func marshal(value any) json.RawMessage { data, _ := json.Marshal(value); return data }
 
 type codeError string

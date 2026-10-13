@@ -31,7 +31,7 @@ func loginURL() string {
 	return casOrigin + "/authserver/login?" + url.Values{"service": {eamsOrigin + "/eams/login.action"}}.Encode()
 }
 func (c *connection) login() error {
-	data, _, err := c.request("GET", loginURL(), nil, nil)
+	data, _, err := c.loginRead(loginURL(), nil, nil)
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func (c *connection) login() error {
 	if err != nil || iframe == "" || !strings.HasPrefix(entry, casOrigin+"/authserver/") {
 		return codeError("QR_ENTRY_CHANGED")
 	}
-	data, final, err := c.request("GET", entry, nil, nil)
+	data, final, err := c.loginRead(entry, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func (c *connection) login() error {
 	if wx == "" {
 		return codeError("QR_ENTRY_CHANGED")
 	}
-	data, final, err = c.request("GET", wx, nil, map[string]string{"Referer": entry})
+	data, final, err = c.loginRead(wx, nil, map[string]string{"Referer": entry})
 	if err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func (c *connection) login() error {
 	if err != nil || image == "" || !strings.HasPrefix(imageURL, wxOrigin+"/") {
 		return codeError("QR_IMAGE_INVALID")
 	}
-	imageData, _, err := c.request("GET", imageURL, nil, nil)
+	imageData, _, err := c.loginRead(imageURL, nil, nil)
 	if err != nil {
 		return err
 	}

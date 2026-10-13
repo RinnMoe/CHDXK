@@ -32,6 +32,10 @@ func (r *fakeSettingsCourseRepo) FindBy(ctx context.Context, filter course.Cours
 	return nil, 0, nil
 }
 
+func (r *fakeSettingsCourseRepo) FindDiscovery(ctx context.Context, semester, date string, limit int) ([]course.CourseView, error) {
+	return nil, nil
+}
+
 func (r *fakeSettingsCourseRepo) GetDetail(ctx context.Context, courseID int) (*course.CourseDetailView, error) {
 	return nil, nil
 }

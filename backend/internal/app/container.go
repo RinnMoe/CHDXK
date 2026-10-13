@@ -129,7 +129,9 @@ func NewServiceContainer(conf config.AppConfig) (*ServiceContainer, error) {
 	systemSettingsCommand := application.NewSystemSettingsCommandService(systemSettingsService)
 	auditLogQuery := application.NewAuditLogQueryService(auditLogRepo)
 	auditLogCommand := application.NewAuditLogCommandService(auditLogRepo)
-	collectorQueue := application.NewCollectorQueue(128, 64)
+	collectorQueue := application.NewCollectorQueue(128, 8)
+	requestBudget := bkjw.NewRequestBudget()
+	jobStore := bkjw.NewJobStore(conf.CourseSource.CacheDir)
 	collectorQueue.UseSettings(systemSettingsService)
 	systemSettingsCommand.SetCollectorQueue(collectorQueue)
 	courseCommand.SetImportSettings(systemSettingsService)
@@ -142,8 +144,8 @@ func NewServiceContainer(conf config.AppConfig) (*ServiceContainer, error) {
 		CourseQuery:           courseQuery,
 		CourseCommand:         courseCommand,
 		CourseManagement:      courseManagement,
-		CourseSync:            application.NewCourseSyncService(&bkjw.Source{Config: conf.CourseSource}, courseManagement, collectorQueue),
-		EnrollmentSync:        application.NewEnrollmentSyncService(&bkjw.Source{Config: conf.CourseSource, Personal: true}, courseEnrollmentRepo, collectorQueue),
+		CourseSync:            application.NewCourseSyncService(&bkjw.Source{Config: conf.CourseSource, Budget: requestBudget}, courseManagement, collectorQueue).WithJobStore(jobStore),
+		EnrollmentSync:        application.NewEnrollmentSyncService(&bkjw.Source{Config: conf.CourseSource, Personal: true, Budget: requestBudget}, courseEnrollmentRepo, collectorQueue).WithJobStore(jobStore),
 		CourseEnrollmentQuery: courseEnrollmentQuery,
 		TeacherQuery:          teacherQuery,
 		TeacherProfiles:       application.NewTeacherProfileService(teacherRepo, chdteachers.NewClient(filepath.Join(conf.CourseSource.CacheDir, "teacher-profiles"))),

@@ -7,12 +7,18 @@ import type { CourseListItemDTO } from "@/api/course"
 interface CourseCardProps {
   course: CourseListItemDTO
   action?: ReactNode
+  alignRows?: boolean
+  emptyRatingText?: string
 }
 
-function CourseCardContent({ course }: { course: CourseListItemDTO }) {
+function CourseCardContent({
+  course,
+  emptyRatingText,
+  alignRows,
+}: CourseCardProps) {
   return (
-    <div className="flex min-w-0 items-center gap-2">
-      <div className="min-w-0 flex-1 space-y-2">
+    <div className={alignRows ? "contents" : "flex min-w-0 items-center gap-2"}>
+      <div className={alignRows ? "contents" : "min-w-0 flex-1 space-y-2"}>
         <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
           <span className="shrink-0 font-mono">{course.code}</span>
           <span className="min-w-0 text-sm wrap-break-word">
@@ -24,22 +30,48 @@ function CourseCardContent({ course }: { course: CourseListItemDTO }) {
         </div>
         <div className="text-sm text-muted-foreground">{course.department}</div>
 
-        <CourseBadges
-          credit={course.credit}
-          language={course.language}
-          categories={course.categories}
-          categoryLimit={2}
-          className="gap-1"
-        />
+        <div
+          className={
+            alignRows
+              ? "flex flex-wrap items-end justify-between gap-2 pb-2"
+              : "contents"
+          }
+        >
+          <CourseBadges
+            credit={course.credit}
+            language={course.language}
+            categories={course.categories}
+            categoryLimit={2}
+            className="gap-1"
+          />
+          {alignRows && (
+            <RatingDisplay
+              rating={course.rating}
+              size="sm"
+              emptyText={emptyRatingText}
+            />
+          )}
+        </div>
       </div>
-      <div className="shrink-0">
-        <RatingDisplay rating={course.rating} size="sm" />
-      </div>
+      {!alignRows && (
+        <div className="shrink-0">
+          <RatingDisplay
+            rating={course.rating}
+            size="sm"
+            emptyText={emptyRatingText}
+          />
+        </div>
+      )}
     </div>
   )
 }
 
-export function CourseCard({ course, action }: CourseCardProps) {
+export function CourseCard({
+  course,
+  action,
+  emptyRatingText,
+  alignRows,
+}: CourseCardProps) {
   if (action) {
     return (
       <div className="flex items-center gap-3 border-b p-2">
@@ -48,7 +80,10 @@ export function CourseCard({ course, action }: CourseCardProps) {
           params={{ courseID: String(course.id) }}
           className="min-w-0 flex-1 rounded-sm transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         >
-          <CourseCardContent course={course} />
+          <CourseCardContent
+            course={course}
+            emptyRatingText={emptyRatingText}
+          />
         </Link>
         <div className="flex shrink-0 flex-col items-end gap-2 self-center">
           {action}
@@ -61,9 +96,13 @@ export function CourseCard({ course, action }: CourseCardProps) {
     <Link
       to="/course/$courseID"
       params={{ courseID: String(course.id) }}
-      className="block border-b p-2 transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      className={`${alignRows ? "row-span-4 grid grid-rows-subgrid" : "block"} border-b p-2 transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none`}
     >
-      <CourseCardContent course={course} />
+      <CourseCardContent
+        course={course}
+        emptyRatingText={emptyRatingText}
+        alignRows={alignRows}
+      />
     </Link>
   )
 }

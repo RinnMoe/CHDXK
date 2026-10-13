@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/rand/v2"
 	"net/http"
 	"net/url"
 	"os"
@@ -78,15 +79,18 @@ func (c *Client) request(ctx context.Context, address string, body url.Values, c
 	}
 	started := time.Now()
 	var lastErr error
+	var retryAt time.Time
 	for attempt := 0; attempt < 50 && time.Since(started) < 20*time.Minute; attempt++ {
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
 		}
 		if attempt > 0 {
-			delay := min(2*time.Second<<min(attempt-1, 5), time.Minute)
+			ceiling := min(2*time.Second<<min(attempt-1, 5), time.Minute)
+			delay := ceiling/2 + time.Duration(rand.Int64N(int64(ceiling/2)+1))
 			if c.retryDelay != nil {
 				delay = c.retryDelay(attempt)
 			}
+			delay = max(delay, time.Until(retryAt))
 			notify(ctx, teacher.FetchProgress{Retry: true, WaitDelta: 1})
 			timer := time.NewTimer(delay)
 			select {
@@ -116,6 +120,17 @@ func (c *Client) request(ctx context.Context, address string, body url.Values, c
 		if err != nil {
 			lastErr = err
 			continue
+		}
+		if resp.StatusCode == 429 || resp.StatusCode == 503 {
+			value := resp.Header.Get("Retry-After")
+			if seconds, err := strconv.Atoi(strings.TrimSpace(value)); err == nil && seconds >= 0 {
+				retryAt = time.Now().Add(time.Duration(min(seconds, 1200)) * time.Second)
+			} else if until, err := http.ParseTime(value); err == nil {
+				retryAt = until
+				if retryAt.After(time.Now().Add(20 * time.Minute)) {
+					retryAt = time.Now().Add(20 * time.Minute)
+				}
+			}
 		}
 		data, readErr := io.ReadAll(io.LimitReader(resp.Body, (2<<20)+1))
 		resp.Body.Close()

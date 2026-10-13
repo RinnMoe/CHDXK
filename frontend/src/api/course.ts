@@ -136,6 +136,24 @@ export interface HotCourseListDTO {
   items: HotCourseItemDTO[]
 }
 
+export interface CourseDiscoveryDTO {
+  semester: string
+  items: CourseListItemDTO[]
+}
+
+export interface CourseReviewPromptsDTO {
+  has_enrollments: boolean
+  items: { course: CourseListItemDTO; semester: string }[]
+}
+
+export function discoverCourses(): Promise<CourseDiscoveryDTO> {
+  return apiClient(`${BASE_URL}/course/discover`)
+}
+
+export function listCourseReviewPrompts(): Promise<CourseReviewPromptsDTO> {
+  return apiClient(`${BASE_URL}/course/review-prompts`)
+}
+
 export interface CourseListFilter {
   semester?: string
   campus?: string

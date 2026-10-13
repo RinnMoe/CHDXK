@@ -27,6 +27,7 @@ export interface EnrollmentSyncStatus {
   selected: string[]
   current?: string
   cached?: number
+  warning?: string
   message?: string
   progress?: { retries: number; cached?: number; retry_at?: string }
   results: {
@@ -91,12 +92,17 @@ function ImportDialog({ userID }: { userID: number }) {
     if (!marker || refreshed.current === marker) return
     refreshed.current = marker
     void client.invalidateQueries({ queryKey: ["course-enrollments"] })
+    void client.invalidateQueries({ queryKey: ["course-review-prompts"] })
     void client.invalidateQueries({ queryKey: ["course"] })
   }, [client, marker])
   const selected =
     selection?.job === status?.id
       ? (selection?.semesters ?? [])
-      : recentEnrollmentSemesters(status?.semesters ?? [])
+      : status?.selected.length
+        ? status.selected.filter((semester) =>
+            status.semesters.includes(semester)
+          )
+        : recentEnrollmentSemesters(status?.semesters ?? [])
   function selectSemesters(semesters: string[]) {
     if (status) setSelection({ job: status.id, semesters })
   }
@@ -299,6 +305,11 @@ function ImportDialog({ userID }: { userID: number }) {
                       已从缓存恢复 {status.cached} 门课程。
                     </p>
                   )}
+                  {status.warning && (
+                    <p role="status" className="text-sm text-warning">
+                      {status.warning}
+                    </p>
+                  )}
                   {status.message && (
                     <p className="text-destructive" role="alert">
                       {status.message}
@@ -310,7 +321,7 @@ function ImportDialog({ userID }: { userID: number }) {
                         {result.semester}：匹配 {result.enrollment.matched}{" "}
                         门，新增 {result.enrollment.added} 条记录。
                       </p>
-                      {!!result.enrollment.unmatched.length && (
+                      {!!result.enrollment.unmatched_count && (
                         <details>
                           <summary className="cursor-pointer">
                             {result.enrollment.unmatched_count} 门课程暂未匹配

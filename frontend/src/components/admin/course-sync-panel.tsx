@@ -31,6 +31,7 @@ interface SyncStatus {
   semesters: string[]
   selected: string[]
   current?: string
+  warning?: string
   message?: string
   started_at?: string
   progress?: SyncProgress
@@ -58,7 +59,10 @@ const states: Record<SyncStatus["state"], string> = {
 export function CourseSyncPanel() {
   const methods = useImportSettings()
   const [job, setJob] = useState(() => sessionStorage.getItem(storageKey) ?? "")
-  const [excluded, setExcluded] = useState<string[]>([])
+  const [selection, setSelection] = useState<{
+    job: string
+    excluded: string[]
+  }>()
   const [fresh, setFresh] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
@@ -71,6 +75,17 @@ export function CourseSyncPanel() {
     retry: 3,
   })
   const status = query.data
+  const excluded =
+    selection?.job === status?.id
+      ? (selection?.excluded ?? [])
+      : status?.selected.length
+        ? status.semesters.filter(
+            (semester) => !status.selected.includes(semester)
+          )
+        : []
+  function setExcluded(items: string[]) {
+    if (status) setSelection({ job: status.id, excluded: items })
+  }
   const refreshed = useRef("")
   const savedCount = status?.results.length ?? 0
   const statusID = status?.id
@@ -102,7 +117,7 @@ export function CourseSyncPanel() {
       client.setQueryData(["course-sync", value.id], value)
       setJob(value.id)
       sessionStorage.setItem(storageKey, value.id)
-      if (kind === "start") setExcluded([])
+      if (kind === "start") setSelection(undefined)
     } catch (err) {
       setError(getErrorMessage(err))
     } finally {
@@ -230,6 +245,11 @@ export function CourseSyncPanel() {
             <p className="text-sm">
               当前学期 {status.current || "准备中"} · 已保存{" "}
               {status.results.length} / {status.selected.length} 个学期
+            </p>
+          )}
+          {status.warning && (
+            <p role="status" className="text-sm text-warning">
+              {status.warning}
             </p>
           )}
           {status.message && (

@@ -64,8 +64,9 @@ const entryPage = `<input class="calendar-text" id="querySemester"><script>semes
 const calendar = `{semesters:{y0:[{id:101,schoolYear:2025-2026,name:1},{id:102,schoolYear:2025-2026,name:2}],semesterId:101}}`
 
 func TestHTTPCollectorEndToEnd(t *testing.T) {
-	for _, personal := range []bool{true, false} {
-		t.Run(fmt.Sprint(personal), func(t *testing.T) {
+	for _, mode := range []struct{ personal, keep bool }{{true, false}, {false, false}, {true, true}} {
+		personal := mode.personal
+		t.Run(fmt.Sprint(personal, mode.keep), func(t *testing.T) {
 			var tables atomic.Int32
 			var callbacks atomic.Int32
 			var business atomic.Int32
@@ -146,7 +147,7 @@ func TestHTTPCollectorEndToEnd(t *testing.T) {
 				}
 			}))
 			defer server.Close()
-			c := (&Source{Personal: personal}).connect(context.Background(), mappedTransport{server.URL})
+			c := (&Source{Personal: personal, KeepSessionOpen: mode.keep}).connect(context.Background(), mappedTransport{server.URL})
 			defer c.Close()
 			if e := next(t, c, "qr"); !strings.HasPrefix(e.QR, "data:image/png;base64,") {
 				t.Fatal("qr")
@@ -197,6 +198,25 @@ func TestHTTPCollectorEndToEnd(t *testing.T) {
 				}
 			}
 			next(t, c, "done")
+			if mode.keep {
+				if err := c.Sync([]string{"unknown"}); err != nil {
+					t.Fatal(err)
+				}
+				select {
+				case e := <-c.Events():
+					if e.Type != "error" || e.Error != "INVALID_SEMESTER" {
+						t.Fatal(e)
+					}
+				case <-time.After(time.Second):
+					t.Fatal("missing selection error")
+				}
+				if err := c.SyncFresh(selected[:1]); err != nil {
+					t.Fatal(err)
+				}
+				next(t, c, "archive")
+				next(t, c, "done")
+				c.Close()
+			}
 			c.WaitClosed()
 			if callbacks.Load() != 1 || business.Load() < 1 {
 				t.Fatal("unverified business session")

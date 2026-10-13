@@ -29,6 +29,29 @@ func (ctrl *CourseController) GetCourseFilters(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+func (ctrl *CourseController) DiscoverCourses(c *gin.Context) {
+	result, err := ctrl.query.DiscoverCourses(c.Request.Context())
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
+func (ctrl *CourseController) ReviewPrompts(c *gin.Context) {
+	u := auth.GetUserFromCtx(c.Request.Context())
+	if u == nil {
+		respondUnauthorized(c)
+		return
+	}
+	result, err := ctrl.query.ReviewPrompts(c.Request.Context(), u.ID)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
 func bindCourseListFilter(c *gin.Context) (application.CourseListFilter, bool) {
 	var f application.CourseListFilter
 	if err := c.ShouldBindQuery(&f); err != nil {

@@ -17,7 +17,7 @@ const (
 )
 
 func ImportSettingDefinitions() []setting.Definition {
-	defs := []setting.Definition{{Key: ImportConcurrency, Group: "import", Label: "个人导入并发数", Description: "1～64。保存后立即生效；降低时等待已有任务结束，增加时自动接纳排队任务。", Type: setting.ValueTypeInt, DefaultValue: "64", Validator: setting.ValueValidatorFunc(func(_ context.Context, value string) error {
+	defs := []setting.Definition{{Key: ImportConcurrency, Group: "import", Label: "个人导入并发数", Description: "1～64。保存后立即生效；降低时等待已有任务结束，增加时自动接纳排队任务。", Type: setting.ValueTypeInt, DefaultValue: "8", Validator: setting.ValueValidatorFunc(func(_ context.Context, value string) error {
 		n, err := strconv.Atoi(value)
 		if err != nil || n < 1 || n > 64 {
 			return setting.ErrInvalidSystemSettingValue

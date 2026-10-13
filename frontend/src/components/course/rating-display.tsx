@@ -5,9 +5,17 @@ import type { RatingInfoDTO } from "@/api/course"
 interface RatingDisplayProps {
   rating: RatingInfoDTO
   size?: "sm" | "md"
+  emptyText?: string
 }
 
-export function RatingDisplay({ rating, size = "md" }: RatingDisplayProps) {
+export function RatingDisplay({
+  rating,
+  size = "md",
+  emptyText,
+}: RatingDisplayProps) {
+  if (rating.count === 0 && emptyText) {
+    return <span className="text-sm text-muted-foreground">{emptyText}</span>
+  }
   const sizeClass = size === "sm" ? "size-3" : "size-3.5"
   const filled = Math.round(rating.avg)
   const stars = Array.from({ length: 5 }, (_, i) => i < filled)

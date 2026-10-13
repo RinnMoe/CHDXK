@@ -69,6 +69,10 @@ export function useCreateReview() {
     mutationFn: (cmd: CreateReviewCommand) => createReview(cmd),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["reviews"] })
+      void queryClient.invalidateQueries({
+        queryKey: ["course-review-prompts"],
+      })
+      void queryClient.invalidateQueries({ queryKey: ["course-discovery"] })
       void queryClient.invalidateQueries({ queryKey: ["courses"] })
     },
   })
@@ -86,6 +90,10 @@ export function useUpdateReview() {
     }) => updateReview(reviewID, cmd),
     onSuccess: (_, { reviewID }) => {
       void queryClient.invalidateQueries({ queryKey: ["reviews"] })
+      void queryClient.invalidateQueries({
+        queryKey: ["course-review-prompts"],
+      })
+      void queryClient.invalidateQueries({ queryKey: ["course-discovery"] })
       void queryClient.invalidateQueries({ queryKey: ["review", reviewID] })
     },
   })
@@ -114,6 +122,10 @@ export function useDeleteReview() {
     mutationFn: (reviewID: number) => deleteReview(reviewID),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["reviews"] })
+      void queryClient.invalidateQueries({
+        queryKey: ["course-review-prompts"],
+      })
+      void queryClient.invalidateQueries({ queryKey: ["course-discovery"] })
       void queryClient.invalidateQueries({ queryKey: ["courses"] })
     },
   })

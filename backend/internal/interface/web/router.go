@@ -119,6 +119,8 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	courseGroup := apiGroup.Group("/course")
 	{
 		courseGroup.GET("/filter", courseController.GetCourseFilters)
+		courseGroup.GET("/discover", courseController.DiscoverCourses)
+		courseGroup.GET("/review-prompts", courseController.ReviewPrompts)
 		courseGroup.GET("/hot", courseController.ListHotCourses)
 		courseGroup.GET("/", courseController.ListCourses)
 		courseGroup.POST("/enrollment-sync", enrollmentSyncController.Start)

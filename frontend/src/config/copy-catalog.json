@@ -5225,5 +5225,155 @@
     "text": "已绑定：{v0}。下次从频道登录时，可以选择初始超级管理员或原有账号。",
     "audience": "user",
     "location": "pages/user-settings-page.tsx"
+  },
+  "copy.user.pages.home-page.search-title": {
+    "text": "找课程",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.search-placeholder": {
+    "text": "搜索课程名、课程号或教师",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.search": {
+    "text": "搜索",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.categories": {
+    "text": "按课程类别浏览",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.browse-all": {
+    "text": "浏览全部",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.discover": {
+    "text": "发现课程",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.next-batch": {
+    "text": "换一批",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.catalog-semester": {
+    "text": "最近收录学期",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.source-semester": {
+    "text": "来源学期",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.unknown-semester": {
+    "text": "学期未标注",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.no-rating": {
+    "text": "暂无点评",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.no-courses": {
+    "text": "暂无课程",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.share-experience": {
+    "text": "待点评",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.write-review": {
+    "text": "写点评",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.all-reviewed": {
+    "text": "已全部点评",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.no-enrollments": {
+    "text": "暂无修读记录",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.search-taken": {
+    "text": "搜索课程",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.my-courses": {
+    "text": "我的课程",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.first-review": {
+    "text": "还没有点评",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.follow-description": {
+    "text": "暂无关注",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.more": {
+    "text": "查看更多",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.loading": {
+    "text": "正在加载内容",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.load-error": {
+    "text": "加载失败",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.refresh-error": {
+    "text": "刷新失败，保留上次内容",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.retry": {
+    "text": "重试",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
   }
 }

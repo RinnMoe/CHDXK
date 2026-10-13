@@ -25,6 +25,7 @@ type catalogCheckpoint struct {
 	Size       int
 	NextPage   int
 	Signature  string
+	FailedIDs  []string
 	Lessons    []map[string]any
 }
 type detailCheckpoint struct {

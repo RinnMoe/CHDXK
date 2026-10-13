@@ -1,7 +1,9 @@
 package bkjw
 
 import (
+	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"jcourse/internal/domain/course"
 	"log/slog"
 	"net/url"
@@ -11,7 +13,7 @@ import (
 )
 
 func (c *connection) progress(s semester, stage string, completed, total, retries, page, pages int) {
-	c.emit(course.SourceEvent{Type: "progress", Semester: s.Name, Progress: &course.SourceProgress{Stage: stage, Completed: completed, Total: &total, Retries: retries, Page: page, Pages: pages, UpdatedAt: time.Now(), Cached: c.restored, RetryAt: c.retryAt}})
+	c.emit(course.SourceEvent{Type: "progress", Semester: s.Name, Progress: &course.SourceProgress{Stage: stage, Completed: completed, Total: &total, Retries: retries, Failed: c.failedDetails, Page: page, Pages: pages, UpdatedAt: time.Now(), Cached: c.restored, RetryAt: c.retryAt}})
 }
 func (c *connection) adminArchive(s semester) (course.SourceEvent, error) {
 	lessons := []map[string]any{}
@@ -100,13 +102,8 @@ func (c *connection) adminArchive(s semester) (course.SourceEvent, error) {
 	if len(lessons) != total {
 		return course.SourceEvent{}, codeError("PAGE_STRUCTURE")
 	}
-	for i, lesson := range lessons {
-		if detail := c.cache.loadDetail(s, checkpoint, lesson); detail != nil {
-			lesson["detail"] = detail
-			c.restored++
-			c.progress(s, "details", i+1, total, retries, 0, 0)
-			continue
-		}
+	completed := 0
+	fetch := func(lesson map[string]any) error {
 		path := lesson["links"].(map[string]any)["detail"].(string)
 		err := c.retry(func() error {
 			data, _, err := c.eams("GET", path, nil)
@@ -128,14 +125,67 @@ func (c *connection) adminArchive(s semester) (course.SourceEvent, error) {
 			}
 			lesson["detail"] = detail
 			return nil
-		}, func(int) { retries++; c.progress(s, "details", i, total, retries, 0, 0) })
+		}, func(int) { retries++; c.progress(s, "details", completed, total, retries, 0, 0) })
 		if err != nil {
-			return course.SourceEvent{}, err
+			return err
 		}
+
 		if err := c.cache.saveDetail(s, checkpoint, lesson); err != nil {
-			return course.SourceEvent{}, err
+			return err
 		}
-		c.progress(s, "details", i+1, total, retries, 0, 0)
+		return nil
+	}
+	pending := []map[string]any{}
+	for _, lesson := range lessons {
+		if detail := c.cache.loadDetail(s, checkpoint, lesson); detail != nil {
+			lesson["detail"] = detail
+			c.restored++
+			completed++
+		} else {
+			// Read other details before giving an individual outage the full retry budget.
+			c.shortRetries = true
+			err := fetch(lesson)
+			c.shortRetries = false
+			if err != nil {
+				if fatalDetailError(err) || c.ctx.Err() != nil {
+					return course.SourceEvent{}, err
+				}
+				pending = append(pending, lesson)
+				c.failedDetails = len(pending)
+			} else {
+				completed++
+			}
+		}
+		c.progress(s, "details", completed, total, retries, 0, 0)
+	}
+	checkpoint.FailedIDs = nil
+	for _, lesson := range pending {
+		checkpoint.FailedIDs = append(checkpoint.FailedIDs, lesson["id"].(string))
+	}
+	if err := c.cache.saveCatalog(s, checkpoint); err != nil {
+		return course.SourceEvent{}, err
+	}
+	var lastError error
+	failed := []string{}
+	for _, lesson := range pending {
+		if err := fetch(lesson); err != nil {
+			if fatalDetailError(err) || c.ctx.Err() != nil {
+				return course.SourceEvent{}, err
+			}
+			failed = append(failed, lesson["id"].(string))
+			lastError = err
+		} else {
+			completed++
+			c.failedDetails--
+		}
+		c.progress(s, "details", completed, total, retries, 0, 0)
+	}
+	checkpoint.FailedIDs = failed
+	if err := c.cache.saveCatalog(s, checkpoint); err != nil {
+		return course.SourceEvent{}, err
+	}
+	if lastError != nil {
+		return course.SourceEvent{}, lastError
 	}
 	c.progress(s, "validating", total, total, retries, 0, 0)
 	document := marshal(map[string]any{"schema_version": 1, "source": map[string]any{"host": "bkjw.chd.edu.cn", "semester_id": s.ID}, "semester": s.Name, "expected_count": total, "lessons": lessons})
@@ -191,16 +241,26 @@ func (c *connection) personalArchive(page []byte, s semester) (course.SourceEven
 	}
 	var courses []course.EnrollmentSourceCourse
 	retries := 0
+	var previousBad [32]byte
+	badSeen := false
 	err = c.retry(func() error {
 		data, _, err := c.eams("POST", "/eams/courseTableForStd!courseTable.action", params)
 		if err != nil {
 			return err
 		}
 		courses, err = parsePersonal(data)
+		if err != nil {
+			digest := sha256.Sum256(data)
+			if badSeen && digest == previousBad {
+				return permanentSourceError{err}
+			}
+			previousBad, badSeen = digest, true
+		}
 		return err
 	}, func(int) { retries++; c.progress(s, "listing", 0, 0, retries, 0, 0) })
 	if err != nil {
-		if _, typed := err.(codeError); !typed {
+		var code codeError
+		if !errors.As(err, &code) {
 			err = codeError("PERSONAL_REQUEST_FAILED")
 		}
 		return course.SourceEvent{}, err
@@ -272,39 +332,75 @@ func parsePersonal(data []byte) ([]course.EnrollmentSourceCourse, error) {
 		}
 		return out, nil
 	}
-	content := string(data)
-	cursor := 0
-	count := 0
-	for {
-		index := strings.Index(content[cursor:], "new TaskActivity(")
-		if index < 0 {
-			break
-		}
-		start := cursor + index + len("new TaskActivity(")
-		args, end, err := arguments(content[start:])
-		if err != nil || len(args) < 4 {
-			return nil, codeError("PERSONAL_PARSE_FAILED")
-		}
-		id, err := jsString(args[2])
+	sources := []string{}
+	doc := document(data)
+	for _, script := range tag(doc, "script") {
+		sources = append(sources, rawText(script))
+	}
+	if len(sources) == 0 {
+		sources = append(sources, string(data))
+	}
+	count, initialized := 0, false
+	for _, source := range sources {
+		clean, err := scriptCode(source, false)
 		if err != nil {
-			return nil, codeError("PERSONAL_PARSE_FAILED")
+			return nil, personalParseFailure("script-comments-or-strings", len(source), 0)
 		}
-		name, err := jsString(args[3])
+		mask, err := scriptCode(source, true)
 		if err != nil {
-			return nil, codeError("PERSONAL_PARSE_FAILED")
+			return nil, personalParseFailure("script-mask", len(source), 0)
 		}
-		if err = add(id, "", name); err != nil {
-			return nil, err
+		constructors := constructorPattern.FindAllStringSubmatchIndex(mask, -1)
+		for _, loc := range constructors {
+			name := mask[loc[2]:loc[3]]
+			args, _, err := arguments(clean[loc[1]:])
+			if err != nil {
+				return nil, personalParseFailure("constructor-arguments", len(source), 0)
+			}
+			if name == "CourseTable" {
+				initialized = true
+				continue
+			}
+			if len(args) < 4 {
+				return nil, personalParseFailure("activity-argument-count", len(source), len(args))
+			}
+			id, err := jsStringExpression(args[2])
+			if err != nil {
+				return nil, personalParseFailure("activity-id-literal", len(source), len(args))
+			}
+			name, err = boundStringExpression(args[3], precedingStringBindings(clean[:loc[0]], mask[:loc[0]]))
+			if err != nil {
+				return nil, personalNameFailure(args[3], len(source), len(args))
+			}
+			if err = add(id, "", name); err != nil {
+				return nil, personalParseFailure("activity-identity-shape", len(source), len(args))
+			}
+			count++
+			if count > 10000 {
+				return nil, codeError("PERSONAL_PARSE_FAILED")
+			}
 		}
-		cursor = start + end
-		count++
-		if count > 10000 {
+		if strings.Contains(mask, "TaskActivity") && len(constructors) == 0 {
 			return nil, codeError("PERSONAL_PARSE_FAILED")
 		}
 	}
-	// A known empty timetable must still have a valid table initializer.
-	if count == 0 && !regexp.MustCompile(`new\s+CourseTable\s*\(`).MatchString(content) {
-		return nil, codeError("PERSONAL_PARSE_FAILED")
+	if count == 0 && !initialized {
+		return nil, personalParseFailure("missing-timetable-initializer", len(data), len(sources))
 	}
 	return out, nil
+}
+
+func fatalDetailError(err error) bool {
+	switch errorCode(err, "") {
+	case "AUTH_REQUIRED", "PERMISSION_DENIED", "URL_NOT_ALLOWED", "CACHE_WRITE_FAILED":
+		return true
+	}
+	return false
+}
+
+func personalParseFailure(reason string, responseBytes, items int) error {
+	// Fixed reason names and numeric structure only; never dump response text,
+	// argument values, identity, URLs or cookies from a private timetable.
+	slog.Warn("academic timetable format rejected", "reason", reason, "response_bytes", responseBytes, "structure_items", items)
+	return codeError("PERSONAL_PARSE_FAILED")
 }

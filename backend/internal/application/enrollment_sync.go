@@ -19,6 +19,7 @@ type EnrollmentSyncService struct {
 	importer course.EnrollmentImporter
 	limit    int
 	queue    *CollectorQueue
+	jobStore course.SourceJobStore
 }
 
 func NewEnrollmentSyncService(source course.CourseSource, importer course.EnrollmentImporter, queues ...*CollectorQueue) *EnrollmentSyncService {
@@ -64,7 +65,7 @@ func (s *EnrollmentSyncService) Start(owner int) (*CourseSyncStatus, error) {
 			delete(s.jobs, oldestUser)
 		}
 	}
-	service := &CourseSyncService{source: s.source, lifetime: 2 * time.Hour, personal: true, queue: s.queue}
+	service := &CourseSyncService{source: s.source, lifetime: 2 * time.Hour, personal: true, queue: s.queue, jobStore: s.jobStore}
 	service.importEvent = func(ctx context.Context, event course.SourceEvent) (*CourseImportResult, error) {
 		var document struct {
 			Semester string                          `json:"semester"`
@@ -120,7 +121,7 @@ func (s *EnrollmentSyncService) owned(owner int) (*CourseSyncService, error) {
 func (s *EnrollmentSyncService) Status(owner int, id string) (*CourseSyncStatus, error) {
 	service, err := s.owned(owner)
 	if err != nil {
-		return nil, err
+		return (&CourseSyncService{personal: true, jobStore: s.jobStore}).restoreStatus(owner, id)
 	}
 	return service.Status(owner, id)
 }

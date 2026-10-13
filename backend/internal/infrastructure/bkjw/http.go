@@ -1,15 +1,18 @@
 package bkjw
 
 import (
+	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"golang.org/x/net/html"
+	"golang.org/x/net/html/charset"
 	"io"
 	"log/slog"
+	"math/rand/v2"
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -68,6 +71,13 @@ func (c *connection) request(method, raw string, form url.Values, headers map[st
 		return nil, "", codeError("URL_NOT_ALLOWED")
 	}
 	u, _ := url.Parse(raw)
+	if c.budget != nil && u.Hostname() == "bkjw.chd.edu.cn" {
+		finish, err := c.budget.begin(c.ctx)
+		if err != nil {
+			return nil, "", err
+		}
+		defer finish()
+	}
 	if c.pacer != nil && u.Hostname() == "bkjw.chd.edu.cn" {
 		finish, err := c.pacer.begin(c.ctx)
 		if err != nil {
@@ -96,13 +106,14 @@ func (c *connection) request(method, raw string, form url.Values, headers map[st
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}
+	started := time.Now()
 	resp, err := c.client.Do(req)
 	if err != nil {
 		var networkError net.Error
 		timedOut := errors.As(err, &networkError) && networkError.Timeout()
 		// WeChat long polling normally times out while waiting for a scan.
 		if !(req.URL.Hostname() == "lp.open.weixin.qq.com" && timedOut && c.ctx.Err() == nil) {
-			slog.Warn("academic HTTP request failed", "host", req.URL.Hostname(), "timeout", timedOut, "cancelled", c.ctx.Err() != nil)
+			slog.Warn("academic HTTP request failed", "host", req.URL.Hostname(), "timeout", timedOut, "cancelled", c.ctx.Err() != nil, "method", method, "path", u.Path, "elapsed_ms", time.Since(started).Milliseconds())
 		}
 		return nil, "", err
 	}
@@ -115,6 +126,12 @@ func (c *connection) request(method, raw string, form url.Values, headers map[st
 			c.pacer.next = maxTime(c.pacer.next, time.Now().Add(c.pacer.interval))
 			c.pacer.mu.Unlock()
 		}()
+	}
+	if resp.StatusCode == 429 || resp.StatusCode == 503 {
+		c.retryAfter = retryAfter(resp.Header.Get("Retry-After"), time.Now())
+		if c.budget != nil && u.Hostname() == "bkjw.chd.edu.cn" {
+			c.budget.observe(true, c.retryAfter)
+		}
 	}
 	if resp.StatusCode == 429 {
 		if c.pacer != nil {
@@ -130,7 +147,10 @@ func (c *connection) request(method, raw string, form url.Values, headers map[st
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		slog.Warn("academic HTTP response failed", "host", req.URL.Hostname(), "status", resp.StatusCode)
-		return nil, "", fmt.Errorf("upstream status %d", resp.StatusCode)
+		if resp.StatusCode >= 500 || resp.StatusCode == 408 {
+			return nil, "", codeError("UPSTREAM_UNAVAILABLE")
+		}
+		return nil, "", codeError("UPSTREAM_REJECTED")
 	}
 	data, err := io.ReadAll(io.LimitReader(resp.Body, maxBody+1))
 	if err != nil {
@@ -139,6 +159,18 @@ func (c *connection) request(method, raw string, form url.Values, headers map[st
 	if len(data) > maxBody {
 		return nil, "", codeError("PAGE_STRUCTURE")
 	}
+	contentType := strings.ToLower(resp.Header.Get("Content-Type"))
+	if strings.HasPrefix(contentType, "text/") || strings.Contains(contentType, "javascript") || strings.Contains(contentType, "json") {
+		reader, decodeErr := charset.NewReader(bytes.NewReader(data), contentType)
+		if decodeErr != nil {
+			return nil, "", codeError("PAGE_STRUCTURE")
+		}
+		data, decodeErr = io.ReadAll(io.LimitReader(reader, maxBody+1))
+		if decodeErr != nil || len(data) > maxBody {
+			return nil, "", codeError("PAGE_STRUCTURE")
+		}
+	}
+	slog.Debug("academic HTTP response", "host", u.Hostname(), "path", u.Path, "method", method, "status", resp.StatusCode, "elapsed_ms", time.Since(started).Milliseconds(), "response_bytes", len(data))
 	return data, resp.Request.URL.String(), nil
 }
 
@@ -149,6 +181,8 @@ type requestPacer struct {
 	mu       sync.Mutex
 	next     time.Time
 	interval time.Duration
+	adaptive bool
+	stable   int
 }
 
 func (p *requestPacer) begin(ctx context.Context) (func(), error) {
@@ -180,10 +214,29 @@ func maxTime(a, b time.Time) time.Time {
 func (p *requestPacer) slowDown() {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	p.interval = min(max(p.interval+250*time.Millisecond, 1250*time.Millisecond), 3*time.Second)
+	p.stable = 0
+	p.interval = min(max(p.interval*2, 1250*time.Millisecond), 10*time.Second)
 	p.next = time.Now().Add(p.interval)
 }
 func (c *connection) eams(method, path string, form url.Values) ([]byte, string, error) {
+	data, final, err := c.eamsOnce(method, path, form)
+	// Renew EAMS from the still-valid CAS jar once per retry operation. No
+	// credentials or browser cookies are persisted, and a real login is never guessed.
+	if err == codeError("AUTH_REQUIRED") && !c.refreshTried {
+		c.refreshTried = true
+		_, landing, refreshErr := c.navigate(loginURL())
+		if refreshErr != nil {
+			return nil, "", refreshErr
+		}
+		target, _ := url.Parse(landing)
+		if target.Hostname() != "bkjw.chd.edu.cn" {
+			return nil, "", err
+		}
+		return c.eamsOnce(method, path, form)
+	}
+	return data, final, err
+}
+func (c *connection) eamsOnce(method, path string, form url.Values) ([]byte, string, error) {
 	raw, err := resolve(eamsOrigin+"/eams/", path)
 	if err != nil {
 		return nil, "", err
@@ -206,11 +259,26 @@ func (c *connection) eams(method, path string, form url.Values) ([]byte, string,
 		if c.pacer != nil {
 			c.pacer.slowDown()
 		}
+		if c.budget != nil {
+			c.budget.observe(true, time.Time{})
+		}
 		slog.Warn("academic request rate limited", "response_bytes", len(data))
 		return nil, "", codeError("RATE_LIMITED")
 	}
-	if strings.Contains(string(data), "没有权限") || strings.Contains(string(data), "无权访问") {
+	if isPermissionPage(data) {
 		return nil, "", codeError("PERMISSION_DENIED")
+	}
+	if isMaintenancePage(data) {
+		if c.budget != nil {
+			c.budget.observe(true, time.Time{})
+		}
+		return nil, "", codeError("UPSTREAM_UNAVAILABLE")
+	}
+	if c.pacer != nil {
+		c.pacer.success()
+	}
+	if c.budget != nil {
+		c.budget.observe(false, time.Time{})
 	}
 	return data, final, nil
 }
@@ -259,16 +327,24 @@ func (c *connection) pause(d time.Duration) error {
 func (c *connection) retry(operation func() error, onRetry func(int)) error {
 	var err error
 	started := time.Now()
+	c.refreshTried = false
+	c.retryAfter = time.Time{}
 	defer func() { c.retryAt = nil }()
-	for attempt := 0; attempt < 50 && time.Since(started) < 20*time.Minute; attempt++ {
+	attempts := 50
+	if c.shortRetries {
+		attempts = 3
+	}
+	for attempt := 0; attempt < attempts && time.Since(started) < 20*time.Minute; attempt++ {
 		if c.ctx.Err() != nil {
 			return c.ctx.Err()
 		}
 		if attempt > 0 {
-			delay := min(2*time.Second<<min(attempt-1, 5), time.Minute)
+			ceiling := min(2*time.Second<<min(attempt-1, 5), time.Minute)
+			delay := ceiling/2 + time.Duration(rand.Int64N(int64(ceiling/2)+1))
 			if c.retryDelay != nil {
 				delay = c.retryDelay(attempt)
 			}
+			delay = max(delay, time.Until(c.retryAfter))
 			next := time.Now().Add(delay)
 			c.retryAt = &next
 			if onRetry != nil {
@@ -283,6 +359,10 @@ func (c *connection) retry(operation func() error, onRetry func(int)) error {
 		if err == nil {
 			return nil
 		}
+		var permanent permanentSourceError
+		if errors.As(err, &permanent) {
+			return err
+		}
 		var code codeError
 		if errors.As(err, &code) {
 			switch code {
@@ -294,7 +374,7 @@ func (c *connection) retry(operation func() error, onRetry func(int)) error {
 				if attempt >= 7 {
 					return err
 				}
-			case "RATE_LIMITED", "SESSION_REFRESHED":
+			case "RATE_LIMITED", "SESSION_REFRESHED", "UPSTREAM_UNAVAILABLE":
 			default:
 				return err
 			}
@@ -305,3 +385,95 @@ func (c *connection) retry(operation func() error, onRetry func(int)) error {
 	}
 	return err
 }
+
+func retryAfter(value string, now time.Time) time.Time {
+	if seconds, err := strconv.Atoi(strings.TrimSpace(value)); err == nil && seconds >= 0 {
+		return now.Add(time.Duration(min(seconds, 1200)) * time.Second)
+	}
+	if t, err := http.ParseTime(value); err == nil {
+		return maxTime(now, minTime(t, now.Add(20*time.Minute)))
+	}
+	return time.Time{}
+}
+func minTime(a, b time.Time) time.Time {
+	if a.Before(b) {
+		return a
+	}
+	return b
+}
+func (p *requestPacer) success() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if !p.adaptive {
+		return
+	}
+	p.stable++
+	if p.stable >= 12 {
+		p.stable = 0
+		p.interval = max(150*time.Millisecond, p.interval-50*time.Millisecond)
+	}
+}
+func isMaintenancePage(data []byte) bool {
+	notices := []string{"系统维护中", "系统正在维护", "系统繁忙", "服务暂不可用", "Service Unavailable"}
+	candidate := false
+	for _, notice := range notices {
+		if strings.Contains(string(data), notice) {
+			candidate = true
+			break
+		}
+	}
+	if !candidate {
+		return false
+	}
+	doc := document(data)
+	for _, script := range tag(doc, "script") {
+		if script.Parent != nil {
+			script.Parent.RemoveChild(script)
+		}
+	}
+	for _, style := range tag(doc, "style") {
+		if style.Parent != nil {
+			style.Parent.RemoveChild(style)
+		}
+	}
+	visible := text(doc)
+	if len([]rune(visible)) > 300 {
+		return false
+	}
+	for _, notice := range notices {
+		if strings.Contains(visible, notice) && len(tag(doc, "table")) == 0 && len(tag(doc, "form")) == 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func isPermissionPage(data []byte) bool {
+	content := string(data)
+	if !strings.Contains(content, "没有权限") && !strings.Contains(content, "无权访问") {
+		return false
+	}
+	doc := document(data)
+	for _, n := range append(tag(doc, "script"), tag(doc, "style")...) {
+		if n.Parent != nil {
+			n.Parent.RemoveChild(n)
+		}
+	}
+	visible := text(doc)
+	// Reject only an actual short permission notice, not a script message or
+	// these words in course descriptions. HTTP 403 is classified separately.
+	if len([]rune(visible)) > 300 || strings.Contains(visible, "课程代码") || strings.Contains(visible, "课程序号") {
+		return false
+	}
+	for _, table := range tag(doc, "table") {
+		if hasClass(table, "gridtable") {
+			return false
+		}
+	}
+	return strings.Contains(visible, "没有权限") || strings.Contains(visible, "无权访问")
+}
+
+type permanentSourceError struct{ err error }
+
+func (e permanentSourceError) Error() string { return e.err.Error() }
+func (e permanentSourceError) Unwrap() error { return e.err }

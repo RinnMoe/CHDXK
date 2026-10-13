@@ -7,6 +7,7 @@ import (
 type CourseRepository interface {
 	Get(ctx context.Context, courseID int) (*CourseView, error)
 	FindBy(ctx context.Context, filter CourseFilter) ([]CourseView, int64, error)
+	FindDiscovery(ctx context.Context, semester, date string, limit int) ([]CourseView, error)
 	GetDetail(ctx context.Context, courseID int) (*CourseDetailView, error)
 	FindOfferedCourses(ctx context.Context, courseID int) ([]OfferedCourseView, error)
 	GetFilters(ctx context.Context) (*CourseFilters, error)

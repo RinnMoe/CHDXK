@@ -23,8 +23,10 @@ type CourseSyncStatus struct {
 	Semesters     []string               `json:"semesters"`
 	Selected      []string               `json:"selected"`
 	Current       string                 `json:"current,omitempty"`
+	Warning       string                 `json:"warning,omitempty"`
 	Message       string                 `json:"message,omitempty"`
 	Results       []CourseImportResult   `json:"results"`
+	CreatedAt     time.Time              `json:"created_at"`
 	ExpiresAt     time.Time              `json:"expires_at"`
 	StartedAt     *time.Time             `json:"started_at,omitempty"`
 	Progress      *course.SourceProgress `json:"progress,omitempty"`
@@ -33,6 +35,9 @@ type CourseSyncStatus struct {
 }
 type courseSyncSession struct {
 	mu         sync.Mutex
+	persistMu  sync.Mutex
+	lastSaved  time.Time
+	savedState string
 	owner      int
 	status     CourseSyncStatus
 	connection course.SourceConnection
@@ -48,6 +53,7 @@ type CourseSyncService struct {
 	lifetime      time.Duration
 	personal      bool
 	queue         *CollectorQueue
+	jobStore      course.SourceJobStore
 }
 
 func NewCourseSyncService(source course.CourseSource, management *CourseManagementService, queues ...*CollectorQueue) *CourseSyncService {
@@ -69,6 +75,7 @@ func (s *CourseSyncService) Start(owner int) (*CourseSyncStatus, error) {
 		}
 		old.cancel()
 	}
+	resume := s.resumeSelection(owner)
 	lifetime := s.lifetime
 	if lifetime == 0 {
 		lifetime = 24 * time.Hour
@@ -84,8 +91,9 @@ func (s *CourseSyncService) Start(owner int) (*CourseSyncStatus, error) {
 			return nil, err
 		}
 		ctx, cancel := context.WithCancel(context.Background())
-		session := &courseSyncSession{owner: owner, cancel: cancel, ticket: ticket, status: CourseSyncStatus{ID: hex.EncodeToString(id), State: "queued", Semesters: []string{}, Selected: []string{}, Results: []CourseImportResult{}, ExpiresAt: time.Now().Add(30 * time.Minute)}}
+		session := &courseSyncSession{owner: owner, cancel: cancel, ticket: ticket, status: CourseSyncStatus{ID: hex.EncodeToString(id), State: "queued", CreatedAt: time.Now(), Semesters: []string{}, Selected: resume, Results: []CourseImportResult{}, ExpiresAt: time.Now().Add(30 * time.Minute)}}
 		s.session = session
+		s.persist(session, true)
 		go s.connectQueued(ctx, session, lifetime)
 		return session.snapshot(), nil
 	}
@@ -101,8 +109,9 @@ func (s *CourseSyncService) Start(owner int) (*CourseSyncStatus, error) {
 		connection.Close()
 		return nil, err
 	}
-	session := &courseSyncSession{owner: owner, connection: connection, cancel: cancel, status: CourseSyncStatus{ID: hex.EncodeToString(id), State: "connecting", Semesters: []string{}, Selected: []string{}, Results: []CourseImportResult{}, ExpiresAt: time.Now().Add(lifetime)}}
+	session := &courseSyncSession{owner: owner, connection: connection, cancel: cancel, status: CourseSyncStatus{ID: hex.EncodeToString(id), State: "connecting", CreatedAt: time.Now(), Semesters: []string{}, Selected: resume, Results: []CourseImportResult{}, ExpiresAt: time.Now().Add(lifetime)}}
 	s.session = session
+	s.persist(session, true)
 	go s.consume(ctx, session)
 	return session.snapshot(), nil
 }
@@ -145,7 +154,7 @@ func (s *CourseSyncService) owned(owner int, id string) (*courseSyncSession, err
 func (s *CourseSyncService) Status(owner int, id string) (*CourseSyncStatus, error) {
 	session, err := s.owned(owner, id)
 	if err != nil {
-		return nil, err
+		return s.restoreStatus(owner, id)
 	}
 	return session.snapshot(), nil
 }
@@ -186,6 +195,7 @@ func (s *CourseSyncService) Sync(owner int, id string, selected []string, fresh 
 		err = session.connection.Sync(selected)
 	}
 	session.mu.Unlock()
+	s.persist(session, true)
 	if err != nil {
 		s.fail(session, "连接已中断，请重新扫码登录")
 		return nil, apperr.ServiceUnavailable("连接已中断，请重新扫码登录")
@@ -204,6 +214,7 @@ func (s *CourseSyncService) Cancel(owner int, id string) (*CourseSyncStatus, err
 		session.cancel()
 	}
 	session.mu.Unlock()
+	s.persist(session, true)
 	return session.snapshot(), nil
 }
 func (s *CourseSyncService) fail(session *courseSyncSession, message string) {
@@ -214,6 +225,7 @@ func (s *CourseSyncService) fail(session *courseSyncSession, message string) {
 		session.status.QR = ""
 	}
 	session.mu.Unlock()
+	s.persist(session, true)
 	session.cancel()
 }
 func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSession) {
@@ -393,6 +405,12 @@ func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSess
 						message = "当前学校账号无权访问个人课表，请使用学生账号重新连接"
 					}
 				}
+				if event.Error == "UPSTREAM_UNAVAILABLE" {
+					message = "教务服务暂时不可用，退避重试后仍未恢复；已完成学期保留，可稍后继续"
+				}
+				if event.Error == "UPSTREAM_REJECTED" {
+					message = "教务查询接口拒绝了请求，已停止无效重试，请联系技术管理员检查接口"
+				}
 				if event.Error == "CACHE_WRITE_FAILED" {
 					message = "采集进度缓存无法保存，请联系技术管理员检查存储空间与目录权限"
 				}
@@ -404,6 +422,7 @@ func (s *CourseSyncService) consume(ctx context.Context, session *courseSyncSess
 			}
 			done := syncTerminal(session.status.State)
 			session.mu.Unlock()
+			s.persist(session, event.Type != "progress")
 			if done {
 				return
 			}
@@ -443,7 +462,7 @@ func (s *CourseSyncService) connectQueued(ctx context.Context, session *courseSy
 
 func safeSourceErrorCode(code string) string {
 	switch code {
-	case "CACHE_WRITE_FAILED", "RATE_LIMITED", "PERSONAL_REQUEST_FAILED", "PERSONAL_RENDER_FAILED", "PERSONAL_PARSE_FAILED", "PERSONAL_MENU_MISSING", "PERSONAL_QUERY_FAILED", "PERSONAL_CALENDAR_FAILED", "AUTH_REQUIRED", "PERMISSION_DENIED", "QR_EXPIRED", "QR_LOGIN_FAILED", "COURSE_COLLECTION_FAILED", "SEMESTER_DISCOVERY_FAILED", "PAGE_STRUCTURE", "QR_ENTRY_CHANGED", "QR_PAGE_CHANGED", "QR_CALLBACK_INVALID", "QR_IMAGE_INVALID", "URL_NOT_ALLOWED", "WECHAT_UNBOUND", "INVALID_SEMESTER":
+	case "UPSTREAM_UNAVAILABLE", "UPSTREAM_REJECTED", "CACHE_WRITE_FAILED", "RATE_LIMITED", "PERSONAL_REQUEST_FAILED", "PERSONAL_RENDER_FAILED", "PERSONAL_PARSE_FAILED", "PERSONAL_MENU_MISSING", "PERSONAL_QUERY_FAILED", "PERSONAL_CALENDAR_FAILED", "AUTH_REQUIRED", "PERMISSION_DENIED", "QR_EXPIRED", "QR_LOGIN_FAILED", "COURSE_COLLECTION_FAILED", "SEMESTER_DISCOVERY_FAILED", "PAGE_STRUCTURE", "QR_ENTRY_CHANGED", "QR_PAGE_CHANGED", "QR_CALLBACK_INVALID", "QR_IMAGE_INVALID", "URL_NOT_ALLOWED", "WECHAT_UNBOUND", "INVALID_SEMESTER":
 		return code
 	default:
 		return "SOURCE_UNAVAILABLE"
