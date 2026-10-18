@@ -4,6 +4,14 @@ package auth
 
 import "context"
 
+type MockResHubSessionRefresher struct {
+	OnRefresh func(context.Context, string) (ResHubSession, error)
+}
+
+func (m *MockResHubSessionRefresher) Refresh(ctx context.Context, token string) (ResHubSession, error) {
+	return m.OnRefresh(ctx, token)
+}
+
 type MockUserRepository struct {
 	Users         map[int]*User
 	FindByIDCalls int

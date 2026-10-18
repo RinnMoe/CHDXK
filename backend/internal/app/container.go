@@ -15,9 +15,11 @@ import (
 	"jcourse/internal/infrastructure/reshub"
 	"jcourse/internal/infrastructure/smtp"
 	"path/filepath"
+	"time"
 )
 
 type ServiceContainer struct {
+	ResHubRefresh         auth.ResHubSessionRefresher
 	ResHubOIDCClient      auth.ResHubOIDCClient
 	Accounts              *application.LocalAccountService
 	CourseSync            *application.CourseSyncService
@@ -60,6 +62,7 @@ func NewServiceContainer(conf config.AppConfig) (*ServiceContainer, error) {
 
 	db := persistence.NewPostgres(conf.Postgres)
 	redisClient := persistence.NewRedisClient(conf.Redis)
+	resHubRefresh := reshub.NewRefreshCoordinator(redisClient, resHubClient, time.Duration(conf.Session.MaxAge)*time.Second)
 
 	reviewRepo := repository.NewReviewRepositoryWithRatingScore(db, redisClient, conf.Course.RatingScore)
 	voteRepo := repository.NewReviewVoteRepository(db, redisClient)
@@ -137,6 +140,7 @@ func NewServiceContainer(conf config.AppConfig) (*ServiceContainer, error) {
 	courseCommand.SetImportSettings(systemSettingsService)
 
 	return &ServiceContainer{
+		ResHubRefresh:         resHubRefresh,
 		Accounts:              application.NewLocalAccountService(identityProjection, systemSettingsService, resHubClient, auditLogRepo),
 		ResHubOIDCClient:      resHubClient,
 		ReviewQuery:           reviewQuery,

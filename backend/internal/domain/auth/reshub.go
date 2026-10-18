@@ -29,17 +29,25 @@ type ResHubIdentity struct {
 }
 
 type ResHubSession struct {
-	AccessToken string
-	IDToken     string
-	SessionID   string
-	ExpiresAt   time.Time
+	AccessToken  string
+	RefreshToken string
+	IDToken      string
+	SessionID    string
+	ExpiresAt    time.Time
+}
+
+// ResHubSessionRefresher rotates a provider credential without exposing it to clients.
+type ResHubSessionRefresher interface {
+	Refresh(ctx context.Context, refreshToken string) (ResHubSession, error)
 }
 
 var (
 	ErrResHubUnavailable = apperr.ServiceUnavailable("主站服务暂不可用，请稍后重试")
 	ErrResHubSession     = apperr.Unauthorized("主站登录状态已失效，请重新登录")
-	ErrResHubState       = apperr.BadRequest("单点登录状态无效")
-	ErrIdentityNotFound  = apperr.NotFound("本站主体映射不存在")
+	// A single-use refresh may have been consumed but its response was lost.
+	ErrResHubRefreshUncertain = apperr.Unauthorized("登录续期结果无法确认，请重新登录")
+	ErrResHubState            = apperr.BadRequest("单点登录状态无效")
+	ErrIdentityNotFound       = apperr.NotFound("本站主体映射不存在")
 )
 
 // ResHubOIDCClient is the standard OIDC contract consumed by xk. Discovery,

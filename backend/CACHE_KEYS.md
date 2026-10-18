@@ -41,5 +41,10 @@ Redis keys owned internally by third-party libraries can have library-defined fo
 | `jcourse:course:hot:week:{period_key}` | `CourseHotRepository` | Redis sorted set, member is course ID, score is hot score | No TTL currently set |
 | `jcourse:course:hot:month:{period_key}` | `CourseHotRepository` | Redis sorted set, member is course ID, score is hot score | No TTL currently set |
 | `jcourse:session:{session_id}` | Gin session Redis store | Serialized session payload | Session max age from session config |
+| `jcourse:oidc-refresh:{sha256(refresh_token)}` | OIDC refresh coordinator | Rotated access/refresh credentials, server-only | 2 minutes |
+| `jcourse:oidc-refresh:{sha256(refresh_token)}:lock` | OIDC refresh coordinator | Random lock owner, compare-and-delete release | 30 seconds |
+| `jcourse:oidc-refresh:{sha256(refresh_token)}:consumed` | OIDC refresh coordinator | Single-use grant consumption marker | Configured session max age |
+| `jcourse:session-revocation:{sha256(session_id)}` | Session save gate | Logout/session-ID rotation marker; rejects stale writes | Configured session max age |
+| `jcourse:session-revocation:{sha256(session_id)}:lock` | Session save gate | Random owner; serializes save and deletion across API instances | 30 seconds |
 
-OIDC access/ID tokens, state, PKCE verifier, and nonce are stored in the session payload during the authorization-code flow. No local registration, password-reset, verification-code, or login-lockout Redis keys are owned by the application.
+OIDC access/ID/refresh tokens, access expiry and absolute local session deadline are stored only in the server-side session payload; state, PKCE verifier and nonce are stored during authorization. The short-lived rotation result lets concurrent API instances share one refresh without replaying a grant. The consumption marker prevents replay after a lost response, process crash or expired result cache. These keys contain credentials: apply the same access controls as session data; never log their payloads. No local registration, password-reset, verification-code, or login-lockout Redis keys are owned by the application.

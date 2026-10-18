@@ -74,11 +74,12 @@ type cachedToken struct {
 }
 
 type tokenResponse struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int64  `json:"expires_in"`
-	Scope       string `json:"scope"`
-	IDToken     string `json:"id_token"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int64  `json:"expires_in"`
+	Scope        string `json:"scope"`
+	IDToken      string `json:"id_token"`
 }
 
 type userInfoResponse struct {
@@ -204,14 +205,18 @@ func (c *Client) Exchange(ctx context.Context, code, codeVerifier, nonce, redire
 		return auth.ResHubSession{}, err
 	}
 	expiresAt := unixClaim(claims, "exp")
-	if expiresAt.IsZero() && response.ExpiresIn > 0 {
-		expiresAt = time.Now().Add(time.Duration(response.ExpiresIn) * time.Second)
+	if response.ExpiresIn > 0 && response.ExpiresIn <= 86400 {
+		accessExpiry := time.Now().Add(time.Duration(response.ExpiresIn) * time.Second)
+		if expiresAt.IsZero() || accessExpiry.Before(expiresAt) {
+			expiresAt = accessExpiry
+		}
 	}
 	return auth.ResHubSession{
-		AccessToken: response.AccessToken,
-		IDToken:     response.IDToken,
-		SessionID:   stringClaim(claims, "sid"),
-		ExpiresAt:   expiresAt,
+		AccessToken:  response.AccessToken,
+		RefreshToken: response.RefreshToken,
+		IDToken:      response.IDToken,
+		SessionID:    stringClaim(claims, "sid"),
+		ExpiresAt:    expiresAt,
 	}, nil
 }
 

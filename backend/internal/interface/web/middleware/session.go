@@ -8,20 +8,25 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
+	redigo "github.com/gomodule/redigo/redis"
 	gsessions "github.com/gorilla/sessions"
 
+	"jcourse/internal/domain/auth"
 	"jcourse/internal/infrastructure/persistence"
 )
 
 const (
-	sessionKeyOIDCAccessToken = "oidc_access_token"
-	sessionKeyOIDCIDToken     = "oidc_id_token"
-	sessionKeyOIDCState       = "oidc_state"
-	sessionKeyOIDCVerifier    = "oidc_verifier"
-	sessionKeyOIDCNonce       = "oidc_nonce"
-	sessionKeyOIDCReturn      = "oidc_return"
-	sessionKeyCSRFToken       = "csrf_token"
-	sessionRedisPrefix        = "jcourse:session:"
+	sessionKeyOIDCAccessToken  = "oidc_access_token"
+	sessionKeyOIDCIDToken      = "oidc_id_token"
+	sessionKeyOIDCRefreshToken = "oidc_refresh_token"
+	sessionKeyOIDCExpiresAt    = "oidc_expires_at"
+	sessionKeyOIDCDeadline     = "oidc_deadline"
+	sessionKeyOIDCState        = "oidc_state"
+	sessionKeyOIDCVerifier     = "oidc_verifier"
+	sessionKeyOIDCNonce        = "oidc_nonce"
+	sessionKeyOIDCReturn       = "oidc_return"
+	sessionKeyCSRFToken        = "csrf_token"
+	sessionRedisPrefix         = "jcourse:session:"
 )
 
 type SessionConfig struct {
@@ -36,11 +41,23 @@ var DefaultSessionConfig = SessionConfig{
 }
 
 func NewSessionStore(redisConf persistence.RedisConfig, sessionConf SessionConfig) (sessions.Store, error) {
-	store, err := redis.NewStoreWithDB(10, "tcp", redisConf.Addr, redisConf.Username, redisConf.Password, fmt.Sprintf("%d", redisConf.DB), []byte(sessionConf.Secret))
+	pool := &redigo.Pool{
+		MaxIdle:     10,
+		IdleTimeout: 240 * time.Second,
+		Dial: func() (redigo.Conn, error) {
+			return redigo.Dial("tcp", redisConf.Addr,
+				redigo.DialUsername(redisConf.Username), redigo.DialPassword(redisConf.Password), redigo.DialDatabase(redisConf.DB),
+				redigo.DialConnectTimeout(time.Second), redigo.DialReadTimeout(time.Second), redigo.DialWriteTimeout(time.Second))
+		},
+		TestOnBorrow: func(conn redigo.Conn, _ time.Time) error { _, err := conn.Do("PING"); return err },
+	}
+	store, err := redis.NewStoreWithPool(pool, []byte(sessionConf.Secret))
 	if err != nil {
+		_ = pool.Close()
 		return nil, err
 	}
 	if err := redis.SetKeyPrefix(store, sessionRedisPrefix); err != nil {
+		_ = pool.Close()
 		return nil, err
 	}
 	store.Options(sessions.Options{
@@ -50,19 +67,36 @@ func NewSessionStore(redisConf persistence.RedisConfig, sessionConf SessionConfi
 		Secure:   sessionConf.Secure,
 		SameSite: http.SameSiteLaxMode,
 	})
-	return store, nil
+	retention := time.Duration(sessionConf.MaxAge) * time.Second
+	if retention <= 0 {
+		retention = time.Duration(DefaultSessionConfig.MaxAge) * time.Second
+	}
+	return &revokedSessionStore{base: store, pool: pool, retention: retention}, nil
 }
 
 func SetSessionOIDC(c *gin.Context, accessToken, idToken string) error {
-	if accessToken == "" || idToken == "" {
+	return SetSessionOIDCCredentials(c, auth.ResHubSession{AccessToken: accessToken, IDToken: idToken})
+}
+
+// SetSessionOIDCCredentials also records an absolute local lifetime. Refreshing
+// provider credentials must not silently turn a seven-day session into an unlimited one.
+func SetSessionOIDCCredentials(c *gin.Context, credentials auth.ResHubSession) error {
+	if credentials.AccessToken == "" || credentials.IDToken == "" {
 		return fmt.Errorf("invalid oidc session")
 	}
 	if err := resetSession(c); err != nil {
 		return err
 	}
 	s := sessions.Default(c)
-	s.Set(sessionKeyOIDCAccessToken, accessToken)
-	s.Set(sessionKeyOIDCIDToken, idToken)
+	s.Set(sessionKeyOIDCAccessToken, credentials.AccessToken)
+	s.Set(sessionKeyOIDCIDToken, credentials.IDToken)
+	if credentials.RefreshToken != "" && !credentials.ExpiresAt.IsZero() {
+		s.Set(sessionKeyOIDCRefreshToken, credentials.RefreshToken)
+		s.Set(sessionKeyOIDCExpiresAt, credentials.ExpiresAt.Unix())
+		if accessor, ok := s.(gorillaSessionAccessor); ok && accessor.Session().Options != nil && accessor.Session().Options.MaxAge > 0 {
+			s.Set(sessionKeyOIDCDeadline, time.Now().Add(time.Duration(accessor.Session().Options.MaxAge)*time.Second).Unix())
+		}
+	}
 	return s.Save()
 }
 
@@ -185,17 +219,28 @@ func AccountSessionVersion(c *gin.Context) int {
 }
 func SetAccountSession(c *gin.Context, id, version int, rotate bool) error {
 	token, idToken := OIDCAccessToken(c), OIDCIDToken(c)
+	s := sessions.Default(c)
+	refresh, expires, deadline := s.Get(sessionKeyOIDCRefreshToken), s.Get(sessionKeyOIDCExpiresAt), s.Get(sessionKeyOIDCDeadline)
 	if rotate {
 		if err := resetSession(c); err != nil {
 			return err
 		}
 	}
-	s := sessions.Default(c)
+	s = sessions.Default(c)
 	s.Set("account_id", id)
 	s.Set("account_version", version)
 	if token != "" {
 		s.Set(sessionKeyOIDCAccessToken, token)
 		s.Set(sessionKeyOIDCIDToken, idToken)
+		if refresh != nil {
+			s.Set(sessionKeyOIDCRefreshToken, refresh)
+		}
+		if expires != nil {
+			s.Set(sessionKeyOIDCExpiresAt, expires)
+		}
+		if deadline != nil {
+			s.Set(sessionKeyOIDCDeadline, deadline)
+		}
 	}
 	return s.Save()
 }

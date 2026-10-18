@@ -68,6 +68,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	g.Use(middleware.GlobalRateLimit())
 	g.Use(sessions.Sessions("jcourse_session", store))
 	g.Use(middleware.SiteCopy(container.SystemSettingsQuery))
+	g.Use(middleware.RefreshOIDCSession(container.ResHubRefresh))
 	g.Use(middleware.ResolveCurrentUser(container.AuthResolution))
 	g.Use(middleware.UserIDRateLimit())
 	g.Use(middleware.CSRF())

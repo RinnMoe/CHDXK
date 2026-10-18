@@ -102,7 +102,7 @@ func (ctrl *AccountController) OIDCCallback(c *gin.Context) {
 			return
 		}
 	}
-	if err := middleware.SetSessionOIDC(c, session.AccessToken, session.IDToken); err != nil {
+	if err := middleware.SetSessionOIDCCredentials(c, session); err != nil {
 		respondError(c, err)
 		return
 	}

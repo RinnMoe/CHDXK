@@ -65,7 +65,7 @@ func (ctrl *AccountController) NativeExchange(c *gin.Context) {
 			return
 		}
 	}
-	if err := middleware.SetSessionOIDC(c, session.AccessToken, session.IDToken); err != nil {
+	if err := middleware.SetSessionOIDCCredentials(c, session); err != nil {
 		nativeAuthError(c, err)
 		return
 	}

@@ -61,6 +61,7 @@ func TestClientUsesStandardOIDCAndBearerPointAPI(t *testing.T) {
 				accessToken := "user-access-token"
 				writeJSON(t, w, map[string]any{
 					"access_token": accessToken,
+					"refresh_token": "user-refresh-token",
 					"token_type":   "Bearer",
 					"expires_in":   3600,
 					"scope":        "openid profile res_hub_identity",
@@ -179,7 +180,7 @@ func TestClientUsesStandardOIDCAndBearerPointAPI(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Exchange: %v", err)
 	}
-	if session.AccessToken != "user-access-token" || session.IDToken == "" || session.SessionID != "session-1" || session.ExpiresAt.IsZero() {
+	if session.AccessToken != "user-access-token" || session.RefreshToken != "user-refresh-token" || session.IDToken == "" || session.SessionID != "session-1" || session.ExpiresAt.IsZero() {
 		t.Fatalf("session = %#v", session)
 	}
 	if tokenRequestBody.Get("grant_type") != "authorization_code" || tokenRequestBody.Get("code") != "auth-code" || tokenRequestBody.Get("code_verifier") != "verifier" || tokenRequestBody.Get("redirect_uri") != "https://xk.example.test/api/auth/oidc/callback" {
