@@ -8,7 +8,73 @@ import (
 
 	"jcourse/internal/domain/course"
 	"jcourse/internal/infrastructure/repository"
+
+	"gorm.io/gorm"
 )
+
+func TestSemesterImportBatchesPreserveIdentityAndRollback(t *testing.T) {
+	db := newTestDBNamed(t, fmt.Sprintf("jcourse_batches_%d", time.Now().UnixNano()))
+	repo := repository.NewCourseRepository(db)
+	ctx := context.Background()
+	const semester = "2025-2026-2"
+	if err := db.Callback().Create().After("gorm:create").Register("test:bounded_inserts", func(tx *gorm.DB) {
+		switch tx.Statement.Table {
+		case "teachers", "courses", "course_sections":
+			if tx.RowsAffected > 50 {
+				t.Errorf("unbounded %s insert: %d rows", tx.Statement.Table, tx.RowsAffected)
+			}
+		}
+	}); err != nil {
+		t.Fatal(err)
+	}
+	offerings := make([]course.ManagedOffering, 125)
+	for i := range offerings {
+		offerings[i] = course.ManagedOffering{Code: fmt.Sprintf("BATCH%03d", i), Semester: semester,
+			Sections: []course.CourseSection{{SourceLessonID: fmt.Sprintf("lesson-%d", i),
+				CourseName: "批量课程", Department: "测试学院", Credit: 2,
+				Teachers: []string{fmt.Sprintf("测试教师%d", i)}}}}
+	}
+	// Exercise section batching as well as teacher and course batching.
+	for i := 1; i < 125; i++ {
+		section := offerings[0].Sections[0]
+		section.SourceLessonID = fmt.Sprintf("extra-%d", i)
+		offerings[0].Sections = append(offerings[0].Sections, section)
+	}
+	for attempt := 0; attempt < 2; attempt++ {
+		if err := repo.ReplaceSemester(ctx, semester, offerings); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, check := range []struct {
+		model any
+		want  int64
+	}{
+		{&repository.TeacherEntity{}, 125}, {&repository.CourseEntity{}, 125},
+		{&repository.OfferedCourseEntity{}, 125},
+	} {
+		var count int64
+		if err := db.Model(check.model).Count(&count).Error; err != nil || count != check.want {
+			t.Fatalf("%T: count=%d want=%d err=%v", check.model, count, check.want, err)
+		}
+	}
+	// Fail after earlier batches have already written, including the semester delete.
+	if err := db.Callback().Create().After("gorm:create").Register("test:fail_sections", func(tx *gorm.DB) {
+		if tx.Statement.Table == "course_sections" {
+			tx.AddError(fmt.Errorf("injected section failure"))
+		}
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.ReplaceSemester(ctx, semester, offerings[:1]); err == nil {
+		t.Fatal("expected import failure")
+	}
+	var count int64
+	if err := db.Model(&repository.CourseSectionEntity{}).
+		Joins("JOIN offered_courses oc ON oc.id = course_sections.offered_course_id").
+		Where("oc.semester = ?", semester).Count(&count).Error; err != nil || count != 249 {
+		t.Fatalf("failed import did not restore the previous semester: count=%d err=%v", count, err)
+	}
+}
 
 func TestCourseDataRepositorySemesterReplaceAndMaintenance(t *testing.T) {
 	dbName := fmt.Sprintf("jcourse_admin_%d", time.Now().UnixNano())

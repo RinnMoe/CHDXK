@@ -17,6 +17,10 @@ import (
 	"jcourse/pkg/apperr"
 )
 
+// Bound statement planning memory and parameter counts for full-semester imports.
+// All batches remain inside the caller's transaction.
+const courseImportBatchSize = 50
+
 type managedOfferingRow struct {
 	ID          int            `gorm:"column:id"`
 	CourseID    int            `gorm:"column:course_id"`
@@ -325,7 +329,7 @@ func (r *CourseRepository) saveOfferingsTx(ctx context.Context, tx *gorm.DB, sem
 			sectionRows = append(sectionRows, newCourseSectionEntity(offeringID, section, teacherIDs))
 		}
 		if len(sectionRows) > 0 {
-			if err := tx.Create(&sectionRows).Error; err != nil {
+			if err := tx.CreateInBatches(&sectionRows, courseImportBatchSize).Error; err != nil {
 				return err
 			}
 		}
@@ -370,8 +374,15 @@ func upsertCourseTeachers(ctx context.Context, tx *gorm.DB, searchConfig, semest
 			clause.Expr{SQL: "teachers.last_semester <= ?", Vars: []any{semester}},
 		}},
 	}
-	if err := tx.WithContext(ctx).Model(&TeacherEntity{}).Clauses(conflict).Create(&entities).Error; err != nil {
-		return nil, err
+	// Keep a pointer to each map slice: GORM's CreateInBatches RETURNING
+	// scanner treats map slices as structs and panics for model-backed inserts.
+	for start := 0; start < len(entities); start += courseImportBatchSize {
+		end := min(start+courseImportBatchSize, len(entities))
+		// RETURNING appends maps; cap the slice so it cannot overwrite the next batch.
+		batch := entities[start:end:end]
+		if err := tx.WithContext(ctx).Model(&TeacherEntity{}).Clauses(conflict).Create(&batch).Error; err != nil {
+			return nil, err
+		}
 	}
 	var teachers []TeacherEntity
 	if err := tx.WithContext(ctx).Select("id, code").Where("code IN ?", codes).Find(&teachers).Error; err != nil {
@@ -450,8 +461,12 @@ func upsertOfferingCourses(ctx context.Context, tx *gorm.DB, semester string, of
 				clause.Expr{SQL: "courses.last_semester <= ?", Vars: []any{semester}},
 			}},
 		}
-		if err := tx.WithContext(ctx).Model(&CourseEntity{}).Clauses(conflict).Create(&teacherTargets).Error; err != nil {
-			return nil, err
+		for start := 0; start < len(teacherTargets); start += courseImportBatchSize {
+			end := min(start+courseImportBatchSize, len(teacherTargets))
+			batch := teacherTargets[start:end:end]
+			if err := tx.WithContext(ctx).Model(&CourseEntity{}).Clauses(conflict).Create(&batch).Error; err != nil {
+				return nil, err
+			}
 		}
 	}
 	for _, item := range teacherlessTargets {
