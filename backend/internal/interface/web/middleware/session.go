@@ -84,7 +84,7 @@ func SetSessionOIDCCredentials(c *gin.Context, credentials auth.ResHubSession) e
 	if credentials.AccessToken == "" || credentials.IDToken == "" {
 		return fmt.Errorf("invalid oidc session")
 	}
-	if err := resetSession(c); err != nil {
+	if err := resetSession(c, false); err != nil {
 		return err
 	}
 	s := sessions.Default(c)
@@ -183,7 +183,7 @@ type gorillaSessionAccessor interface {
 	Session() *gsessions.Session
 }
 
-func resetSession(c *gin.Context) error {
+func resetSession(c *gin.Context, preserveOIDC bool) error {
 	s := sessions.Default(c)
 	if accessor, ok := s.(gorillaSessionAccessor); ok {
 		gs := accessor.Session()
@@ -201,7 +201,15 @@ func resetSession(c *gin.Context) error {
 		}
 		gs.ID = ""
 		gs.IsNew = true
-		gs.Values = map[any]any{}
+		values := map[any]any{}
+		if preserveOIDC {
+			for _, key := range oidcCredentialKeys {
+				if value, exists := gs.Values[key]; exists {
+					values[key] = value
+				}
+			}
+		}
+		gs.Values = values
 		gs.Options = options
 		return nil
 	}
@@ -218,30 +226,14 @@ func AccountSessionVersion(c *gin.Context) int {
 	return v
 }
 func SetAccountSession(c *gin.Context, id, version int, rotate bool) error {
-	token, idToken := OIDCAccessToken(c), OIDCIDToken(c)
-	s := sessions.Default(c)
-	refresh, expires, deadline := s.Get(sessionKeyOIDCRefreshToken), s.Get(sessionKeyOIDCExpiresAt), s.Get(sessionKeyOIDCDeadline)
 	if rotate {
-		if err := resetSession(c); err != nil {
+		if err := resetSession(c, true); err != nil {
 			return err
 		}
 	}
-	s = sessions.Default(c)
+	s := sessions.Default(c)
 	s.Set("account_id", id)
 	s.Set("account_version", version)
-	if token != "" {
-		s.Set(sessionKeyOIDCAccessToken, token)
-		s.Set(sessionKeyOIDCIDToken, idToken)
-		if refresh != nil {
-			s.Set(sessionKeyOIDCRefreshToken, refresh)
-		}
-		if expires != nil {
-			s.Set(sessionKeyOIDCExpiresAt, expires)
-		}
-		if deadline != nil {
-			s.Set(sessionKeyOIDCDeadline, deadline)
-		}
-	}
 	return s.Save()
 }
 func SetOIDCBindingTarget(c *gin.Context, id, version int) error {
@@ -261,7 +253,7 @@ func TakeOIDCBindingTarget(c *gin.Context) (int, int) {
 }
 
 func SetPasswordSession(c *gin.Context, id, version int) error {
-	if err := resetSession(c); err != nil {
+	if err := resetSession(c, false); err != nil {
 		return err
 	}
 	s := sessions.Default(c)

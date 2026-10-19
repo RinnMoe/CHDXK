@@ -1,11 +1,15 @@
 package middleware
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/gob"
 	"encoding/hex"
+	"maps"
 	"net/http"
+	"reflect"
 	"time"
 
 	"github.com/gin-contrib/sessions"
@@ -22,6 +26,23 @@ type revokedSessionStore struct {
 	retention time.Duration
 }
 
+// Bound to one request's Gorilla session; no snapshot data is persisted.
+type sessionSnapshotStore struct {
+	*revokedSessionStore
+	id     string
+	values map[any]any
+}
+
+type sessionSnapshotContextKey struct {
+	store *revokedSessionStore
+	name  string
+}
+
+var oidcCredentialKeys = []string{
+	sessionKeyOIDCAccessToken, sessionKeyOIDCIDToken, sessionKeyOIDCRefreshToken,
+	sessionKeyOIDCExpiresAt, sessionKeyOIDCDeadline,
+}
+
 type sessionCookieSink struct {
 	http.ResponseWriter
 	header http.Header
@@ -32,23 +53,48 @@ func (w sessionCookieSink) Header() http.Header { return w.header }
 func (s *revokedSessionStore) Options(options sessions.Options) { s.base.Options(options) }
 
 func (s *revokedSessionStore) Get(r *http.Request, name string) (*gsessions.Session, error) {
-	return gsessions.GetRegistry(r).Get(s, name)
+	key := sessionSnapshotContextKey{store: s, name: name}
+	snapshot, _ := r.Context().Value(key).(*sessionSnapshotStore)
+	if snapshot == nil {
+		snapshot = &sessionSnapshotStore{revokedSessionStore: s}
+		*r = *r.WithContext(context.WithValue(r.Context(), key, snapshot))
+	}
+	// Gorilla rebinds the returned session to the store passed to Registry.Get.
+	return gsessions.GetRegistry(r).Get(snapshot, name)
 }
 
 func (s *revokedSessionStore) New(r *http.Request, name string) (*gsessions.Session, error) {
+	return (&sessionSnapshotStore{revokedSessionStore: s}).New(r, name)
+}
+
+func (s *sessionSnapshotStore) New(r *http.Request, name string) (*gsessions.Session, error) {
 	loaded, err := s.base.New(r, name)
 	if loaded == nil {
 		return nil, err
 	}
 	// Gorilla keeps the store private; construct a session bound to this gate so
 	// direct Session.Save calls made by resetSession also pass through it.
+	s.id, s.values = loaded.ID, maps.Clone(loaded.Values)
 	wrapped := gsessions.NewSession(s, name)
 	wrapped.ID, wrapped.Values, wrapped.Options, wrapped.IsNew = loaded.ID, loaded.Values, loaded.Options, loaded.IsNew
+	if wrapped.IsNew {
+		// A cookie whose Redis entry expired starts a fresh anonymous session.
+		wrapped.ID, s.id = "", ""
+	}
 	return wrapped, err
 }
 
-func (s *revokedSessionStore) Save(r *http.Request, w http.ResponseWriter, session *gsessions.Session) error {
+func (s *revokedSessionStore) Save(r *http.Request, w http.ResponseWriter, session *gsessions.Session) (saveErr error) {
+	snapshot, _ := session.Store().(*sessionSnapshotStore)
+	defer func() {
+		if saveErr == nil && snapshot != nil {
+			snapshot.id, snapshot.values = session.ID, maps.Clone(session.Values)
+		}
+	}()
 	if session.ID == "" {
+		if err := boundSessionDeadline(session); err != nil {
+			return err
+		}
 		return s.base.Save(r, w, session)
 	}
 	digest := sha256.Sum256([]byte(session.ID))
@@ -101,10 +147,82 @@ func (s *revokedSessionStore) Save(r *http.Request, w http.ResponseWriter, sessi
 		}
 		return auth.ErrResHubSession
 	}
+	if snapshot != nil && snapshot.id == session.ID && (session.Options.MaxAge > 0 || len(session.Values) > 0) {
+		data, err := redis.Bytes(conn.Do("GET", sessionRedisPrefix+session.ID))
+		if err == redis.ErrNil {
+			return auth.ErrResHubSession
+		}
+		if err != nil {
+			return auth.ErrResHubUnavailable
+		}
+		var latest map[any]any
+		// NewSessionStore uses RediStore's default Gob session serializer.
+		if gob.NewDecoder(bytes.NewReader(data)).Decode(&latest) != nil {
+			return auth.ErrResHubUnavailable
+		}
+		session.Values = mergeSessionChanges(snapshot.values, session.Values, latest)
+	}
+	if err := boundSessionDeadline(session); err != nil {
+		return err
+	}
 	if session.Options != nil && session.Options.MaxAge <= 0 {
 		if _, err := conn.Do("SET", key, "1", "PX", s.retention.Milliseconds()); err != nil {
 			return auth.ErrResHubUnavailable
 		}
 	}
 	return s.base.Save(r, w, session)
+}
+
+func boundSessionDeadline(session *gsessions.Session) error {
+	deadline, _ := session.Values[sessionKeyOIDCDeadline].(int64)
+	if deadline == 0 || session.Options == nil || session.Options.MaxAge <= 0 {
+		return nil
+	}
+	remaining := int(deadline - time.Now().Unix())
+	if remaining <= 0 {
+		return auth.ErrResHubSession
+	}
+	if remaining < session.Options.MaxAge {
+		options := *session.Options
+		options.MaxAge = remaining
+		session.Options = &options
+	}
+	return nil
+}
+
+// Session values written by this application are scalar values. Apply only the
+// caller's changes, retaining unrelated concurrent writes and explicit deletions.
+func mergeSessionChanges(original, incoming, latest map[any]any) map[any]any {
+	merged := maps.Clone(latest)
+	if merged == nil {
+		merged = make(map[any]any)
+	}
+	for key, value := range incoming {
+		before, existed := original[key]
+		if !existed || !reflect.DeepEqual(before, value) {
+			merged[key] = value
+		}
+	}
+	for key := range original {
+		if _, exists := incoming[key]; !exists {
+			delete(merged, key)
+		}
+	}
+	// Concurrent refreshes can finish out of order. If another request has
+	// already advanced the credentials, use that entire authoritative bundle.
+	for _, key := range oidcCredentialKeys {
+		before, hadBefore := original[key]
+		current, hasCurrent := latest[key]
+		if hadBefore != hasCurrent || !reflect.DeepEqual(before, current) {
+			for _, credentialKey := range oidcCredentialKeys {
+				if value, exists := latest[credentialKey]; exists {
+					merged[credentialKey] = value
+				} else {
+					delete(merged, credentialKey)
+				}
+			}
+			break
+		}
+	}
+	return merged
 }
