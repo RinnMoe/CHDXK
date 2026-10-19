@@ -49,8 +49,20 @@ func revocationTestCleanupID(t *testing.T, store *revokedSessionStore, id string
 }
 
 func TestSessionStoreSlowRefreshCannotRestoreDeletedSession(t *testing.T) {
-	for _, operation := range []string{"logout", "account-rotation"} {
-		t.Run(operation, func(t *testing.T) {
+	for _, outcome := range []struct {
+		name      string
+		operation string
+		err       error
+	}{
+		{"success/logout", "logout", nil},
+		{"success/account-rotation", "account-rotation", nil},
+		{"invalid-grant/logout", "logout", auth.ErrResHubSession},
+		{"invalid-grant/account-rotation", "account-rotation", auth.ErrResHubSession},
+		{"uncertain/logout", "logout", auth.ErrResHubRefreshUncertain},
+		{"uncertain/account-rotation", "account-rotation", auth.ErrResHubRefreshUncertain},
+	} {
+		operation := outcome.operation
+		t.Run(outcome.name, func(t *testing.T) {
 			gin.SetMode(gin.TestMode)
 			first, second := revocationTestStores(t)
 			seedRouter := gin.New()
@@ -77,6 +89,9 @@ func TestSessionStoreSlowRefreshCannotRestoreDeletedSession(t *testing.T) {
 			slow.Use(sessions.Sessions("revocation_test", first), RefreshOIDCSession(&auth.MockResHubSessionRefresher{OnRefresh: func(context.Context, string) (auth.ResHubSession, error) {
 				close(loaded)
 				<-release
+				if outcome.err != nil {
+					return auth.ResHubSession{}, outcome.err
+				}
 				return auth.ResHubSession{AccessToken: "test-refreshed-access", RefreshToken: "test-refreshed-grant", ExpiresAt: time.Now().Add(time.Hour)}, nil
 			}}))
 			slow.GET("/refresh", func(c *gin.Context) {
@@ -170,6 +185,40 @@ func TestSessionStoreCancelledLogoutStillRevokes(t *testing.T) {
 	}
 	if err := stale.Save(request2, httptest.NewRecorder()); !errors.Is(err, auth.ErrResHubSession) {
 		t.Fatal("cancelled logout failed to revoke old session")
+	}
+}
+
+func TestSessionStoreRepeatedDeleteRetriesStorageWithoutClearingCookie(t *testing.T) {
+	store, _ := revocationTestStores(t)
+	request := httptest.NewRequest("GET", "/", nil)
+	session, err := store.New(request, "repeat_delete_test")
+	if err != nil {
+		t.Fatal("create session")
+	}
+	session.Values["account_id"] = 7
+	if err := session.Save(request, httptest.NewRecorder()); err != nil {
+		t.Fatal("save initial session")
+	}
+	revocationTestCleanupID(t, store, session.ID)
+	digest := sha256.Sum256([]byte(session.ID))
+	key := "jcourse:session-revocation:" + hex.EncodeToString(digest[:])
+	conn := store.pool.Get()
+	defer conn.Close()
+	// Model a logout that persisted its revocation but lost the DEL response.
+	if _, err := conn.Do("SET", key, "1", "EX", 3600); err != nil {
+		t.Fatal("seed revocation")
+	}
+	session.Options.MaxAge = -1
+	response := httptest.NewRecorder()
+	response.Header().Set("X-Test", "preserved")
+	if err := session.Save(request, response); err != nil {
+		t.Fatal("repeat server-side deletion failed")
+	}
+	if len(response.Result().Cookies()) != 0 || response.Header().Get("X-Test") != "preserved" {
+		t.Fatal("repeat deletion modified the response headers or cleared a newer cookie")
+	}
+	if exists, err := redis.Bool(conn.Do("EXISTS", sessionRedisPrefix+session.ID)); err != nil || exists {
+		t.Fatal("repeat deletion left revoked session data behind")
 	}
 }
 

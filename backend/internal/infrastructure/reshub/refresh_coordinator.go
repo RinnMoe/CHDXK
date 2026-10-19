@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -93,7 +94,16 @@ func (r *RefreshCoordinator) Refresh(ctx context.Context, token string) (auth.Re
 				// An explicit provider rejection that did not consume the grant can
 				// be retried later. Transport ambiguity is deliberately fail-closed.
 				if errors.Is(err, auth.ErrResHubUnavailable) {
-					_ = r.redis.Del(rotationCtx, key+":consumed").Err()
+					// Discovery may have exhausted rotationCtx without consuming
+					// the grant. Cleanup needs its own bounded lifetime.
+					cleanupCtx, cleanupDone := context.WithTimeout(context.Background(), time.Second)
+					cleanupErr := r.redis.Del(cleanupCtx, key+":consumed").Err()
+					cleanupDone()
+					if cleanupErr != nil {
+						// Retain the marker when recovery cannot be confirmed;
+						// never silently allow replay after a storage failure.
+						return auth.ResHubSession{}, fmt.Errorf("%w: could not clear unused refresh grant", auth.ErrResHubUnavailable)
+					}
 				}
 				return auth.ResHubSession{}, err
 			}

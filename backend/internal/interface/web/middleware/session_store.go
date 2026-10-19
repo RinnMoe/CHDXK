@@ -22,6 +22,13 @@ type revokedSessionStore struct {
 	retention time.Duration
 }
 
+type sessionCookieSink struct {
+	http.ResponseWriter
+	header http.Header
+}
+
+func (w sessionCookieSink) Header() http.Header { return w.header }
+
 func (s *revokedSessionStore) Options(options sessions.Options) { s.base.Options(options) }
 
 func (s *revokedSessionStore) Get(r *http.Request, name string) (*gsessions.Session, error) {
@@ -81,17 +88,22 @@ func (s *revokedSessionStore) Save(r *http.Request, w http.ResponseWriter, sessi
 	defer func() {
 		_, _ = conn.Do("EVAL", `if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) end return 0`, 1, key+":lock", ownerID)
 	}()
+	revoked, err := redis.Bool(conn.Do("EXISTS", key))
+	if err != nil {
+		return auth.ErrResHubUnavailable
+	}
+	if revoked {
+		if session.Options != nil && session.Options.MaxAge <= 0 {
+			// A late failure from the old session must not clear the cookie
+			// issued by a concurrent account switch or fresh login. Still retry
+			// server-side deletion if the original delete failed.
+			return s.base.Save(r, sessionCookieSink{ResponseWriter: w, header: w.Header().Clone()}, session)
+		}
+		return auth.ErrResHubSession
+	}
 	if session.Options != nil && session.Options.MaxAge <= 0 {
 		if _, err := conn.Do("SET", key, "1", "PX", s.retention.Milliseconds()); err != nil {
 			return auth.ErrResHubUnavailable
-		}
-	} else {
-		revoked, err := redis.Bool(conn.Do("EXISTS", key))
-		if err != nil {
-			return auth.ErrResHubUnavailable
-		}
-		if revoked {
-			return auth.ErrResHubSession
 		}
 	}
 	return s.base.Save(r, w, session)

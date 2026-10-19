@@ -178,6 +178,51 @@ func TestRefreshCoordinatorExplicitSafeFailureCanRetry(t *testing.T) {
 	}
 }
 
+func TestRefreshCoordinatorSafeTimeoutCanRetry(t *testing.T) {
+	client, token := coordinatorRedis(t)
+	var calls atomic.Int32
+	provider := coordinatorRefreshFunc(func(ctx context.Context, _ string) (auth.ResHubSession, error) {
+		if calls.Add(1) == 1 {
+			// Discovery can exhaust the rotation budget without sending a grant.
+			<-ctx.Done()
+			return auth.ResHubSession{}, auth.ErrResHubUnavailable
+		}
+		return coordinatorResult(), nil
+	})
+	coordinator := NewRefreshCoordinator(client, provider)
+	if _, err := coordinator.Refresh(context.Background(), token); !errors.Is(err, auth.ErrResHubUnavailable) {
+		t.Fatal("expected a recoverable discovery timeout")
+	}
+	got, err := coordinator.Refresh(context.Background(), token)
+	if err != nil || got != coordinatorResult() || calls.Load() != 2 {
+		t.Fatal("discovery timeout incorrectly invalidated an unused grant")
+	}
+}
+
+func TestRefreshCoordinatorSafeFailureReportsCleanupFailure(t *testing.T) {
+	client, token := coordinatorRedis(t)
+	ownerClient := redis.NewClient(client.Options())
+	t.Cleanup(func() { _ = ownerClient.Close() })
+	var calls atomic.Int32
+	provider := coordinatorRefreshFunc(func(context.Context, string) (auth.ResHubSession, error) {
+		calls.Add(1)
+		_ = ownerClient.Close()
+		return auth.ResHubSession{}, auth.ErrResHubUnavailable
+	})
+	_, err := NewRefreshCoordinator(ownerClient, provider).Refresh(context.Background(), token)
+	if !errors.Is(err, auth.ErrResHubUnavailable) || err == auth.ErrResHubUnavailable {
+		t.Fatal("failed marker cleanup was not reported as a distinct unavailable error")
+	}
+	digest := sha256.Sum256([]byte(token))
+	key := "jcourse:oidc-refresh:" + hex.EncodeToString(digest[:])
+	if err := client.Del(context.Background(), key+":lock").Err(); err != nil {
+		t.Fatal("expire disconnected owner's lock")
+	}
+	if _, err := NewRefreshCoordinator(client, provider).Refresh(context.Background(), token); !errors.Is(err, auth.ErrResHubSession) || calls.Load() != 1 {
+		t.Fatal("unconfirmed cleanup permitted another provider call")
+	}
+}
+
 func TestRefreshCoordinatorExpiredResultNeverReplaysGrant(t *testing.T) {
 	client, token := coordinatorRedis(t)
 	var calls atomic.Int32
