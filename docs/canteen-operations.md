@@ -36,7 +36,7 @@ go run cmd/taskworker/main.go --config config/config.yaml   # 日任务与异步
 ## 媒体
 
 - 目录：`canteen.media.dir`（默认 `.local/canteen-media`，已被 `.gitignore` 忽略）。
-- 发布编排 `docker/release/compose.yaml` 已把 `canteen_media` 卷挂载到 `/app/.local/canteen-media`；API 镜像在构建阶段预创建该目录并设置 `app:app` 所有权。重建 API 容器不会丢图片；已用命名卷验证非 root 写入和跨容器读取。备份/恢复时请与 PostgreSQL 备份一起处理该卷。
+- 发布编排 `docker/release/compose.yaml` 已把 `canteen_media` 卷挂载到 `/app/.local/canteen-media`；API 与 taskworker 镜像都在构建阶段预创建 `.local/canteen-media` 并设置 `app:app` 所有权。重建 API 容器不会丢图片；已用命名卷验证非 root 写入、跨容器读取，并实际启动 API + taskworker 确认两者持续运行。备份/恢复时请与 PostgreSQL 备份一起处理该卷。
 - 单张上限、每日上传、像素与每评价张数见 `config/config.example.yaml` 的 `canteen.media`。
 - 上传经过服务端重编码，EXIF（含 GPS）不会保留。
 - 未审核图片不进入公开评价列表；直链读取会校验所有者/管理员。
