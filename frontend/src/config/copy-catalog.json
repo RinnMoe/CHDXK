@@ -1688,6 +1688,11 @@
     "audience": "user",
     "location": "pwa.config.ts"
   },
+  "copy.server.01c83a8b3794": {
+    "text": "请等待同步完成后修改资料",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
+  },
   "copy.server.020cd7697720": {
     "text": "教务连接或采集失败，请检查教务系统是否可访问后重新连接",
     "audience": "user",
@@ -1708,6 +1713,11 @@
     "audience": "user",
     "location": "internal/interface/web/controller/error.go"
   },
+  "copy.server.0379075134c5": {
+    "text": "请填写有效的积分数量和原因",
+    "audience": "user",
+    "location": "internal/application/local_account.go"
+  },
   "copy.server.0411c57ee9a8": {
     "text": "教务学期列表读取失败",
     "audience": "user",
@@ -1723,10 +1733,35 @@
     "audience": "user",
     "location": "internal/app/site_settings.go"
   },
+  "copy.server.0555ef73eb29": {
+    "text": "今日评价次数已达上限",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
   "copy.server.06e522e8e374": {
     "text": "课程数据来源必须是 CHD 教务系统",
     "audience": "user",
     "location": "internal/application/course_admin.go"
+  },
+  "copy.server.0a8a57a4d859": {
+    "text": "体验标签无效",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
+  "copy.server.0b819c2775a2": {
+    "text": "任务进度无法保存，服务重启后需重新发起；请检查采集缓存目录",
+    "audience": "user",
+    "location": "internal/application/source_job.go"
+  },
+  "copy.server.0bb1c535f60d": {
+    "text": "关闭后停止图片上传与审核",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.0e3129049291": {
+    "text": "请填写账号、昵称和密码",
+    "audience": "user",
+    "location": "internal/interface/web/controller/local_account.go"
   },
   "copy.server.0efb5e398193": {
     "text": "点评分数不能超过 10 个字符",
@@ -1748,15 +1783,50 @@
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
   },
+  "copy.server.11a39befb9d5": {
+    "text": "开放本站账号注册",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
   "copy.server.14c6a4b45b6d": {
     "text": "收款用户不存在",
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
   },
+  "copy.server.14e8ff9ad71b": {
+    "text": "食堂评价暂未开放",
+    "audience": "user",
+    "location": "internal/application/canteen_catalog_query.go"
+  },
+  "copy.server.1742be6b7b97": {
+    "text": "个人课表的学期列表未能加载，请稍后重新连接",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
+  "copy.server.195b7586bb70": {
+    "text": "启用实拍图片",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
   "copy.server.19894dcf4452": {
     "text": "课程数据中没有课节记录",
     "audience": "user",
     "location": "internal/application/course_admin.go"
+  },
+  "copy.server.1afe7ed65de9": {
+    "text": "允许用户扫码导入个人课程。关闭后不再接受新任务，已提交任务继续完成。",
+    "audience": "technical",
+    "location": "internal/application/import_settings.go"
+  },
+  "copy.server.1b46ba302da0": {
+    "text": "允许管理员从教务批量同步开课记录。关闭后不再接受新任务，已提交任务继续完成。",
+    "audience": "user",
+    "location": "internal/application/import_settings.go"
+  },
+  "copy.server.1b5f5da754cb": {
+    "text": "评分必须在 1 到 5 之间",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
   },
   "copy.server.1c3d38879c17": {
     "text": "该学期未开设此课程",
@@ -1773,30 +1843,95 @@
     "audience": "user",
     "location": "internal/interface/web/controller/course_admin.go"
   },
+  "copy.server.1ddce200e85e": {
+    "text": "教师主页请填写完整的网页地址",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
+  },
+  "copy.server.1e815e64c219": {
+    "text": "启用食堂评价",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.1f665227837b": {
+    "text": "只能设置管理员或用户身份",
+    "audience": "user",
+    "location": "internal/application/local_account.go"
+  },
+  "copy.server.21073f3f2d4e": {
+    "text": "教务服务暂时不可用，退避重试后仍未恢复；已完成学期保留，可稍后继续",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
+  "copy.server.215214bd0928": {
+    "text": "请填写处理方式",
+    "audience": "user",
+    "location": "internal/interface/web/controller/user_management.go"
+  },
+  "copy.server.226c882af29b": {
+    "text": "教务查询接口拒绝了请求，已停止无效重试，请联系技术管理员检查接口",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
   "copy.server.22f70fc11fa4": {
     "text": "点评投票热度分",
     "audience": "user",
     "location": "internal/app/site_settings.go"
+  },
+  "copy.server.2382f195fa01": {
+    "text": "店铺已合并到其他店铺",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
   },
   "copy.server.2616d115e909": {
     "text": "本学期未通过导入校验或保存失败，已停止同步",
     "audience": "technical",
     "location": "internal/application/course_sync.go"
   },
+  "copy.server.264a73161764": {
+    "text": "图片大小超出限制",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
   "copy.server.2a0ec9b7708a": {
     "text": "积分余额不足",
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.2ada1cbf5f87": {
+    "text": "手动添加课程",
+    "audience": "user",
+    "location": "internal/application/import_settings.go"
+  },
+  "copy.server.2bfef4a3a375": {
+    "text": "采集进度缓存无法保存，请联系技术管理员检查存储空间与目录权限",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
   },
   "copy.server.2c6d5b983b8e": {
     "text": "无权更新管理员备注",
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
   },
+  "copy.server.2c9f198c3899": {
+    "text": "扫码登录未完成，请重新连接并在手机上确认登录",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
+  "copy.server.2ca4e04acbc4": {
+    "text": "教师资料同步完成，请在重名处理页确认无法唯一匹配的教师",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
+  },
   "copy.server.2d6d4c3dcea3": {
     "text": "课程数据 ZIP 不能超过 64 MiB",
     "audience": "user",
     "location": "internal/interface/web/controller/course_admin.go"
+  },
+  "copy.server.2da21c9fb748": {
+    "text": "未能打开个人课表，请确认学校账号可查看本科教务的个人课表后重新连接",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
   },
   "copy.server.2dff186d8eef": {
     "text": "每日投票上限",
@@ -1823,6 +1958,16 @@
     "audience": "user",
     "location": "internal/interface/web/controller/point.go"
   },
+  "copy.server.311bb313fdec": {
+    "text": "账号",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.323a881ebd47": {
+    "text": "联系方式",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
+  },
   "copy.server.339312721109": {
     "text": "撤回发布点评奖励",
     "audience": "user",
@@ -1838,10 +1983,25 @@
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
   },
+  "copy.server.35fce25346aa": {
+    "text": "教学班数量范围无效",
+    "audience": "technical",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.368ccdddb696": {
+    "text": "排序方向无效",
+    "audience": "user",
+    "location": "internal/interface/web/controller/course_admin.go"
+  },
   "copy.server.36ead66c1105": {
     "text": "课程首评奖励",
     "audience": "user",
     "location": "internal/application/point_dto.go"
+  },
+  "copy.server.38dcab981dae": {
+    "text": "体验标签不能重复",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
   },
   "copy.server.3b95740295f1": {
     "text": "课程大纲链接只能指向 CHD 教务系统",
@@ -1853,20 +2013,65 @@
     "audience": "user",
     "location": "internal/app/site_settings.go"
   },
+  "copy.server.3c2342a2da63": {
+    "text": "管理员教务同步",
+    "audience": "user",
+    "location": "internal/application/import_settings.go"
+  },
+  "copy.server.3cd1ec48e03c": {
+    "text": "当前学校账号无权访问全校开课查询，请使用有访问权限的账号重新连接",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
+  "copy.server.3d1a8a4e75de": {
+    "text": "请填写密码",
+    "audience": "user",
+    "location": "internal/interface/web/controller/local_account.go"
+  },
+  "copy.server.3d60de565a5d": {
+    "text": "没有积分管理权限",
+    "audience": "user",
+    "location": "internal/application/local_account.go"
+  },
   "copy.server.3dd156610922": {
     "text": "点评不存在",
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.3e8c43613bc3": {
+    "text": "没有权限操作该评价",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
+  "copy.server.3e946bab9bf2": {
+    "text": "教务课程数据未通过完整性校验，重试后仍未成功，未保存当前学期；已完成学期保留，请稍后重试",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
+  "copy.server.3ec7aaa2fb29": {
+    "text": "未能读取教务学期列表，请稍后重新连接；如持续失败，请联系技术管理员",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
   },
   "copy.server.3edfd648efa7": {
     "text": "通知级别必须是 0、1 或 2",
     "audience": "user",
     "location": "internal/interface/web/controller/course.go"
   },
+  "copy.server.3ef6a41c3cce": {
+    "text": "授权参数无效",
+    "audience": "user",
+    "location": "internal/interface/web/controller/native_account.go"
+  },
   "copy.server.4041e686be40": {
     "text": "数量应在 1 到 100 之间",
     "audience": "user",
     "location": "internal/interface/web/controller/teacher_hot.go"
+  },
+  "copy.server.42a86936607a": {
+    "text": "选课记录无效",
+    "audience": "user",
+    "location": "internal/interface/web/controller/course_enrollment.go"
   },
   "copy.server.42d6be3dd039": {
     "text": "当前学期",
@@ -1882,6 +2087,16 @@
     "text": "API Key ID 无效",
     "audience": "technical",
     "location": "internal/interface/web/controller/api_key.go"
+  },
+  "copy.server.470c4e7fb42f": {
+    "text": "本学期课表请求失败，自动重试后仍未成功；已完成学期的记录保留，请稍后重试",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
+  "copy.server.471bf17ab983": {
+    "text": "读取本站教师失败，原有资料保留",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
   },
   "copy.server.483679aab45f": {
     "text": "刷评通知管理员邮箱",
@@ -1903,10 +2118,25 @@
     "audience": "user",
     "location": "internal/application/course_sync.go"
   },
+  "copy.server.4dcc8715d6cb": {
+    "text": "授权已失效，请重新登录",
+    "audience": "user",
+    "location": "internal/interface/web/controller/native_account.go"
+  },
   "copy.server.4e3601363432": {
     "text": "审计日志时间范围无效",
     "audience": "technical",
     "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.4e769a09d8aa": {
+    "text": "教师主页地址过长",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
+  },
+  "copy.server.4f78af916993": {
+    "text": "食堂信息不完整",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
   },
   "copy.server.4fe17b07d060": {
     "text": "请完成扫码登录并选择学期",
@@ -1917,6 +2147,11 @@
     "text": "公告 ID 无效",
     "audience": "user",
     "location": "internal/interface/web/controller/announcement.go"
+  },
+  "copy.server.518379853676": {
+    "text": "；已缓存的课程可在重新扫码并选择相同学期后继续采集",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
   },
   "copy.server.51d84a61ce98": {
     "text": "二维码已过期，请重新连接",
@@ -1953,25 +2188,50 @@
     "audience": "user",
     "location": "internal/interface/web/controller/review.go"
   },
+  "copy.server.55f92574f2cc": {
+    "text": "仅超级管理员可修改导入设置",
+    "audience": "technical",
+    "location": "internal/application/system_settings_command.go"
+  },
   "copy.server.56107592d5d8": {
     "text": "刷评检测评论数阈值",
     "audience": "user",
     "location": "internal/app/site_settings.go"
+  },
+  "copy.server.58edcb208f44": {
+    "text": "不能处理权限高于自己的管理员账号",
+    "audience": "user",
+    "location": "internal/application/local_account.go"
   },
   "copy.server.592114a9a2e6": {
     "text": "课程大纲链接路径无效",
     "audience": "user",
     "location": "internal/application/course_admin.go"
   },
+  "copy.server.5d72db1ddf57": {
+    "text": "请先填写姓名和学院",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
+  },
   "copy.server.5edf4f1d062a": {
     "text": "API Key 无效",
     "audience": "technical",
     "location": "pkg/apperr/apperr.go"
   },
+  "copy.server.5f31112db416": {
+    "text": "请填写用户权限",
+    "audience": "user",
+    "location": "internal/interface/web/controller/user_management.go"
+  },
   "copy.server.601b63c1f004": {
     "text": "需要超级管理员权限",
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.61e8303e2f27": {
+    "text": "请填写有效的姓名、学院和职称",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
   },
   "copy.server.62b3e23530b6": {
     "text": "教师 ID 无效",
@@ -1982,6 +2242,16 @@
     "text": "课节 ID 不能为空",
     "audience": "user",
     "location": "internal/application/course_admin.go"
+  },
+  "copy.server.64550b9ec5d4": {
+    "text": "结束时间须晚于当前时间",
+    "audience": "user",
+    "location": "internal/application/local_account.go"
+  },
+  "copy.server.6461607d824b": {
+    "text": "账号名须为 3–32 位小写字母、数字、点、横线或下划线",
+    "audience": "user",
+    "location": "internal/application/local_account.go"
   },
   "copy.server.65240f42cf2d": {
     "text": "同步学期与所选学期不一致",
@@ -2003,10 +2273,20 @@
     "audience": "user",
     "location": "internal/app/site_settings.go"
   },
+  "copy.server.67dd99b0febd": {
+    "text": "该教师主页资料读取失败，请稍后重试，现有资料保留",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
+  },
   "copy.server.6810d7b6baef": {
     "text": "请先在学校统一登录页面绑定微信，再重新连接",
     "audience": "user",
     "location": "internal/application/course_sync.go"
+  },
+  "copy.server.686f53df46e3": {
+    "text": "资料站暂时无法连接",
+    "audience": "user",
+    "location": "internal/interface/web/controller/native_account.go"
   },
   "copy.server.6985c2d3be25": {
     "text": "课程数据包含重复课节 ID",
@@ -2018,25 +2298,90 @@
     "audience": "user",
     "location": "internal/app/site_settings.go"
   },
+  "copy.server.6fad553cf8a2": {
+    "text": "体验标签最多选择 5 个",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
+  "copy.server.70783f8f60ad": {
+    "text": "无效的处理方式",
+    "audience": "user",
+    "location": "internal/application/local_account.go"
+  },
+  "copy.server.718a46d73832": {
+    "text": "已举报过该内容",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
   "copy.server.71adc327572d": {
     "text": "今日投票次数已达上限",
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.730eda5c59ba": {
+    "text": "个人简介",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
+  },
+  "copy.server.73a9716b3098": {
+    "text": "仅支持 JPEG/PNG 图片",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
+  "copy.server.73c7c4d9aca7": {
+    "text": "导入队列已满，请稍后重试",
+    "audience": "technical",
+    "location": "internal/application/collector_queue.go"
   },
   "copy.server.757bbbda2913": {
     "text": "页码无效",
     "audience": "user",
     "location": "internal/interface/web/controller/course_admin.go"
   },
+  "copy.server.76c1035aa677": {
+    "text": "举报不存在",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
   "copy.server.789ce72effce": {
     "text": "站点每日统计不存在",
     "audience": "user",
     "location": "internal/interface/web/controller/site_stats.go"
   },
+  "copy.server.7920030fec51": {
+    "text": "只能修改自己的评价",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
+  "copy.server.7a21e09ddc3e": {
+    "text": "请选择姓名与学院匹配的候选主页",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
+  },
+  "copy.server.7a8faf477ac4": {
+    "text": "教务系统暂时限制了请求频率，持续降速重试后仍未恢复，请稍后重新连接",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
   "copy.server.7ac5fca17fe0": {
     "text": "发布点评奖励积分",
     "audience": "user",
     "location": "internal/app/site_settings.go"
+  },
+  "copy.server.7bbe61ee9928": {
+    "text": "不能合并到自身",
+    "audience": "user",
+    "location": "internal/application/canteen_admin.go"
+  },
+  "copy.server.7bd446125892": {
+    "text": "1～64。保存后立即生效；降低时等待已有任务结束，增加时自动接纳排队任务。",
+    "audience": "user",
+    "location": "internal/application/import_settings.go"
+  },
+  "copy.server.7c6e86d4b99c": {
+    "text": "菜品已合并到其他菜品",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
   },
   "copy.server.7cb42c86e13f": {
     "text": "请上传包含 semester.json 和 report.json 的 ZIP 文件",
@@ -2048,20 +2393,50 @@
     "audience": "user",
     "location": "internal/application/course_admin.go"
   },
+  "copy.server.7f0b7f649016": {
+    "text": "图片尺寸超出限制",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
   "copy.server.803f35d6d887": {
     "text": "冲正：review_create",
     "audience": "user",
     "location": "internal/application/point_dto.go"
+  },
+  "copy.server.81dc74fa55b1": {
+    "text": "密码至少 8 个字符，最多 72 字节",
+    "audience": "user",
+    "location": "internal/application/local_account.go"
+  },
+  "copy.server.82af6bde5b1f": {
+    "text": "店铺 ID 无效",
+    "audience": "user",
+    "location": "internal/interface/web/controller/canteen_admin.go"
+  },
+  "copy.server.83516a45d169": {
+    "text": "店铺不存在",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
   },
   "copy.server.83dd7ea30e95": {
     "text": "同一学期内课节 ID 不能重复",
     "audience": "user",
     "location": "internal/application/course_admin.go"
   },
+  "copy.server.845206616ac8": {
+    "text": "排队已取消或超时，请重新导入",
+    "audience": "technical",
+    "location": "internal/application/course_sync.go"
+  },
   "copy.server.8478da401107": {
     "text": "日期范围无效",
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.85067a424ad3": {
+    "text": "课程缺少教学班信息，请重新导入",
+    "audience": "technical",
+    "location": "internal/application/enrollment_sync.go"
   },
   "copy.server.85a3c8a85c98": {
     "text": "无权创建点评",
@@ -2083,15 +2458,60 @@
     "audience": "user",
     "location": "internal/application/course_admin.go"
   },
+  "copy.server.89e1166df343": {
+    "text": "请填写积分数量和原因",
+    "audience": "user",
+    "location": "internal/interface/web/controller/user_management.go"
+  },
+  "copy.server.8a2ea403fda2": {
+    "text": "未找到该用户",
+    "audience": "user",
+    "location": "internal/application/local_account.go"
+  },
+  "copy.server.8ad81042fb52": {
+    "text": "处理原因过长",
+    "audience": "user",
+    "location": "internal/application/local_account.go"
+  },
+  "copy.server.8e707d319097": {
+    "text": "启用到店评价",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
   "copy.server.8f7f6f047afe": {
     "text": "课程 ID 无效",
     "audience": "user",
     "location": "internal/interface/web/controller/course.go"
   },
+  "copy.server.8f8ed17044fb": {
+    "text": "当前扫码导入人数较多，请稍后重试",
+    "audience": "technical",
+    "location": "internal/application/enrollment_sync.go"
+  },
+  "copy.server.91115b0120ee": {
+    "text": "允许用户选择已有课程和教学班添加选课记录。关闭后仍可编辑或删除已有记录。",
+    "audience": "technical",
+    "location": "internal/application/import_settings.go"
+  },
+  "copy.server.914fae01b212": {
+    "text": "关闭后隐藏注册入口，并停止接受新账号注册。资料站首次授权登录仍会创建绑定账号。",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.918d4c97e8b8": {
+    "text": "今日上传次数已达上限",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
   "copy.server.91baccd86e58": {
     "text": "教师不存在",
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.91f47f087537": {
+    "text": "没有此项管理权限",
+    "audience": "user",
+    "location": "internal/interface/web/middleware/auth.go"
   },
   "copy.server.91fec82e09e3": {
     "text": "请选择有效且不重复的学期",
@@ -2107,6 +2527,16 @@
     "text": "点评内容不能超过 9681 个字符",
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.949213601cc7": {
+    "text": "请填写账号和昵称",
+    "audience": "user",
+    "location": "internal/interface/web/controller/local_account.go"
+  },
+  "copy.server.94cbcdbb3c62": {
+    "text": "不能选择该账号",
+    "audience": "user",
+    "location": "internal/interface/web/controller/account.go"
   },
   "copy.server.95b12e1df84f": {
     "text": "一个开课记录内的教学班必须使用相同主讲教师",
@@ -2128,15 +2558,95 @@
     "audience": "user",
     "location": "internal/application/course_admin.go"
   },
+  "copy.server.97cbadbc805b": {
+    "text": "关闭后停止创建、修改和投票，已有评价仍可浏览",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
+  "copy.server.9823c52e63c6": {
+    "text": "图片不存在",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
+  "copy.server.9866a777af89": {
+    "text": "店铺当前不可评价",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
+  "copy.server.98df7af87466": {
+    "text": "连接等待超时，请重新排队导入",
+    "audience": "technical",
+    "location": "internal/application/course_sync.go"
+  },
+  "copy.server.9947743a0924": {
+    "text": "请填写账号资料",
+    "audience": "user",
+    "location": "internal/interface/web/controller/user_management.go"
+  },
+  "copy.server.9a492dcbc506": {
+    "text": "昵称须为 1–64 个字",
+    "audience": "user",
+    "location": "internal/application/local_account.go"
+  },
+  "copy.server.9af2bda0a7af": {
+    "text": "每条评价最多关联 3 张图片",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
+  "copy.server.9b8eee76a682": {
+    "text": "教师主页目录持续重试后仍无法读取，原有资料保留；再次同步可从缓存继续",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
+  },
+  "copy.server.9c76afbf2446": {
+    "text": "资料字段或内容长度无效",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
+  },
+  "copy.server.9d6bf1ffbf2b": {
+    "text": "菜品不存在",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
+  "copy.server.9dd1573e40ba": {
+    "text": "教师主页查询失败，请稍后重试，现有资料保留",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
+  },
+  "copy.server.9dd97adc2220": {
+    "text": "教学班数量必须是整数",
+    "audience": "technical",
+    "location": "internal/interface/web/controller/course_admin.go"
+  },
+  "copy.server.9e836b2df070": {
+    "text": "登录续期结果无法确认，请重新登录",
+    "audience": "user",
+    "location": "internal/domain/auth/reshub.go"
+  },
+  "copy.server.a2993517d563": {
+    "text": "只能操作自己上传的图片",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
   "copy.server.a311879dc92c": {
     "text": "同步未完成，请检查学期结果后重新连接",
     "audience": "user",
     "location": "internal/application/course_sync.go"
   },
+  "copy.server.a32307890cc5": {
+    "text": "不能授予未拥有的管理权限",
+    "audience": "user",
+    "location": "internal/application/local_account.go"
+  },
   "copy.server.a3d1b587446e": {
     "text": "请求参数无效",
     "audience": "user",
     "location": "internal/interface/web/controller/error.go"
+  },
+  "copy.server.a7e7385d08eb": {
+    "text": "评价不存在",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
   },
   "copy.server.a8d7452412a1": {
     "text": "数量限制无效",
@@ -2148,6 +2658,16 @@
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
   },
+  "copy.server.aa7f39015eb3": {
+    "text": "教务登录已过期，请重新扫码；已完成学期的记录保留",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
+  "copy.server.aae70e7db4ed": {
+    "text": "研究方向",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
+  },
   "copy.server.acbd8bc9317a": {
     "text": "教务同步暂不可用，请联系技术管理员检查采集器配置",
     "audience": "user",
@@ -2158,10 +2678,25 @@
     "audience": "user",
     "location": "internal/application/point_dto.go"
   },
+  "copy.server.b01f382f1531": {
+    "text": "学校登录返回了尚未支持的跳转地址，已停止连接，请联系技术管理员",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
   "copy.server.b0f1bb7e3c30": {
     "text": "无法读取课程数据 ZIP",
     "audience": "user",
     "location": "internal/application/course_admin.go"
+  },
+  "copy.server.b103d8f3f587": {
+    "text": "不能通过此操作修改当前账号或受保护的管理员账号",
+    "audience": "user",
+    "location": "internal/application/local_account.go"
+  },
+  "copy.server.b42678fa3b43": {
+    "text": "请选择一个账号",
+    "audience": "user",
+    "location": "internal/interface/web/controller/account.go"
   },
   "copy.server.b4a1fd706249": {
     "text": "选课记录 ID 无效",
@@ -2173,6 +2708,11 @@
     "audience": "user",
     "location": "internal/app/site_settings.go"
   },
+  "copy.server.b4ed59ef6803": {
+    "text": "请填写完整的账号资料",
+    "audience": "user",
+    "location": "internal/interface/web/controller/user_management.go"
+  },
   "copy.server.b68fcbe33679": {
     "text": "课程代码、学期和至少一个教学班为必填项",
     "audience": "technical",
@@ -2183,10 +2723,25 @@
     "audience": "user",
     "location": "internal/app/site_settings.go"
   },
+  "copy.server.b720cf3b34ec": {
+    "text": "教师资料同步正在进行",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
+  },
   "copy.server.b7ee108267f7": {
     "text": "课程数据文件必须是 ZIP",
     "audience": "user",
     "location": "internal/interface/web/controller/course_admin.go"
+  },
+  "copy.server.b8ff11f83980": {
+    "text": "排序字段无效",
+    "audience": "user",
+    "location": "internal/application/course_admin.go"
+  },
+  "copy.server.b9c84ca6bf1c": {
+    "text": "当前学校账号无权访问个人课表，请使用学生账号重新连接",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
   },
   "copy.server.bb2dbe5881a6": {
     "text": "ZIP 中的课程数据总量超过 64 MiB",
@@ -2208,10 +2763,20 @@
     "audience": "user",
     "location": "internal/application/course_sync.go"
   },
+  "copy.server.beba11d9f23b": {
+    "text": "本学期课表未能加载，自动重试后仍未成功；已完成学期的记录保留",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
   "copy.server.bf40ac112729": {
     "text": "本学期采集结果不完整，未导入，请重新同步",
     "audience": "technical",
     "location": "internal/application/course_sync.go"
+  },
+  "copy.server.c169505d19f0": {
+    "text": "没有内容管理权限",
+    "audience": "user",
+    "location": "internal/application/local_account.go"
   },
   "copy.server.c1cbef3b639a": {
     "text": "发布点评奖励",
@@ -2228,6 +2793,16 @@
     "audience": "user",
     "location": "internal/application/course_sync.go"
   },
+  "copy.server.c2cfb48086cb": {
+    "text": "个人课表数据不完整，请重新导入",
+    "audience": "technical",
+    "location": "internal/application/enrollment_sync.go"
+  },
+  "copy.server.c3102f5cdf53": {
+    "text": "评价已被修改，请刷新后重试",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
   "copy.server.c3431639187a": {
     "text": "课节详情中的学期与课程数据不一致",
     "audience": "user",
@@ -2237,6 +2812,16 @@
     "text": "更新点评时给课程热度增加的分值",
     "audience": "user",
     "location": "internal/app/site_settings.go"
+  },
+  "copy.server.c4a6c24c7e46": {
+    "text": "办公地点",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
+  },
+  "copy.server.c4b1d816ac7a": {
+    "text": "菜品不属于该店铺",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
   },
   "copy.server.c69ba42c51f3": {
     "text": "教务同步任务不存在，请重新连接",
@@ -2253,10 +2838,25 @@
     "audience": "user",
     "location": "internal/app/site_settings.go"
   },
+  "copy.server.c6d00fa656c5": {
+    "text": "该导入方式已关闭",
+    "audience": "technical",
+    "location": "internal/application/collector_queue.go"
+  },
+  "copy.server.c85783fe3643": {
+    "text": "学位",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
+  },
   "copy.server.c8e1aac604cf": {
     "text": "采集报告未通过完整性检查",
     "audience": "user",
     "location": "internal/application/course_admin.go"
+  },
+  "copy.server.c8ee51ed58d8": {
+    "text": "显示 MyCHU 预留入口",
+    "audience": "user",
+    "location": "internal/application/import_settings.go"
   },
   "copy.server.c92acf63c7c5": {
     "text": "ZIP 中的课程数据文件过大",
@@ -2273,6 +2873,11 @@
     "audience": "user",
     "location": "internal/app/site_settings.go"
   },
+  "copy.server.ca0ccb82ac11": {
+    "text": "本学期课表格式无法读取，未保存本学期，请联系技术管理员；已完成学期的记录保留",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
   "copy.server.cb445ab6acad": {
     "text": "课程学分不能小于 0",
     "audience": "user",
@@ -2282,6 +2887,11 @@
     "text": "数据 ZIP 为空或超过 64 MiB",
     "audience": "user",
     "location": "internal/application/course_admin.go"
+  },
+  "copy.server.cd0e7ccbe852": {
+    "text": "课程导入任务不存在，请重新扫码",
+    "audience": "technical",
+    "location": "internal/application/enrollment_sync.go"
   },
   "copy.server.cda648937fa3": {
     "text": "短时间内相似点评过多",
@@ -2293,6 +2903,11 @@
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
   },
+  "copy.server.ce10b21d9305": {
+    "text": "个人导入并发数",
+    "audience": "technical",
+    "location": "internal/application/import_settings.go"
+  },
   "copy.server.cea95a8549ee": {
     "text": "本站主体映射不存在",
     "audience": "user",
@@ -2303,10 +2918,20 @@
     "audience": "user",
     "location": "internal/application/course_admin.go"
   },
+  "copy.server.cf674da8dcc3": {
+    "text": "不能给自己的评价投票",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
   "copy.server.d019b4bc455c": {
     "text": "课程记录数量与采集报告不一致",
     "audience": "user",
     "location": "internal/application/course_admin.go"
+  },
+  "copy.server.d047000b7b5f": {
+    "text": "暂时无法登录，请稍后重试",
+    "audience": "user",
+    "location": "internal/interface/web/controller/native_account.go"
   },
   "copy.server.d04d1ee20bbf": {
     "text": "发布点评热度分",
@@ -2318,15 +2943,55 @@
     "audience": "user",
     "location": "internal/interface/web/controller/course_admin.go"
   },
+  "copy.server.d21b52b97eb2": {
+    "text": "举报原因无效",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
+  "copy.server.d50435b42e46": {
+    "text": "教师编号无效",
+    "audience": "user",
+    "location": "internal/interface/web/controller/teacher_profile.go"
+  },
   "copy.server.d53415431211": {
     "text": "发布点评时给课程热度增加的分值",
     "audience": "user",
     "location": "internal/app/site_settings.go"
   },
+  "copy.server.d6141df9a78a": {
+    "text": "评价内容不能超过 2000 个字符",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
+  "copy.server.d61cb082d106": {
+    "text": "新密码不能与原密码相同",
+    "audience": "user",
+    "location": "internal/application/local_account.go"
+  },
+  "copy.server.d766e16621cc": {
+    "text": "请等待同步完成后处理重名",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
+  },
+  "copy.server.d82631c0c6f7": {
+    "text": "店铺状态无效",
+    "audience": "user",
+    "location": "internal/application/canteen_admin.go"
+  },
   "copy.server.d863acc80692": {
     "text": "无权更新点评",
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.d8b98d02d3d7": {
+    "text": "评价不可见",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
+  "copy.server.d941d49f17fb": {
+    "text": "仅控制预留入口显示；MyCHU 导入功能尚未开放。",
+    "audience": "technical",
+    "location": "internal/application/import_settings.go"
   },
   "copy.server.dab1d359e365": {
     "text": "当前学期无效",
@@ -2338,6 +3003,36 @@
     "audience": "user",
     "location": "internal/app/site_settings.go"
   },
+  "copy.server.dcb6f988a10d": {
+    "text": "请先完成或取消正在进行的课程导入",
+    "audience": "technical",
+    "location": "internal/application/enrollment_sync.go"
+  },
+  "copy.server.dd8e9a1c7c99": {
+    "text": "该账号已被封禁",
+    "audience": "user",
+    "location": "internal/interface/web/controller/native_account.go"
+  },
+  "copy.server.ddb0ceeda802": {
+    "text": "请填写课程和学期",
+    "audience": "user",
+    "location": "internal/interface/web/controller/course_enrollment.go"
+  },
+  "copy.server.de086b600624": {
+    "text": "本站暂未开放账号注册",
+    "audience": "user",
+    "location": "internal/application/local_account.go"
+  },
+  "copy.server.de2c66eaaf9a": {
+    "text": "教务扫码导入",
+    "audience": "technical",
+    "location": "internal/application/import_settings.go"
+  },
+  "copy.server.df07d8014676": {
+    "text": "请填写新密码",
+    "audience": "user",
+    "location": "internal/interface/web/controller/user_management.go"
+  },
   "copy.server.df9000b4093d": {
     "text": "评论文本相似度达到该值时视为相似",
     "audience": "user",
@@ -2348,6 +3043,11 @@
     "audience": "user",
     "location": "internal/interface/web/controller/course_admin.go"
   },
+  "copy.server.e2157674977d": {
+    "text": "关闭后隐藏食堂入口，餐饮接口返回 404",
+    "audience": "user",
+    "location": "internal/app/site_settings.go"
+  },
   "copy.server.e3952759a5c2": {
     "text": "点评 ID 无效",
     "audience": "user",
@@ -2357,6 +3057,16 @@
     "text": "扣除手续费后到账积分过少",
     "audience": "user",
     "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.e7d7973ae656": {
+    "text": "图片当前状态不允许该操作",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
+  "copy.server.e868f9eab5d7": {
+    "text": "已保存成功读取的资料；部分主页仍无法读取，原有资料保留。再次同步可复用缓存，补读未完成的资料",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
   },
   "copy.server.e8b605353396": {
     "text": "点评内容不能为空",
@@ -2378,6 +3088,11 @@
     "audience": "user",
     "location": "internal/application/course_sync.go"
   },
+  "copy.server.ece2bcf3d90e": {
+    "text": "请先修改初始密码",
+    "audience": "user",
+    "location": "internal/interface/web/middleware/auth.go"
+  },
   "copy.server.ee067221f541": {
     "text": "API Key 角色无效",
     "audience": "technical",
@@ -2392,6 +3107,26 @@
     "text": "API Key 名称不能为空",
     "audience": "technical",
     "location": "pkg/apperr/apperr.go"
+  },
+  "copy.server.f0d780cf4fbe": {
+    "text": "服务已重启，请重新扫码继续；已完成学期保留，采集缓存会自动复用",
+    "audience": "user",
+    "location": "internal/application/source_job.go"
+  },
+  "copy.server.f28b7272ef70": {
+    "text": "无效的用户编号",
+    "audience": "user",
+    "location": "internal/interface/web/controller/user_management.go"
+  },
+  "copy.server.f42ffa1bd256": {
+    "text": "学校登录已确认，但未能进入本科教务系统，请重新连接",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
+  },
+  "copy.server.f478eb783c9b": {
+    "text": "没有用户权限设置权限",
+    "audience": "user",
+    "location": "internal/application/local_account.go"
   },
   "copy.server.f4999e037ea3": {
     "text": "已有教务连接或同步任务，请完成或取消后重试",
@@ -2412,6 +3147,26 @@
     "text": "课程大纲链接无效",
     "audience": "user",
     "location": "internal/application/course_admin.go"
+  },
+  "copy.server.f78d8001d2cb": {
+    "text": "食堂 ID 无效",
+    "audience": "user",
+    "location": "internal/interface/web/controller/canteen_admin.go"
+  },
+  "copy.server.f937a4a63156": {
+    "text": "同步已取消或超时，原有资料保留；再次同步可从缓存继续",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
+  },
+  "copy.server.fa6bcea0d1f2": {
+    "text": "食堂不存在",
+    "audience": "user",
+    "location": "internal/domain/canteen/errors.go"
+  },
+  "copy.server.fb03e74163e4": {
+    "text": "保存教师资料失败，原有资料保留",
+    "audience": "user",
+    "location": "internal/application/teacher_profile.go"
   },
   "copy.server.fc233922e6aa": {
     "text": "主站登录状态已失效，请重新登录",
@@ -2437,6 +3192,11 @@
     "text": "课程列表与详情中的课程代码不一致",
     "audience": "user",
     "location": "internal/application/course_admin.go"
+  },
+  "copy.server.ff189695d051": {
+    "text": "教务连接暂不可用，请稍后重试",
+    "audience": "user",
+    "location": "internal/application/course_sync.go"
   },
   "copy.user.api.client.10f0e81879c6": {
     "text": "你没有执行此操作的权限",
@@ -4797,10 +5557,160 @@
     "audience": "user",
     "location": "pages/home-page.tsx"
   },
+  "copy.user.pages.home-page.all-reviewed": {
+    "text": "已全部点评",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.browse-all": {
+    "text": "浏览全部",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.catalog-semester": {
+    "text": "最近收录学期",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.categories": {
+    "text": "按课程类别浏览",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
   "copy.user.pages.home-page.d6e3b43107c5": {
     "text": "热门课程",
     "audience": "user",
     "location": "pages/home-page.tsx"
+  },
+  "copy.user.pages.home-page.discover": {
+    "text": "发现课程",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.first-review": {
+    "text": "还没有点评",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.follow-description": {
+    "text": "暂无关注",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.load-error": {
+    "text": "加载失败",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.loading": {
+    "text": "正在加载内容",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.more": {
+    "text": "查看更多",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.my-courses": {
+    "text": "我的课程",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.next-batch": {
+    "text": "换一批",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.no-courses": {
+    "text": "暂无课程",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.no-enrollments": {
+    "text": "暂无修读记录",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.no-rating": {
+    "text": "暂无点评",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.refresh-error": {
+    "text": "刷新失败，保留上次内容",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.retry": {
+    "text": "重试",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.search": {
+    "text": "搜索",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.search-placeholder": {
+    "text": "搜索课程名、课程号或教师",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.search-taken": {
+    "text": "搜索课程",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.search-title": {
+    "text": "找课程",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.share-experience": {
+    "text": "待点评",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.source-semester": {
+    "text": "来源学期",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.unknown-semester": {
+    "text": "学期未标注",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
+  },
+  "copy.user.pages.home-page.write-review": {
+    "text": "写点评",
+    "audience": "user",
+    "location": "pages/home-page.tsx",
+    "editable": true
   },
   "copy.user.pages.hot-courses-page.07588028c5ba": {
     "text": "热度来自点评与有用投票，反映讨论活跃度，不代表教学质量。教师热度汇总其当前任教课程的热度。",
@@ -5225,155 +6135,5 @@
     "text": "已绑定：{v0}。下次从频道登录时，可以选择初始超级管理员或原有账号。",
     "audience": "user",
     "location": "pages/user-settings-page.tsx"
-  },
-  "copy.user.pages.home-page.search-title": {
-    "text": "找课程",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.search-placeholder": {
-    "text": "搜索课程名、课程号或教师",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.search": {
-    "text": "搜索",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.categories": {
-    "text": "按课程类别浏览",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.browse-all": {
-    "text": "浏览全部",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.discover": {
-    "text": "发现课程",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.next-batch": {
-    "text": "换一批",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.catalog-semester": {
-    "text": "最近收录学期",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.source-semester": {
-    "text": "来源学期",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.unknown-semester": {
-    "text": "学期未标注",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.no-rating": {
-    "text": "暂无点评",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.no-courses": {
-    "text": "暂无课程",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.share-experience": {
-    "text": "待点评",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.write-review": {
-    "text": "写点评",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.all-reviewed": {
-    "text": "已全部点评",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.no-enrollments": {
-    "text": "暂无修读记录",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.search-taken": {
-    "text": "搜索课程",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.my-courses": {
-    "text": "我的课程",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.first-review": {
-    "text": "还没有点评",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.follow-description": {
-    "text": "暂无关注",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.more": {
-    "text": "查看更多",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.loading": {
-    "text": "正在加载内容",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.load-error": {
-    "text": "加载失败",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.refresh-error": {
-    "text": "刷新失败，保留上次内容",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
-  },
-  "copy.user.pages.home-page.retry": {
-    "text": "重试",
-    "audience": "user",
-    "location": "pages/home-page.tsx",
-    "editable": true
   }
 }
