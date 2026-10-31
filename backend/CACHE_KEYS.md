@@ -27,6 +27,9 @@ Redis keys owned internally by third-party libraries can have library-defined fo
 | `jcourse:review:course:{course_id}:filters` | `ReviewRepository.GetCourseFilters` | `review.ReviewFilters` | Review create/update/delete for the course |
 | `jcourse:review:course:{course_id}:trend` | `ReviewRepository.GetCourseTrend` | `[]review.ReviewTrendItem` | Review create/update/delete for the course |
 | `jcourse:review_vote:{review_id}:{user_id}` | `ReviewVoteRepository.FindByReviewAndUser` | `review.Vote` | `ReviewVoteRepository.Save`, `ReviewVoteRepository.Delete` |
+| `jcourse:canteen:home:v2` | `CanteenStoreQueryRepository.GetHome` | `canteen.HomeView` with hero/feeds/hot dishes | Any canteen review/store/hall/dish write, by pattern `jcourse:canteen:*` |
+| `jcourse:canteen:store:{store_id}:detail:v2:{viewer_id}` | `CanteenStoreQueryRepository.GetStoreDetail` | `canteen.StoreDetail` (viewer-specific my summary, dish covers) | Any canteen review/store/hall/dish write, by pattern `jcourse:canteen:*` |
+| `jcourse:canteen:rankings:v2:{campus}:{hall_id}:{sort}:{page}:{page_size}` | `CanteenStoreQueryRepository.ListRankings` | `canteenRankingCache` with confidence/tags/dish counts | Any canteen review/store/hall/dish write, by pattern `jcourse:canteen:*` |
 | `jcourse:site_daily_stat:{stat_date}` | `SiteDailyStatRepository.GetByDate` | `stat.DailyStatView` | `SiteDailyStatRepository.Upsert` |
 | `jcourse:teacher:{teacher_id}` | `TeacherRepository.GetByID` | `teacher.TeacherView` | TTL only |
 | `jcourse:teacher:filters` | `TeacherRepository.GetFilters` | `teacher.TeacherFilters` | TTL only |

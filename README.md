@@ -35,8 +35,20 @@ PostgreSQL 默认监听 `localhost:5432`，Redis 默认监听 `localhost:6379`�
 
 ### 2. 初始化数据库
 
+空库按编号顺序应用全部 up 迁移（包含 `canteen_*` 食堂评价表）：
+
 ```bash
-psql "host=localhost port=5432 user=postgres password=postgres dbname=jcourse sslmode=disable" -f backend/script/0001_schema_pgsql.up.sql
+for f in $(ls backend/script/*.up.sql | sort); do
+  psql "host=localhost port=5432 user=postgres password=postgres dbname=jcourse sslmode=disable" \
+    -v ON_ERROR_STOP=1 -f "$f"
+done
+```
+
+已有数据库只需应用新增的迁移文件。个别历史迁移不可重复执行，需要重来一次时先重建数据卷：
+
+```bash
+docker compose -f docker/docker-compose.yaml down -v
+docker compose -f docker/docker-compose.yaml up -d postgres redis
 ```
 
 ### 3. 配置并启动后端
