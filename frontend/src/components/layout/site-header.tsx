@@ -5,6 +5,7 @@ import { RiMenuLine, RiSearchLine } from "@remixicon/react"
 import { UserMenu } from "@/components/auth/user-menu"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
+import { useSystemSettings } from "@/hooks/use-system-settings"
 import {
   Command,
   CommandInput,
@@ -29,11 +30,13 @@ import {
 type NavLinkItem = {
   to:
     | "/"
+    | "/canteen"
     | "/course"
     | "/teacher"
     | "/review"
     | "/course/hot"
     | "/admin/user"
+    | "/admin/canteen"
     | "/admin/site-stat"
   label: string
   match: (p: string) => boolean
@@ -49,6 +52,11 @@ const navItems: NavLinkItem[] = [
     to: "/course",
     label: copy("copy.user.components.layout.site-header.60db1afb4022"),
     match: (p: string) => p === "/course" || /^\/course\/\d+(?:\/|$)/.test(p),
+  },
+  {
+    to: "/canteen",
+    label: "食堂",
+    match: (p: string) => p === "/canteen" || p.startsWith("/canteen/"),
   },
   {
     to: "/teacher",
@@ -72,6 +80,12 @@ const adminNavItems: NavLinkItem[] = [
     to: "/admin/user",
     label: copy("copy.user.components.layout.site-header.bb6d995724f4"),
     match: (p: string) => p === "/admin/user" || p.startsWith("/admin/user/"),
+  },
+  {
+    to: "/admin/canteen",
+    label: "食堂管理",
+    match: (p: string) =>
+      p === "/admin/canteen" || p.startsWith("/admin/canteen/"),
   },
   {
     to: "/admin/site-stat",
@@ -174,11 +188,19 @@ function HeaderSearch() {
 export function SiteHeader() {
   const { pathname } = useLocation()
   const { user } = useAuth()
+  const { data: publicSettings } = useSystemSettings()
+  const canteenEnabled =
+    publicSettings?.some(
+      (item) => item.key === "canteen.enabled" && item.value === "true"
+    ) ?? false
   const [open, setOpen] = useState(false)
   const navRef = useRef<HTMLElement>(null)
+  const baseNavItems = canteenEnabled
+    ? navItems
+    : navItems.filter((item) => item.to !== "/canteen")
   const visibleNavItems: NavLinkItem[] = user?.is_admin()
-    ? [...navItems, ...adminNavItems]
-    : navItems
+    ? [...baseNavItems, ...adminNavItems]
+    : baseNavItems
   const activeIndex = visibleNavItems.findIndex((item) => item.match(pathname))
   const [navIndicator, setNavIndicator] = useState({
     left: 0,

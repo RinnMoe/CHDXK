@@ -25,6 +25,8 @@ import {
   validateUserAdminSearch,
   validateUserCoursesSearch,
 } from "./router-search"
+import { createCanteenRoutes } from "./router-canteen"
+import { createPublicContentRoutes } from "./router-public"
 import { authMeQueryOptions } from "@/hooks/use-auth"
 
 type RouterContext = {
@@ -32,6 +34,7 @@ type RouterContext = {
 }
 
 export type {
+  CanteenListSearch,
   CourseDetailSearch,
   CourseListSearch,
   LoginSearch,
@@ -104,7 +107,6 @@ const publicRoute = createRoute({
   id: "public",
   component: PublicLayout,
 })
-
 const appRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: "app",
@@ -309,20 +311,19 @@ export const siteStatsRoute = createRoute({
   ),
 })
 
-export const aboutRoute = createRoute({
-  getParentRoute: () => publicRoute,
-  path: "/about",
-  component: lazyRouteComponent(
-    () => import("@/pages/about-page"),
-    "AboutPage"
-  ),
-})
-
-export const faqRoute = createRoute({
-  getParentRoute: () => publicRoute,
-  path: "/faq",
-  component: lazyRouteComponent(() => import("@/pages/faq-page"), "FaqPage"),
-})
+const {
+  canteenHomeRoute,
+  canteenRankingsRoute,
+  canteenStoreRoute,
+  canteenReviewNewRoute,
+  canteenDishDetailRoute,
+  canteenReviewEditRoute,
+  canteenMyReviewsRoute,
+  canteenContributionsRoute,
+  canteenAdminRoute,
+} = createCanteenRoutes(appRoute)
+const { aboutRoute, faqRoute, sitePageRoute } =
+  createPublicContentRoutes(publicRoute)
 
 const latestRedirectRoute = createRoute({
   getParentRoute: () => appRoute,
@@ -330,12 +331,6 @@ const latestRedirectRoute = createRoute({
   beforeLoad: () => {
     throw redirect({ to: "/review", replace: true })
   },
-})
-
-export const sitePageRoute = createRoute({
-  getParentRoute: () => publicRoute,
-  path: "/p/$slug",
-  component: lazyRouteComponent(() => import("@/pages/site-page"), "SitePage"),
 })
 
 const notFoundRoute = createRoute({
@@ -346,7 +341,6 @@ const notFoundRoute = createRoute({
     "NotFoundPage"
   ),
 })
-
 const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([
     loginAccountsRoute,
@@ -373,6 +367,13 @@ const routeTree = rootRoute.addChildren([
     userSettingsRoute,
     userAdminRoute,
     siteStatsRoute,
+    canteenHomeRoute,
+    canteenRankingsRoute,
+    canteenStoreRoute.addChildren([canteenReviewNewRoute, canteenDishDetailRoute]),
+    canteenReviewEditRoute,
+    canteenMyReviewsRoute,
+    canteenContributionsRoute,
+    canteenAdminRoute,
     latestRedirectRoute,
     notFoundRoute,
   ]),

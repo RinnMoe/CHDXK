@@ -33,6 +33,13 @@ export type CourseDetailSearch = {
 }
 export type PageSearch = { page?: number }
 export type ReviewsSearch = PageSearch & { q?: string }
+export type CanteenListSearch = {
+  campus?: string
+  hall_id?: number
+  q?: string
+  sort?: "rating_score" | "rating_count" | "latest" | "name"
+  page?: number
+}
 export type UserCoursesSearch = PageSearch & {
   type?: "enrolled" | "followed" | "ignored"
   semester?: string
@@ -180,5 +187,22 @@ export function validateSiteStatsSearch(search: SearchRecord): SiteStatsSearch {
   return {
     start_date: rawStringParam(search.start_date),
     end_date: rawStringParam(search.end_date),
+  }
+}
+
+export function validateCanteenListSearch(
+  search: SearchRecord
+): CanteenListSearch {
+  return {
+    campus: rawStringParam(search.campus),
+    hall_id: optionalPositiveIntParam(search.hall_id),
+    q: stringParam(search.q),
+    sort: enumParam(search.sort, [
+      "rating_score",
+      "rating_count",
+      "latest",
+      "name",
+    ] as const),
+    page: optionalPositiveIntParam(search.page),
   }
 }
