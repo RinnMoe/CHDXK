@@ -31,3 +31,7 @@ CHDXK 服务端兑码使用固定内部 `urn:reshub:native`，复用 `/oidc/toke
 MyCHU agent 通过 `test/integration/channel_course_live_test.dart` 完成无 mock 的 Flutter HTTPS 请求联调：宿主登录/授权、Cookie/me、课程/教师/filter/hot/我的点评/选课/站点内容 DTO、课程趋势、点评创建更新读取删除、投票 1/-1/0、关注恢复、选课创建修改删除及两站退出。测试写入已清理。这是客户端真实传输验证，不等同于手机设备界面验收。
 
 生产部署、生产 mTLS 和 Android/iOS 设备体验需单独验收。临时证书与联调密码只在忽略目录保存，不纳入版本控制；v0.1.0 发布保持原样。
+
+## 食堂评价
+
+食堂评价复用同一套 native exchange 与本站会话，不需要新增客户端登录方式。接口契约见 [`canteen-api.md`](canteen-api.md)；当前实现只在本机验证，原生端接入时按该文档读取 `/api/canteen/*` 即可，不需要绑定 Flutter 实现或地图数据。

@@ -57,9 +57,17 @@ JCOURSE_SERVER_ADDR=:9090 go run cmd/api/main.go --config config/config.yaml
 
 ### 3. 初始化数据库 schema
 
+空库按编号顺序应用全部 up 迁移（包含 `canteen_*` 食堂评价表）：
+
 ```bash
-psql "host=localhost port=5432 user=postgres password=postgres dbname=jcourse sslmode=disable" -f script/0001_schema_pgsql.up.sql
+for f in $(ls script/*.up.sql | sort); do
+  psql "host=localhost port=5432 user=postgres password=postgres dbname=jcourse sslmode=disable" \
+    -v ON_ERROR_STOP=1 -f "$f"
+done
 ```
+
+已有数据库只需应用新增的迁移文件。个别历史迁移不可重复执行；需要重建时先执行
+`docker compose -f ../docker/docker-compose.yaml down -v`。
 
 ### 4. 启动 API
 
