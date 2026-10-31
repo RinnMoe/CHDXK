@@ -121,6 +121,21 @@ func migrateTestDB(t *testing.T, db *gorm.DB) {
 		&repository.SiteDailyStatEntity{},
 		&repository.TeacherProfileSourceEntity{},
 		&repository.AnnouncementEntity{},
+		&repository.CanteenHallEntity{},
+		&repository.CanteenStoreEntity{},
+		&repository.CanteenDishEntity{},
+		&repository.CanteenDishAliasEntity{},
+		&repository.CanteenDishMediaEntity{},
+		&repository.CanteenMediaEntity{},
+		&repository.CanteenReviewEventEntity{},
+		&repository.CanteenReviewRevisionEntity{},
+		&repository.CanteenReviewVoteEntity{},
+		&repository.CanteenReviewDishEntity{},
+		&repository.CanteenUserRatingSummaryEntity{},
+		&repository.CanteenDishReviewEventEntity{},
+		&repository.CanteenDishRatingSummaryEntity{},
+		&repository.CanteenReviewMediaEntity{},
+		&repository.CanteenReportEntity{},
 	)
 	if err != nil {
 		t.Fatalf("auto migrate: %v", err)

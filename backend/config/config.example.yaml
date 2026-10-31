@@ -41,6 +41,27 @@ course:
     refresh_cron: "0 5 * * *"
     scheduler_enabled: true
 
+# Canteen review domain. Operator toggles live in system settings
+# (canteen.enabled / canteen.reviews.enabled / canteen.media.enabled).
+canteen:
+  rating:
+    prior_count: 5
+    refresh_cron: "30 5 * * *"
+    scheduler_enabled: true
+  review:
+    frequency:
+      window: 10m
+      max_reviews: 5
+      similarity_ratio: 0.85
+    max_daily_reviews: 5
+  media:
+    driver: local
+    dir: ".local/canteen-media"
+    max_bytes: 5242880
+    max_per_review: 3
+    max_uploads_per_day: 20
+    max_pixels: 8000000
+
 review:
   safety_policy:
     enabled: false

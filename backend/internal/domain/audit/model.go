@@ -15,10 +15,19 @@ const (
 	ActionReviewDelete              = "review.delete"
 	ActionReviewModeratorRemarkEdit = "review.moderator_remark.update"
 
+	ActionCanteenHallCreate  = "canteen.hall.create"
+	ActionCanteenHallUpdate  = "canteen.hall.update"
+	ActionCanteenStoreCreate = "canteen.store.create"
+	ActionCanteenStoreUpdate = "canteen.store.update"
+	ActionCanteenStoreStatus = "canteen.store.status"
+	ActionCanteenStoreMerge  = "canteen.store.merge"
+
 	TargetTypeUser           = "user"
 	TargetTypeSystemAPIKey   = "system_api_key"
 	TargetTypeSystemSettings = "system_settings"
 	TargetTypeReview         = "review"
+	TargetTypeCanteenHall    = "canteen_hall"
+	TargetTypeCanteenStore   = "canteen_store"
 )
 
 var ErrInvalidTimeRange = apperr.ErrInvalidAuditTimeRange
