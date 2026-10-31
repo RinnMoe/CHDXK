@@ -87,6 +87,13 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	siteStatsController := controller.NewSiteStatsController(container.SiteStatsQuery)
 	announcementController := controller.NewAnnouncementController(container.AnnouncementQuery, container.AnnouncementService)
 	auditLogController := controller.NewAuditLogController(container.AuditLogQuery)
+	canteenController := controller.NewCanteenCatalogController(container.CanteenCatalogQuery)
+	canteenAdminController := controller.NewCanteenAdminController(container.CanteenAdmin, container.CanteenCatalogQuery)
+	canteenReviewController := controller.NewCanteenReviewController(container.CanteenReviewCommand, container.CanteenReviewQuery)
+	canteenDishController := controller.NewCanteenDishController(container.CanteenDishCommand, container.CanteenDishQuery, container.CanteenMediaQuery)
+	canteenMediaController := controller.NewCanteenMediaController(container.CanteenMediaCommand, container.CanteenMediaQuery)
+	canteenReportController := controller.NewCanteenReportController(container.CanteenReportCommand)
+	canteenSearchController := controller.NewCanteenSearchController(container.CanteenSearchQuery)
 
 	apiGroup := g.Group("/api", middleware.NoStore())
 	apiGroup.GET("/site-copy", systemSettingsController.Copy)
@@ -165,6 +172,53 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 	{
 		userGroup.GET("/:userID/point", middleware.RequireSelfOrAdmin("userID"), pointController.GetUserPoints)
 		userGroup.GET("/:userID/review", middleware.RequireSelfOrAdmin("userID"), reviewController.ListUserReviews)
+	}
+	// Canteen routes stay behind RequireAuth for the first release. If guest
+	// browsing is added later, move the read-only routes into a group created
+	// before apiGroup.Use(middleware.RequireAuth()) instead of relaxing auth here.
+	canteenGroup := apiGroup.Group("/canteen")
+	{
+		canteenGroup.GET("/home", canteenController.Home)
+		canteenGroup.GET("/halls", canteenController.Halls)
+		canteenGroup.GET("/stores", canteenController.Stores)
+		canteenGroup.GET("/rankings", canteenController.Rankings)
+		canteenGroup.GET("/stores/:storeID", canteenController.Store)
+		canteenGroup.GET("/stores/:storeID/reviews", canteenReviewController.ListStoreReviews)
+		canteenGroup.POST("/stores/:storeID/reviews", canteenReviewController.Create)
+		canteenGroup.GET("/stores/:storeID/dishes", canteenDishController.ListStoreDishes)
+		canteenGroup.GET("/stores/:storeID/dishes/:dishID", canteenDishController.GetDishDetail)
+		canteenGroup.POST("/stores/:storeID/dishes", canteenDishController.CreateDish)
+		canteenGroup.GET("/dishes/suggest", canteenDishController.Suggest)
+		canteenGroup.POST("/dishes/:dishID/reviews", canteenDishController.CreateDishReview)
+		canteenGroup.GET("/search", canteenSearchController.Search)
+		canteenGroup.GET("/reviews/mine", canteenReviewController.ListMyReviews)
+		canteenGroup.PATCH("/reviews/:reviewID", canteenReviewController.Update)
+		canteenGroup.DELETE("/reviews/:reviewID", canteenReviewController.Delete)
+		canteenGroup.POST("/reviews/:reviewID/vote", canteenReviewController.Vote)
+		canteenGroup.POST("/media/upload-intents", canteenMediaController.CreateIntent)
+		canteenGroup.PUT("/media/:mediaID/content", canteenMediaController.PutContent)
+		canteenGroup.POST("/media/:mediaID/complete", canteenMediaController.Complete)
+		canteenGroup.GET("/media/:mediaID", canteenMediaController.Get)
+		canteenGroup.POST("/reports", canteenReportController.Create)
+		canteenGroup.GET("/contributions", canteenDishController.Contributions)
+	}
+	adminCanteenGroup := apiGroup.Group("/admin/canteen", middleware.RequireAdmin())
+	{
+		adminCanteenGroup.POST("/halls", canteenAdminController.CreateHall)
+		adminCanteenGroup.PUT("/halls/:hallID", canteenAdminController.UpdateHall)
+		adminCanteenGroup.GET("/stores", canteenAdminController.ListStores)
+		adminCanteenGroup.POST("/stores", canteenAdminController.CreateStore)
+		adminCanteenGroup.PUT("/stores/:storeID", canteenAdminController.UpdateStore)
+		adminCanteenGroup.POST("/stores/:storeID/status", canteenAdminController.UpdateStoreStatus)
+		adminCanteenGroup.POST("/stores/:storeID/merge", canteenAdminController.MergeStore)
+		adminCanteenGroup.POST("/reviews/:reviewID/hide", canteenReviewController.Hide)
+		adminCanteenGroup.GET("/dishes", canteenDishController.ListAdminDishes)
+		adminCanteenGroup.POST("/dishes/:dishID/status", canteenDishController.UpdateDishStatus)
+		adminCanteenGroup.POST("/dishes/:dishID/merge", canteenDishController.MergeDish)
+		adminCanteenGroup.GET("/media", canteenMediaController.ListAdminMedia)
+		adminCanteenGroup.POST("/media/:mediaID/review", canteenMediaController.Review)
+		adminCanteenGroup.GET("/reports", canteenReportController.List)
+		adminCanteenGroup.POST("/reports/:reportID/resolve", canteenReportController.Resolve)
 	}
 	siteStatsGroup := apiGroup.Group("/site-stat", middleware.RequireAdmin())
 	{

@@ -7,6 +7,7 @@ import (
 	"jcourse/internal/app"
 	"jcourse/internal/domain/audit"
 	"jcourse/internal/domain/auth"
+	"jcourse/internal/domain/canteen"
 	"jcourse/internal/domain/course"
 	domainemail "jcourse/internal/domain/email"
 	"jcourse/internal/domain/point"
@@ -22,6 +23,7 @@ func NewMux(container *app.ServiceContainer) *asynq.ServeMux {
 	mux.Handle(auth.TaskTypeFlushAccess, asynchandler.NewFlushAccessHandler(container.AccessTracker))
 	mux.Handle(course.TaskTypeRecordHotCourseActivity, asynchandler.NewRecordHotCourseActivityHandler(container.CourseCommand))
 	mux.Handle(course.TaskTypeRefreshRatingScores, asynchandler.NewRefreshCourseRatingScoresHandler(container.CourseCommand))
+	mux.Handle(canteen.TaskTypeRefreshCanteenRankings, asynchandler.NewRefreshCanteenRankingsHandler(container.CanteenReviewCommand))
 	mux.Handle(point.TaskTypeGrantReward, asynchandler.NewGrantPointRewardHandler(container.PointRewardCommand))
 	mux.Handle(point.TaskTypeRevokeReviewRewardsByID, asynchandler.NewRevokeReviewPointRewardsHandler(container.PointRewardCommand))
 	mux.Handle(domainemail.TaskTypeSendEmail, asynchandler.NewSendEmailHandler(container.EmailSender))
@@ -50,6 +52,14 @@ func RegisterScheduledTasks(scheduler *asynq.Scheduler, conf config.AppConfig) (
 	if ratingScore.SchedulerEnabled && ratingScore.RefreshCron != "" {
 		task := course.NewRefreshRatingScoresTask()
 		if _, err := scheduler.Register(ratingScore.RefreshCron, asynq.NewTask(task.Type(), task.Payload())); err != nil {
+			return false, err
+		}
+		registered = true
+	}
+	canteenRating := conf.Canteen.Rating.Normalized()
+	if canteenRating.SchedulerEnabled && canteenRating.RefreshCron != "" {
+		task := canteen.NewRefreshRankingsTask()
+		if _, err := scheduler.Register(canteenRating.RefreshCron, asynq.NewTask(task.Type(), task.Payload())); err != nil {
 			return false, err
 		}
 		registered = true
