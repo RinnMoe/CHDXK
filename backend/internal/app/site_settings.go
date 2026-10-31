@@ -157,6 +157,31 @@ func newSystemSettingsService(repo setting.SystemRepository, courseRepo course.C
 			Type:         setting.ValueTypeStringList,
 			DefaultValue: "",
 		},
+		{
+			Key:          setting.SystemSettingKeyCanteenEnabled,
+			Group:        "canteen",
+			Label:        "启用食堂评价",
+			Description:  "关闭后隐藏食堂入口，餐饮接口返回 404",
+			Type:         setting.ValueTypeBool,
+			DefaultValue: "false",
+			Public:       true,
+		},
+		{
+			Key:          setting.SystemSettingKeyCanteenReviewsEnabled,
+			Group:        "canteen",
+			Label:        "启用到店评价",
+			Description:  "关闭后停止创建、修改和投票，已有评价仍可浏览",
+			Type:         setting.ValueTypeBool,
+			DefaultValue: "true",
+		},
+		{
+			Key:          setting.SystemSettingKeyCanteenMediaEnabled,
+			Group:        "canteen",
+			Label:        "启用实拍图片",
+			Description:  "关闭后停止图片上传与审核",
+			Type:         setting.ValueTypeBool,
+			DefaultValue: "true",
+		},
 	}
 	// Account restrictions belong to res-hub; the local frequency rule only rejects submissions.
 	visible := make([]setting.Definition, 0, len(defs))

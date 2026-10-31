@@ -10,6 +10,7 @@ import (
 	"jcourse/internal/domain/point"
 	"jcourse/internal/infrastructure/bkjw"
 	"jcourse/internal/infrastructure/chdteachers"
+	inframedia "jcourse/internal/infrastructure/media"
 	"jcourse/internal/infrastructure/persistence"
 	"jcourse/internal/infrastructure/repository"
 	"jcourse/internal/infrastructure/reshub"
@@ -50,6 +51,21 @@ type ServiceContainer struct {
 	SystemSettingsCommand *application.SystemSettingsCommandService
 	AuditLogQuery         *application.AuditLogQueryService
 	AuditLogCommand       *application.AuditLogCommandService
+	CanteenSettings       application.CanteenSettingsProvider
+	CanteenHalls          *repository.CanteenHallRepository
+	CanteenStores         *repository.CanteenStoreRepository
+	CanteenDishes         *repository.CanteenDishRepository
+	CanteenReviews        *repository.CanteenReviewRepository
+	CanteenCatalogQuery   *application.CanteenCatalogQueryService
+	CanteenAdmin          *application.CanteenAdminService
+	CanteenReviewCommand  *application.CanteenReviewCommandService
+	CanteenReviewQuery    *application.CanteenReviewQueryService
+	CanteenDishCommand    *application.CanteenDishCommandService
+	CanteenDishQuery      *application.CanteenDishQueryService
+	CanteenSearchQuery    *application.CanteenSearchQueryService
+	CanteenMediaCommand   *application.CanteenMediaCommandService
+	CanteenMediaQuery     *application.CanteenMediaQueryService
+	CanteenReportCommand  *application.CanteenReportCommandService
 	EmailSender           email.Sender
 	ResHubOIDC            *application.ResHubOIDCService
 }
@@ -77,6 +93,61 @@ func NewServiceContainer(conf config.AppConfig) (*ServiceContainer, error) {
 	userRepo := repository.NewUserRepository(db, redisClient)
 	systemSettingsRepo := repository.NewSystemSettingsRepository(db, redisClient)
 	systemSettingsService := newSystemSettingsService(systemSettingsRepo, courseRepo)
+	canteenHalls := repository.NewCanteenHallRepository(db, redisClient)
+	canteenStores := repository.NewCanteenStoreRepository(db, redisClient)
+	canteenDishes := repository.NewCanteenDishRepository(db, redisClient)
+	canteenReviews := repository.NewCanteenReviewRepository(db, redisClient)
+	canteenReviews.SetPriorCount(conf.Canteen.Rating.Normalized().PriorCount)
+	canteenVotes := repository.NewCanteenVoteRepository(db)
+	canteenSettings := newSystemCanteenSettingsProvider(systemSettingsService)
+	canteenStoreQuery := repository.NewCanteenStoreQueryRepository(db, redisClient)
+	canteenCatalogQuery := application.NewCanteenCatalogQueryService(canteenStoreQuery, canteenStoreQuery, canteenSettings)
+	canteenAdmin := application.NewCanteenAdminService(canteenHalls, canteenStores)
+	canteenMediaRepo := repository.NewCanteenMediaRepository(db)
+	canteenMediaStorage, err := inframedia.NewLocalStorage(conf.Canteen.Media.Normalized().Dir)
+	if err != nil {
+		return nil, err
+	}
+	canteenMediaCommand := application.NewCanteenMediaCommandService(
+		canteenMediaRepo,
+		canteenMediaRepo,
+		canteenMediaStorage,
+		inframedia.Processor{},
+		canteenSettings,
+		application.CanteenMediaLimits{
+			MaxBytes:         conf.Canteen.Media.Normalized().MaxBytes,
+			MaxPerReview:     conf.Canteen.Media.Normalized().MaxPerReview,
+			MaxUploadsPerDay: conf.Canteen.Media.Normalized().MaxUploadsPerDay,
+			MaxPixels:        conf.Canteen.Media.Normalized().MaxPixels,
+		},
+	)
+	canteenMediaQuery := application.NewCanteenMediaQueryService(canteenMediaRepo, canteenSettings)
+	canteenReportCommand := application.NewCanteenReportCommandService(repository.NewCanteenReportRepository(db), canteenSettings)
+
+	canteenReviewCommand := application.NewCanteenReviewCommandService(
+		canteenStores,
+		canteenReviews,
+		canteenVotes,
+		canteenStoreQuery,
+		canteenSettings,
+		conf.Canteen.Review.Frequency,
+		conf.Canteen.Review.MaxDailyReviews,
+		canteenMediaCommand,
+	)
+	canteenReviewQuery := application.NewCanteenReviewQueryService(canteenStoreQuery, canteenSettings)
+	canteenDishQueryRepo := repository.NewCanteenDishQueryRepository(db)
+	canteenDishReviews := repository.NewCanteenDishReviewRepository(db, redisClient)
+	canteenDishReviews.SetPriorCount(conf.Canteen.Rating.Normalized().PriorCount)
+	canteenDishQueryService := application.NewCanteenDishQueryService(canteenDishQueryRepo, canteenSettings)
+	canteenSearchQuery := application.NewCanteenSearchQueryService(canteenStoreQuery, canteenDishQueryRepo, canteenSettings)
+	canteenDishCommand := application.NewCanteenDishCommandService(
+		canteenStores,
+		canteenDishes,
+		canteenDishQueryRepo,
+		canteenDishReviews,
+		canteenSettings,
+		canteenMediaCommand,
+	)
 	siteSettings := application.NewSystemSiteSettingsProvider(systemSettingsService)
 	apiKeyRepo := repository.NewApiKeyRepository(db)
 	auditLogRepo := repository.NewAuditLogRepository(db)
@@ -171,6 +242,21 @@ func NewServiceContainer(conf config.AppConfig) (*ServiceContainer, error) {
 		SystemSettingsCommand: systemSettingsCommand,
 		AuditLogQuery:         auditLogQuery,
 		AuditLogCommand:       auditLogCommand,
+		CanteenSettings:       canteenSettings,
+		CanteenHalls:          canteenHalls,
+		CanteenStores:         canteenStores,
+		CanteenDishes:         canteenDishes,
+		CanteenReviews:        canteenReviews,
+		CanteenCatalogQuery:   canteenCatalogQuery,
+		CanteenAdmin:          canteenAdmin,
+		CanteenReviewCommand:  canteenReviewCommand,
+		CanteenReviewQuery:    canteenReviewQuery,
+		CanteenDishCommand:    canteenDishCommand,
+		CanteenDishQuery:      canteenDishQueryService,
+		CanteenSearchQuery:    canteenSearchQuery,
+		CanteenMediaCommand:   canteenMediaCommand,
+		CanteenMediaQuery:     canteenMediaQuery,
+		CanteenReportCommand:  canteenReportCommand,
 		EmailSender:           smtpSender,
 		ResHubOIDC:            resHubOIDC,
 	}, nil
