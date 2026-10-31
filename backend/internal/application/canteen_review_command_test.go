@@ -154,6 +154,17 @@ func TestCanteenReviewUpdateAndConflict(t *testing.T) {
 		t.Fatalf("OverallScore = %v, want 5", updated.OverallScore)
 	}
 
+	second := cmd
+	second.ExpectedUpdatedAt = updated.UpdatedAt
+	second.Content = "第三次来"
+	updatedAgain, err := service.Update(context.Background(), user, second)
+	if err != nil {
+		t.Fatalf("second Update() = %v", err)
+	}
+	if !updatedAgain.UpdatedAt.After(updated.UpdatedAt) {
+		t.Fatalf("updated_at did not advance: %v -> %v", updated.UpdatedAt, updatedAgain.UpdatedAt)
+	}
+
 	missingVersion := cmd
 	missingVersion.ExpectedUpdatedAt = time.Time{}
 	if _, err := service.Update(context.Background(), user, missingVersion); err == nil {

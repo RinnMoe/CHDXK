@@ -231,11 +231,51 @@ func TestCanteenMediaVisibilityFollowsParentStatus(t *testing.T) {
 	if err != nil || !visible {
 		t.Fatalf("dish media visible=%v err=%v", visible, err)
 	}
+	if err := db.Exec("UPDATE canteen_stores SET status = ? WHERE id = ?", string(canteen.StoreStatusOffline), store.ID).Error; err != nil {
+		t.Fatalf("offline store: %v", err)
+	}
+	visible, err = mediaRepo.IsMediaPublic(ctx, dishMedia.ID)
+	if err != nil || !visible {
+		t.Fatalf("offline store dish media visible=%v err=%v", visible, err)
+	}
+	if err := db.Exec("UPDATE canteen_stores SET status = ? WHERE id = ?", string(canteen.StoreStatusActive), store.ID).Error; err != nil {
+		t.Fatalf("reactivate store: %v", err)
+	}
 	if err := dishes.UpdateStatus(ctx, dish.ID, canteen.DishStatusHidden, time.Now()); err != nil {
 		t.Fatalf("hide dish: %v", err)
 	}
 	visible, err = mediaRepo.IsMediaPublic(ctx, dishMedia.ID)
 	if err != nil || visible {
 		t.Fatalf("hidden dish media visible=%v err=%v", visible, err)
+	}
+
+	cover := &canteen.Media{
+		OwnerUserID: 2, Purpose: canteen.MediaPurposeStoreCover, StorageDriver: "local",
+		StorageKey: "store/cover.png", MIME: "image/png", ByteSize: 10, Width: 8, Height: 8,
+		SHA256: "visibility-cover", Status: canteen.MediaStatusApproved, CreatedAt: time.Now(), UpdatedAt: time.Now(),
+	}
+	if err := mediaRepo.Create(ctx, cover); err != nil {
+		t.Fatalf("create cover: %v", err)
+	}
+	if err := db.Exec("UPDATE canteen_stores SET cover_media_id = ? WHERE id = ?", cover.ID, store.ID).Error; err != nil {
+		t.Fatalf("attach cover: %v", err)
+	}
+	visible, err = mediaRepo.IsMediaPublic(ctx, cover.ID)
+	if err != nil || !visible {
+		t.Fatalf("store cover visible=%v err=%v", visible, err)
+	}
+	if err := db.Exec("UPDATE canteen_stores SET status = ? WHERE id = ?", string(canteen.StoreStatusOffline), store.ID).Error; err != nil {
+		t.Fatalf("offline cover store: %v", err)
+	}
+	visible, err = mediaRepo.IsMediaPublic(ctx, cover.ID)
+	if err != nil || !visible {
+		t.Fatalf("offline store cover visible=%v err=%v", visible, err)
+	}
+	if err := db.Exec("UPDATE canteen_stores SET status = ? WHERE id = ?", string(canteen.StoreStatusRejected), store.ID).Error; err != nil {
+		t.Fatalf("reject cover store: %v", err)
+	}
+	visible, err = mediaRepo.IsMediaPublic(ctx, cover.ID)
+	if err != nil || visible {
+		t.Fatalf("rejected store cover visible=%v err=%v", visible, err)
 	}
 }

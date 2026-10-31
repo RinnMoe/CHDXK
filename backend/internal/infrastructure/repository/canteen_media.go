@@ -171,10 +171,15 @@ func (r *CanteenMediaRepository) IsMediaPublic(ctx context.Context, id int) (boo
 			FROM canteen_dish_media AS dm
 			JOIN canteen_dishes AS d ON d.id = dm.dish_id
 			JOIN canteen_stores AS s ON s.id = d.store_id
-			WHERE dm.media_id = ? AND d.status = ? AND s.status = ?
+			WHERE dm.media_id = ? AND d.status = ? AND s.status IN (?, ?)
+		) OR EXISTS (
+			SELECT 1
+			FROM canteen_stores AS s
+			WHERE s.cover_media_id = ? AND s.status IN (?, ?)
 		)`,
 		id, string(canteen.ReviewStatusActive), string(canteen.StoreStatusActive), string(canteen.StoreStatusOffline),
-		id, string(canteen.DishStatusActive), string(canteen.StoreStatusActive),
+		id, string(canteen.DishStatusActive), string(canteen.StoreStatusActive), string(canteen.StoreStatusOffline),
+		id, string(canteen.StoreStatusActive), string(canteen.StoreStatusOffline),
 	).Scan(&visible).Error
 	return visible, err
 }

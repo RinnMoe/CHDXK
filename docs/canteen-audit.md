@@ -53,7 +53,9 @@ pnpm build
 - 店铺合并：事务内迁移到店评价、用户摘要、菜品与实拍关联，重算源/目标统计；目标店铺不能已合并或处于已拒绝状态；新增合并聚合测试。
 - 菜品合并：补齐 `canteen_review_dishes` 关联迁移；新增关联迁移测试。
 - 权限：禁言/暂停用户不能新增菜品；菜品评分关联的到店评价必须属于当前用户、同一店铺且为 active。
-- 发布：`docker/release/compose.yaml` 增加 `canteen_media` 持久化卷。
+- 发布：`docker/release/compose.yaml` 增加 `canteen_media` 持久化卷；API Dockerfile 预创建并 chown `/app/.local/canteen-media`。已用命名卷在非 root 容器内验证写入、重建容器后读取。
+- 媒体缓存：所有餐饮媒体响应统一 `Cache-Control: private, no-store`，不再依据 `approved` 状态设置公共缓存。
+- 媒体父内容：`IsMediaPublic` 增加店铺封面判断，并统一 `offline` 店铺的历史菜品/封面展示规则；新增测试。
 - 契约：CORS 补 `PATCH` 与 `Idempotency-Key`；幂等键校验 UUID；`visited_at` 限制未来 24 小时至一年前；创建/更新评价返回完整 DTO；前端区分评价加载失败与空列表。
 
 ## 已知限制

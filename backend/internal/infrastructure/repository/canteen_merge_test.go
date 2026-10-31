@@ -88,3 +88,47 @@ func TestCanteenStoreMergeMovesReviewsAndDishes(t *testing.T) {
 		t.Fatalf("target dish stats = %+v", targetDishReloaded.Stats)
 	}
 }
+
+func TestCanteenStoreMergeSameUserCountsOnce(t *testing.T) {
+	db := newTestDB(t)
+	cleanTables(
+		t, db,
+		"canteen_review_events", "canteen_review_revisions", "canteen_review_votes",
+		"canteen_user_rating_summaries", "canteen_stores", "canteen_halls",
+	)
+	ctx := context.Background()
+	halls := repository.NewCanteenHallRepository(db)
+	stores := repository.NewCanteenStoreRepository(db)
+	reviews := repository.NewCanteenReviewRepository(db)
+	query := repository.NewCanteenStoreQueryRepository(db)
+
+	hall := newCanteenHall(t, halls)
+	source := newCanteenStore(t, stores, hall.ID, "同用户源店", canteen.StoreStatusActive)
+	target := newCanteenStore(t, stores, hall.ID, "同用户目标店", canteen.StoreStatusActive)
+	base := time.Now().Add(-2 * time.Hour)
+	createTaggedReview(t, reviews, source.ID, 2, 5, []string{"上菜快"}, base)
+	createTaggedReview(t, reviews, target.ID, 2, 3, []string{"环境干净"}, base.Add(time.Hour))
+
+	if err := stores.Merge(ctx, source.ID, target.ID, time.Now()); err != nil {
+		t.Fatalf("merge stores: %v", err)
+	}
+	merged, err := stores.Get(ctx, target.ID)
+	if err != nil {
+		t.Fatalf("get target: %v", err)
+	}
+	if merged.Stats.RatingCount != 1 || merged.Stats.ReviewEventCount != 2 {
+		t.Fatalf("target stats = %+v, want one user/two events", merged.Stats)
+	}
+	latest, latestTotal, err := query.ListReviews(ctx, canteen.ReviewListFilter{
+		StoreID: target.ID, Order: "latest", PageSize: 10,
+	})
+	if err != nil || latestTotal != 1 || len(latest) != 1 {
+		t.Fatalf("latest total=%d items=%d err=%v", latestTotal, len(latest), err)
+	}
+	history, historyTotal, err := query.ListReviews(ctx, canteen.ReviewListFilter{
+		StoreID: target.ID, Order: "latest", History: true, PageSize: 10,
+	})
+	if err != nil || historyTotal != 2 || len(history) != 2 {
+		t.Fatalf("history total=%d items=%d err=%v", historyTotal, len(history), err)
+	}
+}
