@@ -39,7 +39,7 @@ type DishRepository interface {
 // stats inside the same transaction.
 type ReviewRepository interface {
 	Create(ctx context.Context, review *ReviewEvent) error
-	Update(ctx context.Context, review *ReviewEvent, revision Revision) error
+	Update(ctx context.Context, review *ReviewEvent, revision Revision, expectedUpdatedAt time.Time) error
 	Get(ctx context.Context, id int) (*ReviewEvent, error)
 	FindByClientRequestID(ctx context.Context, userID int, requestID string) (*ReviewEvent, error)
 	SoftDelete(ctx context.Context, id int, now time.Time) error

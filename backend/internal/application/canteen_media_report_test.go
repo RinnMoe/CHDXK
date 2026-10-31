@@ -62,6 +62,7 @@ func TestCanteenMediaUploadFlow(t *testing.T) {
 	if err := service.Approve(context.Background(), admin, media.ID, canteen.MediaStatusApproved, ""); err != nil {
 		t.Fatalf("Approve() = %v", err)
 	}
+	repo.Public[media.ID] = true
 	reader, approved, err := service.Open(context.Background(), other, media.ID)
 	if err != nil {
 		t.Fatalf("Open(approved) = %v", err)
@@ -76,6 +77,33 @@ func TestCanteenMediaUploadFlow(t *testing.T) {
 	if len(repo.Items) != 1 {
 		t.Fatalf("media rows = %d", len(repo.Items))
 	}
+}
+
+func TestCanteenMediaApprovedWithoutLiveParentIsPrivate(t *testing.T) {
+	service, repo, _ := newMediaCommandFixture(t)
+	owner := &auth.User{ID: 2, Role: auth.RoleUser}
+	media, _, err := service.CreateIntent(context.Background(), owner, "review", "image/png", 100)
+	if err != nil {
+		t.Fatalf("CreateIntent() = %v", err)
+	}
+	if _, err := service.PutContent(context.Background(), owner, media.ID, bytes.NewReader([]byte("raw"))); err != nil {
+		t.Fatalf("PutContent() = %v", err)
+	}
+	admin := &auth.User{ID: 1, Role: auth.RoleAdmin}
+	if err := service.Approve(context.Background(), admin, media.ID, canteen.MediaStatusApproved, ""); err != nil {
+		t.Fatalf("Approve() = %v", err)
+	}
+	// The media itself is approved, but no active review/dish exposes it.
+	repo.Public[media.ID] = false
+	other := &auth.User{ID: 3, Role: auth.RoleUser}
+	if _, _, err := service.Open(context.Background(), other, media.ID); !errors.Is(err, canteen.ErrMediaNotFound) {
+		t.Fatalf("Open(orphan approved as other) = %v, want ErrMediaNotFound", err)
+	}
+	reader, _, err := service.Open(context.Background(), owner, media.ID)
+	if err != nil {
+		t.Fatalf("Open(orphan approved as owner) = %v", err)
+	}
+	_ = reader.Close()
 }
 
 func TestCanteenMediaOwnership(t *testing.T) {

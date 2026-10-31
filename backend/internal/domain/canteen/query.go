@@ -42,6 +42,9 @@ type MediaQuery interface {
 	GetMedia(ctx context.Context, id int) (*Media, error)
 	ListMediaByOwner(ctx context.Context, userID int, page, pageSize int) ([]Media, int64, error)
 	ListMediaByStatus(ctx context.Context, filter MediaFilter) ([]Media, int64, error)
+	// IsMediaPublic reports whether at least one live parent (active review or
+	// active dish) currently exposes this approved media.
+	IsMediaPublic(ctx context.Context, id int) (bool, error)
 }
 
 // DimensionAverages is the read-side average of the five store dimensions.

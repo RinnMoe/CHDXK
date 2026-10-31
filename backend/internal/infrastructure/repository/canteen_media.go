@@ -157,6 +157,28 @@ func (r *CanteenMediaRepository) ListMediaByOwner(ctx context.Context, userID in
 	return media, total, nil
 }
 
+func (r *CanteenMediaRepository) IsMediaPublic(ctx context.Context, id int) (bool, error) {
+	var visible bool
+	err := r.db.WithContext(ctx).Raw(`
+		SELECT EXISTS (
+			SELECT 1
+			FROM canteen_review_media AS rm
+			JOIN canteen_review_events AS e ON e.id = rm.review_event_id
+			JOIN canteen_stores AS s ON s.id = e.store_id
+			WHERE rm.media_id = ? AND e.status = ? AND s.status IN (?, ?)
+		) OR EXISTS (
+			SELECT 1
+			FROM canteen_dish_media AS dm
+			JOIN canteen_dishes AS d ON d.id = dm.dish_id
+			JOIN canteen_stores AS s ON s.id = d.store_id
+			WHERE dm.media_id = ? AND d.status = ? AND s.status = ?
+		)`,
+		id, string(canteen.ReviewStatusActive), string(canteen.StoreStatusActive), string(canteen.StoreStatusOffline),
+		id, string(canteen.DishStatusActive), string(canteen.StoreStatusActive),
+	).Scan(&visible).Error
+	return visible, err
+}
+
 func (r *CanteenMediaRepository) ListMediaByStatus(ctx context.Context, filter canteen.MediaFilter) ([]canteen.Media, int64, error) {
 	page, pageSize := normalizeCanteenPage(filter.Page, filter.PageSize)
 	query := r.db.WithContext(ctx).Model(&CanteenMediaEntity{})

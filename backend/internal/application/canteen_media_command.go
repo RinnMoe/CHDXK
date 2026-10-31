@@ -201,6 +201,9 @@ func (s *CanteenMediaCommandService) PutContent(ctx context.Context, user *auth.
 
 // Complete is idempotent confirmation that the upload finished.
 func (s *CanteenMediaCommandService) Complete(ctx context.Context, user *auth.User, mediaID int) (*canteen.Media, error) {
+	if err := s.requireEnabled(ctx); err != nil {
+		return nil, err
+	}
 	media, err := s.query.GetMedia(ctx, mediaID)
 	if err != nil {
 		return nil, err
@@ -256,6 +259,9 @@ func (s *CanteenMediaCommandService) Approve(ctx context.Context, reviewer *auth
 
 // Open returns bytes only when the caller may see the image status.
 func (s *CanteenMediaCommandService) Open(ctx context.Context, viewer *auth.User, mediaID int) (io.ReadCloser, *canteen.Media, error) {
+	if err := s.requireEnabled(ctx); err != nil {
+		return nil, nil, err
+	}
 	media, err := s.query.GetMedia(ctx, mediaID)
 	if err != nil {
 		return nil, nil, err
@@ -263,7 +269,14 @@ func (s *CanteenMediaCommandService) Open(ctx context.Context, viewer *auth.User
 	if media == nil {
 		return nil, nil, canteen.ErrMediaNotFound
 	}
-	if !media.Status.PubliclyVisible() {
+	public := false
+	if media.Status.PubliclyVisible() {
+		public, err = s.query.IsMediaPublic(ctx, media.ID)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	if !public {
 		if viewer == nil {
 			return nil, nil, canteen.ErrMediaNotFound
 		}

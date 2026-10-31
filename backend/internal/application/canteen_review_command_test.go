@@ -143,7 +143,8 @@ func TestCanteenReviewUpdateAndConflict(t *testing.T) {
 		ReviewID:  created.ID,
 		VisitedAt: time.Now(),
 		Taste:     5, Value: 5, Queue: 5, Hygiene: 5, Service: 5,
-		Content: "第二次来好多了",
+		Content:           "第二次来好多了",
+		ExpectedUpdatedAt: created.UpdatedAt,
 	}
 	updated, err := service.Update(context.Background(), user, cmd)
 	if err != nil {
@@ -153,7 +154,13 @@ func TestCanteenReviewUpdateAndConflict(t *testing.T) {
 		t.Fatalf("OverallScore = %v, want 5", updated.OverallScore)
 	}
 
-	cmd.ExpectedUpdatedAt = time.Now().Add(-time.Hour)
+	missingVersion := cmd
+	missingVersion.ExpectedUpdatedAt = time.Time{}
+	if _, err := service.Update(context.Background(), user, missingVersion); err == nil {
+		t.Fatal("Update() without version should be rejected")
+	}
+
+	cmd.ExpectedUpdatedAt = created.UpdatedAt
 	if _, err := service.Update(context.Background(), user, cmd); !errors.Is(err, canteen.ErrReviewConflict) {
 		t.Fatalf("Update(stale) err = %v, want ErrReviewConflict", err)
 	}
@@ -207,5 +214,22 @@ func TestCanteenReviewHideRequiresAdmin(t *testing.T) {
 	admin := &auth.User{ID: 1, Role: auth.RoleAdmin}
 	if err := service.Hide(context.Background(), admin, review.ID, "spam"); err != nil {
 		t.Fatalf("Hide(admin) = %v", err)
+	}
+}
+
+func TestCanteenReviewVisitTimeBounds(t *testing.T) {
+	service, _, _, _, _ := newCanteenReviewCommandFixture(t)
+	user := &auth.User{ID: 2, Role: auth.RoleUser}
+
+	future := validCanteenReviewCommand(1)
+	future.VisitedAt = time.Now().Add(48 * time.Hour)
+	if _, _, err := service.Create(context.Background(), user, future); err == nil {
+		t.Fatal("Create() should reject a far-future visit time")
+	}
+	old := validCanteenReviewCommand(1)
+	old.ClientRequestID = "6f1a4c2e-8d3b-4f5a-9c7e-1b2d3e4f5a6c"
+	old.VisitedAt = time.Now().AddDate(-2, 0, 0)
+	if _, _, err := service.Create(context.Background(), user, old); err == nil {
+		t.Fatal("Create() should reject a visit older than one year")
 	}
 }

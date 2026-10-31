@@ -174,3 +174,68 @@ func TestCanteenRankingExplanationAndDishGallery(t *testing.T) {
 		t.Fatalf("home hero=%+v hot=%d feeds=%d", home.Hero, len(home.HotDishes), len(home.Feeds))
 	}
 }
+
+func TestCanteenMediaVisibilityFollowsParentStatus(t *testing.T) {
+	db := newTestDB(t)
+	cleanTables(
+		t, db,
+		"canteen_dish_media", "canteen_dishes", "canteen_review_media", "canteen_media",
+		"canteen_review_events", "canteen_user_rating_summaries", "canteen_stores", "canteen_halls",
+	)
+	ctx := context.Background()
+	halls := repository.NewCanteenHallRepository(db)
+	stores := repository.NewCanteenStoreRepository(db)
+	reviews := repository.NewCanteenReviewRepository(db)
+	dishes := repository.NewCanteenDishRepository(db)
+	mediaRepo := repository.NewCanteenMediaRepository(db)
+
+	hall := newCanteenHall(t, halls)
+	store := newCanteenStore(t, stores, hall.ID, "媒体可见性店", canteen.StoreStatusActive)
+	review := createTaggedReview(t, reviews, store.ID, 2, 5, nil, time.Now().Add(-time.Hour))
+	media := &canteen.Media{
+		OwnerUserID: 2, Purpose: canteen.MediaPurposeReview, StorageDriver: "local",
+		StorageKey: "review/visibility.png", MIME: "image/png", ByteSize: 10, Width: 8, Height: 8,
+		SHA256: "visibility", Status: canteen.MediaStatusApproved, CreatedAt: time.Now(), UpdatedAt: time.Now(),
+	}
+	if err := mediaRepo.Create(ctx, media); err != nil {
+		t.Fatalf("create media: %v", err)
+	}
+	if err := mediaRepo.AttachToReview(ctx, review.ID, media.ID, 0); err != nil {
+		t.Fatalf("attach review media: %v", err)
+	}
+	visible, err := mediaRepo.IsMediaPublic(ctx, media.ID)
+	if err != nil || !visible {
+		t.Fatalf("review media visible=%v err=%v", visible, err)
+	}
+	if err := reviews.Hide(ctx, review.ID, 1, "test", time.Now()); err != nil {
+		t.Fatalf("hide review: %v", err)
+	}
+	visible, err = mediaRepo.IsMediaPublic(ctx, media.ID)
+	if err != nil || visible {
+		t.Fatalf("hidden review media visible=%v err=%v", visible, err)
+	}
+
+	dish := newCanteenDish(t, dishes, store.ID, "可见性菜品", canteen.DishStatusActive)
+	dishMedia := &canteen.Media{
+		OwnerUserID: 2, Purpose: canteen.MediaPurposeDish, StorageDriver: "local",
+		StorageKey: "dish/visibility.png", MIME: "image/png", ByteSize: 10, Width: 8, Height: 8,
+		SHA256: "visibility-dish", Status: canteen.MediaStatusApproved, CreatedAt: time.Now(), UpdatedAt: time.Now(),
+	}
+	if err := mediaRepo.Create(ctx, dishMedia); err != nil {
+		t.Fatalf("create dish media: %v", err)
+	}
+	if err := mediaRepo.AttachToDish(ctx, dish.ID, dishMedia.ID, 2, 0, time.Now()); err != nil {
+		t.Fatalf("attach dish media: %v", err)
+	}
+	visible, err = mediaRepo.IsMediaPublic(ctx, dishMedia.ID)
+	if err != nil || !visible {
+		t.Fatalf("dish media visible=%v err=%v", visible, err)
+	}
+	if err := dishes.UpdateStatus(ctx, dish.ID, canteen.DishStatusHidden, time.Now()); err != nil {
+		t.Fatalf("hide dish: %v", err)
+	}
+	visible, err = mediaRepo.IsMediaPublic(ctx, dishMedia.ID)
+	if err != nil || visible {
+		t.Fatalf("hidden dish media visible=%v err=%v", visible, err)
+	}
+}

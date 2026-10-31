@@ -7,6 +7,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"jcourse/internal/domain/canteen"
 )
@@ -64,10 +65,21 @@ func (r *CanteenReviewRepository) Create(ctx context.Context, review *canteen.Re
 	return nil
 }
 
-func (r *CanteenReviewRepository) Update(ctx context.Context, review *canteen.ReviewEvent, revision canteen.Revision) error {
+func (r *CanteenReviewRepository) Update(ctx context.Context, review *canteen.ReviewEvent, revision canteen.Revision, expectedUpdatedAt time.Time) error {
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := lockCanteenStore(tx, review.StoreID); err != nil {
 			return err
+		}
+		var current CanteenReviewEventEntity
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ?", review.ID).First(&current).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return canteen.ErrReviewNotFound
+			}
+			return err
+		}
+		if expectedUpdatedAt.IsZero() ||
+			!current.UpdatedAt.Truncate(time.Microsecond).Equal(expectedUpdatedAt.Truncate(time.Microsecond)) {
+			return canteen.ErrReviewConflict
 		}
 		revisionEntity := newCanteenRevisionEntity(&revision)
 		if err := tx.Create(&revisionEntity).Error; err != nil {
