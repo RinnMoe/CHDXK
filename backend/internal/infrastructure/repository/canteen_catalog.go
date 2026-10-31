@@ -7,6 +7,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"jcourse/internal/domain/canteen"
 	"jcourse/pkg/apperr"
@@ -90,8 +91,9 @@ func (r *CanteenHallRepository) invalidate(ctx context.Context) {
 
 // CanteenStoreRepository persists stores and their persisted aggregate stats.
 type CanteenStoreRepository struct {
-	db    *gorm.DB
-	cache *redis.Client
+	db         *gorm.DB
+	cache      *redis.Client
+	priorCount int
 }
 
 func NewCanteenStoreRepository(db *gorm.DB, cache ...*redis.Client) *CanteenStoreRepository {
@@ -99,7 +101,13 @@ func NewCanteenStoreRepository(db *gorm.DB, cache ...*redis.Client) *CanteenStor
 	if len(cache) > 0 {
 		client = cache[0]
 	}
-	return &CanteenStoreRepository{db: db, cache: client}
+	return &CanteenStoreRepository{db: db, cache: client, priorCount: canteen.DefaultPriorCount}
+}
+
+func (r *CanteenStoreRepository) SetPriorCount(prior int) {
+	if prior > 0 {
+		r.priorCount = prior
+	}
 }
 
 func (r *CanteenStoreRepository) Create(ctx context.Context, store *canteen.Store) error {
@@ -184,16 +192,88 @@ func (r *CanteenStoreRepository) UpdateStatus(ctx context.Context, id int, statu
 }
 
 func (r *CanteenStoreRepository) Merge(ctx context.Context, id, targetID int, now time.Time) error {
-	result := r.db.WithContext(ctx).Model(&CanteenStoreEntity{}).Where("id = ?", id).Updates(map[string]any{
-		"status":               string(canteen.StoreStatusMerged),
-		"merged_into_store_id": targetID,
-		"updated_at":           now,
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var source, target CanteenStoreEntity
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&source, id).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return canteen.ErrStoreNotFound
+			}
+			return err
+		}
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&target, targetID).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return canteen.ErrStoreNotFound
+			}
+			return err
+		}
+		if target.Status == string(canteen.StoreStatusMerged) {
+			return canteen.ErrStoreMerged
+		}
+		if err := tx.Model(&CanteenStoreEntity{}).Where("id = ?", id).Updates(map[string]any{
+			"status":               string(canteen.StoreStatusMerged),
+			"merged_into_store_id": targetID,
+			"updated_at":           now,
+		}).Error; err != nil {
+			return err
+		}
+		// Move every review event so target aggregates and history include the
+		// merged store. Source user summaries are rebuilt as empty.
+		if err := tx.Exec(
+			"UPDATE canteen_review_events SET store_id = ? WHERE store_id = ?",
+			targetID, id,
+		).Error; err != nil {
+			return err
+		}
+		if err := tx.Exec(
+			"DELETE FROM canteen_user_rating_summaries WHERE store_id = ?", id,
+		).Error; err != nil {
+			return err
+		}
+		var userIDs []int
+		if err := tx.Raw(
+			"SELECT DISTINCT user_id FROM canteen_review_events WHERE store_id = ?", targetID,
+		).Scan(&userIDs).Error; err != nil {
+			return err
+		}
+		for _, userID := range userIDs {
+			if err := recomputeCanteenUserSummary(tx, targetID, userID); err != nil {
+				return err
+			}
+		}
+		// Move dishes. A same-named dish already in the target is merged into
+		// that dish instead of violating the per-store unique index.
+		var sourceDishes []CanteenDishEntity
+		if err := tx.Where("store_id = ? AND status <> ?", id, string(canteen.DishStatusMerged)).
+			Find(&sourceDishes).Error; err != nil {
+			return err
+		}
+		for _, dish := range sourceDishes {
+			var existing CanteenDishEntity
+			err := tx.Where(
+				"store_id = ? AND normalized_name = ? AND status <> ?",
+				targetID, dish.NormalizedName, string(canteen.DishStatusMerged),
+			).First(&existing).Error
+			switch {
+			case err == nil:
+				if err := mergeCanteenDishTx(tx, dish.ID, existing.ID, now); err != nil {
+					return err
+				}
+			case errors.Is(err, gorm.ErrRecordNotFound):
+				if err := tx.Model(&CanteenDishEntity{}).Where("id = ?", dish.ID).
+					Update("store_id", targetID).Error; err != nil {
+					return err
+				}
+			default:
+				return err
+			}
+		}
+		if err := recomputeCanteenStoreStats(tx, targetID, r.priorCount); err != nil {
+			return err
+		}
+		return recomputeCanteenStoreStats(tx, id, r.priorCount)
 	})
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
-		return canteen.ErrStoreNotFound
+	if err != nil {
+		return err
 	}
 	r.invalidate(ctx)
 	return nil
@@ -318,87 +398,100 @@ func (r *CanteenDishRepository) UpdateStatus(ctx context.Context, id int, status
 
 func (r *CanteenDishRepository) Merge(ctx context.Context, id, targetID int, now time.Time) error {
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var source CanteenDishEntity
-		if err := tx.First(&source, id).Error; err != nil {
-			return err
-		}
-		result := tx.Model(&CanteenDishEntity{}).Where("id = ?", id).Updates(map[string]any{
-			"status":              string(canteen.DishStatusMerged),
-			"merged_into_dish_id": targetID,
-			"updated_at":          now,
-		})
-		if result.Error != nil {
-			return result.Error
-		}
-		if result.RowsAffected == 0 {
-			return canteen.ErrDishNotFound
-		}
-		if err := tx.Exec(
-			"UPDATE canteen_dish_review_events SET dish_id = ? WHERE dish_id = ?",
-			targetID, id,
-		).Error; err != nil {
-			return err
-		}
-		// Preserve synonyms so future searches still resolve to the target.
-		if err := tx.Exec(`
-			INSERT INTO canteen_dish_aliases (dish_id, name, normalized_name, created_at)
-			SELECT ?, name, normalized_name, ? FROM canteen_dish_aliases WHERE dish_id = ?
-			ON CONFLICT (dish_id, normalized_name) DO NOTHING`,
-			targetID, now, id,
-		).Error; err != nil {
-			return err
-		}
-		if source.NormalizedName != "" {
-			if err := tx.Exec(`
-				INSERT INTO canteen_dish_aliases (dish_id, name, normalized_name, created_at)
-				VALUES (?, ?, ?, ?)
-				ON CONFLICT (dish_id, normalized_name) DO NOTHING`,
-				targetID, source.Name, source.NormalizedName, now,
-			).Error; err != nil {
-				return err
-			}
-		}
-		if err := tx.Exec("DELETE FROM canteen_dish_aliases WHERE dish_id = ?", id).Error; err != nil {
-			return err
-		}
-		if err := tx.Exec(`
-			INSERT INTO canteen_dish_media (dish_id, media_id, user_id, sort_order, created_at, updated_at)
-			SELECT ?, media_id, user_id, sort_order, created_at, updated_at
-			FROM canteen_dish_media WHERE dish_id = ?
-			ON CONFLICT (dish_id, media_id) DO NOTHING`,
-			targetID, id,
-		).Error; err != nil {
-			return err
-		}
-		if err := tx.Exec("DELETE FROM canteen_dish_media WHERE dish_id = ?", id).Error; err != nil {
-			return err
-		}
-		if err := tx.Exec(
-			"DELETE FROM canteen_dish_rating_summaries WHERE dish_id = ?", id,
-		).Error; err != nil {
-			return err
-		}
-		var userIDs []int
-		if err := tx.Raw(
-			"SELECT DISTINCT user_id FROM canteen_dish_review_events WHERE dish_id = ?", targetID,
-		).Scan(&userIDs).Error; err != nil {
-			return err
-		}
-		for _, userID := range userIDs {
-			if err := recomputeCanteenDishSummary(tx, targetID, userID); err != nil {
-				return err
-			}
-		}
-		if err := recomputeCanteenDishStats(tx, targetID, canteen.DefaultPriorCount); err != nil {
-			return err
-		}
-		return recomputeCanteenDishStats(tx, id, canteen.DefaultPriorCount)
+		return mergeCanteenDishTx(tx, id, targetID, now)
 	})
 	if err != nil {
 		return err
 	}
 	r.invalidate(ctx)
 	return nil
+}
+
+// mergeCanteenDishTx moves every relation that can point at a dish before
+// marking the source as merged. It is shared by dish merge and store merge so a
+// store merge cannot leave dish relations dangling.
+func mergeCanteenDishTx(tx *gorm.DB, id, targetID int, now time.Time) error {
+	var source CanteenDishEntity
+	if err := tx.First(&source, id).Error; err != nil {
+		return err
+	}
+	result := tx.Model(&CanteenDishEntity{}).Where("id = ?", id).Updates(map[string]any{
+		"status":              string(canteen.DishStatusMerged),
+		"merged_into_dish_id": targetID,
+		"updated_at":          now,
+	})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return canteen.ErrDishNotFound
+	}
+	if err := tx.Exec(
+		"UPDATE canteen_dish_review_events SET dish_id = ? WHERE dish_id = ?",
+		targetID, id,
+	).Error; err != nil {
+		return err
+	}
+	if err := tx.Exec(
+		"UPDATE canteen_review_dishes SET dish_id = ? WHERE dish_id = ?",
+		targetID, id,
+	).Error; err != nil {
+		return err
+	}
+	// Preserve synonyms so future searches still resolve to the target.
+	if err := tx.Exec(`
+		INSERT INTO canteen_dish_aliases (dish_id, name, normalized_name, created_at)
+		SELECT ?, name, normalized_name, ? FROM canteen_dish_aliases WHERE dish_id = ?
+		ON CONFLICT (dish_id, normalized_name) DO NOTHING`,
+		targetID, now, id,
+	).Error; err != nil {
+		return err
+	}
+	if source.NormalizedName != "" {
+		if err := tx.Exec(`
+			INSERT INTO canteen_dish_aliases (dish_id, name, normalized_name, created_at)
+			VALUES (?, ?, ?, ?)
+			ON CONFLICT (dish_id, normalized_name) DO NOTHING`,
+			targetID, source.Name, source.NormalizedName, now,
+		).Error; err != nil {
+			return err
+		}
+	}
+	if err := tx.Exec("DELETE FROM canteen_dish_aliases WHERE dish_id = ?", id).Error; err != nil {
+		return err
+	}
+	if err := tx.Exec(`
+		INSERT INTO canteen_dish_media (dish_id, media_id, user_id, sort_order, created_at, updated_at)
+		SELECT ?, media_id, user_id, sort_order, created_at, updated_at
+		FROM canteen_dish_media WHERE dish_id = ?
+		ON CONFLICT (dish_id, media_id) DO NOTHING`,
+		targetID, id,
+	).Error; err != nil {
+		return err
+	}
+	if err := tx.Exec("DELETE FROM canteen_dish_media WHERE dish_id = ?", id).Error; err != nil {
+		return err
+	}
+	if err := tx.Exec(
+		"DELETE FROM canteen_dish_rating_summaries WHERE dish_id = ?", id,
+	).Error; err != nil {
+		return err
+	}
+	var userIDs []int
+	if err := tx.Raw(
+		"SELECT DISTINCT user_id FROM canteen_dish_review_events WHERE dish_id = ?", targetID,
+	).Scan(&userIDs).Error; err != nil {
+		return err
+	}
+	for _, userID := range userIDs {
+		if err := recomputeCanteenDishSummary(tx, targetID, userID); err != nil {
+			return err
+		}
+	}
+	if err := recomputeCanteenDishStats(tx, targetID, canteen.DefaultPriorCount); err != nil {
+		return err
+	}
+	return recomputeCanteenDishStats(tx, id, canteen.DefaultPriorCount)
 }
 
 func (r *CanteenDishRepository) UpdateStats(ctx context.Context, id int, stats canteen.DishStats, now time.Time) error {
