@@ -17,4 +17,8 @@ const (
 	SystemSettingKeyReviewFrequencySimilarityRatio      = "review.frequency.similarity_ratio"
 	SystemSettingKeyReviewFrequencySuspendDuration      = "review.frequency.suspend_duration"
 	SystemSettingKeyReviewFrequencyViolationAdminEmails = "review.frequency.violation_admin_emails"
+
+	SystemSettingKeyCanteenEnabled        = "canteen.enabled"
+	SystemSettingKeyCanteenReviewsEnabled = "canteen.reviews.enabled"
+	SystemSettingKeyCanteenMediaEnabled   = "canteen.media.enabled"
 )

@@ -10,6 +10,8 @@ import (
 	"github.com/spf13/viper"
 
 	"jcourse/internal/domain/auth"
+	"jcourse/internal/domain/canteen"
+	"jcourse/internal/domain/canteen/policy"
 	"jcourse/internal/domain/course"
 	"jcourse/internal/domain/point"
 	"jcourse/internal/domain/stat"
@@ -29,6 +31,7 @@ type AppConfig struct {
 	Session      middleware.SessionConfig   `mapstructure:"session"`
 	Auth         AuthConfig                 `mapstructure:"auth"`
 	Course       CourseConfig               `mapstructure:"course"`
+	Canteen      CanteenConfig              `mapstructure:"canteen"`
 	Review       ReviewConfig               `mapstructure:"review"`
 	APIKey       auth.ApiKeyConfig          `mapstructure:"api_key"`
 	Point        point.TransferFeeConfig    `mapstructure:"point"`
@@ -48,6 +51,61 @@ type CourseConfig struct {
 
 type ReviewConfig struct {
 	SafetyPolicy moderation.AliyunGreenConfig `mapstructure:"safety_policy"`
+}
+
+// CanteenConfig keeps structural knobs in configuration; operator toggles live
+// in system settings.
+type CanteenConfig struct {
+	Rating canteen.RatingConfig `mapstructure:"rating"`
+	Review CanteenReviewConfig  `mapstructure:"review"`
+	Media  CanteenMediaConfig   `mapstructure:"media"`
+}
+
+type CanteenReviewConfig struct {
+	Frequency       policy.Config `mapstructure:"frequency"`
+	MaxDailyReviews int           `mapstructure:"max_daily_reviews"`
+}
+
+type CanteenMediaConfig struct {
+	Driver           string `mapstructure:"driver"`
+	Dir              string `mapstructure:"dir"`
+	MaxBytes         int64  `mapstructure:"max_bytes"`
+	MaxPerReview     int    `mapstructure:"max_per_review"`
+	MaxUploadsPerDay int    `mapstructure:"max_uploads_per_day"`
+	MaxPixels        int    `mapstructure:"max_pixels"`
+}
+
+var DefaultCanteenMediaConfig = CanteenMediaConfig{
+	Driver:           "local",
+	Dir:              ".local/canteen-media",
+	MaxBytes:         5 * 1024 * 1024,
+	MaxPerReview:     3,
+	MaxUploadsPerDay: 20,
+	MaxPixels:        8000000,
+}
+
+// Normalized fills zero values so a partial config cannot disable media limits.
+func (c CanteenMediaConfig) Normalized() CanteenMediaConfig {
+	defaults := DefaultCanteenMediaConfig
+	if c.Driver == "" {
+		c.Driver = defaults.Driver
+	}
+	if c.Dir == "" {
+		c.Dir = defaults.Dir
+	}
+	if c.MaxBytes <= 0 {
+		c.MaxBytes = defaults.MaxBytes
+	}
+	if c.MaxPerReview <= 0 {
+		c.MaxPerReview = defaults.MaxPerReview
+	}
+	if c.MaxUploadsPerDay <= 0 {
+		c.MaxUploadsPerDay = defaults.MaxUploadsPerDay
+	}
+	if c.MaxPixels <= 0 {
+		c.MaxPixels = defaults.MaxPixels
+	}
+	return c
 }
 
 type ServerConfig struct {
@@ -168,6 +226,27 @@ func setDefaults(v *viper.Viper) {
 		"prior_count":       course.DefaultRatingScoreConfig.PriorCount,
 		"refresh_cron":      course.DefaultRatingScoreConfig.RefreshCron,
 		"scheduler_enabled": course.DefaultRatingScoreConfig.SchedulerEnabled,
+	})
+	setSectionDefaults(v, "canteen.rating", map[string]any{
+		"prior_count":       canteen.DefaultRatingConfig.PriorCount,
+		"refresh_cron":      canteen.DefaultRatingConfig.RefreshCron,
+		"scheduler_enabled": canteen.DefaultRatingConfig.SchedulerEnabled,
+	})
+	setSectionDefaults(v, "canteen.review", map[string]any{
+		"max_daily_reviews": 5,
+	})
+	setSectionDefaults(v, "canteen.review.frequency", map[string]any{
+		"window":           policy.DefaultConfig.Window.String(),
+		"max_reviews":      policy.DefaultConfig.MaxReviews,
+		"similarity_ratio": policy.DefaultConfig.SimilarityRatio,
+	})
+	setSectionDefaults(v, "canteen.media", map[string]any{
+		"driver":              DefaultCanteenMediaConfig.Driver,
+		"dir":                 DefaultCanteenMediaConfig.Dir,
+		"max_bytes":           DefaultCanteenMediaConfig.MaxBytes,
+		"max_per_review":      DefaultCanteenMediaConfig.MaxPerReview,
+		"max_uploads_per_day": DefaultCanteenMediaConfig.MaxUploadsPerDay,
+		"max_pixels":          DefaultCanteenMediaConfig.MaxPixels,
 	})
 	setSectionDefaults(v, "review.safety_policy", map[string]any{
 		"enabled":         moderation.DefaultAliyunGreenConfig.Enabled,
