@@ -245,7 +245,19 @@ export function CanteenStoreDetailPage() {
               ))}
             </div>
             {voteError && <p className="text-sm text-destructive">{voteError}</p>}
-            {reviews.isLoading ? (
+            {reviews.isError ? (
+              <div className="flex flex-wrap items-center gap-2 text-sm text-destructive">
+                <span>评价加载失败，请稍后重试。</span>
+                <Button
+                  type="button"
+                  size="xs"
+                  variant="outline"
+                  onClick={() => void reviews.refetch()}
+                >
+                  重试
+                </Button>
+              </div>
+            ) : reviews.isLoading ? (
               <p className="text-sm text-muted-foreground">加载中…</p>
             ) : (
               <CanteenReviewList

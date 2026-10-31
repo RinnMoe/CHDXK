@@ -95,6 +95,7 @@ func NewServiceContainer(conf config.AppConfig) (*ServiceContainer, error) {
 	systemSettingsService := newSystemSettingsService(systemSettingsRepo, courseRepo)
 	canteenHalls := repository.NewCanteenHallRepository(db, redisClient)
 	canteenStores := repository.NewCanteenStoreRepository(db, redisClient)
+	canteenStores.SetPriorCount(conf.Canteen.Rating.Normalized().PriorCount)
 	canteenDishes := repository.NewCanteenDishRepository(db, redisClient)
 	canteenReviews := repository.NewCanteenReviewRepository(db, redisClient)
 	canteenReviews.SetPriorCount(conf.Canteen.Rating.Normalized().PriorCount)
@@ -145,6 +146,7 @@ func NewServiceContainer(conf config.AppConfig) (*ServiceContainer, error) {
 		canteenDishes,
 		canteenDishQueryRepo,
 		canteenDishReviews,
+		canteenStoreQuery,
 		canteenSettings,
 		canteenMediaCommand,
 	)
