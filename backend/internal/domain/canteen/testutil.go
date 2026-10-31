@@ -303,7 +303,7 @@ func (m *MockReviewRepository) Create(ctx context.Context, review *ReviewEvent) 
 	return nil
 }
 
-func (m *MockReviewRepository) Update(_ context.Context, review *ReviewEvent, _ Revision) error {
+func (m *MockReviewRepository) Update(_ context.Context, review *ReviewEvent, _ Revision, _ time.Time) error {
 	if m.Reviews == nil {
 		m.Reviews = map[int]*ReviewEvent{}
 	}
@@ -487,10 +487,11 @@ type MockMediaRepository struct {
 	NextID int
 	Items  map[int]*Media
 	Links  map[int][]int
+	Public map[int]bool
 }
 
 func NewMockMediaRepository() *MockMediaRepository {
-	return &MockMediaRepository{NextID: 1, Items: map[int]*Media{}, Links: map[int][]int{}}
+	return &MockMediaRepository{NextID: 1, Items: map[int]*Media{}, Links: map[int][]int{}, Public: map[int]bool{}}
 }
 
 func (m *MockMediaRepository) Create(_ context.Context, media *Media) error {
@@ -555,6 +556,10 @@ func (m *MockMediaRepository) ListMediaByStatus(context.Context, MediaFilter) ([
 		result = append(result, *item)
 	}
 	return result, int64(len(result)), nil
+}
+
+func (m *MockMediaRepository) IsMediaPublic(_ context.Context, id int) (bool, error) {
+	return m.Public[id], nil
 }
 
 // MockReportRepository is an in-memory ReportRepository.

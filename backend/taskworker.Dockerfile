@@ -20,7 +20,9 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 
 RUN apk add --no-cache ca-certificates tzdata \
     && addgroup -S app \
-    && adduser -S -G app app
+    && adduser -S -G app app \
+    && mkdir -p /app/.local/course-cache /app/.local/canteen-media \
+    && chown -R app:app /app/.local
 
 WORKDIR /app
 

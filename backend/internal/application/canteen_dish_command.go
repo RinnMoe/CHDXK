@@ -33,6 +33,7 @@ type CanteenDishCommandService struct {
 	dishes      canteen.DishRepository
 	dishQuery   canteen.DishQuery
 	dishReviews canteen.DishReviewRepository
+	reviewQuery canteen.ReviewQuery
 	settings    CanteenSettingsProvider
 	media       *CanteenMediaCommandService
 	now         func() time.Time
@@ -43,6 +44,7 @@ func NewCanteenDishCommandService(
 	dishes canteen.DishRepository,
 	dishQuery canteen.DishQuery,
 	dishReviews canteen.DishReviewRepository,
+	reviewQuery canteen.ReviewQuery,
 	settings CanteenSettingsProvider,
 	media *CanteenMediaCommandService,
 ) *CanteenDishCommandService {
@@ -51,6 +53,7 @@ func NewCanteenDishCommandService(
 		dishes:      dishes,
 		dishQuery:   dishQuery,
 		dishReviews: dishReviews,
+		reviewQuery: reviewQuery,
 		settings:    settings,
 		media:       media,
 		now:         time.Now,
@@ -85,6 +88,15 @@ func (s *CanteenDishCommandService) CreateDish(ctx context.Context, user *auth.U
 		if !config.Enabled {
 			return nil, false, apperr.NotFound("食堂评价暂未开放")
 		}
+		if !config.ReviewsEnabled {
+			return nil, false, apperr.Forbidden("餐饮内容投稿暂未开放")
+		}
+	}
+	if user != nil && !user.IsAdmin() && !canteen.CanCreateReview(user) {
+		if user.IsSuspended() {
+			return nil, false, apperr.ErrUserSuspended
+		}
+		return nil, false, auth.ErrMuted
 	}
 	store, err := s.stores.Get(ctx, cmd.StoreID)
 	if err != nil {
@@ -202,6 +214,9 @@ func (s *CanteenDishCommandService) MergeDish(ctx context.Context, user *auth.Us
 	if target == nil || target.StoreID != dish.StoreID {
 		return canteen.ErrDishNotFound
 	}
+	if target.Status == canteen.DishStatusMerged {
+		return canteen.ErrDishMerged
+	}
 	now := s.now()
 	if err := s.dishes.Merge(ctx, dish.ID, target.ID, now); err != nil {
 		return err
@@ -240,6 +255,16 @@ func (s *CanteenDishCommandService) CreateDishReview(ctx context.Context, user *
 	}
 	if store == nil || !store.CanAcceptReview() {
 		return nil, canteen.ErrStoreNotActive
+	}
+	if cmd.ReviewEventID != nil {
+		linked, err := s.reviewQuery.GetReview(ctx, *cmd.ReviewEventID)
+		if err != nil {
+			return nil, err
+		}
+		if linked == nil || linked.UserID != user.ID || linked.StoreID != dish.StoreID ||
+			linked.Status != canteen.ReviewStatusActive {
+			return nil, apperr.BadRequest("关联的到店评价无效")
+		}
 	}
 	now := s.now()
 	review := &canteen.DishReviewEvent{

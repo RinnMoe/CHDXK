@@ -93,3 +93,25 @@ func TestCanteenAdminMergeStore(t *testing.T) {
 		t.Fatal("self merge must be rejected")
 	}
 }
+
+func TestCanteenAdminMergeStoreRejectsMergedTarget(t *testing.T) {
+	service, _, _ := newCanteenAdminService(t)
+	source, err := service.CreateStore(context.Background(), 1, CanteenStoreCommand{HallID: 1, Name: "源店铺"})
+	if err != nil {
+		t.Fatalf("create source: %v", err)
+	}
+	target, err := service.CreateStore(context.Background(), 1, CanteenStoreCommand{HallID: 1, Name: "目标店铺"})
+	if err != nil {
+		t.Fatalf("create target: %v", err)
+	}
+	final, err := service.CreateStore(context.Background(), 1, CanteenStoreCommand{HallID: 1, Name: "最终店铺"})
+	if err != nil {
+		t.Fatalf("create final: %v", err)
+	}
+	if _, err := service.MergeStore(context.Background(), 1, target.ID, final.ID); err != nil {
+		t.Fatalf("merge target: %v", err)
+	}
+	if _, err := service.MergeStore(context.Background(), 1, source.ID, target.ID); !errors.Is(err, canteen.ErrStoreMerged) {
+		t.Fatalf("merge into merged target err = %v, want ErrStoreMerged", err)
+	}
+}

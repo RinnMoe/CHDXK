@@ -110,11 +110,10 @@ func (c *CanteenMediaController) Get(ctx *gin.Context) {
 	}()
 	ctx.Header("Content-Type", media.MIME)
 	ctx.Header("X-Content-Type-Options", "nosniff")
-	if media.Status.PubliclyVisible() {
-		ctx.Header("Cache-Control", "public, max-age=300")
-	} else {
-		ctx.Header("Cache-Control", "private, no-store")
-	}
+	// Canteen media visibility depends on parent state that can change at any
+	// time. Do not let shared caches retain a response that was public before a
+	// review/dish/store was hidden or deleted.
+	ctx.Header("Cache-Control", "private, no-store")
 	ctx.Status(http.StatusOK)
 	if _, err := io.Copy(ctx.Writer, reader); err != nil {
 		return

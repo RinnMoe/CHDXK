@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"jcourse/internal/domain/auth"
 	"jcourse/internal/domain/canteen"
 )
 
-func newDishCommandFixture(t *testing.T) (*CanteenDishCommandService, *canteen.MockDishRepository, *canteen.MockDishReviewRepository, *canteen.MockDishQuery) {
+func newDishCommandFixture(t *testing.T) (*CanteenDishCommandService, *canteen.MockDishRepository, *canteen.MockDishReviewRepository, *canteen.MockDishQuery, *canteen.MockReviewQuery) {
 	t.Helper()
 	stores := canteen.NewMockStoreRepository()
 	store := &canteen.Store{HallID: 1, Name: "老王面馆", Status: canteen.StoreStatusActive}
@@ -20,19 +21,21 @@ func newDishCommandFixture(t *testing.T) (*CanteenDishCommandService, *canteen.M
 	dishes := canteen.NewMockDishRepository()
 	dishReviews := canteen.NewMockDishReviewRepository()
 	query := &canteen.MockDishQuery{}
+	reviewQuery := &canteen.MockReviewQuery{}
 	service := NewCanteenDishCommandService(
 		stores,
 		dishes,
 		query,
 		dishReviews,
+		reviewQuery,
 		StaticCanteenSettingsProvider{Runtime: CanteenRuntimeConfig{Enabled: true, ReviewsEnabled: true, MediaEnabled: true}},
 		nil,
 	)
-	return service, dishes, dishReviews, query
+	return service, dishes, dishReviews, query, reviewQuery
 }
 
 func TestCanteenDishCreatePendingAndDedupe(t *testing.T) {
-	service, dishes, _, _ := newDishCommandFixture(t)
+	service, dishes, _, _, _ := newDishCommandFixture(t)
 	user := &auth.User{ID: 2, Role: auth.RoleUser}
 	dish, existing, err := service.CreateDish(context.Background(), user, CreateCanteenDishCommand{StoreID: 1, Name: " 牛肉面 "})
 	if err != nil {
@@ -54,7 +57,7 @@ func TestCanteenDishCreatePendingAndDedupe(t *testing.T) {
 }
 
 func TestCanteenDishAdminCreateIsActive(t *testing.T) {
-	service, _, _, _ := newDishCommandFixture(t)
+	service, _, _, _, _ := newDishCommandFixture(t)
 	admin := &auth.User{ID: 1, Role: auth.RoleAdmin}
 	dish, existing, err := service.CreateDish(context.Background(), admin, CreateCanteenDishCommand{StoreID: 1, Name: "牛肉面"})
 	if err != nil {
@@ -66,7 +69,7 @@ func TestCanteenDishAdminCreateIsActive(t *testing.T) {
 }
 
 func TestCanteenDishReview(t *testing.T) {
-	service, _, dishReviews, query := newDishCommandFixture(t)
+	service, _, dishReviews, query, _ := newDishCommandFixture(t)
 	query.Dish = &canteen.Dish{ID: 9, StoreID: 1, Name: "牛肉面", Status: canteen.DishStatusActive}
 	user := &auth.User{ID: 2, Role: auth.RoleUser}
 	review, err := service.CreateDishReview(context.Background(), user, CreateCanteenDishReviewCommand{
@@ -87,7 +90,7 @@ func TestCanteenDishReview(t *testing.T) {
 }
 
 func TestCanteenDishAuthority(t *testing.T) {
-	service, _, _, query := newDishCommandFixture(t)
+	service, _, _, query, _ := newDishCommandFixture(t)
 	query.Dish = &canteen.Dish{ID: 9, StoreID: 1, Name: "牛肉面", Status: canteen.DishStatusActive}
 	user := &auth.User{ID: 2, Role: auth.RoleUser}
 	if _, err := service.UpdateDishStatus(context.Background(), user, 9, canteen.DishStatusActive); !errors.Is(err, canteen.ErrCannotModerate) {
@@ -99,5 +102,38 @@ func TestCanteenDishAuthority(t *testing.T) {
 	admin := &auth.User{ID: 1, Role: auth.RoleAdmin}
 	if err := service.MergeDish(context.Background(), admin, 9, 9); err == nil {
 		t.Fatal("self merge should be rejected")
+	}
+}
+
+func TestCanteenDishReviewRejectsForeignVisit(t *testing.T) {
+	service, _, _, query, reviewQuery := newDishCommandFixture(t)
+	query.Dish = &canteen.Dish{ID: 9, StoreID: 1, Name: "牛肉面", Status: canteen.DishStatusActive}
+	reviewQuery.Reviews = []canteen.ReviewView{{
+		ID: 7, StoreID: 1, UserID: 3, Status: canteen.ReviewStatusActive,
+	}}
+	user := &auth.User{ID: 2, Role: auth.RoleUser}
+	if _, err := service.CreateDishReview(context.Background(), user, CreateCanteenDishReviewCommand{
+		DishID: 9, ReviewEventID: intPtr(7), Taste: 5, Portion: 5, Value: 5,
+	}); err == nil {
+		t.Fatal("CreateDishReview should reject another user's visit")
+	}
+	reviewQuery.Reviews[0].UserID = 2
+	if _, err := service.CreateDishReview(context.Background(), user, CreateCanteenDishReviewCommand{
+		DishID: 9, ReviewEventID: intPtr(7), Taste: 5, Portion: 5, Value: 5,
+	}); err != nil {
+		t.Fatalf("CreateDishReview(own visit) = %v", err)
+	}
+}
+
+func intPtr(value int) *int {
+	return &value
+}
+
+func TestCanteenDishCreateRejectsMutedUser(t *testing.T) {
+	service, _, _, _, _ := newDishCommandFixture(t)
+	until := time.Now().Add(24 * time.Hour)
+	muted := &auth.User{ID: 2, Role: auth.RoleUser, MutedUntil: &until}
+	if _, _, err := service.CreateDish(context.Background(), muted, CreateCanteenDishCommand{StoreID: 1, Name: "牛肉面"}); !errors.Is(err, auth.ErrMuted) {
+		t.Fatalf("CreateDish(muted) = %v, want ErrMuted", err)
 	}
 }

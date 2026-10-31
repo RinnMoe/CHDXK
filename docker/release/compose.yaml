@@ -66,6 +66,7 @@ services:
     volumes:
       - ../../backend/config/config.example.yaml:/app/config/config.yaml:ro
       - course_cache:/app/.local/course-cache
+      - canteen_media:/app/.local/canteen-media
     depends_on:
       postgres:
         condition: service_healthy
@@ -110,3 +111,4 @@ volumes:
   postgres_data:
   redis_data:
   course_cache:
+  canteen_media:

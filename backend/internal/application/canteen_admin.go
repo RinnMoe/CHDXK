@@ -224,6 +224,12 @@ func (s *CanteenAdminService) MergeStore(ctx context.Context, actorID int, store
 	if target == nil {
 		return nil, canteen.ErrStoreNotFound
 	}
+	if target.Status == canteen.StoreStatusMerged || target.MergedIntoStoreID != nil {
+		return nil, canteen.ErrStoreMerged
+	}
+	if target.Status == canteen.StoreStatusRejected {
+		return nil, apperr.BadRequest("目标店铺已被拒绝，不能作为合并目标")
+	}
 	now := s.now()
 	if err := s.stores.Merge(ctx, store.ID, target.ID, now); err != nil {
 		return nil, err

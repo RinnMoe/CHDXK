@@ -117,6 +117,21 @@ func (s *CanteenReviewQueryService) ListMyReviews(
 	return newCanteenReviewPage(items, total, page, pageSize), nil
 }
 
+func (s *CanteenReviewQueryService) GetReview(ctx context.Context, reviewID int) (*CanteenReviewDTO, error) {
+	if err := s.requireEnabled(ctx); err != nil {
+		return nil, err
+	}
+	view, err := s.reviews.GetReview(ctx, reviewID)
+	if err != nil {
+		return nil, err
+	}
+	if view == nil {
+		return nil, canteen.ErrReviewNotFound
+	}
+	dto := newCanteenReviewDTO(*view)
+	return &dto, nil
+}
+
 func newCanteenReviewPage(items []canteen.ReviewView, total int64, page, pageSize int) *CanteenReviewPage {
 	list := make([]CanteenReviewDTO, 0, len(items))
 	for _, item := range items {

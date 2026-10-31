@@ -46,6 +46,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 			http.MethodGet,
 			http.MethodPost,
 			http.MethodPut,
+			http.MethodPatch,
 			http.MethodDelete,
 			http.MethodOptions,
 		},
@@ -53,6 +54,7 @@ func NewRouter(container *app.ServiceContainer, conf config.AppConfig) *gin.Engi
 			"Authorization",
 			"Content-Type",
 			"X-CSRF-Token",
+			"Idempotency-Key",
 		},
 		ExposeHeaders: []string{
 			"X-CSRF-Token",

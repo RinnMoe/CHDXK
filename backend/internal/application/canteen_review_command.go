@@ -134,7 +134,10 @@ func (s *CanteenReviewCommandService) Create(
 	if !store.CanAcceptReview() {
 		return nil, false, canteen.ErrStoreNotActive
 	}
-	now := s.now()
+	now := s.now().Truncate(time.Microsecond)
+	if err := validateCanteenVisitTime(cmd.VisitedAt, now); err != nil {
+		return nil, false, err
+	}
 	count, err := s.reviewQuery.CountSince(ctx, user.ID, now.Add(-24*time.Hour))
 	if err != nil {
 		return nil, false, err
@@ -219,7 +222,17 @@ func (s *CanteenReviewCommandService) Update(
 	if !cmd.ExpectedUpdatedAt.IsZero() && !review.UpdatedAt.Equal(cmd.ExpectedUpdatedAt) {
 		return nil, canteen.ErrReviewConflict
 	}
-	now := s.now()
+	if cmd.ExpectedUpdatedAt.IsZero() {
+		return nil, apperr.BadRequest("缺少评价版本，请刷新后重试")
+	}
+	now := s.now().Truncate(time.Microsecond)
+	if !now.After(review.UpdatedAt) {
+		now = review.UpdatedAt.Add(time.Microsecond)
+	}
+	if err := validateCanteenVisitTime(cmd.VisitedAt, now); err != nil {
+		return nil, err
+	}
+	expectedUpdatedAt := review.UpdatedAt
 	revision := review.MakeRevision(user.ID, now)
 	update := canteen.UpdateReview{
 		VisitedAt: cmd.VisitedAt,
@@ -237,7 +250,7 @@ func (s *CanteenReviewCommandService) Update(
 	if err := review.ApplyUpdate(update, canteen.DefaultStoreWeights); err != nil {
 		return nil, err
 	}
-	if err := s.reviews.Update(ctx, review, revision); err != nil {
+	if err := s.reviews.Update(ctx, review, revision, expectedUpdatedAt); err != nil {
 		return nil, err
 	}
 	return review, nil
@@ -322,4 +335,20 @@ func (s *CanteenReviewCommandService) Vote(
 // RefreshRankings recomputes every store from persisted summaries.
 func (s *CanteenReviewCommandService) RefreshRankings(ctx context.Context) error {
 	return s.reviews.RefreshAllStoreStats(ctx)
+}
+
+// validateCanteenVisitTime keeps client-supplied visit times inside a
+// defensible window. Future visits would poison the recent-visit weighting;
+// arbitrarily old backfill would rewrite historical rankings.
+func validateCanteenVisitTime(visitedAt, now time.Time) error {
+	if visitedAt.IsZero() {
+		return nil
+	}
+	if visitedAt.After(now.Add(24 * time.Hour)) {
+		return apperr.BadRequest("到店时间不能晚于当前时间")
+	}
+	if visitedAt.Before(now.AddDate(-1, 0, 0)) {
+		return apperr.BadRequest("到店时间不能早于一年前")
+	}
+	return nil
 }

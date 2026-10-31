@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	"jcourse/internal/application"
 	"jcourse/internal/domain/auth"
@@ -102,6 +103,10 @@ func (c *CanteenReviewController) Create(ctx *gin.Context) {
 		respondBadRequest(ctx, "缺少幂等请求标识")
 		return
 	}
+	if _, err := uuid.Parse(requestID); err != nil {
+		respondBadRequest(ctx, "幂等请求标识格式无效")
+		return
+	}
 	user := auth.GetUserFromCtx(ctx.Request.Context())
 	review, created, err := c.command.Create(ctx.Request.Context(), user, application.CreateCanteenReviewCommand{
 		StoreID:         storeID,
@@ -120,7 +125,12 @@ func (c *CanteenReviewController) Create(ctx *gin.Context) {
 		respondError(ctx, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"created": created, "review": newCanteenReviewResponse(review)})
+	dto, err := c.query.GetReview(ctx.Request.Context(), review.ID)
+	if err != nil {
+		respondError(ctx, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"created": created, "review": dto})
 }
 
 func (c *CanteenReviewController) Update(ctx *gin.Context) {
@@ -161,7 +171,12 @@ func (c *CanteenReviewController) Update(ctx *gin.Context) {
 		respondError(ctx, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"review": newCanteenReviewResponse(review)})
+	dto, err := c.query.GetReview(ctx.Request.Context(), review.ID)
+	if err != nil {
+		respondError(ctx, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"review": dto})
 }
 
 func (c *CanteenReviewController) Delete(ctx *gin.Context) {
@@ -285,22 +300,4 @@ func (c *CanteenReviewController) ListMyReviews(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, page)
-}
-
-func newCanteenReviewResponse(review *canteen.ReviewEvent) gin.H {
-	if review == nil {
-		return gin.H{}
-	}
-	return gin.H{
-		"id":            review.ID,
-		"store_id":      review.StoreID,
-		"user_id":       review.UserID,
-		"visited_at":    review.VisitedAt,
-		"overall_score": review.OverallScore,
-		"content":       review.Content,
-		"tags":          review.Tags,
-		"status":        review.Status,
-		"created_at":    review.CreatedAt,
-		"updated_at":    review.UpdatedAt,
-	}
 }
